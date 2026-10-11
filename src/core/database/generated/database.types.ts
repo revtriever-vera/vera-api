@@ -174,6 +174,17 @@ export interface PortfolioSettings {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface Positions {
+    assetId: string;
+    averagePrice: Numeric | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    quantity: Numeric;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Sessions {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -227,6 +238,7 @@ export interface DB {
     IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
     PortfolioSettings: PortfolioSettings;
+    Positions: Positions;
     Sessions: Sessions;
     Throttles: Throttles;
     Users: Users;
