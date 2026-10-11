@@ -1,0 +1,119 @@
+{
+  "name": "vera-api",
+  "version": "0.1.0",
+  "description": "Vera — API",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "nest build",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main.js",
+    "lint": "eslint \"{src,test,scripts}/**/*.ts\"",
+    "lint:fix": "eslint \"{src,test,scripts}/**/*.ts\" --fix",
+    "format": "prettier --write \"{src,test,scripts}/**/*.ts\"",
+    "format:check": "prettier --check \"{src,test,scripts}/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.mts",
+    "test:watch": "vitest --config vitest.config.mts",
+    "test:int": "vitest run --config vitest.integration.config.mts",
+    "test:cov": "vitest run --config vitest.config.mts --coverage",
+    "test:int:cov": "vitest run --config vitest.integration.config.mts --coverage",
+    "coverage:gate": "rm -rf coverage/merged && mkdir -p coverage/merged/.nyc && cp coverage/unit/coverage-final.json coverage/merged/.nyc/unit.json && cp coverage/integration/coverage-final.json coverage/merged/.nyc/integration.json && nyc report -t coverage/merged/.nyc --report-dir coverage/merged --reporter=text-summary --reporter=lcov --check-coverage --lines 85 --branches 85 --functions 85 --statements 85",
+    "prepare": "husky",
+    "migrate:latest": "kysely migrate:latest",
+    "migrate:down": "kysely migrate:down",
+    "migrate:make": "kysely migrate:make",
+    "codegen": "kysely-codegen --out-file src/core/database/generated/database.types.ts && prettier --write src/core/database/generated/database.types.ts",
+    "check:migrations": "tsx scripts/check-migration-names.ts",
+    "env:pull": "tsx scripts/env-pull.ts",
+    "tick": "tsx scripts/tick.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1102.0",
+    "@bull-board/api": "^8.6.0",
+    "@bull-board/express": "^8.6.0",
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "@nestjs/swagger": "^11.4.6",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.79.0",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.221.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.221.0",
+    "@opentelemetry/instrumentation-pino": "^0.67.0",
+    "@opentelemetry/resources": "^2.10.0",
+    "@opentelemetry/sdk-node": "^0.221.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "bullmq": "^6.0.8",
+    "cookie-parser": "^1.4.7",
+    "express-basic-auth": "^1.2.1",
+    "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "kysely": "^0.28.0",
+    "kysely-ctl": "^0.13.0",
+    "nestjs-pino": "^4.4.0",
+    "nestjs-zod": "^4.3.0",
+    "nodemailer": "^9.0.3",
+    "pg": "^8.16.0",
+    "pino": "^9.7.0",
+    "pino-http": "^10.4.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "tsx": "^4.23.5",
+    "uuid": "^14.0.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@eslint/js": "^9.39.5",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.1.0",
+    "@swc/core": "^1.11.0",
+    "@testcontainers/postgresql": "^11.0.0",
+    "@testcontainers/redis": "^12.1.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.20.3",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.1.0",
+    "husky": "^9.1.7",
+    "kysely-codegen": "^0.18.0",
+    "lint-staged": "^16.0.0",
+    "nyc": "^18.0.0",
+    "pino-pretty": "^13.0.0",
+    "prettier": "^3.5.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.33.0",
+    "unplugin-swc": "^1.5.0",
+    "vitest": "^3.2.0"
+  },
+  "overrides": {
+    "@nestjs/swagger": {
+      "js-yaml": "5.2.3"
+    },
+    "brace-expansion@5.0.8": "5.0.9"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "migrations/*.ts": [
+      "tsx scripts/check-migration-names.ts --"
+    ]
+  }
+}
