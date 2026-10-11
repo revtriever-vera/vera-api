@@ -122,6 +122,20 @@ export interface CatalogSyncRuns {
     upserted: Generated<number>;
 }
 
+export interface CategoryRules {
+    appliesTo: string;
+    categoryId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    isSample: Generated<boolean>;
+    label: string;
+    matchType: string;
+    pattern: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Companies {
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
@@ -242,6 +256,20 @@ export interface Sessions {
     userId: string;
 }
 
+export interface SpendingCategories {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    flexibility: string | null;
+    icon: string;
+    id: string;
+    kind: string;
+    name: string | null;
+    position: number;
+    systemKey: string | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Throttles {
     count: Generated<number>;
     createdAt: Generated<Timestamp>;
@@ -274,6 +302,7 @@ export interface DB {
     Assets: Assets;
     AuthIdentities: AuthIdentities;
     CatalogSyncRuns: CatalogSyncRuns;
+    CategoryRules: CategoryRules;
     Companies: Companies;
     ExchangeRates: ExchangeRates;
     FixedIncomeTitles: FixedIncomeTitles;
@@ -284,6 +313,7 @@ export interface DB {
     ProviderUsage: ProviderUsage;
     QuoteFetchFailures: QuoteFetchFailures;
     Sessions: Sessions;
+    SpendingCategories: SpendingCategories;
     Throttles: Throttles;
     Users: Users;
 }
