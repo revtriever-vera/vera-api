@@ -30,10 +30,12 @@
     "check:migrations": "tsx scripts/check-migration-names.ts",
     "env:pull": "tsx scripts/env-pull.ts",
     "tick": "tsx scripts/tick.ts",
+    "secrets:reseal": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/secrets-reseal.js",
     "catalog:seed": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/catalog-seed.js",
     "cdk": "cdk"
   },
   "dependencies": {
+    "@aws-sdk/client-kms": "^3.1149.0",
     "@aws-sdk/client-sesv2": "^3.1102.0",
     "@bull-board/api": "^8.6.0",
     "@bull-board/express": "^8.6.0",

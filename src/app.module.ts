@@ -7,6 +7,7 @@ import { appConfig } from './config/app.config';
 import { requestLogLevel, requestLogProps } from './core/observability/http-log';
 import { redactRequest, SerializedRequest } from './core/observability/url-redaction';
 import { ContextModule } from './core/context/context.module';
+import { CryptoModule } from './core/crypto/crypto.module';
 import { RequestContextMiddleware } from './core/context/request-context.middleware';
 import { HttpModule } from './core/http/http.module';
 import { AppErrorFilter } from './core/http/app-error.filter';
@@ -45,6 +46,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
             })
         }),
         ContextModule,
+        CryptoModule,
         ObservabilityModule,
         QueueModule,
         HttpModule,
