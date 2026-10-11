@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: vera
+          POSTGRES_PASSWORD: vera
+          POSTGRES_DB: vera
+        ports:
+          - 5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Migration names
+        run: npm run check:migrations
+
+      - name: Migration drift guard
+        env:
+          DATABASE_URL: postgres://vera:vera@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/vera
+        run: |
+          npm run migrate:latest
+          npm run codegen
+          git diff --exit-code src/core/database/generated/database.types.ts \
+            || (echo "::error::Tipos gerados estão desatualizados. Rode 'npm run codegen' e comite." && exit 1)
+
+      - name: Unit tests
+        run: npm run test:cov
+
+      - name: Integration tests
+        if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
+        run: npm run test:int:cov
+
+      - name: Coverage gate (unit + integration, 85%)
+        if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
+        run: npm run coverage:gate
+
+      - name: Sonar
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SONAR_ENABLED == 'true'
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Resumo do Sonar
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SONAR_ENABLED == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PROJECT_KEY: revtriever-vera_vera-api
+        run: |
+          STATUS="$(curl -fsS -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${PROJECT_KEY}" \
+            | jq -r '.projectStatus.status' || echo "desconhecido")"
+          {
+            echo "### Sonar"
+            echo "Quality gate: **${STATUS}**"
+            echo "[Abrir no SonarCloud](https://sonarcloud.io/dashboard?id=${PROJECT_KEY})"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  cdk-diff:
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && vars.CDK_DIFF_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCOUNT_ID_DEV: ${{ vars.AWS_ACCOUNT_ID_DEV }}
+      SHARED_INFRA_DEV: ${{ vars.SHARED_INFRA_DEV }}
+      VERA_DOMAIN: ${{ vars.VERA_DOMAIN }}
+      VERA_ENVIRONMENTS: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mascara valores de infraestrutura
+        run: bash .github/scripts/mask-values.sh AWS_ACCOUNT_ID_DEV SHARED_INFRA_DEV
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID_DEV }}:role/vera-github-deploy-dev
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: cdk diff
+        run: |
+          npx cdk diff 'vera-*-dev' --no-color --context imageTag=latest > diff-raw.txt 2>&1 \
+            || { echo "::error::cdk diff falhou; saída omitida porque o log é público."; exit 1; }
+          awk '/^Stack / {print} /^\[[-+~]\] AWS::/ {print $1, $2, $3}' diff-raw.txt \
+            | sed -E 's/[0-9]{12}/************/g' > diff-body.txt
+
+      - name: comenta o diff no PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          {
+            echo '<!-- cdk-diff -->'
+            echo '### cdk diff (dev): recursos alterados'
+            echo
+            echo '```'
+            if [ -s diff-body.txt ]; then cat diff-body.txt; else echo 'sem mudanças'; fi
+            echo '```'
+          } > comment.md
+          EXISTING="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --jq '.[] | select(.body | startswith("<!-- cdk-diff -->")) | .id' | head -1)"
+          if [ -n "$EXISTING" ]; then
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${EXISTING}" -F body=@comment.md > /dev/null
+          else
+            gh pr comment "$PR_NUMBER" --body-file comment.md
+          fi
