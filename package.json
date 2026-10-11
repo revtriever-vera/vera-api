@@ -53,6 +53,7 @@
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "bullmq": "^6.0.8",
     "cookie-parser": "^1.4.7",
+    "decimal.js": "^10.6.0",
     "express-basic-auth": "^1.2.1",
     "helmet": "^8.3.0",
     "ioredis": "^6.0.0",

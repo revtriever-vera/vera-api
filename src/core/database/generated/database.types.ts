@@ -8,6 +8,8 @@ import type { ColumnType } from 'kysely';
 export type Generated<T> =
     T extends ColumnType<infer S, infer I, infer U> ? ColumnType<S, I | undefined, U> : ColumnType<T, T | undefined, T>;
 
+export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
+
 export type Json = JsonValue;
 
 export type JsonArray = JsonValue[];
@@ -19,6 +21,8 @@ export type JsonObject = {
 export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
+
+export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -117,6 +121,31 @@ export interface Companies {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface FixedIncomeTitles {
+    appliedAt: Timestamp;
+    appliedMinor: Int8;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: Generated<string>;
+    deletedAt: Timestamp | null;
+    id: string;
+    indexer: string;
+    kind: string;
+    maturityDate: Timestamp;
+    name: string;
+    rateBps: number;
+    taxRegime: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface IndexSeriesPoints {
+    date: Timestamp;
+    fetchedAt: Generated<Timestamp>;
+    series: string;
+    source: string;
+    value: Numeric;
+}
+
 export interface OnboardingStates {
     assetsDoneAt: Timestamp | null;
     assetsSkippedAt: Timestamp | null;
@@ -192,6 +221,8 @@ export interface DB {
     AuthIdentities: AuthIdentities;
     CatalogSyncRuns: CatalogSyncRuns;
     Companies: Companies;
+    FixedIncomeTitles: FixedIncomeTitles;
+    IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
     PortfolioSettings: PortfolioSettings;
     Sessions: Sessions;

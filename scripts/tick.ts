@@ -16,7 +16,8 @@ const QUEUE_NAMES: string[] = Object.values(QUEUES);
 const MESSAGE_TYPE_VALUES: string[] = Object.values(MESSAGE_TYPES);
 
 const TICK_TYPE_BY_QUEUE: Record<string, string> = {
-    [QUEUES.catalog]: MESSAGE_TYPES.catalogSyncTickRequested
+    [QUEUES.catalog]: MESSAGE_TYPES.catalogSyncTickRequested,
+    [QUEUES.fixedIncome]: MESSAGE_TYPES.fixedIncomeIndexSyncRequested
 };
 
 function connect(): Cluster | Redis {
