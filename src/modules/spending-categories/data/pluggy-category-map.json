@@ -1,0 +1,82 @@
+[
+  {
+    "pluggyId": "01000000",
+    "category": "income"
+  },
+  {
+    "pluggyId": "03000000",
+    "category": "investments"
+  },
+  {
+    "pluggyId": "04000000",
+    "category": "own_transfer"
+  },
+  {
+    "pluggyId": "07000000",
+    "category": "taxes_fees"
+  },
+  {
+    "pluggyId": "08000000",
+    "category": "home_services"
+  },
+  {
+    "pluggyId": "09000000",
+    "category": "shopping"
+  },
+  {
+    "pluggyId": "10000000",
+    "category": "groceries"
+  },
+  {
+    "pluggyId": "11000000",
+    "category": "eating_out"
+  },
+  {
+    "pluggyId": "12000000",
+    "category": "leisure"
+  },
+  {
+    "pluggyId": "13000000",
+    "category": "other_expenses"
+  },
+  {
+    "pluggyId": "14000000",
+    "category": "leisure"
+  },
+  {
+    "pluggyId": "15000000",
+    "category": "taxes_fees"
+  },
+  {
+    "pluggyId": "16000000",
+    "category": "taxes_fees"
+  },
+  {
+    "pluggyId": "17000000",
+    "category": "housing"
+  },
+  {
+    "pluggyId": "18000000",
+    "category": "home_services"
+  },
+  {
+    "pluggyId": "19000000",
+    "category": "health"
+  },
+  {
+    "pluggyId": "20000000",
+    "category": "transport"
+  },
+  {
+    "pluggyId": "21000000",
+    "category": "transport"
+  },
+  {
+    "pluggyId": "22000000",
+    "category": "home_services"
+  },
+  {
+    "pluggyId": "23000000",
+    "category": "leisure"
+  }
+]
