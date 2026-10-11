@@ -10,6 +10,33 @@ export type Generated<T> =
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface Companies {
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    locale: Generated<string>;
+    name: string;
+    timezone: Generated<string>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface Sessions {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    expiresAt: Timestamp;
+    familyId: string;
+    id: string;
+    ip: string | null;
+    provider: string;
+    replacedById: string | null;
+    revokedAt: Timestamp | null;
+    tokenHash: string;
+    updatedAt: Generated<Timestamp>;
+    userAgent: string | null;
+    userId: string;
+}
+
 export interface Throttles {
     count: Generated<number>;
     createdAt: Generated<Timestamp>;
@@ -20,6 +47,23 @@ export interface Throttles {
     windowStartedAt: Timestamp;
 }
 
+export interface Users {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    email: string;
+    emailVerifiedAt: Timestamp | null;
+    id: string;
+    locale: string | null;
+    name: string;
+    role: Generated<string>;
+    termsAcceptedAt: Timestamp | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface DB {
+    Companies: Companies;
+    Sessions: Sessions;
     Throttles: Throttles;
+    Users: Users;
 }
