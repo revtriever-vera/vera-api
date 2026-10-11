@@ -14,6 +14,7 @@ import { ObservabilityModule } from './core/observability/observability.module';
 import { QueueModule } from './core/queue/queue.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { ContributionModule } from './modules/contribution/contribution.module';
 import { FixedIncomeModule } from './modules/fixed-income/fixed-income.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
@@ -56,7 +57,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         PositionsModule,
         MarketDataModule,
         PortfolioModule,
-        PortfolioExportModule
+        PortfolioExportModule,
+        ContributionModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
