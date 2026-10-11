@@ -1,0 +1,67 @@
+name: vera-api
+
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - '5437:5432'
+    environment:
+      POSTGRES_USER: vera
+      POSTGRES_PASSWORD: vera
+      POSTGRES_DB: vera
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vera']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: grokzen/redis-cluster:7.0.10
+    ports:
+      - '7200-7205:7200-7205'
+    environment:
+      IP: '0.0.0.0'
+      INITIAL_PORT: '7200'
+      MASTERS: '3'
+      SLAVES_PER_MASTER: '1'
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -p 7200 cluster info | grep -q cluster_state:ok']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  localstack:
+    image: localstack/localstack:4
+    ports:
+      - '4577:4566'
+    environment:
+      SERVICES: sqs,ssm
+      AWS_DEFAULT_REGION: us-east-1
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:4566/_localstack/health | grep -q "\"ssm\": \"\\(available\\|running\\)\""']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - '1027:1025'
+      - '8027:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  lgtm:
+    image: grafana/otel-lgtm
+    profiles: [observability]
+    ports:
+      - '4320:4318'
+      - '3003:3000'
+
+volumes:
+  pgdata:
