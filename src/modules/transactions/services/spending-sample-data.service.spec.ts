@@ -38,7 +38,8 @@ function build(accounts: FinancialAccount[] = [], realTransactions: number = 0):
             store.accounts.push(created);
             return Promise.resolve(created);
         }),
-        removeMany: vi.fn().mockResolvedValue([])
+        removeMany: vi.fn().mockResolvedValue([]),
+        promoteToReal: vi.fn().mockResolvedValue(0)
     };
     const transactionDomain: Record<string, ReturnType<typeof vi.fn>> = {
         countReal: vi.fn().mockImplementation(() => Promise.resolve(store.realTransactions)),
@@ -129,7 +130,7 @@ describe('SpendingSampleDataService', () => {
         expect(built.logs).toHaveBeenCalledWith('cleared', DATASET_SIZE);
     });
 
-    it('limpar mantém conta de exemplo que ainda guarda transação real', async () => {
+    it('limpar promove a conta de exemplo que ainda guarda transação real', async () => {
         const built: Built = build([
             makeFinancialAccount({ id: 's1', isSample: true }),
             makeFinancialAccount({ id: 's2', isSample: true })
@@ -138,6 +139,7 @@ describe('SpendingSampleDataService', () => {
 
         await built.service.clear();
 
+        expect(built.accounts['promoteToReal']).toHaveBeenCalledWith(['s1']);
         expect(built.accounts['removeMany']).toHaveBeenCalledWith(['s2']);
     });
 });

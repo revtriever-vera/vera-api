@@ -80,6 +80,10 @@ export class FinancialAccountsRepository extends TenantRepository<'FinancialAcco
         return this.updateRow(id, { name });
     }
 
+    public async markReal(ids: readonly string[]): Promise<FinancialAccount[]> {
+        return this.updateManyRows({ id: [...ids] }, { isSample: false });
+    }
+
     public async softDeleteMany(ids: readonly string[]): Promise<FinancialAccount[]> {
         return this.updateManyRows({ id: [...ids] }, { deletedAt: new Date() });
     }

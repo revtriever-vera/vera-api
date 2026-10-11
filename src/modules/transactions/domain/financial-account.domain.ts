@@ -67,6 +67,10 @@ export class FinancialAccountDomain {
         return renamed;
     }
 
+    public async promoteToReal(ids: readonly string[]): Promise<number> {
+        return ids.length === 0 ? 0 : (await this.accounts.markReal(ids)).length;
+    }
+
     public async removeMany(ids: readonly string[]): Promise<FinancialAccount[]> {
         return ids.length === 0 ? [] : this.accounts.softDeleteMany(ids);
     }

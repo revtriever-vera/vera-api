@@ -121,6 +121,7 @@ export class SpendingSampleDataService extends SampleDataPort {
         const occupied: ReadonlySet<string> = new Set<string>(
             stats.filter((item: AccountStats): boolean => item.transactionCount > 0).map((item: AccountStats): string => item.accountId)
         );
+        await this.accounts.promoteToReal([...occupied]);
         await this.accounts.removeMany(
             samples
                 .filter((account: FinancialAccount): boolean => !occupied.has(account.id))

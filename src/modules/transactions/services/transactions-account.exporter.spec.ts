@@ -53,7 +53,10 @@ function build(pages: ReturnType<typeof makeTransaction>[][]): {
         } as unknown as FinancialAccountDomain,
         { listAfter } as unknown as TransactionDomain,
         {
-            listReal: vi.fn().mockResolvedValue([makeTransactionImport({ id: 'i1', accountId: 'a1', fileSha256: 'f'.repeat(64) })])
+            listRealPage: vi
+                .fn()
+                .mockResolvedValueOnce([makeTransactionImport({ id: 'i1', accountId: 'a1', fileSha256: 'f'.repeat(64) })])
+                .mockResolvedValue([])
         } as unknown as TransactionImportDomain,
         {
             listForCompany: vi
@@ -126,5 +129,23 @@ describe('TransactionsAccountExporter', () => {
         expect(exported.transactions).toHaveLength(EXPORT_PAGE_SIZE + 1);
         expect(listAfter).toHaveBeenCalledTimes(2);
         expect(listAfter.mock.calls[1]?.[1]).toEqual({ date: '2026-09-10', id: `t${String(EXPORT_PAGE_SIZE - 1).padStart(5, '0')}` });
+    });
+
+    it('pagina também os lotes de importação', async () => {
+        const full = Array.from({ length: EXPORT_PAGE_SIZE }, (_: unknown, index: number) =>
+            makeTransactionImport({ id: `i${String(index)}` })
+        );
+        const listRealPage = vi.fn().mockResolvedValueOnce(full).mockResolvedValueOnce([makeTransactionImport()]).mockResolvedValue([]);
+        const exporter: TransactionsAccountExporter = new TransactionsAccountExporter(
+            { listAll: vi.fn().mockResolvedValue([]) } as unknown as FinancialAccountDomain,
+            { listAfter: vi.fn().mockResolvedValue([]) } as unknown as TransactionDomain,
+            { listRealPage } as unknown as TransactionImportDomain,
+            { listForCompany: vi.fn().mockResolvedValue([]) } as unknown as CategoryReaderService
+        );
+
+        const exported = await exporter.exportAll();
+
+        expect(exported.imports).toHaveLength(EXPORT_PAGE_SIZE + 1);
+        expect(listRealPage).toHaveBeenNthCalledWith(2, EXPORT_PAGE_SIZE, EXPORT_PAGE_SIZE);
     });
 });

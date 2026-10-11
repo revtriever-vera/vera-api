@@ -74,7 +74,7 @@ export class TransactionsAccountExporter extends AccountDataExporterPort {
         return {
             accounts: accounts.map((account: FinancialAccount): FinancialAccountExport => this.accountOf(account)),
             transactions: await this.allTransactions(names, keys),
-            imports: (await this.imports.listReal()).map((item: TransactionImport): TransactionImportExport => this.importOf(item))
+            imports: await this.allImports()
         };
     }
 
@@ -98,6 +98,16 @@ export class TransactionsAccountExporter extends AccountDataExporterPort {
             const last: Transaction | undefined = page[page.length - 1];
             cursor = last === undefined ? null : { date: toDateString(last.date), id: last.id };
             page = page.length < EXPORT_PAGE_SIZE ? [] : await this.transactions.listAfter(filter, cursor, EXPORT_PAGE_SIZE);
+        }
+        return exported;
+    }
+
+    private async allImports(): Promise<TransactionImportExport[]> {
+        const exported: TransactionImportExport[] = [];
+        let page: TransactionImport[] = await this.imports.listRealPage(0, EXPORT_PAGE_SIZE);
+        while (page.length > 0) {
+            exported.push(...page.map((item: TransactionImport): TransactionImportExport => this.importOf(item)));
+            page = page.length < EXPORT_PAGE_SIZE ? [] : await this.imports.listRealPage(exported.length, EXPORT_PAGE_SIZE);
         }
         return exported;
     }

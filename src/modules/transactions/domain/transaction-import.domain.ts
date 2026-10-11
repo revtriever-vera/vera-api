@@ -63,8 +63,8 @@ export class TransactionImportDomain {
         return this.imports.countCompleted();
     }
 
-    public async listReal(): Promise<TransactionImport[]> {
-        return this.imports.listReal();
+    public async listRealPage(offset: number, size: number): Promise<TransactionImport[]> {
+        return this.imports.listRealPage(offset, size);
     }
 
     public async removeSamples(): Promise<number> {

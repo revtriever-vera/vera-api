@@ -49,11 +49,15 @@ describe('spending ports', () => {
         await harness.stop();
     });
 
-    async function importOfx(owner: Account, name: string): Promise<number> {
+    async function importOfx(owner: Account, name: string, accountId: string | null = null): Promise<number> {
         const form: FormData = new FormData();
         form.append('format', 'ofx');
-        form.append('newAccountName', 'Conta real');
-        form.append('newAccountKind', 'credit_card');
+        if (accountId === null) {
+            form.append('newAccountName', 'Conta real');
+            form.append('newAccountKind', 'credit_card');
+        } else {
+            form.append('accountId', accountId);
+        }
         form.append('file', new Blob([new Uint8Array(fixture(name))]), name);
         const response: Response = await fetch(`${origin}/spending/imports`, {
             method: 'POST',
@@ -181,6 +185,27 @@ describe('spending ports', () => {
         expect(await count(mixed, 'Transactions', '"isSample" = true')).toBe(0);
         expect(await count(mixed, 'Transactions')).toBe(4);
         expect(await count(mixed, 'FinancialAccounts')).toBe(1);
+    });
+
+    it('extrato real importado numa conta de exemplo: limpar promove a conta e a exportação a inclui', async () => {
+        const owner: Account = await harness.signUp('promote');
+        await harness.call(owner.token, 'POST', '/onboarding/sample');
+        const card = await harness.pg.query<{ id: string }>(
+            'SELECT "id" FROM "FinancialAccounts" WHERE "companyId" = $1 AND "name" = $2 AND "deletedAt" IS NULL',
+            [owner.company.id, 'Cartão de exemplo']
+        );
+        expect(await importOfx(owner, 'nubank-cartao-1.02.ofx', card.rows[0]?.id ?? '')).toBe(201);
+
+        expect((await harness.call(owner.token, 'DELETE', '/onboarding/sample')).status).toBe(200);
+
+        expect(await count(owner, 'FinancialAccounts', '"isSample" = false')).toBe(1);
+        expect(await count(owner, 'FinancialAccounts', '"isSample" = true')).toBe(0);
+        expect(await count(owner, 'Transactions')).toBe(4);
+        const exported = await harness.call<ExportBody>(owner.token, 'GET', '/account/export');
+        const section = exported.body.sections['transactions'] as { accounts: { name: string }[]; transactions: { account: string }[] };
+        expect(section.accounts.map((item) => item.name)).toEqual(['Cartão de exemplo']);
+        expect(section.transactions).toHaveLength(4);
+        expect(section.transactions.every((item) => item.account === 'Cartão de exemplo')).toBe(true);
     });
 
     it('exportação traz as quatro seções, só do que é real, sem segredo, hash nem marca de exemplo', async () => {

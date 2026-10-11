@@ -4,7 +4,7 @@ import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
 import { Page } from '../../../shared/pagination/pagination.types';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { IMPORT_EXPORT_LIMIT, IMPORT_STATUSES, NewTransactionImport, TransactionImport } from '../domain/transactions.types';
+import { IMPORT_STATUSES, NewTransactionImport, TransactionImport } from '../domain/transactions.types';
 
 type CreateImportData = Pick<
     NewTransactionImport,
@@ -62,8 +62,18 @@ export class TransactionImportsRepository extends TenantRepository<'TransactionI
         return row ?? null;
     }
 
-    public async listReal(): Promise<TransactionImport[]> {
-        return this.findMany({ isSample: false }, { limit: IMPORT_EXPORT_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
+    public async listRealPage(offset: number, size: number): Promise<TransactionImport[]> {
+        return this.findMany(
+            { isSample: false },
+            {
+                limit: size,
+                offset,
+                orderBy: [
+                    { property: 'createdAt', direction: 'asc' },
+                    { property: 'id', direction: 'asc' }
+                ]
+            }
+        );
     }
 
     public async softDeleteSamples(): Promise<TransactionImport[]> {
