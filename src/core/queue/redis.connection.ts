@@ -1,7 +1,7 @@
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { Cluster, ClusterNode, ClusterOptions, Redis } from 'ioredis';
 
-const DEFAULT_NODES: string = 'localhost:7000,localhost:7001,localhost:7002';
+const DEFAULT_NODES: string = 'localhost:7200,localhost:7201,localhost:7202';
 const SLOTS_REFRESH_INTERVAL_MS: number = 60_000;
 const SLOTS_REFRESH_TIMEOUT_MS: number = 10_000;
 const CONNECT_TIMEOUT_MS: number = 10_000;
