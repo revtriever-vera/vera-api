@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { runTunnel, routesOf, settingsFrom, TunnelSettings } from './tunnel-core';
+
+vi.mock('node:child_process', () => ({ execFileSync: vi.fn() }));
+
+import { execFileSync } from 'node:child_process';
+import { putParameterWithAwsCli, runTunnel, routesOf, settingsFrom, TunnelSettings } from './tunnel-core';
 
 const ENV: NodeJS.ProcessEnv = {
     VERA_DOMAIN: 'example.test',
@@ -135,6 +139,14 @@ describe('runTunnel', () => {
         expect(log).toHaveBeenCalledWith('tunnel existente: vera-prod');
     });
 
+    it('encodes query parameters', async () => {
+        const fetchMock: ReturnType<typeof vi.fn> = stubFetch((): Response => ok([]));
+        await expect(
+            runTunnel(settingsFrom(['dev'], { ...ENV, VERA_DOMAIN: 'a b&c' }), { putParameter: vi.fn(), log: vi.fn() })
+        ).rejects.toThrow();
+        expect(describeCalls(fetchMock)[0]).toContain('name=a%20b%26c');
+    });
+
     it('fails when the zone is not found', async () => {
         stubFetch((): Response => ok([]));
         await expect(runTunnel(settings('dev'), { putParameter: vi.fn(), log: vi.fn() })).rejects.toThrow('zona não encontrada');
@@ -148,5 +160,35 @@ describe('runTunnel', () => {
                 }) as Response
         );
         await expect(runTunnel(settings('dev'), { putParameter: vi.fn(), log: vi.fn() })).rejects.toThrow('10000 denied');
+    });
+});
+
+describe('putParameterWithAwsCli', () => {
+    it('sends the secret through stdin, never as an argument', () => {
+        putParameterWithAwsCli('/vera/tunnel-token', 'secret-value', settingsFrom(['dev'], ENV));
+        const [command, args, options] = vi.mocked(execFileSync).mock.calls.at(-1) as unknown as [string, string[], { input: string }];
+        expect(command).toBe('aws');
+        expect(args.join(' ')).not.toContain('secret-value');
+        expect(args).toContain('profile-1');
+        expect(JSON.parse(options.input)).toEqual({
+            Name: '/vera/tunnel-token',
+            Value: 'secret-value',
+            Type: 'SecureString',
+            Overwrite: true
+        });
+    });
+
+    it('throws a fixed message without leaking the secret when aws fails', () => {
+        vi.mocked(execFileSync).mockImplementationOnce(() => {
+            throw new Error('Command failed: aws ssm put-parameter --value secret-value');
+        });
+        let message: string = '';
+        try {
+            putParameterWithAwsCli('/vera/tunnel-token', 'secret-value', settingsFrom(['dev'], ENV));
+        } catch (error: unknown) {
+            message = (error as Error).message;
+        }
+        expect(message).toContain('/vera/tunnel-token');
+        expect(message).not.toContain('secret-value');
     });
 });

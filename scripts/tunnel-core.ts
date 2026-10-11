@@ -112,7 +112,7 @@ async function call<T>(settings: TunnelSettings, path: string, options: CallOpti
 }
 
 async function findZone(settings: TunnelSettings): Promise<Zone> {
-    const zones: Zone[] = await call<Zone[]>(settings, `/zones?name=${settings.domain}`);
+    const zones: Zone[] = await call<Zone[]>(settings, `/zones?name=${encodeURIComponent(settings.domain)}`);
     const found: Zone | undefined = zones[0];
     if (!found) {
         throw new Error('zona não encontrada com este token para o domínio informado');
@@ -153,7 +153,10 @@ async function upsertDns(
     tunnelId: string,
     deps: TunnelDependencies
 ): Promise<void> {
-    const records: DnsRecord[] = await call<DnsRecord[]>(settings, `/zones/${zoneId}/dns_records?name=${hostname}&type=CNAME`);
+    const records: DnsRecord[] = await call<DnsRecord[]>(
+        settings,
+        `/zones/${zoneId}/dns_records?name=${encodeURIComponent(hostname)}&type=CNAME`
+    );
     const existing: DnsRecord | undefined = records[0];
     const payload: string = JSON.stringify({ type: 'CNAME', name: hostname, content: `${tunnelId}.cfargotunnel.com`, proxied: true });
     if (existing) {
@@ -172,25 +175,24 @@ async function storeToken(settings: TunnelSettings, tunnelId: string, deps: Tunn
 }
 
 export function putParameterWithAwsCli(name: string, value: string, settings: TunnelSettings): void {
-    execFileSync(
-        'aws',
-        [
-            'ssm',
-            'put-parameter',
-            '--name',
-            name,
-            '--type',
-            'SecureString',
-            '--value',
-            value,
-            '--overwrite',
-            '--region',
-            settings.awsRegion,
-            '--profile',
-            settings.awsProfile ?? ''
-        ],
-        { stdio: 'pipe' }
-    );
+    try {
+        execFileSync(
+            'aws',
+            [
+                'ssm',
+                'put-parameter',
+                '--cli-input-json',
+                'file:///dev/stdin',
+                '--region',
+                settings.awsRegion,
+                '--profile',
+                settings.awsProfile ?? ''
+            ],
+            { input: JSON.stringify({ Name: name, Value: value, Type: 'SecureString', Overwrite: true }), stdio: ['pipe', 'pipe', 'pipe'] }
+        );
+    } catch {
+        throw new Error(`falha ao gravar ${name} no SSM; confira o perfil AWS e a sessão`);
+    }
 }
 
 export async function runTunnel(settings: TunnelSettings, deps: TunnelDependencies): Promise<void> {
