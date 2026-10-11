@@ -367,6 +367,22 @@ describe('transactions ingestion', () => {
         expect(await rows(owner, accountId)).toHaveLength(60);
     });
 
+    it('excluir a company remove contas, lotes e transações em cascata', async () => {
+        const owner: Account = await harness.signUp('cascade');
+        const accountId: string = await providerAccount(owner, 'acc-10');
+        const record = await harness.inCompany(owner.company.id, async () =>
+            imports.record({ accountId, format: 'ofx', fileName: 'x.ofx', fileSha256: 'c'.repeat(64), rows: 1 })
+        );
+        await ingest(owner, accountId, 'ofx', [item('ofx:cascade', '2026-09-01', -100, 'COMPRA')], record.id);
+
+        await harness.pg.query('DELETE FROM "Companies" WHERE "id" = $1', [owner.company.id]);
+
+        for (const table of ['FinancialAccounts', 'TransactionImports', 'Transactions']) {
+            const left = await harness.pg.query(`SELECT 1 FROM "${table}" WHERE "companyId" = $1`, [owner.company.id]);
+            expect(left.rowCount).toBe(0);
+        }
+    });
+
     it('a ingestão no contexto de outra company com o accountId da primeira dá account_not_found', async () => {
         const first: Account = await harness.signUp('tenant-a');
         const second: Account = await harness.signUp('tenant-b');
