@@ -5,7 +5,11 @@ import { TransactionAggregatesService } from './transaction-aggregates.service';
 describe('TransactionAggregatesService', () => {
     it('delega as três leituras ao domínio', async () => {
         const domain: Record<string, ReturnType<typeof vi.fn>> = {
-            monthlyNetByCategory: vi.fn().mockResolvedValue([{ month: '2026-09', categoryId: null, netMinor: -80000 }]),
+            monthlyNetByCategory: vi
+                .fn()
+                .mockResolvedValue([
+                    { month: '2026-09', categoryId: null, netMinor: -80000, outflowMinor: -80000, outflowCount: 2, transactionCount: 2 }
+                ]),
             monthsWithData: vi.fn().mockResolvedValue(['2026-09']),
             countOtherCurrencies: vi.fn().mockResolvedValue(2)
         };

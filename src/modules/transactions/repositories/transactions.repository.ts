@@ -43,8 +43,28 @@ function likePattern(text: string): string {
     return `%${text.replace(LIKE_SPECIALS, '\\$&')}%`;
 }
 
+interface MonthlyCategoryRow {
+    readonly month: string;
+    readonly categoryId: string | null;
+    readonly net: unknown;
+    readonly outflow: unknown;
+    readonly outflowCount: unknown;
+    readonly total: unknown;
+}
+
 function numeric(value: unknown): number {
     return Number(value ?? 0);
+}
+
+function toMonthlyNet(row: MonthlyCategoryRow): MonthlyCategoryNet {
+    return {
+        month: row.month,
+        categoryId: row.categoryId,
+        netMinor: numeric(row.net),
+        outflowMinor: numeric(row.outflow),
+        outflowCount: numeric(row.outflowCount),
+        transactionCount: numeric(row.total)
+    };
 }
 
 @Injectable()
@@ -167,18 +187,8 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     public async monthlyNetByCategory(range: MonthRange): Promise<MonthlyCategoryNet[]> {
-        const month: RawBuilder<string> = sql<string>`to_char("date", 'YYYY-MM')`;
-        const rows: { month: string; categoryId: string | null; net: unknown }[] = await this.inMonths(this.scopedSelect(), range)
-            .select((eb) => [month.as('month'), 'categoryId', eb.fn.sum('amountMinor').as('net')])
-            .where('currency', '=', BASE_CURRENCY)
-            .groupBy([month, 'categoryId'])
-            .orderBy(month)
-            .execute();
-        return rows.map((row: { month: string; categoryId: string | null; net: unknown }): MonthlyCategoryNet => ({
-            month: row.month,
-            categoryId: row.categoryId,
-            netMinor: numeric(row.net)
-        }));
+        const rows: MonthlyCategoryRow[] = await this.monthlyFlowRows(range);
+        return rows.map(toMonthlyNet);
     }
 
     public async monthsWithData(range: MonthRange): Promise<string[]> {
@@ -257,6 +267,23 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
 
     private inDateRange<O>(query: TransactionsQuery<O>, fromDate: string, toDate: string): TransactionsQuery<O> {
         return query.where((eb) => eb.and([eb('date', '>=', this.day(eb, fromDate)), eb('date', '<=', this.day(eb, toDate))]));
+    }
+
+    private async monthlyFlowRows(range: MonthRange): Promise<MonthlyCategoryRow[]> {
+        const month: RawBuilder<string> = sql<string>`to_char("date", 'YYYY-MM')`;
+        return this.inMonths(this.scopedSelect(), range)
+            .select((eb) => [
+                month.as('month'),
+                'categoryId',
+                eb.fn.sum('amountMinor').as('net'),
+                eb.fn.sum('amountMinor').filterWhere('amountMinor', '<', '0').as('outflow'),
+                eb.fn.countAll().filterWhere('amountMinor', '<', '0').as('outflowCount'),
+                eb.fn.countAll().as('total')
+            ])
+            .where('currency', '=', BASE_CURRENCY)
+            .groupBy([month, 'categoryId'])
+            .orderBy(month)
+            .execute();
     }
 
     private inMonths<O>(query: TransactionsQuery<O>, range: MonthRange): TransactionsQuery<O> {
