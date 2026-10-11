@@ -12,8 +12,12 @@ import {
     ConnectionIdentity,
     ITEM_OUTCOMES,
     ItemOutcome,
-    MAX_ACTIVE_CONNECTIONS
+    MAX_ACTIVE_CONNECTIONS,
+    StatusCount,
+    StatusReason
 } from './bank-connections.types';
+import { DerivedStatus, PAUSED, REVOKED, statusOfItem } from './connection-status';
+import { PluggyItem } from '../ports/pluggy-client.port';
 
 export interface Registration {
     readonly externalItemId: string;
@@ -88,6 +92,53 @@ export class BankConnectionDomain {
             throw new ConnectionNotFoundError(id);
         }
         return this.unlinkAfter([disconnected]);
+    }
+
+    public async find(id: string): Promise<BankConnection | null> {
+        return this.connections.findById(id);
+    }
+
+    public async pause(id: string, reason: StatusReason): Promise<BankConnection | null> {
+        return this.connections.applyState(id, { status: PAUSED.status, statusReason: reason });
+    }
+
+    public async require(id: string): Promise<BankConnection> {
+        const connection: BankConnection | null = await this.connections.findById(id);
+        if (connection === null) {
+            throw new ConnectionNotFoundError(id);
+        }
+        return connection;
+    }
+
+    public async listSyncable(): Promise<BankConnection[]> {
+        return this.connections.listSyncable();
+    }
+
+    public async applyItem(id: string, item: PluggyItem): Promise<BankConnection | null> {
+        const derived: DerivedStatus = statusOfItem(item.status);
+        return this.connections.applyState(id, {
+            status: derived.status,
+            statusReason: derived.statusReason,
+            providerStatus: item.status,
+            connectorName: item.connectorName,
+            consentExpiresAt: item.consentExpiresAt
+        });
+    }
+
+    public async revoke(id: string): Promise<BankConnection | null> {
+        return this.connections.applyState(id, { status: REVOKED.status, statusReason: REVOKED.statusReason });
+    }
+
+    public async pauseSyncable(): Promise<BankConnection[]> {
+        return this.connections.pauseSyncable();
+    }
+
+    public async recordSync(id: string, succeeded: boolean): Promise<void> {
+        await this.connections.recordSync(id, new Date(), succeeded);
+    }
+
+    public async countByStatusAcrossTenants(): Promise<StatusCount[]> {
+        return this.connections.countByStatusAcrossTenants();
     }
 
     public async listSyncableAcrossTenants(): Promise<ConnectionIdentity[]> {

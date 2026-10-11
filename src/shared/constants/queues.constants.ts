@@ -17,6 +17,7 @@ export const MESSAGE_TYPES = {
     marketDataReferenceRequested: 'market-data.reference.requested',
     marketDataPtaxRequested: 'market-data.ptax.requested',
     marketDataQuoteOndemandRequested: 'market-data.quote.ondemand.requested',
+    bankConnectionsSyncDailyRequested: 'bank-connections.sync.daily.requested',
     bankConnectionsSyncRequested: 'bank-connections.sync.requested'
 } as const;
 

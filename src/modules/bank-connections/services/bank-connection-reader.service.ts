@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BankConnectionDomain } from '../domain/bank-connection.domain';
-import { ConnectionIdentity } from '../domain/bank-connections.types';
+import { ConnectionIdentity, StatusCount } from '../domain/bank-connections.types';
 
 export type { ConnectionIdentity };
 
@@ -18,6 +18,10 @@ export class BankConnectionReaderService {
 
     public async listActiveAcrossTenants(): Promise<readonly ConnectionIdentity[]> {
         return this.connections.listSyncableAcrossTenants();
+    }
+
+    public async countByStatusAcrossTenants(): Promise<readonly StatusCount[]> {
+        return this.connections.countByStatusAcrossTenants();
     }
 
     public async findByIdAcrossTenants(id: string): Promise<ConnectionIdentity | null> {

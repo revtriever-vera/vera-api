@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configOf } from '../../../../test/support/bank-connections-fakes';
-import { PluggyOperationNotSupportedError } from '../ports/pluggy-client.errors';
 import { LivePluggyClientDriver } from './live-pluggy-client.driver';
 import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
@@ -114,11 +113,167 @@ describe('LivePluggyClientDriver', () => {
         await expect(driver.getItem(new PluggySession('k'), 'i')).rejects.toMatchObject({ reason: 'format_invalid' });
     });
 
-    it('deixa contas e transações para o card da sincronização', async () => {
-        await expect(driver.listAccounts()).rejects.toBeInstanceOf(PluggyOperationNotSupportedError);
+    it('percorre as páginas de contas e normaliza os campos', async () => {
+        const account = (id: string): Record<string, unknown> => ({
+            id,
+            type: 'BANK',
+            subtype: 'CHECKING_ACCOUNT',
+            name: 'Conta',
+            marketingName: 'Conta Marketing',
+            number: '12345-6',
+            currencyCode: 'BRL',
+            ignored: true
+        });
+        const fetchMock: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValueOnce(json(200, { results: [account('a1')], page: 1, totalPages: 2 }))
+            .mockResolvedValueOnce(
+                json(200, { results: [{ ...account('a2'), subtype: null, marketingName: null }], page: 2, totalPages: 2 })
+            );
+        vi.stubGlobal('fetch', fetchMock);
+
+        const accounts = await driver.listAccounts(new PluggySession('k'), 'ITEM-1');
+
+        expect(accounts.map((entry) => entry.id)).toEqual(['a1', 'a2']);
+        expect(accounts[0]).toMatchObject({ marketingName: 'Conta Marketing', number: '12345-6' });
+        expect(accounts[1]).toMatchObject({ subtype: null, marketingName: null });
+        expect((fetchMock.mock.calls[0] as [string])[0]).toBe('https://pluggy.invalid/accounts?itemId=ITEM-1&page=1');
+        expect((fetchMock.mock.calls[1] as [string])[0]).toContain('page=2');
+    });
+
+    it('sem totalPages lê só a primeira página de contas e rejeita corpo fora do formato', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, { results: [] })));
+        expect(await driver.listAccounts(new PluggySession('k'), 'i')).toEqual([]);
+
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, { results: [{ id: 1 }] })));
+        await expect(driver.listAccounts(new PluggySession('k'), 'i')).rejects.toMatchObject({ reason: 'format_invalid' });
+    });
+
+    const TRANSACTION_BODY: Record<string, unknown> = {
+        id: 'tx-1',
+        date: '2026-10-05T03:00:00.000Z',
+        description: 'Pix enviado',
+        descriptionRaw: 'PIX ENVIADO RAW',
+        amount: -10.5,
+        currencyCode: 'BRL',
+        amountInAccountCurrency: null,
+        status: 'POSTED',
+        categoryId: '05000000',
+        paymentData: {
+            payer: null,
+            receiver: { name: 'Maria', documentNumber: { type: 'CPF', value: '000.000.001-91' } }
+        },
+        merchant: { name: 'Loja', businessName: 'Loja LTDA', cnpj: '00000000000191' },
+        creditCardMetadata: { installmentNumber: 2, totalInstallments: 3 }
+    };
+
+    it('lê a página v2 com cursor e mapeia pagamento, estabelecimento e parcelas', async () => {
+        const fetchMock: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(json(200, { items: [TRANSACTION_BODY], next: 'cursor-2' }));
+        vi.stubGlobal('fetch', fetchMock);
+
+        const page = await driver.listTransactions(new PluggySession('k'), {
+            accountId: 'acc-1',
+            from: '2026-10-01',
+            to: '2026-10-10',
+            cursor: 'cursor-1'
+        });
+
+        expect(page.next).toBe('cursor-2');
+        expect(page.items[0]).toMatchObject({
+            id: 'tx-1',
+            accountId: 'acc-1',
+            descriptionRaw: 'PIX ENVIADO RAW',
+            amount: -10.5,
+            paymentData: { payer: null, receiver: { name: 'Maria', documentNumber: '000.000.001-91' } },
+            merchant: { name: 'Loja', businessName: 'Loja LTDA', cnpj: '00000000000191' },
+            installmentNumber: 2,
+            installmentTotal: 3
+        });
+        const url: URL = new URL((fetchMock.mock.calls[0] as [string])[0]);
+        expect(url.pathname).toBe('/v2/transactions');
+        expect(Object.fromEntries(url.searchParams)).toEqual({
+            accountId: 'acc-1',
+            dateFrom: '2026-10-01',
+            dateTo: '2026-10-10',
+            after: 'cursor-1'
+        });
+    });
+
+    it('aceita results no lugar de items na v2, preenche os padrões e omite o cursor da primeira página', async () => {
+        const fetchMock: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValue(json(200, { results: [{ id: 'tx-2', date: '2026-10-05', description: 'X', amount: 1 }] }));
+        vi.stubGlobal('fetch', fetchMock);
+
+        const page = await driver.listTransactions(new PluggySession('k'), {
+            accountId: 'acc-1',
+            from: '2026-10-01',
+            to: '2026-10-10',
+            cursor: null
+        });
+
+        expect(page).toEqual({
+            items: [
+                {
+                    id: 'tx-2',
+                    accountId: 'acc-1',
+                    date: '2026-10-05',
+                    description: 'X',
+                    descriptionRaw: null,
+                    amount: 1,
+                    currencyCode: 'BRL',
+                    amountInAccountCurrency: null,
+                    status: 'POSTED',
+                    categoryId: null,
+                    paymentData: null,
+                    merchant: null,
+                    installmentNumber: null,
+                    installmentTotal: null
+                }
+            ],
+            next: null
+        });
+        expect(new URL((fetchMock.mock.calls[0] as [string])[0]).searchParams.has('after')).toBe(false);
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, {})));
+        expect((await driver.listTransactions(new PluggySession('k'), { accountId: 'a', from: 'x', to: 'y', cursor: null })).items).toEqual(
+            []
+        );
+    });
+
+    it('usa o endpoint antigo por página quando configurado', async () => {
+        const legacy: LivePluggyClientDriver = new LivePluggyClientDriver(
+            configOf({ PLUGGY_BASE_URL: 'https://pluggy.invalid', PLUGGY_TRANSACTIONS_API: 'legacy' })
+        );
+        const fetchMock: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValueOnce(json(200, { results: [TRANSACTION_BODY], page: 1, totalPages: 2 }))
+            .mockResolvedValueOnce(json(200, { results: [], page: 2, totalPages: 2 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const query = { accountId: 'acc-1', from: '2026-10-01', to: '2026-10-10' };
+
+        const first = await legacy.listTransactions(new PluggySession('k'), { ...query, cursor: null });
+        const second = await legacy.listTransactions(new PluggySession('k'), { ...query, cursor: first.next });
+
+        expect(first.next).toBe('2');
+        expect(second.next).toBeNull();
+        const url: URL = new URL((fetchMock.mock.calls[0] as [string])[0]);
+        expect(url.pathname).toBe('/transactions');
+        expect(Object.fromEntries(url.searchParams)).toEqual({
+            accountId: 'acc-1',
+            from: '2026-10-01',
+            to: '2026-10-10',
+            page: '1',
+            pageSize: '500'
+        });
+        expect(new URL((fetchMock.mock.calls[1] as [string])[0]).searchParams.get('page')).toBe('2');
+    });
+
+    it('propaga o 429 das leituras com o atraso informado', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(429, {}, { 'retry-after': '30' })));
+
         await expect(
-            driver.listTransactions(new PluggySession('k'), { accountId: 'a', from: null, cursor: null, pageSize: 50 })
-        ).rejects.toBeInstanceOf(PluggyOperationNotSupportedError);
+            driver.listTransactions(new PluggySession('k'), { accountId: 'a', from: 'x', to: 'y', cursor: null })
+        ).rejects.toMatchObject({ reason: 'rate_limited', retryAfterSeconds: 30 });
     });
 
     it('usa os caminhos configurados', async () => {

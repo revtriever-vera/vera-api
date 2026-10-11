@@ -1,6 +1,12 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { CONNECTION_STATUSES, CREDENTIAL_STATUSES, ITEM_OUTCOMES, MAX_ITEM_IDS_PER_REQUEST } from '../domain/bank-connections.types';
+import {
+    CONNECTION_STATUSES,
+    CREDENTIAL_STATUSES,
+    ITEM_OUTCOMES,
+    MAX_ITEM_IDS_PER_REQUEST,
+    SYNC_TRIGGERS
+} from '../domain/bank-connections.types';
 
 const CLIENT_SECRET_MIN_LENGTH: number = 16;
 const CLIENT_SECRET_MAX_LENGTH: number = 256;
@@ -113,4 +119,20 @@ export const connectItemsResponseSchema = z.object({
             })
         )
         .describe('One entry per distinct Item ID, in the order sent')
+});
+
+export const syncRequestedPayloadSchema = z.object({
+    connectionId: z.string().uuid(),
+    companyId: z.string().uuid(),
+    trigger: z.nativeEnum(SYNC_TRIGGERS)
+});
+
+export type SyncRequestedBody = z.infer<typeof syncRequestedPayloadSchema>;
+
+export const syncQueuedSchema = z.object({
+    queued: z.literal(true).describe('The synchronization was queued. Poll `GET /spending/connections` while `syncing` is true')
+});
+
+export const syncAllQueuedSchema = z.object({
+    queued: z.number().int().nonnegative().describe('How many connections were queued. Connections already syncing are left out')
 });

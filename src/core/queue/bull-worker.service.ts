@@ -9,7 +9,7 @@ import { AppContext } from '../context/app-context.port';
 import { TracingService } from '../observability/tracing.service';
 import { QueueLogService } from './queue-log.service';
 import { RedisConnection } from './redis.connection';
-import { QueueEnvelope, QueueHandlerPort } from './queue.types';
+import { QueueEnvelope, QueueHandlerPort, QueueWorkerOptions } from './queue.types';
 import { bullPrefixFromEnvironment } from '../../shared/config/bull-prefix';
 
 const CONCURRENCY: number = 5;
@@ -52,10 +52,14 @@ export class BullWorkerService implements OnApplicationBootstrap, OnModuleDestro
     }
 
     private startWorker(queue: QueueName, handlers: QueueHandlerPort[]): void {
+        const options: QueueWorkerOptions | undefined = handlers
+            .map((handler: QueueHandlerPort): QueueWorkerOptions | undefined => handler.workerOptions)
+            .find((candidate: QueueWorkerOptions | undefined): boolean => candidate !== undefined);
         const worker: Worker = new Worker(queue, async (job: Job) => this.dispatch(queue, handlers, job), {
             connection: this.redis.connection,
             prefix: bullPrefixFromEnvironment(),
-            concurrency: CONCURRENCY
+            concurrency: options?.concurrency ?? CONCURRENCY,
+            limiter: options?.limiter
         });
         worker.on('error', (error: Error) => {
             this.logs.connectionFailed(queue, 'consumer', error);

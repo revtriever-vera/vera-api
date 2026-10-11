@@ -5,6 +5,10 @@ import { ProviderEndpoint } from './bank-connections-log.service';
 
 const REQUESTS_TOTAL: string = 'vera_pluggy_requests_total';
 const CREDENTIALS_TOTAL: string = 'vera_pluggy_credentials_total';
+const SYNC_TOTAL: string = 'vera_pluggy_sync_total';
+const SYNC_DURATION: string = 'vera_pluggy_sync_duration_seconds';
+const TRANSACTIONS_FETCHED: string = 'vera_pluggy_transactions_fetched_total';
+const CONNECTIONS_GAUGE: string = 'vera_bank_connections';
 const HTTP_OK_FLOOR: number = 200;
 const HTTP_REDIRECT_FLOOR: number = 300;
 const HTTP_CLIENT_ERROR_FLOOR: number = 400;
@@ -35,6 +39,21 @@ export class BankConnectionsMetricsService {
 
     public providerRequest(endpoint: ProviderEndpoint, status: number | null): void {
         this.metrics.count(REQUESTS_TOTAL, { endpoint, status: statusClassOf(status) });
+    }
+
+    public syncFinished(trigger: string, result: string, durationSeconds: number): void {
+        this.metrics.count(SYNC_TOTAL, { trigger, result });
+        this.metrics.observe(SYNC_DURATION, durationSeconds);
+    }
+
+    public transactionsFetched(total: number): void {
+        if (total > 0) {
+            this.metrics.count(TRANSACTIONS_FETCHED, {}, total);
+        }
+    }
+
+    public connections(status: string, total: number): void {
+        this.metrics.gauge(CONNECTIONS_GAUGE, total, { status });
     }
 
     public credentials(action: CredentialAction, result: CredentialResult): void {

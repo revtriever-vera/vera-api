@@ -52,6 +52,28 @@ export class ConnectionNotFoundError extends AppError {
     }
 }
 
+export class SyncInProgressError extends AppError {
+    public constructor(connectionId: string) {
+        super({
+            code: 'connections.sync_in_progress',
+            status: 409,
+            detail: 'A synchronization is already running for this connection.',
+            meta: { connectionId }
+        });
+    }
+}
+
+export class ItemNotFoundError extends AppError {
+    public constructor(connectionId: string) {
+        super({
+            code: 'connections.item_not_found',
+            status: 422,
+            detail: 'The item no longer exists at Pluggy. Authorize it again and connect the new Item ID.',
+            meta: { connectionId }
+        });
+    }
+}
+
 export class SecretSafeValidationError extends AppError {
     public constructor(errors: readonly { readonly path: string; readonly code: string }[]) {
         super({

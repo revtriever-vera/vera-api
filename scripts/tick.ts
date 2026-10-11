@@ -19,7 +19,8 @@ const MESSAGE_TYPE_VALUES: string[] = Object.values(MESSAGE_TYPES);
 const TICK_TYPES_BY_QUEUE: Record<string, string[]> = {
     [QUEUES.catalog]: [MESSAGE_TYPES.catalogSyncTickRequested],
     [QUEUES.fixedIncome]: [MESSAGE_TYPES.fixedIncomeIndexSyncRequested],
-    [QUEUES.marketData]: [MESSAGE_TYPES.marketDataQuotesSweepRequested, MESSAGE_TYPES.marketDataReferenceRequested]
+    [QUEUES.marketData]: [MESSAGE_TYPES.marketDataQuotesSweepRequested, MESSAGE_TYPES.marketDataReferenceRequested],
+    [QUEUES.bankConnections]: [MESSAGE_TYPES.bankConnectionsSyncDailyRequested]
 };
 
 function connect(): Cluster | Redis {

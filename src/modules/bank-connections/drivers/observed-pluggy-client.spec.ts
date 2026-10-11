@@ -73,7 +73,8 @@ describe('ObservedPluggyClient', () => {
             auth: async () => client.authenticate(CREDENTIALS),
             item: async () => client.getItem(SESSION, 'i'),
             accounts: async () => client.listAccounts(SESSION, 'i'),
-            transactions: async () => client.listTransactions(SESSION, { accountId: 'a', from: null, cursor: null, pageSize: 50 })
+            transactions: async () =>
+                client.listTransactions(SESSION, { accountId: 'a', from: '2026-01-01', to: '2026-01-31', cursor: null })
         };
 
         await expect((calls[endpoint] as () => Promise<unknown>)()).rejects.toBe(error);
@@ -83,10 +84,10 @@ describe('ObservedPluggyClient', () => {
     });
 
     it('delega contas e transações quando dão certo', async () => {
-        const page = { results: [], nextCursor: null };
+        const page = { items: [], next: null };
         const { client } = build({ listAccounts: vi.fn().mockResolvedValue([]), listTransactions: vi.fn().mockResolvedValue(page) });
 
         expect(await client.listAccounts(SESSION, 'i')).toEqual([]);
-        expect(await client.listTransactions(SESSION, { accountId: 'a', from: null, cursor: null, pageSize: 50 })).toBe(page);
+        expect(await client.listTransactions(SESSION, { accountId: 'a', from: '2026-01-01', to: '2026-01-31', cursor: null })).toBe(page);
     });
 });

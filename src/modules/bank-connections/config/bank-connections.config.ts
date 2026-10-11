@@ -9,6 +9,12 @@ const DEFAULT_BASE_URL: string = 'https://api.pluggy.ai';
 const DEFAULT_TIMEOUT_MS: number = 10_000;
 const DEFAULT_AUTH_PATH: string = '/auth';
 const DEFAULT_ITEM_PATH: string = '/items';
+const DEFAULT_ACCOUNTS_PATH: string = '/accounts';
+const DEFAULT_TRANSACTIONS_V2_PATH: string = '/v2/transactions';
+const DEFAULT_TRANSACTIONS_LEGACY_PATH: string = '/transactions';
+const DEFAULT_SYNC_JOBS_PER_MINUTE: number = 30;
+const DEFAULT_SYNC_SPACING_MS: number = 2000;
+const DEFAULT_INITIAL_HISTORY_DAYS: number = 365;
 
 function apiPath(fallback: string): z.ZodType<string, z.ZodTypeDef, unknown> {
     return z.preprocess(
@@ -21,6 +27,8 @@ function apiPath(fallback: string): z.ZodType<string, z.ZodTypeDef, unknown> {
     );
 }
 
+const MAX_HISTORY_DAYS: number = 1825;
+
 const flag = z.preprocess(blankAsUndefined, z.enum(['true', 'false']).default('false'));
 
 const schema = z.object({
@@ -29,6 +37,17 @@ const schema = z.object({
     PLUGGY_HTTP_TIMEOUT_MS: z.preprocess(blankAsUndefined, z.coerce.number().int().positive().default(DEFAULT_TIMEOUT_MS)),
     PLUGGY_AUTH_PATH: apiPath(DEFAULT_AUTH_PATH),
     PLUGGY_ITEM_PATH: apiPath(DEFAULT_ITEM_PATH),
+    PLUGGY_ACCOUNTS_PATH: apiPath(DEFAULT_ACCOUNTS_PATH),
+    PLUGGY_TRANSACTIONS_V2_PATH: apiPath(DEFAULT_TRANSACTIONS_V2_PATH),
+    PLUGGY_TRANSACTIONS_LEGACY_PATH: apiPath(DEFAULT_TRANSACTIONS_LEGACY_PATH),
+    PLUGGY_TRANSACTIONS_API: z.preprocess(blankAsUndefined, z.enum(['v2', 'legacy']).default('v2')),
+    PLUGGY_SYNC_JOBS_PER_MINUTE: z.preprocess(blankAsUndefined, z.coerce.number().int().positive().default(DEFAULT_SYNC_JOBS_PER_MINUTE)),
+    PLUGGY_SYNC_SPACING_MS: z.preprocess(blankAsUndefined, z.coerce.number().int().nonnegative().default(DEFAULT_SYNC_SPACING_MS)),
+    PLUGGY_INITIAL_HISTORY_DAYS: z.preprocess(
+        blankAsUndefined,
+        z.coerce.number().int().positive().max(MAX_HISTORY_DAYS).default(DEFAULT_INITIAL_HISTORY_DAYS)
+    ),
+    PLUGGY_SHIFT_INSTALLMENT_DATES: flag,
     MOCK_PLUGGY_FORCE_401: flag,
     MOCK_PLUGGY_REVOKED_ITEMS: z.preprocess(blankAsUndefined, z.string().trim().optional())
 });
@@ -39,6 +58,14 @@ export interface BankConnectionsSettings {
     readonly PLUGGY_HTTP_TIMEOUT_MS: number;
     readonly PLUGGY_AUTH_PATH: string;
     readonly PLUGGY_ITEM_PATH: string;
+    readonly PLUGGY_ACCOUNTS_PATH: string;
+    readonly PLUGGY_TRANSACTIONS_V2_PATH: string;
+    readonly PLUGGY_TRANSACTIONS_LEGACY_PATH: string;
+    readonly PLUGGY_TRANSACTIONS_API: 'v2' | 'legacy';
+    readonly PLUGGY_SYNC_JOBS_PER_MINUTE: number;
+    readonly PLUGGY_SYNC_SPACING_MS: number;
+    readonly PLUGGY_INITIAL_HISTORY_DAYS: number;
+    readonly PLUGGY_SHIFT_INSTALLMENT_DATES: boolean;
     readonly PLUGGY_MOCK_ALLOWED: boolean;
     readonly MOCK_PLUGGY_FORCE_401: boolean;
     readonly MOCK_PLUGGY_REVOKED_ITEMS: readonly string[];
@@ -49,6 +76,31 @@ function revokedItemsOf(raw: string | undefined): string[] {
         .split(',')
         .map((entry: string): string => entry.trim().toLowerCase())
         .filter((entry: string): boolean => entry.length > 0);
+}
+
+function syncSettingsOf(
+    parsed: z.infer<typeof schema>
+): Pick<
+    BankConnectionsSettings,
+    | 'PLUGGY_ACCOUNTS_PATH'
+    | 'PLUGGY_TRANSACTIONS_V2_PATH'
+    | 'PLUGGY_TRANSACTIONS_LEGACY_PATH'
+    | 'PLUGGY_TRANSACTIONS_API'
+    | 'PLUGGY_SYNC_JOBS_PER_MINUTE'
+    | 'PLUGGY_SYNC_SPACING_MS'
+    | 'PLUGGY_INITIAL_HISTORY_DAYS'
+    | 'PLUGGY_SHIFT_INSTALLMENT_DATES'
+> {
+    return {
+        PLUGGY_ACCOUNTS_PATH: parsed.PLUGGY_ACCOUNTS_PATH,
+        PLUGGY_TRANSACTIONS_V2_PATH: parsed.PLUGGY_TRANSACTIONS_V2_PATH,
+        PLUGGY_TRANSACTIONS_LEGACY_PATH: parsed.PLUGGY_TRANSACTIONS_LEGACY_PATH,
+        PLUGGY_TRANSACTIONS_API: parsed.PLUGGY_TRANSACTIONS_API,
+        PLUGGY_SYNC_JOBS_PER_MINUTE: parsed.PLUGGY_SYNC_JOBS_PER_MINUTE,
+        PLUGGY_SYNC_SPACING_MS: parsed.PLUGGY_SYNC_SPACING_MS,
+        PLUGGY_INITIAL_HISTORY_DAYS: parsed.PLUGGY_INITIAL_HISTORY_DAYS,
+        PLUGGY_SHIFT_INSTALLMENT_DATES: parsed.PLUGGY_SHIFT_INSTALLMENT_DATES === 'true'
+    };
 }
 
 export function parseBankConnectionsConfig(env: NodeJS.ProcessEnv): BankConnectionsSettings {
@@ -63,6 +115,7 @@ export function parseBankConnectionsConfig(env: NodeJS.ProcessEnv): BankConnecti
         PLUGGY_HTTP_TIMEOUT_MS: parsed.PLUGGY_HTTP_TIMEOUT_MS,
         PLUGGY_AUTH_PATH: parsed.PLUGGY_AUTH_PATH,
         PLUGGY_ITEM_PATH: parsed.PLUGGY_ITEM_PATH,
+        ...syncSettingsOf(parsed),
         PLUGGY_MOCK_ALLOWED: env['IS_LOCAL'] === 'true',
         MOCK_PLUGGY_FORCE_401: parsed.MOCK_PLUGGY_FORCE_401 === 'true',
         MOCK_PLUGGY_REVOKED_ITEMS: revokedItemsOf(parsed.MOCK_PLUGGY_REVOKED_ITEMS)

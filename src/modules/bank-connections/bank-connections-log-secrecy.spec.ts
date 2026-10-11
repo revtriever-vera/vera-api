@@ -77,7 +77,7 @@ describe('sigilo do segredo da Pluggy', () => {
                 authenticate: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
                 getItem: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
                 listAccounts: () => Promise.resolve([]),
-                listTransactions: () => Promise.resolve({ results: [], nextCursor: null })
+                listTransactions: () => Promise.resolve({ items: [], next: null })
             }
         });
         outputs.push(await attempt(capture, async () => down.credentialsApplication.save(secret)));

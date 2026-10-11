@@ -1,4 +1,4 @@
-import { Insertable, Selectable } from 'kysely';
+import { Insertable, Selectable, Updateable } from 'kysely';
 import { BankConnectionAccounts, BankConnections, BankSyncRuns, PluggyCredentials } from '../../../core/database/generated/database.types';
 
 export type PluggyCredential = Selectable<PluggyCredentials>;
@@ -14,6 +14,13 @@ export const MAX_ACTIVE_CONNECTIONS: number = 20;
 export const MAX_ITEM_IDS_PER_REQUEST: number = 10;
 export const CONNECTION_LIST_LIMIT: number = 100;
 export const HINT_EDGE_LENGTH: number = 4;
+export const SYNC_ATTEMPTS: number = 3;
+export const SYNC_BACKOFF_MS: number = 60_000;
+export const KEPT_SYNC_RUNS: number = 30;
+export const RECENT_RUN_MINUTES: number = 15;
+export const STALE_RUN_MINUTES: number = 45;
+export const MAX_TRANSACTION_PAGES: number = 200;
+export const PRUNE_BATCH: number = 100;
 
 export const CREDENTIAL_STATUSES = {
     valid: 'valid',
@@ -39,7 +46,8 @@ export const STATUS_REASONS = {
     outdated: 'outdated',
     waitingUserInput: 'waiting_user_input',
     itemNotFound: 'item_not_found',
-    credentialsInvalid: 'credentials_invalid'
+    credentialsInvalid: 'credentials_invalid',
+    credentialsMissing: 'credentials_missing'
 } as const;
 
 export type StatusReason = (typeof STATUS_REASONS)[keyof typeof STATUS_REASONS];
@@ -59,6 +67,32 @@ export const SYNC_RUN_STATUSES = {
     partial: 'partial',
     failed: 'failed'
 } as const;
+
+export const SYNC_FAILURE_CODES = {
+    credentialsMissing: 'credentials_missing',
+    invalidCredentials: 'invalid_credentials',
+    itemNotFound: 'item_not_found',
+    providerUnavailable: 'provider_unavailable',
+    rateLimited: 'rate_limited',
+    accountFailed: 'account_failed',
+    interrupted: 'interrupted',
+    unexpected: 'unexpected'
+} as const;
+
+export type SyncFailureCode = (typeof SYNC_FAILURE_CODES)[keyof typeof SYNC_FAILURE_CODES];
+
+export type SyncRunStatus = (typeof SYNC_RUN_STATUSES)[keyof typeof SYNC_RUN_STATUSES];
+
+export interface SyncCounts {
+    readonly accounts: number;
+    readonly fetched: number;
+    readonly inserted: number;
+    readonly updated: number;
+    readonly duplicates: number;
+    readonly skippedPending: number;
+}
+
+export const EMPTY_SYNC_COUNTS: SyncCounts = { accounts: 0, fetched: 0, inserted: 0, updated: 0, duplicates: 0, skippedPending: 0 };
 
 export const ITEM_OUTCOMES = {
     connected: 'connected',
@@ -142,6 +176,16 @@ export interface ConnectionDraft {
 export interface ConnectionIdentity {
     readonly id: string;
     readonly companyId: string;
+}
+
+export type ConnectionStatePatch = Pick<
+    Updateable<BankConnections>,
+    'status' | 'statusReason' | 'providerStatus' | 'connectorName' | 'consentExpiresAt'
+>;
+
+export interface StatusCount {
+    readonly status: string;
+    readonly total: number;
 }
 
 export interface ConnectionDetails {

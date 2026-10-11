@@ -17,14 +17,16 @@ function driverOf(overrides: Parameters<typeof configOf>[0] = {}): MockPluggyCli
 }
 
 const SESSION: PluggySession = new PluggySession('mock-api-key');
+const ALL_FROM: string = '2000-01-01';
+const ALL_TO: string = '2999-12-31';
 
 async function allTransactions(driver: MockPluggyClientDriver, accountId: string): Promise<PluggyTransaction[]> {
     const collected: PluggyTransaction[] = [];
     let cursor: string | null = null;
     do {
-        const page: PluggyTransactionPage = await driver.listTransactions(SESSION, { accountId, from: null, cursor, pageSize: 10 });
-        collected.push(...page.results);
-        cursor = page.nextCursor;
+        const page: PluggyTransactionPage = await driver.listTransactions(SESSION, { accountId, from: ALL_FROM, to: ALL_TO, cursor });
+        collected.push(...page.items);
+        cursor = page.next;
     } while (cursor !== null);
     return collected;
 }
@@ -86,15 +88,15 @@ describe('MockPluggyClientDriver', () => {
         const driver: MockPluggyClientDriver = driverOf();
         const first: PluggyTransactionPage = await driver.listTransactions(SESSION, {
             accountId: 'nubank-card',
-            from: null,
-            cursor: null,
-            pageSize: 10
+            from: ALL_FROM,
+            to: ALL_TO,
+            cursor: null
         });
 
         const all: PluggyTransaction[] = await allTransactions(driver, 'nubank-card');
 
-        expect(first.results).toHaveLength(MOCK_PAGE_SIZE);
-        expect(first.nextCursor).toBe(String(MOCK_PAGE_SIZE));
+        expect(first.items).toHaveLength(MOCK_PAGE_SIZE);
+        expect(first.next).toBe(String(MOCK_PAGE_SIZE));
         expect(all.length).toBeGreaterThan(MOCK_PAGE_SIZE);
         expect(new Set(all.map((transaction: PluggyTransaction) => transaction.id)).size).toBe(all.length);
     });
@@ -117,15 +119,14 @@ describe('MockPluggyClientDriver', () => {
             transaction.description.startsWith('Pix enviado')
         );
         expect(pix).toMatchObject({
-            receiverName: 'Maria Souza',
-            receiverDocument: '00000000191',
+            paymentData: { payer: null, receiver: { name: 'Maria Souza', documentNumber: '00000000191' } },
             categoryId: '05000000',
             status: 'POSTED'
         });
         expect(checking.find((transaction: PluggyTransaction) => transaction.categoryId === '17000000')).toBeDefined();
     });
 
-    it('filtra por data inicial e trata cursor inválido como o começo', async () => {
+    it('filtra pela janela de datas e trata cursor inválido como o começo', async () => {
         const driver: MockPluggyClientDriver = driverOf();
         const all: PluggyTransaction[] = await allTransactions(driver, 'nubank-checking');
         const last: string = all[all.length - 1]?.date ?? '';
@@ -133,12 +134,12 @@ describe('MockPluggyClientDriver', () => {
         const since: PluggyTransactionPage = await driver.listTransactions(SESSION, {
             accountId: 'nubank-checking',
             from: last,
-            cursor: 'lixo',
-            pageSize: 10
+            to: last,
+            cursor: 'lixo'
         });
 
-        expect(since.results.length).toBeGreaterThan(0);
-        expect(since.results.every((transaction: PluggyTransaction) => transaction.date >= last)).toBe(true);
-        expect(since.nextCursor).toBeNull();
+        expect(since.items.length).toBeGreaterThan(0);
+        expect(since.items.every((transaction: PluggyTransaction) => transaction.date === last)).toBe(true);
+        expect(since.next).toBeNull();
     });
 });
