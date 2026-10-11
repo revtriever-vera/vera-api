@@ -1,0 +1,122 @@
+[
+  {
+    "symbol": "ACWI11",
+    "classKey": null,
+    "dollarExposure": false
+  },
+  {
+    "symbol": "BITH11",
+    "classKey": "cripto",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "BOVA11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "BOVV11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "BRAX11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "DIVO11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "ECOO11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "ETHE11",
+    "classKey": "cripto",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "EURP11",
+    "classKey": null,
+    "dollarExposure": false
+  },
+  {
+    "symbol": "FIND11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "GOLD11",
+    "classKey": null,
+    "dollarExposure": false
+  },
+  {
+    "symbol": "HASH11",
+    "classKey": "cripto",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "IMAB11",
+    "classKey": "rf_ipca",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "IRFM11",
+    "classKey": "rf_pre",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "ISUS11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "IVVB11",
+    "classKey": "acoes_eua",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "LFTS11",
+    "classKey": "rf_pos",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "MATB11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "NASD11",
+    "classKey": "acoes_eua",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "PIBB11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "QBTC11",
+    "classKey": "cripto",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "SMAL11",
+    "classKey": "acoes_br",
+    "dollarExposure": false
+  },
+  {
+    "symbol": "SPXI11",
+    "classKey": "acoes_eua",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "XINA11",
+    "classKey": null,
+    "dollarExposure": false
+  }
+]

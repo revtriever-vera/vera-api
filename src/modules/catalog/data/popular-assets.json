@@ -1,0 +1,298 @@
+{
+  "acoes_br": [
+    {
+      "market": "B3",
+      "externalId": "ITUB4"
+    },
+    {
+      "market": "B3",
+      "externalId": "PETR4"
+    },
+    {
+      "market": "B3",
+      "externalId": "VALE3"
+    },
+    {
+      "market": "B3",
+      "externalId": "WEGE3"
+    },
+    {
+      "market": "B3",
+      "externalId": "BBAS3"
+    },
+    {
+      "market": "B3",
+      "externalId": "BOVA11"
+    },
+    {
+      "market": "B3",
+      "externalId": "BBDC4"
+    },
+    {
+      "market": "B3",
+      "externalId": "ABEV3"
+    },
+    {
+      "market": "B3",
+      "externalId": "RENT3"
+    },
+    {
+      "market": "B3",
+      "externalId": "B3SA3"
+    },
+    {
+      "market": "B3",
+      "externalId": "SUZB3"
+    },
+    {
+      "market": "B3",
+      "externalId": "ITSA4"
+    },
+    {
+      "market": "B3",
+      "externalId": "EGIE3"
+    },
+    {
+      "market": "B3",
+      "externalId": "TAEE11"
+    },
+    {
+      "market": "B3",
+      "externalId": "BBSE3"
+    }
+  ],
+  "fii": [
+    {
+      "market": "B3",
+      "externalId": "HGLG11"
+    },
+    {
+      "market": "B3",
+      "externalId": "KNRI11"
+    },
+    {
+      "market": "B3",
+      "externalId": "MXRF11"
+    },
+    {
+      "market": "B3",
+      "externalId": "XPML11"
+    },
+    {
+      "market": "B3",
+      "externalId": "VISC11"
+    },
+    {
+      "market": "B3",
+      "externalId": "BTLG11"
+    },
+    {
+      "market": "B3",
+      "externalId": "XPLG11"
+    },
+    {
+      "market": "B3",
+      "externalId": "KNCR11"
+    },
+    {
+      "market": "B3",
+      "externalId": "TGAR11"
+    },
+    {
+      "market": "B3",
+      "externalId": "PVBI11"
+    }
+  ],
+  "acoes_eua": [
+    {
+      "market": "B3",
+      "externalId": "IVVB11"
+    },
+    {
+      "market": "US",
+      "externalId": "VOO"
+    },
+    {
+      "market": "B3",
+      "externalId": "NASD11"
+    },
+    {
+      "market": "B3",
+      "externalId": "SPXI11"
+    },
+    {
+      "market": "US",
+      "externalId": "AAPL"
+    },
+    {
+      "market": "US",
+      "externalId": "MSFT"
+    },
+    {
+      "market": "B3",
+      "externalId": "AAPL34"
+    },
+    {
+      "market": "B3",
+      "externalId": "MSFT34"
+    },
+    {
+      "market": "US",
+      "externalId": "GOOGL"
+    },
+    {
+      "market": "US",
+      "externalId": "AMZN"
+    },
+    {
+      "market": "US",
+      "externalId": "NVDA"
+    },
+    {
+      "market": "US",
+      "externalId": "SPY"
+    },
+    {
+      "market": "US",
+      "externalId": "QQQ"
+    },
+    {
+      "market": "US",
+      "externalId": "IVV"
+    },
+    {
+      "market": "B3",
+      "externalId": "AMZO34"
+    }
+  ],
+  "reits": [
+    {
+      "market": "US",
+      "externalId": "O"
+    },
+    {
+      "market": "US",
+      "externalId": "VNQ"
+    },
+    {
+      "market": "US",
+      "externalId": "SCHH"
+    },
+    {
+      "market": "US",
+      "externalId": "XLRE"
+    },
+    {
+      "market": "US",
+      "externalId": "PLD"
+    },
+    {
+      "market": "US",
+      "externalId": "AMT"
+    },
+    {
+      "market": "US",
+      "externalId": "IYR"
+    },
+    {
+      "market": "US",
+      "externalId": "EQIX"
+    },
+    {
+      "market": "US",
+      "externalId": "PSA"
+    },
+    {
+      "market": "US",
+      "externalId": "SPG"
+    }
+  ],
+  "cripto": [
+    {
+      "market": "B3",
+      "externalId": "ETHE11"
+    },
+    {
+      "market": "B3",
+      "externalId": "HASH11"
+    },
+    {
+      "market": "B3",
+      "externalId": "QBTC11"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "bitcoin"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "ethereum"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "tether"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "binancecoin"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "solana"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "ripple"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "usd-coin"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "dogecoin"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "cardano"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "tron"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "chainlink"
+    },
+    {
+      "market": "CRYPTO",
+      "externalId": "avalanche-2"
+    }
+  ],
+  "tesouro": [
+    {
+      "market": "TESOURO",
+      "externalId": "selic:2029-03-01"
+    },
+    {
+      "market": "TESOURO",
+      "externalId": "prefixado:2029-01-01"
+    },
+    {
+      "market": "TESOURO",
+      "externalId": "prefixado-juros-semestrais:2033-01-01"
+    },
+    {
+      "market": "TESOURO",
+      "externalId": "ipca:2035-05-15"
+    },
+    {
+      "market": "TESOURO",
+      "externalId": "ipca-juros-semestrais:2040-08-15"
+    },
+    {
+      "market": "TESOURO",
+      "externalId": "renda-mais:2049-12-15"
+    }
+  ]
+}
