@@ -19,4 +19,8 @@ export class CompanyDomain {
     public async findById(id: string): Promise<Company | null> {
         return this.companies.findById(id);
     }
+
+    public async eraseCompany(companyId: string): Promise<boolean> {
+        return this.companies.hardDeleteById(companyId);
+    }
 }

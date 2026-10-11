@@ -33,4 +33,12 @@ describe('AuthIdentityDomain', () => {
         expect(find).toHaveBeenCalledWith('google', 'sub-1');
         expect(touchLogin).toHaveBeenCalledWith('identity-1', expect.any(Date));
     });
+
+    it('lista as identidades do usuário', async () => {
+        const findByUser: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue([{ id: 'identity-1' }]);
+        const domain: AuthIdentityDomain = new AuthIdentityDomain({ findByUser } as unknown as AuthIdentitiesRepository);
+
+        await expect(domain.listForUser('user-1')).resolves.toEqual([{ id: 'identity-1' }]);
+        expect(findByUser).toHaveBeenCalledWith('user-1');
+    });
 });

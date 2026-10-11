@@ -39,4 +39,12 @@ describe('SessionDomain', () => {
         expect(repository['rotate']).toHaveBeenCalledWith('a', 'b');
         expect(repository['revoke']).toHaveBeenCalledWith('a');
     });
+
+    it('lista as sessões ativas do usuário', async () => {
+        const findActive: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue([{ id: 'one' }]);
+        const domain: SessionDomain = new SessionDomain({ findActive } as unknown as SessionsRepository);
+
+        await expect(domain.listActive('user-1')).resolves.toEqual([{ id: 'one' }]);
+        expect(findActive).toHaveBeenCalledWith('user-1', expect.any(Date));
+    });
 });

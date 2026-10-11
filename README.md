@@ -87,6 +87,10 @@ O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reapr
 
 `npm run codegen` regenera `src/core/database/generated/database.types.ts` a partir do banco migrado; o arquivo gerado é versionado.
 
+#### Exclusão de conta e dados pessoais
+
+Toda tabela com a coluna `companyId` precisa de chave estrangeira para `Companies` com `ON DELETE CASCADE`: `DELETE /account` apaga a linha da company e deixa o banco apagar o resto. O spec `test/integration/account-deletion-cascade.int-spec.ts` consulta o catálogo do Postgres e quebra o CI de quem esquecer. O que o cascade não alcança (segredo cifrado, chave no KMS, arquivo, cache, fila) entra por uma subclasse de `AccountDataEraserPort`, e o que a pessoa pode baixar por uma de `AccountDataExporterPort` (ambas em `src/modules/identity/services/`). Basta registrar a subclasse como provider no módulo dono; o `AccountDataRegistry` as descobre sozinho.
+
 ## Verificação
 
 ```bash

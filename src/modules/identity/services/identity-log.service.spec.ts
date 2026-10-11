@@ -2,10 +2,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { LogService } from '../../../core/observability/log.service';
 import { IdentityLogService } from './identity-log.service';
 
-function build(): { logs: IdentityLogService; info: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn> } {
+function build(): {
+    logs: IdentityLogService;
+    info: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+} {
     const info: ReturnType<typeof vi.fn> = vi.fn();
     const warn: ReturnType<typeof vi.fn> = vi.fn();
-    return { logs: new IdentityLogService({ info, warn } as unknown as LogService), info, warn };
+    const error: ReturnType<typeof vi.fn> = vi.fn();
+    return { logs: new IdentityLogService({ info, warn, error } as unknown as LogService), info, warn, error };
 }
 
 describe('IdentityLogService', () => {
@@ -62,6 +68,28 @@ describe('IdentityLogService', () => {
                 meta: { provider: 'google', reason: 'identity.invalid_google_token' }
             },
             { message: 'email not provided by provider', identifier: 'identity-provisioning', meta: { provider: 'facebook' } }
+        ]);
+    });
+
+    it('registra exportação e exclusão de conta só com áreas e contagens', () => {
+        const { logs, info, error } = build();
+
+        logs.exportRequested(['assets']);
+        logs.deletionStarted();
+        logs.erasureAreaDone('assets', 4);
+        logs.erasureAreaFailed('assets', new TypeError('contém dado pessoal'));
+        logs.erasureAreaFailed('spending', 'texto solto');
+        logs.accountDeleted(['assets']);
+
+        expect(info.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            { message: 'account export requested', identifier: 'identity-account', meta: { areas: ['assets'] } },
+            { message: 'account deletion started', identifier: 'identity-account' },
+            { message: 'account erasure area done', identifier: 'identity-account', meta: { area: 'assets', erased: 4 } },
+            { message: 'account deleted', identifier: 'identity-account', meta: { areas: ['assets'] } }
+        ]);
+        expect(error.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            { message: 'account erasure area failed', identifier: 'identity-account', meta: { area: 'assets', errorName: 'TypeError' } },
+            { message: 'account erasure area failed', identifier: 'identity-account', meta: { area: 'spending', errorName: 'string' } }
         ]);
     });
 });

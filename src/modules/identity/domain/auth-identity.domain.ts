@@ -24,4 +24,8 @@ export class AuthIdentityDomain {
     public async touchLogin(identityId: string): Promise<void> {
         await this.identities.touchLogin(identityId, new Date());
     }
+
+    public async listForUser(userId: string): Promise<AuthIdentity[]> {
+        return this.identities.findByUser(userId);
+    }
 }

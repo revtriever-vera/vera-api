@@ -4,6 +4,7 @@ import { LoginProvider } from '../domain/identity.types';
 
 const AUTH: string = 'identity-auth';
 const PROVISIONING: string = 'identity-provisioning';
+const ACCOUNT: string = 'identity-account';
 const REFRESH_REUSE: string = 'auth-refresh-reuse';
 
 @Injectable()
@@ -44,5 +45,29 @@ export class IdentityLogService {
             identifier: REFRESH_REUSE,
             meta: { familyId, revoked, userId }
         });
+    }
+
+    public exportRequested(areas: readonly string[]): void {
+        this.logService.info({ message: 'account export requested', identifier: ACCOUNT, meta: { areas } });
+    }
+
+    public deletionStarted(): void {
+        this.logService.info({ message: 'account deletion started', identifier: ACCOUNT });
+    }
+
+    public erasureAreaDone(area: string, erased: number): void {
+        this.logService.info({ message: 'account erasure area done', identifier: ACCOUNT, meta: { area, erased } });
+    }
+
+    public erasureAreaFailed(area: string, error: unknown): void {
+        this.logService.error({
+            message: 'account erasure area failed',
+            identifier: ACCOUNT,
+            meta: { area, errorName: error instanceof Error ? error.name : typeof error }
+        });
+    }
+
+    public accountDeleted(areas: readonly string[]): void {
+        this.logService.info({ message: 'account deleted', identifier: ACCOUNT, meta: { areas } });
     }
 }

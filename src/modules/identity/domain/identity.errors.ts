@@ -100,3 +100,47 @@ export class EmailInUseError extends AppError {
         });
     }
 }
+
+export class ForbiddenError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.forbidden',
+            status: 403,
+            detail: 'Only the owner of the company can perform this action.'
+        });
+    }
+}
+
+export class ConfirmationMismatchError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.confirmation_mismatch',
+            status: 422,
+            detail: 'The email typed to confirm does not match the email of the signed-in user.'
+        });
+    }
+}
+
+export class AccountErasureFailedError extends AppError {
+    public constructor(area: string, cause: unknown) {
+        super({
+            code: 'identity.erasure_failed',
+            status: 500,
+            detail: `Erasing the data of area "${area}" failed; nothing was deleted from the database.`,
+            meta: { area },
+            cause
+        });
+    }
+}
+
+export class AccountExportFailedError extends AppError {
+    public constructor(area: string, cause: unknown) {
+        super({
+            code: 'identity.export_failed',
+            status: 500,
+            detail: `Exporting the data of area "${area}" failed; no partial file was produced.`,
+            meta: { area },
+            cause
+        });
+    }
+}

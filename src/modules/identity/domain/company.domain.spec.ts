@@ -18,4 +18,12 @@ describe('CompanyDomain', () => {
 
         await expect(domain.findById('company-1')).resolves.toEqual({ id: 'company-1' });
     });
+
+    it('apaga a company fisicamente pelo id', async () => {
+        const hardDeleteById: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(true);
+        const domain: CompanyDomain = new CompanyDomain({ hardDeleteById } as unknown as CompaniesRepository);
+
+        await expect(domain.eraseCompany('company-1')).resolves.toBe(true);
+        expect(hardDeleteById).toHaveBeenCalledWith('company-1');
+    });
 });
