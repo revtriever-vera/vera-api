@@ -13,4 +13,13 @@ describe('AllocationMetricsService', () => {
         expect(count).toHaveBeenNthCalledWith(1, 'vera_allocation_class_actions_total', { action: 'merged' }, 1);
         expect(count).toHaveBeenNthCalledWith(2, 'vera_allocation_class_actions_total', { action: 'seeded' }, 8);
     });
+
+    it('conta gravações de meta por escopo e resultado', () => {
+        const count: ReturnType<typeof vi.fn> = vi.fn();
+        const metrics: AllocationMetricsService = new AllocationMetricsService({ count } as unknown as MetricsService);
+
+        metrics.targetSave('classes', 'must_sum_100');
+
+        expect(count).toHaveBeenCalledWith('vera_allocation_target_saves_total', { scope: 'classes', result: 'must_sum_100' });
+    });
 });

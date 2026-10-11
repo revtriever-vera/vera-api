@@ -8,28 +8,37 @@ import { ClassAssignmentService } from '../services/class-assignment.service';
 import { ClassDisplayNameService } from '../services/class-display-name.service';
 import { ClassReaderService } from '../services/class-reader.service';
 import { ClassResolverService } from '../services/class-resolver.service';
+import { PortfolioSettingsReaderService } from '../services/portfolio-settings-reader.service';
 import { AssetClassApplication } from './asset-class.application';
 import { ClassAssignmentApplication } from './class-assignment.application';
+import { ClassTargetsApplication } from './class-targets.application';
+import { PortfolioSettingsApplication } from './portfolio-settings.application';
 
 @Module({
     imports: [AllocationDomainModule, ContextModule, ObservabilityModule],
     providers: [
         AssetClassApplication,
         ClassAssignmentApplication,
+        ClassTargetsApplication,
+        PortfolioSettingsApplication,
         AllocationLogService,
         AllocationMetricsService,
         ClassAssignmentService,
         ClassResolverService,
         ClassReaderService,
-        ClassDisplayNameService
+        ClassDisplayNameService,
+        PortfolioSettingsReaderService
     ],
     exports: [
         AssetClassApplication,
         ClassAssignmentApplication,
+        ClassTargetsApplication,
+        PortfolioSettingsApplication,
         ClassAssignmentService,
         ClassResolverService,
         ClassReaderService,
-        ClassDisplayNameService
+        ClassDisplayNameService,
+        PortfolioSettingsReaderService
     ]
 })
 export class AllocationApplicationModule {}

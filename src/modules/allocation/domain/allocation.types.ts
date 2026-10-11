@@ -1,8 +1,11 @@
 import { Insertable, Selectable } from 'kysely';
-import { AssetClassAssignments, AssetClasses } from '../../../core/database/generated/database.types';
+import { AssetClassAssignments, AssetClasses, PortfolioSettings } from '../../../core/database/generated/database.types';
 
 export type AssetClass = Selectable<AssetClasses>;
 export type ClassAssignment = Selectable<AssetClassAssignments>;
+
+export type PortfolioSettingsRow = Selectable<PortfolioSettings>;
+export type NewPortfolioSettings = Insertable<PortfolioSettings>;
 
 export type NewAssetClass = Insertable<AssetClasses>;
 export type NewClassAssignment = Insertable<AssetClassAssignments>;
@@ -45,6 +48,51 @@ export const MAX_CLASSES_PER_COMPANY: number = 30;
 export const CLASS_NAME_MIN_LENGTH: number = 1;
 export const CLASS_NAME_MAX_LENGTH: number = 40;
 export const MAX_BPS: number = 10000;
+export const TOTAL_BPS: number = 10000;
+
+export const BASE_CURRENCIES = {
+    brl: 'BRL',
+    usd: 'USD'
+} as const;
+
+export type BaseCurrency = (typeof BASE_CURRENCIES)[keyof typeof BASE_CURRENCIES];
+
+export const DEFAULT_BASE_CURRENCY: BaseCurrency = BASE_CURRENCIES.brl;
+export const DEFAULT_TOLERANCE_BPS: number = 500;
+export const MAX_TOLERANCE_BPS: number = 2000;
+
+export const TARGET_SCOPES = {
+    classes: 'classes',
+    assets: 'assets',
+    reset: 'reset'
+} as const;
+
+export type TargetScope = (typeof TARGET_SCOPES)[keyof typeof TARGET_SCOPES];
+
+export const TARGET_RESULTS = {
+    saved: 'saved',
+    mustSum100: 'must_sum_100',
+    incomplete: 'incomplete',
+    failed: 'failed'
+} as const;
+
+export type TargetResult = (typeof TARGET_RESULTS)[keyof typeof TARGET_RESULTS];
+
+export interface PortfolioSettingsView {
+    readonly baseCurrency: BaseCurrency;
+    readonly toleranceBps: number;
+}
+
+export interface AssetTargetView {
+    readonly subjectType: string;
+    readonly subjectId: string;
+    readonly targetInClassBps: number;
+}
+
+export interface AssetTargetsView {
+    readonly classId: string;
+    readonly targets: AssetTargetView[];
+}
 
 export interface AssetClassView {
     readonly id: string;

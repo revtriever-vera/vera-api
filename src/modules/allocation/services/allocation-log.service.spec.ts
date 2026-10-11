@@ -27,4 +27,17 @@ describe('AllocationLogService', () => {
             }
         ]);
     });
+
+    it('registra metas e configurações sem os valores das metas', () => {
+        const info: ReturnType<typeof vi.fn> = vi.fn();
+        const logs: AllocationLogService = new AllocationLogService({ info } as unknown as LogService);
+
+        logs.targetsSaved('assets', 'class-1');
+        logs.settingsChanged('USD', 300);
+
+        expect(info.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            { message: 'allocation targets saved', identifier: 'allocation-targets', meta: { scope: 'assets', classId: 'class-1' } },
+            { message: 'portfolio settings changed', identifier: 'allocation-settings', meta: { baseCurrency: 'USD', toleranceBps: 300 } }
+        ]);
+    });
 });
