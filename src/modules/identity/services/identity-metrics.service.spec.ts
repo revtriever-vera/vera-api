@@ -22,4 +22,15 @@ describe('IdentityMetricsService', () => {
         expect(count).toHaveBeenCalledWith('vera_auth_logins_total', { provider: 'facebook', outcome: 'new_account' });
         expect(observe).toHaveBeenCalledWith('vera_auth_provider_latency_seconds', 0.4, { provider: 'facebook' });
     });
+
+    it('conta exportação e exclusão de conta por desfecho', () => {
+        const count: ReturnType<typeof vi.fn> = vi.fn();
+        const metrics: IdentityMetricsService = new IdentityMetricsService({ count } as unknown as MetricsService);
+
+        metrics.accountExport('failed');
+        metrics.accountDeletion('erasure_failed');
+
+        expect(count).toHaveBeenCalledWith('vera_account_exports_total', { outcome: 'failed' });
+        expect(count).toHaveBeenCalledWith('vera_account_deletions_total', { outcome: 'erasure_failed' });
+    });
 });
