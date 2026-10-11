@@ -37,22 +37,33 @@ export class PositionsController {
     })
     @ApiZodBody(createPositionSchema)
     @ApiZodResponse({ status: 201, description: 'Position created', schema: positionViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 404,
-        description: 'The asset (catalog.asset_not_found) or the class (allocation.class_not_found) does not exist'
+        description: 'The asset (catalog.asset_not_found) or the class (allocation.class_not_found) does not exist',
+        example: { type: 'catalog.asset_not_found', title: 'AssetNotFoundError', status: 404 }
     })
     @ApiProblemResponse({
         status: 409,
         description:
-            'The asset is already in the portfolio (positions.asset_already_in_portfolio); meta.positionId is the existing position'
+            'The asset is already in the portfolio (positions.asset_already_in_portfolio); meta.positionId is the existing position',
+        example: { type: 'positions.asset_already_in_portfolio', title: 'AssetAlreadyInPortfolioError', status: 409 }
     })
     @ApiProblemResponse({
         status: 422,
         description:
             'Too many decimal places for the asset (positions.invalid_quantity), no class to record (positions.class_required), ' +
-            'asset no longer listed (positions.asset_not_available) or position limit reached (positions.limit_reached)'
+            'asset no longer listed (positions.asset_not_available) or position limit reached (positions.limit_reached)',
+        example: { type: 'positions.invalid_quantity', title: 'InvalidQuantityError', status: 422 }
     })
     public async create(@Body() body: CreatePositionDto): Promise<PositionView> {
         return this.positions.create(body);
@@ -62,8 +73,16 @@ export class PositionsController {
     @ApiOperation({ summary: 'Read a position', description: 'Returns one position of the company with its class.' })
     @ApiParam(POSITION_ID_PARAM)
     @ApiZodResponse({ status: 200, description: 'Position', schema: positionViewSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'positions.position_not_found', title: 'PositionNotFoundError', status: 404 }
+    })
     public async get(@Param() params: PositionIdParamsDto): Promise<PositionView> {
         return this.positions.get(params.id);
     }
@@ -77,10 +96,26 @@ export class PositionsController {
     @ApiParam(POSITION_ID_PARAM)
     @ApiZodBody(updatePositionSchema)
     @ApiZodResponse({ status: 200, description: 'Position after the change', schema: positionViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
-    @ApiProblemResponse({ status: 422, description: 'Too many decimal places for the asset (positions.invalid_quantity)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'positions.position_not_found', title: 'PositionNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Too many decimal places for the asset (positions.invalid_quantity)',
+        example: { type: 'positions.invalid_quantity', title: 'InvalidQuantityError', status: 422 }
+    })
     public async update(@Param() params: PositionIdParamsDto, @Body() body: UpdatePositionDto): Promise<PositionView> {
         return this.positions.update(params.id, body);
     }
@@ -93,8 +128,16 @@ export class PositionsController {
     })
     @ApiParam(POSITION_ID_PARAM)
     @ApiNoContentResponse({ description: 'Position removed' })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'positions.position_not_found', title: 'PositionNotFoundError', status: 404 }
+    })
     public async remove(@Param() params: PositionIdParamsDto): Promise<void> {
         await this.positions.remove(params.id);
     }

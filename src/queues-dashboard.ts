@@ -6,7 +6,8 @@ import { Queue } from 'bullmq';
 import basicAuth from 'express-basic-auth';
 import { AppConfig } from './config/app.config';
 import { RedisConnection } from './core/queue/redis.connection';
-import { BULL_PREFIX, QUEUES, QueueName } from './shared/constants/queues.constants';
+import { QUEUES, QueueName } from './shared/constants/queues.constants';
+import { bullPrefixFromEnvironment } from './shared/config/bull-prefix';
 
 const DASHBOARD_PATH: string = '/admin/queues';
 
@@ -17,7 +18,7 @@ export function setupQueuesDashboard(app: INestApplication, config: AppConfig): 
 
     createBullBoard({
         queues: Object.values<QueueName>(QUEUES).map(
-            (name: QueueName) => new BullMQAdapter(new Queue(name, { connection: redis.connection, prefix: BULL_PREFIX }))
+            (name: QueueName) => new BullMQAdapter(new Queue(name, { connection: redis.connection, prefix: bullPrefixFromEnvironment() }))
         ),
         serverAdapter: adapter
     });

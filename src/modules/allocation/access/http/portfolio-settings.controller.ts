@@ -27,7 +27,11 @@ export class AllocationSettingsController {
             'Returns the base currency and the tolerance band. The first read creates the defaults: BRL and 500 (5 percentage points).'
     })
     @ApiZodResponse({ status: 200, description: 'Portfolio settings', schema: portfolioSettingsSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async get(): Promise<PortfolioSettingsView> {
         return this.settings.get();
     }
@@ -42,8 +46,16 @@ export class AllocationSettingsController {
     })
     @ApiZodBody(updatePortfolioSettingsSchema)
     @ApiZodResponse({ status: 200, description: 'Portfolio settings after the change', schema: portfolioSettingsSchema })
-    @ApiProblemResponse({ status: 400, description: 'Invalid payload (zod validation details in meta.errors)' })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Invalid payload (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async update(@Body() body: UpdatePortfolioSettingsDto): Promise<PortfolioSettingsView> {
         return this.settings.update(body);
     }

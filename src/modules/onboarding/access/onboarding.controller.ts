@@ -25,7 +25,11 @@ export class OnboardingController {
         description: 'Creates the company onboarding row on the first call. `status` tells the front which screen to resume.'
     })
     @ApiZodResponse({ status: 200, description: 'Onboarding state', schema: onboardingStateSchema })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async current(): Promise<OnboardingStateView> {
         return this.state.current();
     }
@@ -36,7 +40,11 @@ export class OnboardingController {
         description: 'Asks every registered module for its area summary. An area with no module, or whose module failed, is null.'
     })
     @ApiZodResponse({ status: 200, description: 'Per area summary', schema: onboardingSummarySchema })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async summary(): Promise<OnboardingAreaSummaries> {
         return this.summaryApplication.summary();
     }
@@ -45,8 +53,16 @@ export class OnboardingController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Leave the welcome screen', description: 'Idempotent.' })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
-    @ApiProblemResponse({ status: 409, description: 'Onboarding already closed (onboarding.already_closed)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Onboarding already closed (onboarding.already_closed)',
+        example: { type: 'onboarding.already_closed', title: 'OnboardingAlreadyClosedError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async start(): Promise<OnboardingStateView> {
         return this.state.start();
     }
@@ -58,9 +74,21 @@ export class OnboardingController {
         description: '`step` is `assets` or `banks`. Clears a previous skip of the same step. Idempotent.'
     })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
-    @ApiProblemResponse({ status: 400, description: 'Unknown step (onboarding.unknown_step)' })
-    @ApiProblemResponse({ status: 409, description: 'Onboarding already closed (onboarding.already_closed)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Unknown step (onboarding.unknown_step)',
+        example: { type: 'onboarding.unknown_step', title: 'UnknownOnboardingStepError', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Onboarding already closed (onboarding.already_closed)',
+        example: { type: 'onboarding.already_closed', title: 'OnboardingAlreadyClosedError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async complete(@Param('step') step: string): Promise<OnboardingStateView> {
         return this.state.completeStep(step);
     }
@@ -72,9 +100,21 @@ export class OnboardingController {
         description: '`step` is `assets` or `banks`. Clears a previous completion of the same step. Idempotent.'
     })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
-    @ApiProblemResponse({ status: 400, description: 'Unknown step (onboarding.unknown_step)' })
-    @ApiProblemResponse({ status: 409, description: 'Onboarding already closed (onboarding.already_closed)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Unknown step (onboarding.unknown_step)',
+        example: { type: 'onboarding.unknown_step', title: 'UnknownOnboardingStepError', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Onboarding already closed (onboarding.already_closed)',
+        example: { type: 'onboarding.already_closed', title: 'OnboardingAlreadyClosedError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async skip(@Param('step') step: string): Promise<OnboardingStateView> {
         return this.state.skipStep(step);
     }
@@ -83,8 +123,16 @@ export class OnboardingController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Go to the dashboard', description: 'Closes the onboarding for good. Idempotent.' })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
-    @ApiProblemResponse({ status: 409, description: 'Onboarding was dismissed (onboarding.already_closed)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Onboarding was dismissed (onboarding.already_closed)',
+        example: { type: 'onboarding.already_closed', title: 'OnboardingAlreadyClosedError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async finish(): Promise<OnboardingStateView> {
         return this.state.finish();
     }
@@ -93,8 +141,16 @@ export class OnboardingController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Skip the whole setup', description: 'Closes the onboarding for good. Idempotent.' })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
-    @ApiProblemResponse({ status: 409, description: 'Onboarding was finished (onboarding.already_closed)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Onboarding was finished (onboarding.already_closed)',
+        example: { type: 'onboarding.already_closed', title: 'OnboardingAlreadyClosedError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async dismiss(): Promise<OnboardingStateView> {
         return this.state.dismiss();
     }

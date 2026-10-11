@@ -58,7 +58,7 @@ export class QuoteReaderService {
                     QUEUES.marketData,
                     MESSAGE_TYPES.marketDataQuoteOndemandRequested,
                     { assetId: asset.id },
-                    { jobId: `quote-ondemand-${asset.id}-${day}` }
+                    { jobId: `quote-ondemand-${asset.id}-${day}`, retryFailed: true }
                 )
             )
         );

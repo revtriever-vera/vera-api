@@ -31,9 +31,21 @@ export class AccountController {
             'It is delivered whole or not at all: a module that fails to export turns the answer into a 500.'
     })
     @ApiZodResponse({ status: 200, description: 'JSON attachment vera-export-<date>.json', schema: accountExportSchema })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
-    @ApiProblemResponse({ status: 429, description: 'Too many exports for this user (core.too_many_attempts)' })
-    @ApiProblemResponse({ status: 500, description: 'An area failed to export (identity.export_failed, meta.area)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'Too many exports for this user (core.too_many_attempts)',
+        example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
+    })
+    @ApiProblemResponse({
+        status: 500,
+        description: 'An area failed to export (identity.export_failed, meta.area)',
+        example: { type: 'identity.export_failed', title: 'AccountExportFailedError', status: 500 }
+    })
     public async exportData(@Res({ passthrough: true }) res: Response): Promise<AccountExportFile> {
         const file: AccountExportFile = await this.exportApplication.export();
         res.setHeader('Content-Disposition', `attachment; filename="vera-export-${file.exportedAt.slice(0, DATE_LENGTH)}.json"`);
@@ -49,11 +61,31 @@ export class AccountController {
             'then the company row is deleted and the foreign keys cascade. Clears the rt_refresh cookie.'
     })
     @ApiZodBody(deleteAccountSchema)
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
-    @ApiProblemResponse({ status: 403, description: 'Only the owner can delete the company (identity.forbidden)' })
-    @ApiProblemResponse({ status: 422, description: 'Typed email does not match (identity.confirmation_mismatch)' })
-    @ApiProblemResponse({ status: 429, description: 'Too many attempts for this user (core.too_many_attempts)' })
-    @ApiProblemResponse({ status: 500, description: 'An area failed to erase, nothing was deleted (identity.erasure_failed, meta.area)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 403,
+        description: 'Only the owner can delete the company (identity.forbidden)',
+        example: { type: 'identity.forbidden', title: 'ForbiddenError', status: 403 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Typed email does not match (identity.confirmation_mismatch)',
+        example: { type: 'identity.confirmation_mismatch', title: 'ConfirmationMismatchError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'Too many attempts for this user (core.too_many_attempts)',
+        example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
+    })
+    @ApiProblemResponse({
+        status: 500,
+        description: 'An area failed to erase, nothing was deleted (identity.erasure_failed, meta.area)',
+        example: { type: 'identity.erasure_failed', title: 'AccountErasureFailedError', status: 500 }
+    })
     public async deleteAccount(@Body() body: DeleteAccountDto, @Res({ passthrough: true }) res: Response): Promise<void> {
         await this.deletionApplication.delete(body.confirmEmail);
         this.refreshCookie.clear(res);

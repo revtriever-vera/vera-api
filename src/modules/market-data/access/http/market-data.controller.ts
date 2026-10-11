@@ -72,7 +72,11 @@ export class MarketDataController {
             requestId: '0199c3a0-0000-7000-8000-000000000001'
         }
     })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 429,
         description: 'More than 120 reads in a minute for the company',
@@ -95,8 +99,16 @@ export class MarketDataController {
     })
     @ApiParam({ name: 'currency', description: 'ISO 4217 code of the foreign currency', schema: { type: 'string', example: 'USD' } })
     @ApiZodResponse({ status: 200, description: 'The latest stored rate', schema: exchangeRateResponseSchema, example: RATE_EXAMPLE })
-    @ApiProblemResponse({ status: 400, description: 'Malformed currency code (zod validation details in meta.errors)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Malformed currency code (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 404,
         description: 'No rate stored for the currency (market-data.exchange_rate_unavailable)',

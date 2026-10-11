@@ -18,6 +18,7 @@ interface AddedJob {
 
 interface JobStub {
     readonly isActive: () => Promise<boolean>;
+    readonly isFailed?: () => Promise<boolean>;
     readonly remove: () => Promise<void>;
 }
 
@@ -152,5 +153,47 @@ describe('BullQueuePublisher', () => {
         expect(remove).not.toHaveBeenCalled();
         expect(state.added).toHaveLength(0);
         expect(enqueueSkippedRunning).toHaveBeenCalledOnce();
+    });
+
+    it('removes a failed job before re-enqueueing under retryFailed', async () => {
+        const remove: ReturnType<typeof vi.fn> = vi.fn(async (): Promise<void> => Promise.resolve());
+        state.jobs.set('sample-job-1', {
+            isActive: async (): Promise<boolean> => Promise.resolve(false),
+            isFailed: async (): Promise<boolean> => Promise.resolve(true),
+            remove
+        });
+        const { publish, flush } = await publisherOf();
+
+        await publish('sample.type', { id: '1' }, { jobId: 'sample-job-1', retryFailed: true });
+        await flush();
+
+        expect(remove).toHaveBeenCalledOnce();
+        expect(state.added).toHaveLength(1);
+    });
+
+    it('keeps a pending or successfully completed job untouched under retryFailed', async () => {
+        const remove: ReturnType<typeof vi.fn> = vi.fn();
+        state.jobs.set('sample-job-1', {
+            isActive: async (): Promise<boolean> => Promise.resolve(false),
+            isFailed: async (): Promise<boolean> => Promise.resolve(false),
+            remove
+        });
+        const { publish, flush } = await publisherOf();
+
+        await publish('sample.type', { id: '1' }, { jobId: 'sample-job-1', retryFailed: true });
+        await flush();
+
+        expect(remove).not.toHaveBeenCalled();
+        expect(state.added).toHaveLength(1);
+        expect(state.added[0]?.opts.jobId).toBe('sample-job-1');
+    });
+
+    it('enqueues normally under retryFailed when there is no previous job', async () => {
+        const { publish, flush } = await publisherOf();
+
+        await publish('sample.type', { id: '1' }, { jobId: 'sample-job-1', retryFailed: true });
+        await flush();
+
+        expect(state.added).toHaveLength(1);
     });
 });

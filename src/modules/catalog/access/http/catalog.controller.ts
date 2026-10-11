@@ -70,7 +70,11 @@ export class CatalogController {
             requestId: '0199c3a0-0000-7000-8000-000000000001'
         }
     })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 429,
         description: 'More than 60 searches in a minute for the company',
@@ -93,7 +97,11 @@ export class CatalogController {
     })
     @ApiParam({ name: 'id', description: 'Catalog asset id', schema: { type: 'string', format: 'uuid' } })
     @ApiZodResponse({ status: 200, description: 'The asset', schema: assetItemSchema, example: ITEM_EXAMPLE })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 404,
         description: 'The asset does not exist (catalog.asset_not_found)',

@@ -48,12 +48,25 @@ export class FixedIncomeController {
     })
     @ApiZodBody(createFixedIncomeTitleSchema)
     @ApiZodResponse({ status: 201, description: 'Security registered, with its valuation today', schema: fixedIncomeTitleViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: 'The sent classId does not exist in this company (allocation.class_not_found)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'The sent classId does not exist in this company (allocation.class_not_found)',
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
+    })
     @ApiProblemResponse({
         status: 422,
-        description: `${OUT_OF_RANGE}; ${INVALID_TERMS}; or the company reached 200 securities (fixed_income.limit_reached)`
+        description: `${OUT_OF_RANGE}; ${INVALID_TERMS}; or the company reached 200 securities (fixed_income.limit_reached)`,
+        example: { type: 'fixed_income.limit_reached', title: 'TitleLimitReachedError', status: 422 }
     })
     public async create(@Body() body: CreateFixedIncomeTitleDto): Promise<FixedIncomeTitleView> {
         return this.titles.create(body);
@@ -69,8 +82,16 @@ export class FixedIncomeController {
     })
     @ApiParam(TITLE_ID_PARAM)
     @ApiZodResponse({ status: 200, description: 'Security with its valuation today', schema: fixedIncomeTitleViewSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'fixed_income.title_not_found', title: 'TitleNotFoundError', status: 404 }
+    })
     public async get(@Param() params: TitleIdParamsDto): Promise<FixedIncomeTitleView> {
         return this.titles.get(params.id);
     }
@@ -85,10 +106,26 @@ export class FixedIncomeController {
     @ApiParam(TITLE_ID_PARAM)
     @ApiZodBody(updateFixedIncomeTitleSchema)
     @ApiZodResponse({ status: 200, description: 'Security after the change, with its valuation today', schema: fixedIncomeTitleViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
-    @ApiProblemResponse({ status: 422, description: `${OUT_OF_RANGE}; ${INVALID_TERMS}` })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'fixed_income.title_not_found', title: 'TitleNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: `${OUT_OF_RANGE}; ${INVALID_TERMS}`,
+        example: { type: 'fixed_income.applied_date_out_of_range', title: 'AppliedDateOutOfRangeError', status: 422 }
+    })
     public async update(@Param() params: TitleIdParamsDto, @Body() body: UpdateFixedIncomeTitleDto): Promise<FixedIncomeTitleView> {
         return this.titles.update(params.id, body);
     }
@@ -101,8 +138,16 @@ export class FixedIncomeController {
     })
     @ApiParam(TITLE_ID_PARAM)
     @ApiNoContentResponse({ description: 'Security removed' })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'fixed_income.title_not_found', title: 'TitleNotFoundError', status: 404 }
+    })
     public async remove(@Param() params: TitleIdParamsDto): Promise<void> {
         await this.titles.remove(params.id);
     }
@@ -117,10 +162,26 @@ export class FixedIncomeController {
     })
     @ApiZodBody(previewFixedIncomeSchema)
     @ApiZodResponse({ status: 200, description: 'Valuation today of the given terms', schema: valuationSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 422, description: `${OUT_OF_RANGE}; ${INVALID_TERMS}` })
-    @ApiProblemResponse({ status: 429, description: 'More than 120 previews in a minute (core.too_many_attempts)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: `${OUT_OF_RANGE}; ${INVALID_TERMS}`,
+        example: { type: 'fixed_income.applied_date_out_of_range', title: 'AppliedDateOutOfRangeError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'More than 120 previews in a minute (core.too_many_attempts)',
+        example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
+    })
     public async preview(@Body() body: PreviewFixedIncomeDto): Promise<FixedIncomeValuation> {
         return this.previews.preview(body);
     }

@@ -44,7 +44,7 @@ describe('QuoteReaderService', () => {
             'vera-market-data',
             'market-data.quote.ondemand.requested',
             { assetId: 'a' },
-            { jobId: 'quote-ondemand-a-2026-10-09' }
+            { jobId: 'quote-ondemand-a-2026-10-09', retryFailed: true }
         );
     });
 

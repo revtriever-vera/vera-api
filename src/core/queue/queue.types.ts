@@ -18,6 +18,7 @@ export interface PublishOptions {
     readonly delayMs?: number;
     readonly attempts?: number;
     readonly replaceExisting?: boolean;
+    readonly retryFailed?: boolean;
 }
 
 export abstract class QueuePublisherPort {
