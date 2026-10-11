@@ -23,3 +23,5 @@ coverage/
 *.local.md
 *.local.sh
 CREDENCIAIS-LOCAIS.md
+
+cdk.context.json

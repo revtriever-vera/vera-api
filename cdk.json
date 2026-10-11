@@ -1,0 +1,14 @@
+{
+  "app": "npx tsx infra/bin/vera.ts",
+  "watch": {
+    "include": ["infra/**"],
+    "exclude": ["README.md", "cdk*.json", "node_modules"]
+  },
+  "context": {
+    "@aws-cdk/aws-ecs:disableEcsImdsBlocking": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:validateSnapshotRemovalPolicy": true,
+    "@aws-cdk/core:target-partitions": ["aws"]
+  }
+}
