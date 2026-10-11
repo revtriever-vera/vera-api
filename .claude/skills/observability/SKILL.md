@@ -131,6 +131,9 @@ table — same rule as renaming one.
 | `contribution-suggest`        | Contribution suggestion computed, or refused because class targets are not set | `classesFunded`, `assetsFunded`, `warnings`, `result`                     |
 | `spending-categories-write`   | Spending category created, renamed, flexibility changed or removed             | `categoryId`, `action`, `recategorized`                                   |
 | `spending-rules-write`        | Categorization rule written, or recategorization skipped (no driver, debug)    | `ruleId`, `matchType`, `action`, `recategorized`                          |
+| `transactions-ingest`         | Batch of transactions ingested from any source (Pluggy, file, example data)    | `source`, `accountId`, `inserted`, `updated`, `unchanged`, `duplicates`, `superseded`, `rejected`, `durationMs` |
+| `transactions-recategorize`   | Transaction recategorized by the user, with or without a "always to" rule      | `transactionId`, `ruleCreated`, `recategorized`                           |
+| `transactions-port`           | Recategorization port ran after a rule or category change                      | `scope`, `affected`                                                       |
 
 `message` is static by rule, so it is a reliable filter — but it travels as the **log line**, not as
 structured metadata, so the filter is the line filter: ``|= `import failed` `` works
