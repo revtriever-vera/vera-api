@@ -286,6 +286,17 @@ export interface SpendingCategories {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface SpendingSettings {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    declaredIncomeMinor: Int8 | null;
+    deletedAt: Timestamp | null;
+    id: string;
+    incomeMode: Generated<string>;
+    savingsGoalBps: Generated<number>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Throttles {
     count: Generated<number>;
     createdAt: Generated<Timestamp>;
@@ -380,6 +391,7 @@ export interface DB {
     QuoteFetchFailures: QuoteFetchFailures;
     Sessions: Sessions;
     SpendingCategories: SpendingCategories;
+    SpendingSettings: SpendingSettings;
     Throttles: Throttles;
     TransactionImports: TransactionImports;
     Transactions: Transactions;
