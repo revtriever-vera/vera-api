@@ -1,14 +1,16 @@
 import { Insertable, Selectable } from 'kysely';
-import { Companies, Sessions, Users } from '../../../core/database/generated/database.types';
+import { AuthIdentities, Companies, Sessions, Users } from '../../../core/database/generated/database.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 
 export type Company = Selectable<Companies>;
 export type User = Selectable<Users>;
 export type Session = Selectable<Sessions>;
+export type AuthIdentity = Selectable<AuthIdentities>;
 
 export type NewCompany = Insertable<Companies>;
 export type NewUser = Insertable<Users>;
 export type NewSession = Insertable<Sessions>;
+export type NewAuthIdentity = Insertable<AuthIdentities>;
 
 export const USER_ROLES = {
     owner: 'owner',
@@ -23,6 +25,23 @@ export const LOGIN_PROVIDERS = {
 } as const;
 
 export type LoginProvider = (typeof LOGIN_PROVIDERS)[keyof typeof LOGIN_PROVIDERS];
+
+export interface SocialIdentity {
+    readonly provider: LoginProvider;
+    readonly subject: string;
+    readonly email: string | null;
+    readonly emailVerified: boolean;
+    readonly name: string | null;
+}
+
+export const LOGIN_OUTCOMES = {
+    success: 'success',
+    newAccount: 'new_account',
+    linked: 'linked',
+    failed: 'failed'
+} as const;
+
+export type LoginOutcome = (typeof LOGIN_OUTCOMES)[keyof typeof LOGIN_OUTCOMES];
 
 export const TOKEN_PURPOSES = {
     access: 'access'

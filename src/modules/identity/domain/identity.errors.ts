@@ -37,3 +37,66 @@ export class AccountClosedError extends AppError {
         });
     }
 }
+
+export class InvalidGoogleTokenError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.invalid_google_token',
+            status: 401,
+            detail: 'The Google ID token is invalid, expired, issued for another client or carries an unverified email.'
+        });
+    }
+}
+
+export class InvalidFacebookTokenError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.invalid_facebook_token',
+            status: 401,
+            detail: 'The Facebook access token is invalid, expired or was issued for another app.'
+        });
+    }
+}
+
+export class ProviderDisabledError extends AppError {
+    public constructor(provider: string) {
+        super({
+            code: 'identity.provider_disabled',
+            status: 503,
+            detail: `Sign-in with ${provider} is not configured in this environment.`,
+            meta: { provider }
+        });
+    }
+}
+
+export class ProviderUnavailableError extends AppError {
+    public constructor(provider: string) {
+        super({
+            code: 'identity.provider_unavailable',
+            status: 502,
+            detail: `The ${provider} verification endpoint did not answer in time or failed.`,
+            meta: { provider }
+        });
+    }
+}
+
+export class EmailNotProvidedError extends AppError {
+    public constructor(provider: string) {
+        super({
+            code: 'identity.email_not_provided',
+            status: 422,
+            detail: `The ${provider} account did not share an email address, which is required to create the account.`,
+            meta: { provider }
+        });
+    }
+}
+
+export class EmailInUseError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.email_in_use',
+            status: 409,
+            detail: 'An account with this email already exists and the sign-in method cannot be linked to it automatically.'
+        });
+    }
+}

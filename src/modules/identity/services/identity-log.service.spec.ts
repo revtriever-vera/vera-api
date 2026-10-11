@@ -34,4 +34,34 @@ describe('IdentityLogService', () => {
             meta: { familyId: 'family-1', revoked: 3, userId: 'user-1' }
         });
     });
+
+    it('registra provisionamento e vínculo sem e-mail, nome, subject ou token', () => {
+        const { logs, info, warn } = build();
+
+        logs.companyProvisioned('company-1', 'user-1', 'facebook');
+        logs.identityLinked('user-1', 'google');
+        logs.providerTokenRejected('google', 'identity.invalid_google_token');
+        logs.emailNotProvided('facebook');
+
+        expect(info.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            {
+                message: 'company provisioned',
+                identifier: 'identity-provisioning',
+                meta: { companyId: 'company-1', userId: 'user-1', provider: 'facebook' }
+            },
+            {
+                message: 'identity linked to existing user',
+                identifier: 'identity-provisioning',
+                meta: { userId: 'user-1', provider: 'google' }
+            }
+        ]);
+        expect(warn.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            {
+                message: 'provider token rejected',
+                identifier: 'identity-auth',
+                meta: { provider: 'google', reason: 'identity.invalid_google_token' }
+            },
+            { message: 'email not provided by provider', identifier: 'identity-provisioning', meta: { provider: 'facebook' } }
+        ]);
+    });
 });
