@@ -45,8 +45,17 @@ export class TransactionImportService {
         return { removed };
     }
 
-    public async list(page: number): Promise<Page<ImportView>> {
-        const result: Page<TransactionImport> = await this.imports.page(page, IMPORT_LIST_PAGE_SIZE);
+    public async find(id: string): Promise<ImportView> {
+        return toImportView(await this.imports.require(id));
+    }
+
+    public async findCompletedByHash(fileSha256: string): Promise<ImportView | null> {
+        const found: TransactionImport | null = await this.imports.findCompletedByHash(fileSha256);
+        return found === null ? null : toImportView(found);
+    }
+
+    public async list(page: number, pageSize: number = IMPORT_LIST_PAGE_SIZE): Promise<Page<ImportView>> {
+        const result: Page<TransactionImport> = await this.imports.page(page, pageSize);
         return { data: result.data.map(toImportView), pagination: result.pagination };
     }
 

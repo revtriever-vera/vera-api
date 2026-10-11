@@ -21,7 +21,8 @@ function build(status: string = 'completed'): {
             data: [makeTransactionImport({ id: 'i1' })],
             pagination: { page: 1, pageSize: 50, totalRecords: 1, totalPages: 1 }
         }),
-        countCompleted: vi.fn().mockResolvedValue(2)
+        countCompleted: vi.fn().mockResolvedValue(2),
+        findCompletedByHash: vi.fn().mockResolvedValue(makeTransactionImport({ id: 'i1' }))
     };
     const transactions: Record<string, ReturnType<typeof vi.fn>> = {
         removeByImport: vi.fn().mockResolvedValue(5),
@@ -77,5 +78,27 @@ describe('TransactionImportService', () => {
         expect(page.data[0]).toMatchObject({ id: 'i1', fileName: 'extrato.ofx' });
         expect(page.pagination.totalRecords).toBe(1);
         await expect(service.countCompleted()).resolves.toBe(2);
+    });
+    it('consulta um lote pelo id, com 404 do domínio quando não existe', async () => {
+        const { service, imports } = build();
+
+        await expect(service.find('i1')).resolves.toMatchObject({ id: 'i1' });
+        expect(imports['require']).toHaveBeenCalledWith('i1');
+    });
+
+    it('acha o último lote concluído pelo hash do arquivo, ou nulo', async () => {
+        const { service, imports } = build();
+
+        await expect(service.findCompletedByHash('a'.repeat(64))).resolves.toMatchObject({ id: 'i1' });
+        imports['findCompletedByHash']?.mockResolvedValue(null);
+        await expect(service.findCompletedByHash('b'.repeat(64))).resolves.toBeNull();
+    });
+
+    it('lista com o tamanho de página pedido', async () => {
+        const { service, imports } = build();
+
+        await service.list(3, 20);
+
+        expect(imports['page']).toHaveBeenCalledWith(3, 20);
     });
 });

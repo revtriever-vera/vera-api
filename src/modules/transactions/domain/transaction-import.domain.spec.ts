@@ -14,6 +14,7 @@ function build(found: unknown = makeTransactionImport({ id: 'i1' })): {
         markUndone: vi.fn().mockResolvedValue(found),
         page: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 50, totalRecords: 0, totalPages: 0 } }),
         countCompleted: vi.fn().mockResolvedValue(3),
+        findCompletedByHash: vi.fn().mockResolvedValue(found),
         softDeleteByAccounts: vi.fn().mockResolvedValue([])
     };
     return { domain: new TransactionImportDomain(repo as unknown as TransactionImportsRepository), repo };
@@ -49,6 +50,8 @@ describe('TransactionImportDomain', () => {
         await expect(domain.markUndone('i1')).resolves.toMatchObject({ id: 'i1' });
         await expect(domain.page(1, 50)).resolves.toMatchObject({ data: [] });
         await expect(domain.countCompleted()).resolves.toBe(3);
+        await expect(domain.findCompletedByHash('c'.repeat(64))).resolves.toMatchObject({ id: 'i1' });
+        expect(repo['findCompletedByHash']).toHaveBeenCalledWith('c'.repeat(64));
         await domain.removeByAccounts([]);
         await domain.removeByAccounts(['a']);
         expect(repo['softDeleteByAccounts']).toHaveBeenCalledTimes(1);

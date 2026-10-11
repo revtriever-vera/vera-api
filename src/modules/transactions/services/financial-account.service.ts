@@ -24,6 +24,10 @@ export class FinancialAccountService {
         return this.accounts.createFile(input);
     }
 
+    public async list(): Promise<FinancialAccount[]> {
+        return this.accounts.listAll();
+    }
+
     public async requireById(id: string): Promise<FinancialAccount> {
         return this.accounts.require(id);
     }

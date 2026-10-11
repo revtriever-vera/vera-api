@@ -47,6 +47,21 @@ export class TransactionImportsRepository extends TenantRepository<'TransactionI
         return Number(row?.total ?? 0);
     }
 
+    public async findCompletedByHash(fileSha256: string): Promise<TransactionImport | null> {
+        const row: TransactionImport | undefined = await this.db
+            .selectFrom('TransactionImports')
+            .selectAll()
+            .where('companyId', '=', this.companyId)
+            .where('deletedAt', 'is', null)
+            .where('status', '=', IMPORT_STATUSES.completed)
+            .where('isSample', '=', false)
+            .where('fileSha256', '=', fileSha256)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .executeTakeFirst();
+        return row ?? null;
+    }
+
     public async softDeleteByAccounts(accountIds: readonly string[]): Promise<TransactionImport[]> {
         return this.updateManyRows({ accountId: [...accountIds] }, { deletedAt: new Date() });
     }
