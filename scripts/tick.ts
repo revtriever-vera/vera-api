@@ -11,7 +11,7 @@ import { Cluster, ClusterNode, Redis } from 'ioredis';
 import { v7 as uuidV7 } from 'uuid';
 import { MESSAGE_TYPES, BULL_PREFIX, QUEUES } from '../src/shared/constants/queues.constants';
 
-const DEFAULT_NODES: string = 'localhost:7100,localhost:7101,localhost:7102';
+const DEFAULT_NODES: string = 'localhost:7200,localhost:7201,localhost:7202';
 const QUEUE_NAMES: string[] = Object.values(QUEUES);
 const MESSAGE_TYPE_VALUES: string[] = Object.values(MESSAGE_TYPES);
 
@@ -20,7 +20,7 @@ const TICK_TYPE_BY_QUEUE: Record<string, string> = {};
 function connect(): Cluster | Redis {
     const nodes: ClusterNode[] = (process.env['REDIS_NODES'] ?? DEFAULT_NODES).split(',').map((entry: string) => {
         const [host, port] = entry.trim().split(':');
-        return { host: host ?? 'localhost', port: Number(port ?? 7100) };
+        return { host: host ?? 'localhost', port: Number(port ?? 7200) };
     });
     if (process.env['REDIS_CLUSTER'] === 'false') {
         const [node] = nodes as { host: string; port: number }[];
@@ -66,4 +66,7 @@ async function tick(): Promise<void> {
     console.log(`tick publicado em ${queue}`);
 }
 
-void tick();
+tick().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+});
