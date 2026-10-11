@@ -15,9 +15,10 @@ const DEFAULT_NODES: string = 'localhost:7200,localhost:7201,localhost:7202';
 const QUEUE_NAMES: string[] = Object.values(QUEUES);
 const MESSAGE_TYPE_VALUES: string[] = Object.values(MESSAGE_TYPES);
 
-const TICK_TYPE_BY_QUEUE: Record<string, string> = {
-    [QUEUES.catalog]: MESSAGE_TYPES.catalogSyncTickRequested,
-    [QUEUES.fixedIncome]: MESSAGE_TYPES.fixedIncomeIndexSyncRequested
+const TICK_TYPES_BY_QUEUE: Record<string, string[]> = {
+    [QUEUES.catalog]: [MESSAGE_TYPES.catalogSyncTickRequested],
+    [QUEUES.fixedIncome]: [MESSAGE_TYPES.fixedIncomeIndexSyncRequested],
+    [QUEUES.marketData]: [MESSAGE_TYPES.marketDataQuotesSweepRequested, MESSAGE_TYPES.marketDataReferenceRequested]
 };
 
 function connect(): Cluster | Redis {
@@ -32,30 +33,22 @@ function connect(): Cluster | Redis {
     return new Cluster(nodes, { redisOptions: { maxRetriesPerRequest: null } });
 }
 
-function tickTypeFor(queue: string, requested: string | undefined): string {
+function tickTypesFor(queue: string, requested: string | undefined): string[] {
     if (requested) {
         const match: string | undefined = MESSAGE_TYPE_VALUES.find((value: string) => value.includes(requested));
         if (!match) {
             throw new Error(`tipo desconhecido: ${requested}`);
         }
-        return match;
+        return [match];
     }
-    const type: string | undefined = TICK_TYPE_BY_QUEUE[queue];
-    if (!type) {
+    const types: string[] | undefined = TICK_TYPES_BY_QUEUE[queue];
+    if (!types) {
         throw new Error(`nenhum tipo de tick mapeado para a fila ${queue}`);
     }
-    return type;
+    return types;
 }
 
-async function tick(): Promise<void> {
-    const name: string | undefined = process.argv[2];
-    const queue: string | undefined = name ? QUEUE_NAMES.find((value: string) => value.includes(name)) : undefined;
-    if (!name || !queue) {
-        throw new Error(`uso: npm run tick -- <parte-do-nome-da-fila> [parte-do-tipo]. disponíveis: ${QUEUE_NAMES.join(', ')}`);
-    }
-    const type: string = tickTypeFor(queue, process.argv[3]);
-    const connection: Cluster | Redis = connect();
-    const client: Queue = new Queue(queue, { connection, prefix: BULL_PREFIX });
+async function enqueue(client: Queue, type: string): Promise<void> {
     await client.add(type, {
         type,
         requestId: uuidV7(),
@@ -64,6 +57,20 @@ async function tick(): Promise<void> {
         trace: {},
         payload: {}
     });
+}
+
+async function tick(): Promise<void> {
+    const name: string | undefined = process.argv[2];
+    const queue: string | undefined = name ? QUEUE_NAMES.find((value: string) => value.includes(name)) : undefined;
+    if (!name || !queue) {
+        throw new Error(`uso: npm run tick -- <parte-do-nome-da-fila> [parte-do-tipo]. disponíveis: ${QUEUE_NAMES.join(', ')}`);
+    }
+    const types: string[] = tickTypesFor(queue, process.argv[3]);
+    const connection: Cluster | Redis = connect();
+    const client: Queue = new Queue(queue, { connection, prefix: BULL_PREFIX });
+    for (const type of types) {
+        await enqueue(client, type);
+    }
     await client.close();
     await connection.quit();
     console.log(`tick publicado em ${queue}`);
