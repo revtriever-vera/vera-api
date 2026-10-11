@@ -71,4 +71,46 @@ describe('QueueTelemetryService', () => {
         expect(logs['failedJobs']).not.toHaveBeenCalled();
         expect(logs['telemetrySampleFailed']).toHaveBeenCalled();
     });
+
+    it('reports the age in seconds of the oldest waiting job', async () => {
+        const NOW: number = 100_000;
+        const WAITED_MS: number = 30_000;
+        queueMock.getFailedCount.mockResolvedValue(0);
+        queueMock.getJobs.mockResolvedValue([{ timestamp: NOW - WAITED_MS }]);
+        queueMock.getJobSchedulers.mockResolvedValue([]);
+        const { service, logs } = harness();
+
+        await service.sample(NOW);
+
+        expect(logs['oldestWaitingJobAge']).toHaveBeenCalledWith(Object.values(QUEUES)[0], WAITED_MS / 1000);
+    });
+
+    it('skips schedulers that have no next run', async () => {
+        queueMock.getFailedCount.mockResolvedValue(0);
+        queueMock.getJobs.mockResolvedValue([]);
+        queueMock.getJobSchedulers.mockResolvedValue([{ key: 'cmd' }]);
+        const { service, logs } = harness();
+
+        await service.sample();
+
+        expect(logs['commandNextRun']).not.toHaveBeenCalled();
+    });
+
+    it('samples on an interval after bootstrap and stops on destroy', async () => {
+        vi.useFakeTimers();
+        queueMock.getFailedCount.mockResolvedValue(0);
+        queueMock.getJobs.mockResolvedValue([]);
+        queueMock.getJobSchedulers.mockResolvedValue([]);
+        const { service, logs } = harness();
+
+        service.onApplicationBootstrap();
+        await vi.advanceTimersByTimeAsync(30_000);
+        const calls: number = logs['failedJobs']?.mock.calls.length ?? 0;
+        await service.onModuleDestroy();
+        await vi.advanceTimersByTimeAsync(60_000);
+        vi.useRealTimers();
+
+        expect(calls).toBeGreaterThan(0);
+        expect(logs['failedJobs']?.mock.calls.length).toBe(calls);
+    });
 });

@@ -56,6 +56,7 @@ export interface SourcePosition {
     readonly id: string;
     readonly assetId: string;
     readonly quantity: string;
+    readonly isSample: boolean;
 }
 
 export interface SourceAsset {
@@ -88,6 +89,7 @@ export interface SourceTitle {
     readonly matured: boolean;
     readonly source: string;
     readonly asOf: string;
+    readonly isSample: boolean;
 }
 
 export interface SourceClass {
@@ -152,6 +154,7 @@ export interface Holding {
     readonly missingRate: boolean;
     readonly indexDataMissing: boolean;
     readonly isZeroQuantity: boolean;
+    readonly isSample: boolean;
     readonly storedTargetInClassBps: number;
     readonly effectiveTargetInClassBps: number;
 }

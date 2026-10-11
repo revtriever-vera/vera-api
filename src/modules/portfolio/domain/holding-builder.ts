@@ -24,7 +24,7 @@ export interface ValuationContext {
 }
 
 type PricingFields = Pick<BareHolding, 'unitPrice' | 'priceCurrency' | 'priceDate' | 'valueSource'>;
-type QuantityFlags = Pick<BareHolding, 'isZeroQuantity' | 'missingQuote' | 'stale'>;
+type QuantityFlags = Pick<BareHolding, 'isZeroQuantity' | 'missingQuote' | 'stale' | 'isSample'>;
 type AmountFields = Pick<BareHolding, 'nativeValueMinor' | 'nativeCurrency' | 'valueMinor' | 'missingRate'>;
 
 function pricingOf(asset: SourceAsset, quote: SourceQuote | null): PricingFields {
@@ -40,6 +40,7 @@ function pricingOf(asset: SourceAsset, quote: SourceQuote | null): PricingFields
 function flagsOf(position: SourcePosition, quote: SourceQuote | null): QuantityFlags {
     const isZeroQuantity: boolean = DecimalUtil.of(position.quantity).isZero();
     return {
+        isSample: position.isSample,
         isZeroQuantity,
         missingQuote: quote === null && !isZeroQuantity,
         stale: quote?.stale === true && !isZeroQuantity
@@ -83,8 +84,9 @@ export function positionHolding(
     };
 }
 
-function titleFlagsOf(title: SourceTitle): Pick<BareHolding, 'estimated' | 'matured' | 'indexDataMissing' | 'dollarExposure'> {
+function titleFlagsOf(title: SourceTitle): Pick<BareHolding, 'estimated' | 'matured' | 'indexDataMissing' | 'dollarExposure' | 'isSample'> {
     return {
+        isSample: title.isSample,
         estimated: title.estimated,
         matured: title.matured,
         indexDataMissing: title.indexDataMissing,

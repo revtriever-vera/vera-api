@@ -78,7 +78,7 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
     }
 
     private positionOf(position: Position): SourcePosition {
-        return { id: position.id, assetId: position.assetId, quantity: decimalStringOf(position.quantity) };
+        return { id: position.id, assetId: position.assetId, quantity: decimalStringOf(position.quantity), isSample: position.isSample };
     }
 
     private assetOf(asset: Asset): SourceAsset {
@@ -104,7 +104,8 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
             estimated: entry.valuation.estimated,
             matured: entry.valuation.matured,
             source: entry.valuation.source,
-            asOf: entry.valuation.asOf
+            asOf: entry.valuation.asOf,
+            isSample: entry.title.isSample
         };
     }
 

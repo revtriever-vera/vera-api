@@ -168,11 +168,23 @@ describe('ports of fixed-income and allocation', () => {
         expect(JSON.stringify(theirs)).not.toContain(account.company.id);
     });
 
+    it('resumo assets com só renda fixa conta o título real e fica escopado por conta', async () => {
+        const mine = await harness.call<SummaryBody>(account.token, 'GET', '/onboarding/summary');
+        const theirs = await harness.call<SummaryBody>(other.token, 'GET', '/onboarding/summary');
+
+        expect(mine.body.assets?.items).toBe(1);
+        expect(mine.body.assets?.amountCents).toBeGreaterThan(0);
+        expect(mine.body.assets?.currency).toBe('BRL');
+        expect(theirs.body.assets).toEqual({ items: 0, amountCents: null, currency: null });
+    });
+
     it('exemplo exportado durante a vigência não vaza: assignments de exemplo ficam fora', async () => {
         const fresh: Account = await harness.signUp('ports-c');
         await harness.call(fresh.token, 'POST', '/onboarding/sample');
 
         const { fixedIncome, allocation } = await exportSections(fresh.token);
+        const summary = await harness.call<SummaryBody>(fresh.token, 'GET', '/onboarding/summary');
+        expect(summary.body.assets).toEqual({ items: 0, amountCents: null, currency: null });
 
         expect(fixedIncome.titles).toEqual([]);
         expect(allocation.assetTargets).toEqual([]);
