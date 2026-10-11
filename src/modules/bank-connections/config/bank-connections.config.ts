@@ -1,3 +1,4 @@
+import { stripTrailing } from '../../../shared/utils/strip-trailing';
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
 
@@ -111,7 +112,7 @@ export function parseBankConnectionsConfig(env: NodeJS.ProcessEnv): BankConnecti
     }
     return {
         PLUGGY_DRIVER: driver,
-        PLUGGY_BASE_URL: parsed.PLUGGY_BASE_URL.replace(/\/+$/, ''),
+        PLUGGY_BASE_URL: stripTrailing(parsed.PLUGGY_BASE_URL, '/'),
         PLUGGY_HTTP_TIMEOUT_MS: parsed.PLUGGY_HTTP_TIMEOUT_MS,
         PLUGGY_AUTH_PATH: parsed.PLUGGY_AUTH_PATH,
         PLUGGY_ITEM_PATH: parsed.PLUGGY_ITEM_PATH,

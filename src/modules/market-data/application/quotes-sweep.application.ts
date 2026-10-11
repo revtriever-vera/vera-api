@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../../../shared/utils/compare-code-units';
 import { Injectable } from '@nestjs/common';
 import { QueuePublisherPort } from '../../../core/queue/queue.types';
 import { MESSAGE_TYPES, QUEUES } from '../../../shared/constants/queues.constants';
@@ -58,7 +59,7 @@ export class QuotesSweepApplication {
         const ids: string[] = assets
             .filter((asset: QuotableAsset): boolean => asset.quotesProvider === group)
             .map((asset: QuotableAsset): string => asset.id)
-            .sort();
+            .sort(compareCodeUnits);
         const size: number = this.registry.chunkSizeOf(group);
         if (ids.length === 0 || size === 0) {
             return [];

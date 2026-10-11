@@ -84,4 +84,12 @@ describe('parseBankConnectionsConfig', () => {
         expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_HTTP_TIMEOUT_MS: '0' })).toThrow();
         expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_AUTH_PATH: 'auth' })).toThrow();
     });
+
+    it.each([
+        ['https://pluggy.example///', 'https://pluggy.example'],
+        ['https://pluggy.example/v1/', 'https://pluggy.example/v1'],
+        ['https://pluggy.example', 'https://pluggy.example']
+    ])('tira só as barras finais de %s', (base: string, expected: string) => {
+        expect(parseBankConnectionsConfig({ PLUGGY_DRIVER: 'live', PLUGGY_BASE_URL: base }).PLUGGY_BASE_URL).toBe(expected);
+    });
 });

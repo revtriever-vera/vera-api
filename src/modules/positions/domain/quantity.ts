@@ -1,3 +1,5 @@
+import { stripTrailing } from '../../../shared/utils/strip-trailing';
+
 export function decimalPlaces(value: string): number {
     const separator: number = value.indexOf('.');
     return separator === -1 ? 0 : value.length - separator - 1;
@@ -11,5 +13,5 @@ export function normalizeDecimal(value: string): string {
     if (!value.includes('.')) {
         return value;
     }
-    return value.replace(/0+$/, '').replace(/\.$/, '');
+    return stripTrailing(stripTrailing(value, '0'), '.', 1);
 }

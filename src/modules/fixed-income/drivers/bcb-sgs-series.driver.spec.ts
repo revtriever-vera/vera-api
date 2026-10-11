@@ -46,6 +46,20 @@ describe('BcbSgsSeriesDriver', () => {
         );
     });
 
+    it.each(['https://sgs.example.test', 'https://sgs.example.test/', 'https://sgs.example.test///'])(
+        'monta a mesma URL para a base %s',
+        async (base: string) => {
+            const fetchMock = vi.fn().mockResolvedValue(respond(200, []));
+            vi.stubGlobal('fetch', fetchMock);
+
+            await new BcbSgsSeriesDriver({ ...CONFIG, SGS_BASE_URL: base }).fetch('cdi_daily', '2025-01-06', '2025-01-07');
+
+            expect(fetchMock.mock.calls[0]?.[0]).toBe(
+                'https://sgs.example.test/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=06/01/2025&dataFinal=07/01/2025'
+            );
+        }
+    );
+
     it('usa o código do IPCA e aceita valor negativo', async () => {
         const fetchMock = vi.fn().mockResolvedValue(respond(200, [{ data: '01/08/2026', valor: '-0.32' }]));
         vi.stubGlobal('fetch', fetchMock);

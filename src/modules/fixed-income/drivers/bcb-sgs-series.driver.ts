@@ -1,3 +1,4 @@
+import { stripTrailing } from '../../../shared/utils/strip-trailing';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { z } from 'zod';
@@ -56,7 +57,7 @@ export class BcbSgsSeriesDriver extends IndexSeriesSourcePort {
 
     private urlFor(series: IndexSeriesName, from: string, to: string): string {
         const code: number = series === INDEX_SERIES.cdiDaily ? this.config.SGS_CDI_SERIES_CODE : this.config.SGS_IPCA_SERIES_CODE;
-        const base: string = this.config.SGS_BASE_URL.replace(/\/+$/, '');
+        const base: string = stripTrailing(this.config.SGS_BASE_URL, '/');
         return `${base}/dados/serie/bcdata.sgs.${String(code)}/dados?formato=json&dataInicial=${toSgsDate(from)}&dataFinal=${toSgsDate(to)}`;
     }
 

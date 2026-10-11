@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../../../shared/utils/compare-code-units';
 import { Injectable } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
@@ -11,7 +12,7 @@ export class HeldAssetsService {
         const lists: (readonly string[])[] = await Promise.all(
             this.ports().map(async (port: HeldAssetsPort): Promise<readonly string[]> => port.listHeldAssetIdsAcrossTenants())
         );
-        return [...new Set<string>(lists.flat())].sort();
+        return [...new Set<string>(lists.flat())].sort(compareCodeUnits);
     }
 
     private ports(): HeldAssetsPort[] {

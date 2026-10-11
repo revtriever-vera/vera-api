@@ -13,13 +13,17 @@ export class RateLimitGuard implements CanActivate {
         private readonly context: AppContext
     ) {}
 
-    public async canActivate(executionContext: ExecutionContext): Promise<boolean> {
+    public canActivate(executionContext: ExecutionContext): Promise<boolean> {
+        return this.enforce(executionContext).then((): boolean => true);
+    }
+
+    private async enforce(executionContext: ExecutionContext): Promise<void> {
         const options: RateLimitOptions | undefined = this.reflector.get<RateLimitOptions | undefined>(
             RATE_LIMIT_KEY,
             executionContext.getHandler()
         );
         if (!options) {
-            return true;
+            return;
         }
         const request: Request = executionContext.switchToHttp().getRequest<Request>();
         const subject: RateLimitSubject = {
@@ -30,9 +34,8 @@ export class RateLimitGuard implements CanActivate {
         };
         const identity: string | null = options.identify(subject);
         if (!identity) {
-            return true;
+            return;
         }
         await this.throttle.assertAllowed(`${options.key}:${identity}`, options.limit, options.windowSeconds);
-        return true;
     }
 }

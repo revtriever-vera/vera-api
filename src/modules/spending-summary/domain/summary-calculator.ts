@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../../../shared/utils/compare-code-units';
 import { DecimalUtil } from '../../../shared/utils/decimal.util';
 import { averageWindow, categoryAverage } from './category-average';
 import {
@@ -203,7 +204,7 @@ function headerOf(
         currency: SUMMARY_CURRENCY,
         previousMonth: input.navigation.previousMonth,
         nextMonth: input.navigation.nextMonth,
-        availableMonths: [...input.monthsWithData].sort().reverse().slice(0, MAX_AVAILABLE_MONTHS)
+        availableMonths: [...input.monthsWithData].sort(compareCodeUnits).reverse().slice(0, MAX_AVAILABLE_MONTHS)
     };
 }
 
