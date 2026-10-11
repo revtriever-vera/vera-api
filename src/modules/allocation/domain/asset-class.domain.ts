@@ -5,6 +5,7 @@ import { ClassNameTakenError } from './allocation.errors';
 import { AssetClass } from './allocation.types';
 import { nextColorKey } from './class-color';
 import { DEFAULT_CLASSES, DEFAULT_SYSTEM_KEYS } from './default-classes';
+import { ClassTargetUpdate } from './targets';
 
 export interface CreateClassInput {
     readonly name: string;
@@ -58,6 +59,10 @@ export class AssetClassDomain {
         const merged: AssetClass | null = await this.classes.updateFields(input.destination.id, { targetBps: input.targetBps, aliasKeys });
         await this.classes.softDelete(input.origin.id);
         return merged;
+    }
+
+    public async applyTargets(updates: readonly ClassTargetUpdate[]): Promise<void> {
+        await this.classes.setTargets(updates);
     }
 
     public async remove(id: string): Promise<void> {

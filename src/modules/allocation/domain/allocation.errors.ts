@@ -95,3 +95,25 @@ export class UnknownSystemKeyError extends AppError {
         });
     }
 }
+
+export class TargetsMustSum100Error extends AppError {
+    public constructor(sumBps: number) {
+        super({
+            code: 'allocation.targets_must_sum_100',
+            status: 422,
+            detail: 'The targets must sum to exactly 100% (10000 basis points).',
+            meta: { sumBps }
+        });
+    }
+}
+
+export class TargetsIncompleteError extends AppError {
+    public constructor(classId: string) {
+        super({
+            code: 'allocation.targets_incomplete',
+            status: 422,
+            detail: 'The body must list every asset of the class exactly once, and only assets of that class.',
+            meta: { classId }
+        });
+    }
+}

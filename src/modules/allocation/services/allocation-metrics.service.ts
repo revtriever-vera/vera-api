@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { MetricsService } from '../../../core/observability/metrics.service';
-import { ClassAction } from '../domain/allocation.types';
+import { ClassAction, TargetResult, TargetScope } from '../domain/allocation.types';
 
 const CLASS_ACTIONS_TOTAL: string = 'vera_allocation_class_actions_total';
+const TARGET_SAVES_TOTAL: string = 'vera_allocation_target_saves_total';
 
 @Injectable()
 export class AllocationMetricsService {
@@ -10,5 +11,9 @@ export class AllocationMetricsService {
 
     public classAction(action: ClassAction, amount: number = 1): void {
         this.metrics.count(CLASS_ACTIONS_TOTAL, { action }, amount);
+    }
+
+    public targetSave(scope: TargetScope, result: TargetResult): void {
+        this.metrics.count(TARGET_SAVES_TOTAL, { scope, result });
     }
 }

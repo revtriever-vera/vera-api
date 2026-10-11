@@ -53,6 +53,12 @@ export class AssetClassesRepository extends TenantRepository<'AssetClasses'> {
         return this.updateRow(id, data);
     }
 
+    public async setTargets(updates: readonly { classId: string; targetBps: number }[]): Promise<void> {
+        for (const update of updates) {
+            await this.updateRow(update.classId, { targetBps: update.targetBps });
+        }
+    }
+
     public async softDelete(id: string): Promise<void> {
         await this.softDeleteRow(id);
     }

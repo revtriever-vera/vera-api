@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { LogService } from '../../../core/observability/log.service';
-import { ClassAction, SubjectType } from '../domain/allocation.types';
+import { BaseCurrency, ClassAction, SubjectType, TargetScope } from '../domain/allocation.types';
 
 const CLASSES: string = 'allocation-classes';
 const ASSIGNMENT: string = 'allocation-assignment';
+const TARGETS: string = 'allocation-targets';
+const SETTINGS: string = 'allocation-settings';
 
 @Injectable()
 export class AllocationLogService {
@@ -27,5 +29,13 @@ export class AllocationLogService {
 
     public assignmentReleased(subjectType: SubjectType, subjectId: string): void {
         this.logService.info({ message: 'asset class assignment released', identifier: ASSIGNMENT, meta: { subjectType, subjectId } });
+    }
+
+    public targetsSaved(scope: TargetScope, classId: string | null): void {
+        this.logService.info({ message: 'allocation targets saved', identifier: TARGETS, meta: { scope, classId } });
+    }
+
+    public settingsChanged(baseCurrency: BaseCurrency, toleranceBps: number): void {
+        this.logService.info({ message: 'portfolio settings changed', identifier: SETTINGS, meta: { baseCurrency, toleranceBps } });
     }
 }
