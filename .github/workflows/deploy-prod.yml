@@ -1,0 +1,173 @@
+name: deploy prod
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'SHA ou tag a publicar (vazio publica o HEAD da main)'
+        required: false
+        type: string
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: vera-api
+  NETWORK_STACK: vera-network-prod
+  DATA_STACK: vera-data-prod
+  APP_STACK: vera-app-prod
+  VERA_ENVIRONMENTS: prod
+  AWS_ACCOUNT_ID_PROD: ${{ vars.AWS_ACCOUNT_ID_PROD }}
+  SHARED_INFRA_PROD: ${{ vars.SHARED_INFRA_PROD }}
+  VERA_DOMAIN: ${{ vars.VERA_DOMAIN }}
+
+jobs:
+  guard:
+    if: >-
+      vars.PROD_DEPLOY_ENABLED == 'true'
+      && (
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+        || (
+          github.event_name == 'workflow_run'
+          && github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.event == 'push'
+          && github.event.workflow_run.head_branch == 'main'
+          && github.event.workflow_run.head_repository.full_name == github.repository
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TIP="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "$TIP" != "$HEAD_SHA" ]; then
+            echo "::notice::commit $HEAD_SHA não é mais o tip da main; deploy pulado."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: guard
+    if: needs.guard.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || inputs.ref || github.sha }}
+
+      - name: Mascara valores de infraestrutura
+        run: bash .github/scripts/mask-values.sh AWS_ACCOUNT_ID_PROD SHARED_INFRA_PROD
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID_PROD }}:role/vera-github-deploy-prod
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Mascara outputs de infraestrutura
+        run: bash .github/scripts/mask-outputs.sh "$AWS_REGION" "$NETWORK_STACK" "$DATA_STACK" "$APP_STACK"
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: build and push image
+        id: image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          TAG="$(git rev-parse --short=7 HEAD)"
+          docker build --platform linux/amd64 \
+            -t "$REGISTRY/$ECR_REPOSITORY:$TAG" \
+            -t "$REGISTRY/$ECR_REPOSITORY:latest" .
+          docker push "$REGISTRY/$ECR_REPOSITORY:$TAG"
+          docker push "$REGISTRY/$ECR_REPOSITORY:latest"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: fundação (roles de deploy e rede)
+        run: bash .github/scripts/cdk-deploy.sh "$NETWORK_STACK"
+
+      - name: bootstrap do stack no primeiro deploy
+        run: |
+          FAMILY="$(aws cloudformation describe-stacks --stack-name "$APP_STACK" --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='MigrationTaskFamily'].OutputValue" --output text 2>/dev/null || true)"
+          if [ -z "$FAMILY" ] || [ "$FAMILY" = "None" ]; then
+            echo "stack sem a task de migração — fazendo o primeiro deploy antes de migrar"
+            bash .github/scripts/cdk-deploy.sh "$APP_STACK"
+          fi
+
+      - name: Mascara outputs do stack da aplicação
+        run: bash .github/scripts/mask-outputs.sh "$AWS_REGION" "$APP_STACK"
+
+      - name: migrate
+        env:
+          MIGRATION_IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.image.outputs.tag }}
+        run: |
+          PUBLIC_SUBNET_IDS="$(printf '%s' "$SHARED_INFRA_PROD" | jq -r '.publicSubnetIds | join(",")')"
+          export PUBLIC_SUBNET_IDS
+          bash .github/scripts/run-migration.sh "$APP_STACK" "$AWS_REGION"
+
+      - name: cdk deploy
+        run: bash .github/scripts/cdk-deploy.sh "$APP_STACK"
+
+      - name: wait for the service to stabilise
+        run: |
+          CLUSTER="$(aws cloudformation describe-stacks --stack-name "$APP_STACK" --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text)"
+          SERVICE="$(aws cloudformation describe-stacks --stack-name "$APP_STACK" --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='ServiceName'].OutputValue" --output text)"
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE" --region "$AWS_REGION"
+
+      - name: publica as rotas do túnel no Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx tsx scripts/tunnel.ts prod --routes-only
+
+      - name: smoke
+        run: |
+          output() {
+            aws cloudformation describe-stacks --stack-name "$APP_STACK" --region "$AWS_REGION" \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text 2>/dev/null || true
+          }
+          URL="$(output ApiUrl)"
+          BODY="$(curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors "$URL/health")"
+          echo "$BODY"
+          grep -q '"status":"ok"' <<<"$BODY"
+          BODY="$(curl --fail --silent --show-error "$URL/health/ready")"
+          echo "$BODY"
+          grep -q '"database":true' <<<"$BODY"
