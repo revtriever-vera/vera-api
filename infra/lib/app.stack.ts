@@ -34,7 +34,7 @@ const SERVICE_CPU: number = 512;
 const SERVICE_MEMORY_MIB: number = 2048;
 const LOG_RETENTION: RetentionDays = RetentionDays.ONE_WEEK;
 const DRAIN_SECONDS: number = 120;
-const TUNNEL_IMAGE: string = 'cloudflare/cloudflared:latest';
+const TUNNEL_IMAGE: string = 'cloudflare/cloudflared:2026.9.3';
 const MAILPIT_IMAGE: string = 'axllent/mailpit:v1.31';
 const MAILPIT_MEMORY_MIB: number = 256;
 const MAILPIT_MAX_MESSAGES: number = 500;
@@ -160,7 +160,7 @@ export class AppStack extends Stack {
             memoryLimitMiB: SERVICE_MEMORY_MIB,
             runtimePlatform: this.platform(props.config)
         });
-        this.grantTaskPermissions(task);
+        this.grantTaskPermissions(task, props);
         this.mailFeedback.queue.grantConsumeMessages(task.taskRole);
         this.wireServiceContainers(task, props);
         return this.fargateService(task, props);
@@ -274,10 +274,18 @@ export class AppStack extends Stack {
         }
     }
 
-    private grantTaskPermissions(task: FargateTaskDefinition): void {
+    private grantTaskPermissions(task: FargateTaskDefinition, props: AppStackProps): void {
         task.addToTaskRolePolicy(
-            new PolicyStatement({ effect: Effect.ALLOW, actions: ['ses:SendEmail', 'ses:SendRawEmail'], resources: ['*'] })
+            new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+                resources: [this.sesArn('identity', props.config.domain), this.sesArn('configuration-set', `vera-${props.config.name}`)]
+            })
         );
+    }
+
+    private sesArn(resource: string, name: string): string {
+        return this.formatArn({ service: 'ses', resource, resourceName: name });
     }
 
     private containerEnvironment(props: AppStackProps): Record<string, string> {

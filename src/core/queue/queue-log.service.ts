@@ -7,6 +7,7 @@ const LOG_IDENTIFIER: string = 'queue-consumer';
 const HEARTBEAT_METRIC: string = 'scheduled_command_heartbeat_total';
 const NEXT_RUN_METRIC: string = 'scheduled_command_next_run_timestamp_seconds';
 const OLDEST_WAITING_METRIC: string = 'queue_oldest_waiting_job_age_seconds';
+const FAILED_JOBS_METRIC: string = 'queue_failed_jobs';
 
 @Injectable()
 export class QueueLogService {
@@ -26,6 +27,10 @@ export class QueueLogService {
 
     public oldestWaitingJobAge(queue: QueueName, ageSeconds: number): void {
         this.metrics.gauge(OLDEST_WAITING_METRIC, ageSeconds, { queue });
+    }
+
+    public failedJobs(queue: QueueName, count: number): void {
+        this.metrics.gauge(FAILED_JOBS_METRIC, count, { queue });
     }
 
     public telemetrySampleFailed(queue: QueueName, error: unknown): void {
