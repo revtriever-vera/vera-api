@@ -1,12 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-    buildFixture,
-    CLIENT_ID,
-    Fixture,
-    ITEM_ITAU,
-    ITEM_NUBANK,
-    SENTINEL
-} from '../../../../test/support/bank-connections-fakes';
+import { buildFixture, CLIENT_ID, Fixture, ITEM_ITAU, ITEM_NUBANK, SENTINEL } from '../../../../test/support/bank-connections-fakes';
 import { PluggyCredentialsPlain } from '../drivers/pluggy-session';
 import { PluggyUnavailableError } from '../ports/pluggy-client.errors';
 
@@ -45,7 +38,10 @@ describe('CredentialsApplication', () => {
     it('com 401 da Pluggy não grava nada e devolve invalid_credentials', async () => {
         const fixture: Fixture = buildFixture({ config: { MOCK_PLUGGY_FORCE_401: true } });
 
-        await expect(fixture.credentialsApplication.save(GOOD)).rejects.toMatchObject({ code: 'connections.invalid_credentials', status: 422 });
+        await expect(fixture.credentialsApplication.save(GOOD)).rejects.toMatchObject({
+            code: 'connections.invalid_credentials',
+            status: 422
+        });
 
         expect(fixture.credentials.rows).toHaveLength(0);
     });
@@ -55,7 +51,9 @@ describe('CredentialsApplication', () => {
         await fixture.credentialsApplication.save(GOOD);
         const before: string | undefined = fixture.credentials.rows[0]?.sealed;
 
-        await expect(fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: 'mock-invalid-secret' })).rejects.toMatchObject({
+        await expect(
+            fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: 'mock-invalid-secret' })
+        ).rejects.toMatchObject({
             code: 'connections.invalid_credentials'
         });
 
@@ -84,7 +82,12 @@ describe('CredentialsApplication', () => {
 
     it('propaga erro inesperado do cliente sem gravar', async () => {
         const fixture: Fixture = buildFixture({
-            client: { authenticate: vi.fn().mockRejectedValue(new Error('boom')), getItem: vi.fn(), listAccounts: vi.fn(), listTransactions: vi.fn() }
+            client: {
+                authenticate: vi.fn().mockRejectedValue(new Error('boom')),
+                getItem: vi.fn(),
+                listAccounts: vi.fn(),
+                listTransactions: vi.fn()
+            }
         });
 
         await expect(fixture.credentialsApplication.save(GOOD)).rejects.toThrow('boom');
@@ -161,7 +164,12 @@ describe('CredentialsApplication', () => {
 
     it('testar com a Pluggy fora do ar devolve 502 e não muda o status', async () => {
         const down: Fixture = buildFixture({
-            client: { authenticate: vi.fn().mockRejectedValue(new PluggyUnavailableError('timeout', null, null)), getItem: vi.fn(), listAccounts: vi.fn(), listTransactions: vi.fn() }
+            client: {
+                authenticate: vi.fn().mockRejectedValue(new PluggyUnavailableError('timeout', null, null)),
+                getItem: vi.fn(),
+                listAccounts: vi.fn(),
+                listTransactions: vi.fn()
+            }
         });
         await down.credentialsDomain.replace(await down.vault.seal(new PluggyCredentialsPlain(CLIENT_ID, SENTINEL)));
 

@@ -155,7 +155,8 @@ describe('bank connections items', () => {
     it('desconecta sem apagar o histórico e com purge apaga as contas e as transações', async () => {
         const account: Account = await withCredentials('remover');
         const connected = await harness.call<ResultsBody>(account.token, 'POST', CONNECTIONS, { itemIds: [NUBANK, ITAU] });
-        const [first, second] = connected.body.results.map((result) => result.connection?.id ?? '');
+        const first: string = connected.body.results[0]?.connection?.id ?? '';
+        const second: string = connected.body.results[1]?.connection?.id ?? '';
         const accounts: FinancialAccountService = harness.app.get(FinancialAccountService, { strict: false });
         const keep = await harness.inCompany(account.company.id, async () =>
             accounts.upsertProviderAccount({ provider: 'pluggy', externalId: 'k1', kind: 'checking', name: 'Fica', currency: 'BRL' })

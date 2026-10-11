@@ -109,14 +109,22 @@ describe('PluggyCredentialsEraser e exportação', () => {
 
     it('exporta dica, status e conexões sem selado, client id nem item id inteiro', async () => {
         const fixture: Fixture = await withConnections();
-        fixture.connections.rows[0] = { ...(fixture.connections.rows[0] as NonNullable<(typeof fixture.connections.rows)[0]>), lastSuccessAt: new Date('2026-10-10T10:00:00.000Z') };
+        fixture.connections.rows[0] = {
+            ...(fixture.connections.rows[0] as NonNullable<(typeof fixture.connections.rows)[0]>),
+            lastSuccessAt: new Date('2026-10-10T10:00:00.000Z')
+        };
 
         const exported = await fixture.exporter.exportAll('company-1');
 
         expect(fixture.exporter.area).toBe('bank_connections');
         expect(exported.credentials).toEqual({ configured: true, clientIdHint: '3f9a…a5b6', status: 'valid' });
         expect(exported.connections).toEqual([
-            expect.objectContaining({ connectorName: 'Nubank', itemIdHint: '0000…a001', status: 'active', lastSuccessAt: '2026-10-10T10:00:00.000Z' }),
+            expect.objectContaining({
+                connectorName: 'Nubank',
+                itemIdHint: '0000…a001',
+                status: 'active',
+                lastSuccessAt: '2026-10-10T10:00:00.000Z'
+            }),
             expect.objectContaining({ connectorName: 'Itaú', itemIdHint: '0000…a002', lastSuccessAt: null })
         ]);
         const text: string = JSON.stringify(exported);
@@ -172,7 +180,9 @@ describe('BankConnectionsLogService e BankConnectionsMetricsService', () => {
             'bank-connections-item'
         ]);
         expect(debug.mock.calls[0]?.[0]).toMatchObject({ identifier: 'bank-connections-provider' });
-        expect(warn.mock.calls[0]?.[0]).toMatchObject({ meta: { endpoint: 'item', status: 429, reason: 'rate_limited', retryAfterSeconds: 60 } });
+        expect(warn.mock.calls[0]?.[0]).toMatchObject({
+            meta: { endpoint: 'item', status: 429, reason: 'rate_limited', retryAfterSeconds: 60 }
+        });
     });
 
     it('conta as chamadas à Pluggy por classe de status e as credenciais por ação', () => {

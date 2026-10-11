@@ -19,7 +19,9 @@ const ITEM_BODY: Record<string, unknown> = {
 };
 
 describe('LivePluggyClientDriver', () => {
-    const driver: LivePluggyClientDriver = new LivePluggyClientDriver(configOf({ PLUGGY_DRIVER: 'live', PLUGGY_BASE_URL: 'https://pluggy.invalid' }));
+    const driver: LivePluggyClientDriver = new LivePluggyClientDriver(
+        configOf({ PLUGGY_DRIVER: 'live', PLUGGY_BASE_URL: 'https://pluggy.invalid' })
+    );
 
     afterEach(() => {
         vi.unstubAllGlobals();
@@ -82,12 +84,22 @@ describe('LivePluggyClientDriver', () => {
                 .mockResolvedValueOnce(json(200, { id: 'i', status: 'UPDATING', lastUpdatedAt: 'não é data', consentExpiresAt: null }))
         );
 
-        expect(await driver.getItem(new PluggySession('k'), 'i')).toMatchObject({ connectorName: null, lastUpdatedAt: null, consentExpiresAt: null });
+        expect(await driver.getItem(new PluggySession('k'), 'i')).toMatchObject({
+            connectorName: null,
+            lastUpdatedAt: null,
+            consentExpiresAt: null
+        });
         expect(await driver.getItem(new PluggySession('k'), 'i')).toMatchObject({ lastUpdatedAt: null, consentExpiresAt: null });
     });
 
     it('devolve nulo no 404 e repassa 429 com o Retry-After', async () => {
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(json(404, {})).mockResolvedValueOnce(json(429, {}, { 'retry-after': '60' })));
+        vi.stubGlobal(
+            'fetch',
+            vi
+                .fn()
+                .mockResolvedValueOnce(json(404, {}))
+                .mockResolvedValueOnce(json(429, {}, { 'retry-after': '60' }))
+        );
 
         expect(await driver.getItem(new PluggySession('k'), 'i')).toBeNull();
         await expect(driver.getItem(new PluggySession('k'), 'i')).rejects.toMatchObject({
@@ -113,12 +125,17 @@ describe('LivePluggyClientDriver', () => {
         const custom: LivePluggyClientDriver = new LivePluggyClientDriver(
             configOf({ PLUGGY_BASE_URL: 'https://pluggy.invalid', PLUGGY_AUTH_PATH: '/v9/auth', PLUGGY_ITEM_PATH: '/v9/items' })
         );
-        const fetchMock: ReturnType<typeof vi.fn> = vi.fn().mockImplementation(() => Promise.resolve(json(200, { apiKey: 'k', ...ITEM_BODY })));
+        const fetchMock: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockImplementation(() => Promise.resolve(json(200, { apiKey: 'k', ...ITEM_BODY })));
         vi.stubGlobal('fetch', fetchMock);
 
         await custom.authenticate(new PluggyCredentialsPlain('id', 'secret-123456789012'));
         await custom.getItem(new PluggySession('k'), 'x');
 
-        expect(fetchMock.mock.calls.map((call: unknown[]) => call[0])).toEqual(['https://pluggy.invalid/v9/auth', 'https://pluggy.invalid/v9/items/x']);
+        expect(fetchMock.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            'https://pluggy.invalid/v9/auth',
+            'https://pluggy.invalid/v9/items/x'
+        ]);
     });
 });

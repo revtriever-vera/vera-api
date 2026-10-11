@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { configOf, CLIENT_ID, ITEM_ITAU, ITEM_LOGIN_ERROR, ITEM_MISSING, ITEM_NUBANK } from '../../../../test/support/bank-connections-fakes';
+import {
+    configOf,
+    CLIENT_ID,
+    ITEM_ITAU,
+    ITEM_LOGIN_ERROR,
+    ITEM_MISSING,
+    ITEM_NUBANK
+} from '../../../../test/support/bank-connections-fakes';
 import { SpendingDatasetService } from '../../transactions/services/spending-dataset.service';
 import { PluggyAccount, PluggyTransaction, PluggyTransactionPage } from '../ports/pluggy-client.port';
 import { MOCK_INVALID_SECRET, MOCK_PAGE_SIZE, MOCK_UNAVAILABLE_SECRET, MockPluggyClientDriver } from './mock-pluggy-client.driver';
@@ -26,7 +33,9 @@ describe('MockPluggyClientDriver', () => {
     it('aceita qualquer client id e recusa o segredo de teste inválido com 401', async () => {
         const driver: MockPluggyClientDriver = driverOf();
 
-        await expect(driver.authenticate(new PluggyCredentialsPlain(CLIENT_ID, 'qualquer-segredo-valido'))).resolves.toBeInstanceOf(PluggySession);
+        await expect(driver.authenticate(new PluggyCredentialsPlain(CLIENT_ID, 'qualquer-segredo-valido'))).resolves.toBeInstanceOf(
+            PluggySession
+        );
         await expect(driver.authenticate(new PluggyCredentialsPlain(CLIENT_ID, MOCK_INVALID_SECRET))).rejects.toMatchObject({
             name: 'PluggyAuthRejectedError'
         });
@@ -40,7 +49,9 @@ describe('MockPluggyClientDriver', () => {
     });
 
     it('MOCK_PLUGGY_FORCE_401 derruba toda autenticação', async () => {
-        await expect(driverOf({ MOCK_PLUGGY_FORCE_401: true }).authenticate(new PluggyCredentialsPlain(CLIENT_ID, 'segredo-valido-1234'))).rejects.toMatchObject({
+        await expect(
+            driverOf({ MOCK_PLUGGY_FORCE_401: true }).authenticate(new PluggyCredentialsPlain(CLIENT_ID, 'segredo-valido-1234'))
+        ).rejects.toMatchObject({
             name: 'PluggyAuthRejectedError'
         });
     });
@@ -63,14 +74,22 @@ describe('MockPluggyClientDriver', () => {
         const itau: readonly PluggyAccount[] = await driver.listAccounts(SESSION, ITEM_ITAU);
 
         expect(nubank.map((account: PluggyAccount) => account.id).sort()).toEqual(['nubank-card', 'nubank-checking']);
-        expect(nubank.find((account: PluggyAccount) => account.id === 'nubank-card')).toMatchObject({ type: 'CREDIT', subtype: 'CREDIT_CARD' });
+        expect(nubank.find((account: PluggyAccount) => account.id === 'nubank-card')).toMatchObject({
+            type: 'CREDIT',
+            subtype: 'CREDIT_CARD'
+        });
         expect(itau.map((account: PluggyAccount) => account.id)).toEqual(['itau-checking']);
         expect(await driver.listAccounts(SESSION, ITEM_MISSING)).toEqual([]);
     });
 
     it('pagina as transações de 50 em 50 com cursor, cobrindo o conjunto canônico', async () => {
         const driver: MockPluggyClientDriver = driverOf();
-        const first: PluggyTransactionPage = await driver.listTransactions(SESSION, { accountId: 'nubank-card', from: null, cursor: null, pageSize: 10 });
+        const first: PluggyTransactionPage = await driver.listTransactions(SESSION, {
+            accountId: 'nubank-card',
+            from: null,
+            cursor: null,
+            pageSize: 10
+        });
 
         const all: PluggyTransaction[] = await allTransactions(driver, 'nubank-card');
 
@@ -86,14 +105,23 @@ describe('MockPluggyClientDriver', () => {
         const checking: PluggyTransaction[] = await allTransactions(driver, 'itau-checking');
 
         expect(card.find((transaction: PluggyTransaction) => transaction.description === 'NETFLIX.COM')?.amount).toBe(55.9);
-        expect(checking.find((transaction: PluggyTransaction) => transaction.description === 'ALUGUEL IMOBILIARIA LOPES')?.amount).toBe(-6500);
+        expect(checking.find((transaction: PluggyTransaction) => transaction.description === 'ALUGUEL IMOBILIARIA LOPES')?.amount).toBe(
+            -6500
+        );
     });
 
     it('leva o documento do favorecido dos Pix e a categoria da Pluggy', async () => {
         const checking: PluggyTransaction[] = await allTransactions(driverOf(), 'itau-checking');
 
-        const pix: PluggyTransaction | undefined = checking.find((transaction: PluggyTransaction) => transaction.description.startsWith('Pix enviado'));
-        expect(pix).toMatchObject({ receiverName: 'Maria Souza', receiverDocument: '00000000191', categoryId: '05000000', status: 'POSTED' });
+        const pix: PluggyTransaction | undefined = checking.find((transaction: PluggyTransaction) =>
+            transaction.description.startsWith('Pix enviado')
+        );
+        expect(pix).toMatchObject({
+            receiverName: 'Maria Souza',
+            receiverDocument: '00000000191',
+            categoryId: '05000000',
+            status: 'POSTED'
+        });
         expect(checking.find((transaction: PluggyTransaction) => transaction.categoryId === '17000000')).toBeDefined();
     });
 
@@ -102,7 +130,12 @@ describe('MockPluggyClientDriver', () => {
         const all: PluggyTransaction[] = await allTransactions(driver, 'nubank-checking');
         const last: string = all[all.length - 1]?.date ?? '';
 
-        const since: PluggyTransactionPage = await driver.listTransactions(SESSION, { accountId: 'nubank-checking', from: last, cursor: 'lixo', pageSize: 10 });
+        const since: PluggyTransactionPage = await driver.listTransactions(SESSION, {
+            accountId: 'nubank-checking',
+            from: last,
+            cursor: 'lixo',
+            pageSize: 10
+        });
 
         expect(since.results.length).toBeGreaterThan(0);
         expect(since.results.every((transaction: PluggyTransaction) => transaction.date >= last)).toBe(true);

@@ -12,8 +12,8 @@ describe('PluggySession', () => {
         expect(JSON.stringify(session)).toBe('"[redacted]"');
         expect(JSON.stringify({ session })).not.toContain(API_KEY);
         expect(inspect(session)).toBe('[redacted]');
-        expect(`${String(session)}`).toBe('[redacted]');
-        expect(`${session.toString()}`).not.toContain(API_KEY);
+        expect(String(session)).toBe('[redacted]');
+        expect(session.toString()).not.toContain(API_KEY);
     });
 
     it('entrega a chave só pelo método explícito', () => {

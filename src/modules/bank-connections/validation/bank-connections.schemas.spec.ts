@@ -35,7 +35,15 @@ describe('connectItemsSchema', () => {
 
     it.each([
         ['lista vazia', { itemIds: [] }],
-        ['mais de 10', { itemIds: Array.from({ length: 11 }, (_unused, index) => `00000000-0000-4000-8000-0000000000${String(index).padStart(2, '0')}`) }],
+        [
+            'mais de 10',
+            {
+                itemIds: Array.from(
+                    { length: 11 },
+                    (_unused, index) => `00000000-0000-4000-8000-0000000000${String(index).padStart(2, '0')}`
+                )
+            }
+        ],
         ['id que não é uuid', { itemIds: ['segredo-colado-no-campo-errado-123'] }],
         ['sem lista', {}]
     ])('recusa %s', (_label, body) => {
@@ -55,7 +63,10 @@ describe('SecretSafeValidationPipe', () => {
     const pipe: SecretSafeValidationPipe<{ clientId: string; clientSecret: string }> = new SecretSafeValidationPipe(saveCredentialsSchema);
 
     it('devolve o corpo validado', () => {
-        expect(pipe.transform({ clientId: CLIENT_ID, clientSecret: 'abcdefghijklmnop' })).toEqual({ clientId: CLIENT_ID, clientSecret: 'abcdefghijklmnop' });
+        expect(pipe.transform({ clientId: CLIENT_ID, clientSecret: 'abcdefghijklmnop' })).toEqual({
+            clientId: CLIENT_ID,
+            clientSecret: 'abcdefghijklmnop'
+        });
     });
 
     it('reporta só o caminho e a regra, sem ecoar o valor enviado', () => {

@@ -21,7 +21,9 @@ describe('ConnectionsApplication', () => {
     it('sem credencial devolve credentials_missing', async () => {
         const fixture: Fixture = buildFixture();
 
-        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({ code: 'connections.credentials_missing' });
+        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({
+            code: 'connections.credentials_missing'
+        });
     });
 
     it('com a credencial marcada inválida devolve invalid_credentials sem chamar a Pluggy', async () => {
@@ -29,7 +31,9 @@ describe('ConnectionsApplication', () => {
         await fixture.vault.markInvalid('invalid_credentials');
         const authenticate = vi.spyOn(fixture.client, 'authenticate');
 
-        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({ code: 'connections.invalid_credentials' });
+        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({
+            code: 'connections.invalid_credentials'
+        });
 
         expect(authenticate).not.toHaveBeenCalled();
     });
@@ -38,7 +42,9 @@ describe('ConnectionsApplication', () => {
         const rejecting: Fixture = await withCredentials();
         vi.spyOn(rejecting.client, 'authenticate').mockRejectedValue(new PluggyAuthRejectedError());
 
-        await expect(rejecting.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({ code: 'connections.invalid_credentials' });
+        await expect(rejecting.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({
+            code: 'connections.invalid_credentials'
+        });
 
         expect(rejecting.credentials.rows[0]).toMatchObject({ status: 'invalid' });
     });
@@ -47,7 +53,9 @@ describe('ConnectionsApplication', () => {
         const fixture: Fixture = await withCredentials();
         vi.spyOn(fixture.client, 'authenticate').mockRejectedValue(new PluggyUnavailableError('server_error', 503, null));
 
-        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({ code: 'connections.provider_unavailable' });
+        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({
+            code: 'connections.provider_unavailable'
+        });
 
         expect(fixture.connections.rows).toHaveLength(0);
     });
@@ -61,7 +69,14 @@ describe('ConnectionsApplication', () => {
         expect(authenticate).toHaveBeenCalledTimes(1);
         expect(results.map((result) => result.outcome)).toEqual(['connected', 'connected', 'not_found', 'connected']);
         expect(results.map((result) => result.itemIdHint)).toEqual(['0000…a001', '0000…a002', '0000…a404', '0000…a409']);
-        expect(results[0]?.connection).toMatchObject({ connectorName: 'Nubank', status: 'active', statusReason: null, accounts: [], lastRun: null, syncing: false });
+        expect(results[0]?.connection).toMatchObject({
+            connectorName: 'Nubank',
+            status: 'active',
+            statusReason: null,
+            accounts: [],
+            lastRun: null,
+            syncing: false
+        });
         expect(results[2]?.connection).toBeNull();
         expect(results[3]?.connection).toMatchObject({ status: 'needs_attention', statusReason: 'login_error' });
         expect(JSON.stringify(results)).not.toContain(ITEM_NUBANK);
@@ -191,7 +206,14 @@ describe('ConnectionsApplication', () => {
             connectorName: 'Nubank',
             syncing: true,
             accounts: [{ accountId: 'account-1', name: 'Conta account-1', kind: 'checking', numberLast4: '1234' }],
-            lastRun: { trigger: 'initial', status: 'running', startedAt: '2026-10-11T10:00:00.000Z', finishedAt: null, inserted: 3, failureCode: null }
+            lastRun: {
+                trigger: 'initial',
+                status: 'running',
+                startedAt: '2026-10-11T10:00:00.000Z',
+                finishedAt: null,
+                inserted: 3,
+                failureCode: null
+            }
         });
     });
 

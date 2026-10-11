@@ -14,7 +14,9 @@ describe('PluggyHttp', () => {
     });
 
     it('expõe só postAuth e get, nenhum método de escrita', () => {
-        const methods: string[] = Object.getOwnPropertyNames(PluggyHttp.prototype).filter((name: string): boolean => name !== 'constructor');
+        const methods: string[] = Object.getOwnPropertyNames(PluggyHttp.prototype).filter(
+            (name: string): boolean => name !== 'constructor'
+        );
 
         expect(methods.sort()).toEqual(['get', 'postAuth']);
     });
@@ -44,7 +46,10 @@ describe('PluggyHttp', () => {
     });
 
     it('trata 401 numa leitura como chave recusada e 404 e 403 como não encontrado', async () => {
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(respond(401)).mockResolvedValueOnce(respond(404)).mockResolvedValueOnce(respond(403)));
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValueOnce(respond(401)).mockResolvedValueOnce(respond(404)).mockResolvedValueOnce(respond(403))
+        );
 
         await expect(http.get('/items/x', 'k')).rejects.toBeInstanceOf(PluggyAuthRejectedError);
         await expect(http.get('/items/x', 'k')).rejects.toBeInstanceOf(PluggyNotFoundError);
@@ -87,7 +92,10 @@ describe('PluggyHttp', () => {
 
     it('distingue timeout de rede fora do ar e não repete a URL no erro', async () => {
         const timeout: Error = Object.assign(new Error('aborted'), { name: 'TimeoutError' });
-        vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(timeout).mockRejectedValueOnce(new Error('connect ECONNREFUSED https://pluggy.invalid/x?token=1')));
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockRejectedValueOnce(timeout).mockRejectedValueOnce(new Error('connect ECONNREFUSED https://pluggy.invalid/x?token=1'))
+        );
 
         await expect(http.get('/x', 'k')).rejects.toMatchObject({ reason: 'timeout', httpStatus: null });
         const unreachable: unknown = await http.get('/x?token=1', 'k').catch((error: unknown) => error);

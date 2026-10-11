@@ -8,7 +8,13 @@ import { BankConnectionsMetricsService } from '../services/bank-connections-metr
 import { ObservedPluggyClient } from './observed-pluggy-client';
 import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
-function build(inner: Partial<PluggyClientPort>): { client: ObservedPluggyClient; count: ReturnType<typeof vi.fn>; info: ReturnType<typeof vi.fn>; debug: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn> } {
+function build(inner: Partial<PluggyClientPort>): {
+    client: ObservedPluggyClient;
+    count: ReturnType<typeof vi.fn>;
+    info: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+} {
     const count: ReturnType<typeof vi.fn> = vi.fn();
     const info: ReturnType<typeof vi.fn> = vi.fn();
     const debug: ReturnType<typeof vi.fn> = vi.fn();
@@ -32,7 +38,10 @@ describe('ObservedPluggyClient', () => {
 
         expect(count).toHaveBeenCalledWith('vera_pluggy_requests_total', { endpoint: 'auth', status: '2xx' });
         expect(debug).toHaveBeenCalledWith(
-            expect.objectContaining({ identifier: 'bank-connections-provider', meta: { endpoint: 'auth', status: 200, reason: null, retryAfterSeconds: null } })
+            expect.objectContaining({
+                identifier: 'bank-connections-provider',
+                meta: { endpoint: 'auth', status: 200, reason: null, retryAfterSeconds: null }
+            })
         );
         expect(JSON.stringify([count.mock.calls, debug.mock.calls])).not.toContain('secret-sentinel');
     });
@@ -54,7 +63,12 @@ describe('ObservedPluggyClient', () => {
         [new Error('boom'), 'auth', 'network', null, 'unexpected', null]
     ])('registra a falha %# e a relança', async (error, endpoint, statusClass, status, reason, retryAfterSeconds) => {
         const rejecting: ReturnType<typeof vi.fn> = vi.fn().mockRejectedValue(error);
-        const { client, count, warn } = build({ authenticate: rejecting, getItem: rejecting, listAccounts: rejecting, listTransactions: rejecting });
+        const { client, count, warn } = build({
+            authenticate: rejecting,
+            getItem: rejecting,
+            listAccounts: rejecting,
+            listTransactions: rejecting
+        });
         const calls: Record<string, () => Promise<unknown>> = {
             auth: async () => client.authenticate(CREDENTIALS),
             item: async () => client.getItem(SESSION, 'i'),
@@ -62,7 +76,7 @@ describe('ObservedPluggyClient', () => {
             transactions: async () => client.listTransactions(SESSION, { accountId: 'a', from: null, cursor: null, pageSize: 50 })
         };
 
-        await expect((calls[endpoint as string] as () => Promise<unknown>)()).rejects.toBe(error);
+        await expect((calls[endpoint] as () => Promise<unknown>)()).rejects.toBe(error);
 
         expect(count).toHaveBeenCalledWith('vera_pluggy_requests_total', { endpoint, status: statusClass });
         expect(warn).toHaveBeenCalledWith(expect.objectContaining({ meta: { endpoint, status, reason, retryAfterSeconds } }));

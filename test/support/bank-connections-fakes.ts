@@ -58,7 +58,11 @@ export class InMemoryCredentialsRepository {
         return Promise.resolve(this.rows[0] ?? null);
     }
 
-    public replaceCurrent(data: { sealed: string; sealerDriver: string; clientIdHint: string }): Promise<{ credential: PluggyCredential; replaced: boolean }> {
+    public replaceCurrent(data: {
+        sealed: string;
+        sealerDriver: string;
+        clientIdHint: string;
+    }): Promise<{ credential: PluggyCredential; replaced: boolean }> {
         const replaced: boolean = this.rows.length > 0;
         const credential: PluggyCredential = {
             id: nextId('credential'),
@@ -230,14 +234,18 @@ export class InMemoryLinksRepository {
     }
 
     public listByConnections(ids: readonly string[]): Promise<BankConnectionAccount[]> {
-        return Promise.resolve(this.rows.filter((row: BankConnectionAccount): boolean => row.deletedAt === null && ids.includes(row.connectionId)));
+        return Promise.resolve(
+            this.rows.filter((row: BankConnectionAccount): boolean => row.deletedAt === null && ids.includes(row.connectionId))
+        );
     }
 
     public unlinkConnections(ids: readonly string[]): Promise<BankConnectionAccount[]> {
         const removed: BankConnectionAccount[] = this.rows.filter(
             (row: BankConnectionAccount): boolean => row.deletedAt === null && ids.includes(row.connectionId)
         );
-        this.rows = this.rows.map((row: BankConnectionAccount): BankConnectionAccount => (removed.includes(row) ? { ...row, deletedAt: new Date() } : row));
+        this.rows = this.rows.map((row: BankConnectionAccount): BankConnectionAccount =>
+            removed.includes(row) ? { ...row, deletedAt: new Date() } : row
+        );
         return Promise.resolve(removed);
     }
 }
@@ -308,66 +316,130 @@ function contextOf(companyId: string): AppContext {
         getOrNull: () => data,
         run: <T>(_data: unknown, fn: () => T): T => fn(),
         enrich: (): void => undefined
-    } as unknown as AppContext;
+    };
 }
 
-export function buildFixture(options: { config?: Partial<ConfigType<typeof bankConnectionsConfig>>; client?: PluggyClientPort } = {}): Fixture {
-    TransactionalContext.set({ withTransaction: async <T>(fn: () => Promise<T>): Promise<T> => fn() } as unknown as DatabaseClient);
+interface Observability {
+    readonly logCalls: unknown[];
+    readonly metricCalls: unknown[];
+    readonly logs: BankConnectionsLogService;
+    readonly metrics: BankConnectionsMetricsService;
+}
+
+function capturingObservability(): Observability {
     const logCalls: unknown[] = [];
     const metricCalls: unknown[] = [];
-    const logService: LogService = {
-        info: (entry: unknown): number => logCalls.push(entry),
-        warn: (entry: unknown): number => logCalls.push(entry),
-        error: (entry: unknown): number => logCalls.push(entry),
-        debug: (entry: unknown): number => logCalls.push(entry)
-    } as unknown as LogService;
-    const metricsService: MetricsService = {
-        count: (...args: unknown[]): number => metricCalls.push(args),
-        observe: (...args: unknown[]): number => metricCalls.push(args),
-        gauge: (...args: unknown[]): number => metricCalls.push(args)
-    } as unknown as MetricsService;
-    const logs: BankConnectionsLogService = new BankConnectionsLogService(logService);
-    const metrics: BankConnectionsMetricsService = new BankConnectionsMetricsService(metricsService);
-    const credentials: InMemoryCredentialsRepository = new InMemoryCredentialsRepository();
-    const connections: InMemoryConnectionsRepository = new InMemoryConnectionsRepository();
-    const links: InMemoryLinksRepository = new InMemoryLinksRepository();
-    const runs: InMemoryRunsRepository = new InMemoryRunsRepository();
-    const credentialsDomain: PluggyCredentialsDomain = new PluggyCredentialsDomain(credentials as never);
-    const connectionDomain: BankConnectionDomain = new BankConnectionDomain(connections as never, links as never, runs as never);
+    const record = (entry: unknown): number => logCalls.push(entry);
+    const track = (...args: unknown[]): number => metricCalls.push(args);
+    const logService: LogService = { info: record, warn: record, error: record, debug: record } as unknown as LogService;
+    const metricsService: MetricsService = { count: track, observe: track, gauge: track } as unknown as MetricsService;
+    return {
+        logCalls,
+        metricCalls,
+        logs: new BankConnectionsLogService(logService),
+        metrics: new BankConnectionsMetricsService(metricsService)
+    };
+}
+
+function fakeAccountService(): Fixture['accountService'] {
+    return {
+        findByIds: vi
+            .fn()
+            .mockImplementation((ids: readonly string[]): Promise<AccountSummary[]> =>
+                Promise.resolve(
+                    ids.map((id: string): AccountSummary => ({ id, name: `Conta ${id}`, kind: 'checking', numberLast4: '1234' }))
+                )
+            ),
+        removeProviderAccounts: vi.fn().mockResolvedValue(0)
+    };
+}
+
+interface Stores {
+    readonly credentials: InMemoryCredentialsRepository;
+    readonly connections: InMemoryConnectionsRepository;
+    readonly links: InMemoryLinksRepository;
+    readonly runs: InMemoryRunsRepository;
+}
+
+function newStores(): Stores {
+    return {
+        credentials: new InMemoryCredentialsRepository(),
+        connections: new InMemoryConnectionsRepository(),
+        links: new InMemoryLinksRepository(),
+        runs: new InMemoryRunsRepository()
+    };
+}
+
+interface Domains {
+    readonly credentialsDomain: PluggyCredentialsDomain;
+    readonly connectionDomain: BankConnectionDomain;
+}
+
+function newDomains(stores: Stores): Domains {
+    return {
+        credentialsDomain: new PluggyCredentialsDomain(stores.credentials as never),
+        connectionDomain: new BankConnectionDomain(stores.connections as never, stores.links as never, stores.runs as never)
+    };
+}
+
+interface Core {
+    readonly context: AppContext;
+    readonly sealer: LocalSecretSealerDriver;
+    readonly vault: CredentialsVaultService;
+    readonly client: PluggyClientPort;
+    readonly publisher: RecordingPublisher;
+    readonly accountService: Fixture['accountService'];
+}
+
+type BuildOptions = { config?: Partial<ConfigType<typeof bankConnectionsConfig>>; client?: PluggyClientPort };
+
+function newCore(options: BuildOptions, domains: Domains, observability: Observability): Core {
     const context: AppContext = contextOf(COMPANY_ID);
     ContextHolder.set(context);
     const sealer: LocalSecretSealerDriver = new LocalSecretSealerDriver(MASTER_KEY);
-    const vault: CredentialsVaultService = new CredentialsVaultService(credentialsDomain, sealer, context);
     const inner: PluggyClientPort = options.client ?? new MockPluggyClientDriver(configOf(options.config), new SpendingDatasetService());
-    const client: PluggyClientPort = new ObservedPluggyClient(inner, logs, metrics);
-    const authenticator: PluggyAuthenticatorService = new PluggyAuthenticatorService(client, vault);
-    const publisher: RecordingPublisher = new RecordingPublisher();
-    const sync: BankSyncPublisherService = new BankSyncPublisherService(publisher, context);
-    const accountService = {
-        findByIds: vi.fn().mockImplementation((ids: readonly string[]): Promise<AccountSummary[]> =>
-            Promise.resolve(ids.map((id: string): AccountSummary => ({ id, name: `Conta ${id}`, kind: 'checking', numberLast4: '1234' })))
-        ),
-        removeProviderAccounts: vi.fn().mockResolvedValue(0)
-    };
-    const accounts: FinancialAccountService = accountService as unknown as FinancialAccountService;
-    const views: ConnectionViewService = new ConnectionViewService(connectionDomain, accounts);
     return {
-        credentials,
-        connections,
-        links,
-        runs,
-        publisher,
-        logCalls,
-        metricCalls,
-        accountService,
-        client,
-        vault,
+        context,
+        sealer,
+        vault: new CredentialsVaultService(domains.credentialsDomain, sealer, context),
+        client: new ObservedPluggyClient(inner, observability.logs, observability.metrics),
+        publisher: new RecordingPublisher(),
+        accountService: fakeAccountService()
+    };
+}
+
+export function buildFixture(options: BuildOptions = {}): Fixture {
+    TransactionalContext.set({ withTransaction: async <T>(fn: () => Promise<T>): Promise<T> => fn() } as unknown as DatabaseClient);
+    const observability: Observability = capturingObservability();
+    const stores: Stores = newStores();
+    const domains: Domains = newDomains(stores);
+    const core: Core = newCore(options, domains, observability);
+    return {
+        ...stores,
+        ...domains,
+        ...core,
+        ...wireApplications(core, domains, observability),
+        logCalls: observability.logCalls,
+        metricCalls: observability.metricCalls,
+        eraser: new PluggyCredentialsEraser(domains.credentialsDomain),
+        exporter: new BankConnectionsExporter(domains.credentialsDomain, domains.connectionDomain)
+    };
+}
+
+function wireApplications(
+    core: Core,
+    domains: Domains,
+    observability: Observability
+): Pick<Fixture, 'credentialsApplication' | 'connectionsApplication'> {
+    const authenticator: PluggyAuthenticatorService = new PluggyAuthenticatorService(core.client, core.vault);
+    const sync: BankSyncPublisherService = new BankSyncPublisherService(core.publisher, core.context);
+    const accounts: FinancialAccountService = core.accountService as unknown as FinancialAccountService;
+    const views: ConnectionViewService = new ConnectionViewService(domains.connectionDomain, accounts);
+    const { logs, metrics } = observability;
+    const { vault, client } = core;
+    const { connectionDomain } = domains;
+    return {
         credentialsApplication: new CredentialsApplication(vault, authenticator, connectionDomain, accounts, sync, logs, metrics),
-        connectionsApplication: new ConnectionsApplication(vault, authenticator, client, connectionDomain, views, accounts, sync, logs),
-        eraser: new PluggyCredentialsEraser(credentialsDomain),
-        exporter: new BankConnectionsExporter(credentialsDomain, connectionDomain),
-        credentialsDomain,
-        connectionDomain,
-        sealer
+        connectionsApplication: new ConnectionsApplication(vault, authenticator, client, connectionDomain, views, accounts, sync, logs)
     };
 }
