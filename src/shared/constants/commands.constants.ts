@@ -1,6 +1,7 @@
 export const COMMAND_KEYS = {
     catalogSyncWeekly: 'catalog-sync-weekly-command',
-    catalogSyncTesouroDaily: 'catalog-sync-tesouro-daily-command'
+    catalogSyncTesouroDaily: 'catalog-sync-tesouro-daily-command',
+    fixedIncomeIndexSync: 'fixed-income-index-sync-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
@@ -16,6 +17,7 @@ export const CRON = {
     everyDayAtFourAm: '0 4 * * *',
     everyDayAtSevenAm: '0 7 * * *',
     everyDayAtNineAm: '0 9 * * *',
+    everyDayAtNineThirtyAm: '30 9 * * *',
     twiceDaily: '0 9,21 * * *',
     everyMondayAtSixAm: '0 6 * * 1'
 } as const;
