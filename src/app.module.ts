@@ -15,6 +15,7 @@ import { QueueModule } from './core/queue/queue.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
 
 const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'];
 
@@ -42,7 +43,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         HttpModule,
         HealthModule,
         IdentityModule,
-        AllocationModule
+        AllocationModule,
+        OnboardingModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
