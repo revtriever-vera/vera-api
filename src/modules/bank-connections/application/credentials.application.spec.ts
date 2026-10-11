@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildFixture, CLIENT_ID, Fixture, ITEM_ITAU, ITEM_NUBANK, SENTINEL } from '../../../../test/support/bank-connections-fakes';
+import {
+    buildFixture,
+    CLIENT_ID,
+    Fixture,
+    ITEM_ITAU,
+    ITEM_NUBANK,
+    SENTINEL,
+    COMPANY_ID
+} from '../../../../test/support/bank-connections-fakes';
 import { PluggyCredentialsPlain } from '../drivers/pluggy-session';
 import { PluggyUnavailableError } from '../ports/pluggy-client.errors';
 
@@ -110,9 +118,9 @@ describe('CredentialsApplication', () => {
         expect(fixture.publisher.published[0]).toMatchObject({
             queue: 'vera-bank-connections',
             type: 'bank-connections.sync.requested',
-            payload: { connectionId: paused, companyId: 'company-1', trigger: 'credentials_rotated' }
+            payload: { connectionId: paused, companyId: COMPANY_ID, trigger: 'credentials_rotated' }
         });
-        expect(fixture.publisher.published[0]?.options?.jobId).toMatch(new RegExp(`^pluggy-sync-${paused}-credentials_rotated-\\d{10}$`));
+        expect(fixture.publisher.published[0]?.options?.jobId).toMatch(new RegExp(`^pluggy-sync-${paused}-credentials_rotated-\\d{17}$`));
         expect(fixture.logCalls).toContainEqual(expect.objectContaining({ meta: { action: 'rotated', status: 'valid' } }));
     });
 

@@ -7,7 +7,8 @@ import {
     ITEM_LOGIN_ERROR,
     ITEM_MISSING,
     ITEM_NUBANK,
-    SENTINEL
+    SENTINEL,
+    COMPANY_ID
 } from '../../../../test/support/bank-connections-fakes';
 import { PluggyAuthRejectedError, PluggyUnavailableError } from '../ports/pluggy-client.errors';
 
@@ -89,7 +90,7 @@ describe('ConnectionsApplication', () => {
 
         expect(fixture.publisher.published).toHaveLength(1);
         const created: string = fixture.connections.rows[0]?.id ?? '';
-        expect(fixture.publisher.published[0]?.payload).toEqual({ connectionId: created, companyId: 'company-1', trigger: 'initial' });
+        expect(fixture.publisher.published[0]?.payload).toEqual({ connectionId: created, companyId: COMPANY_ID, trigger: 'initial' });
         expect(fixture.publisher.published[0]?.options?.jobId).toMatch(new RegExp(`^pluggy-sync-${created}-initial-\\d{10}$`));
     });
 
@@ -177,7 +178,7 @@ describe('ConnectionsApplication', () => {
         fixture.links.link(connection?.id ?? '', 'account-1');
         fixture.runs.rows.push({
             id: 'run-1',
-            companyId: 'company-1',
+            companyId: COMPANY_ID,
             connectionId: connection?.id ?? '',
             trigger: 'initial',
             status: 'running',

@@ -8,13 +8,14 @@ import {
     Fixture,
     ITEM_ITAU,
     ITEM_NUBANK,
-    SENTINEL
+    SENTINEL,
+    COMPANY_ID
 } from '../../../../test/support/bank-connections-fakes';
 import { PluggyCredentialsPlain } from '../drivers/pluggy-session';
 import { BankConnectionReaderService } from './bank-connection-reader.service';
 import { BankConnectionsLogService } from './bank-connections-log.service';
 import { BankConnectionsMetricsService, statusClassOf } from './bank-connections-metrics.service';
-import { BankSyncPublisherService, hourStampOf, syncJobId } from './bank-sync-publisher.service';
+import { BankSyncPublisherService, hourStampOf, manualStampOf, syncJobId } from './bank-sync-publisher.service';
 import { PluggyAvailabilityService } from './pluggy-availability.service';
 import { PluggyCredentialsResealer } from './pluggy-credentials.resealer';
 
@@ -82,21 +83,41 @@ describe('BankConnectionReaderService', () => {
         const reader: BankConnectionReaderService = new BankConnectionReaderService(fixture.connectionDomain);
 
         expect(await reader.countActive()).toBe(2);
-        expect(await reader.listActiveAcrossTenants()).toEqual([{ id: fixture.connections.rows[0]?.id, companyId: 'company-1' }]);
+        expect(await reader.listActiveAcrossTenants()).toEqual([{ id: fixture.connections.rows[0]?.id, companyId: COMPANY_ID }]);
         expect(await reader.findByIdAcrossTenants(fixture.connections.rows[0]?.id ?? '')).toEqual({
             id: fixture.connections.rows[0]?.id,
-            companyId: 'company-1'
+            companyId: COMPANY_ID
         });
         expect(await reader.findByIdAcrossTenants('nope')).toBeNull();
     });
 });
 
 describe('BankSyncPublisherService', () => {
-    it('monta o job id determinístico por conexão, gatilho e hora', () => {
-        const at: Date = new Date('2026-10-11T09:45:12.000Z');
+    it('monta o job id determinístico pelo que distingue duas execuções legítimas de cada gatilho', () => {
+        const at: Date = new Date('2026-10-11T09:45:12.345Z');
 
         expect(hourStampOf(at)).toBe('2026101109');
-        expect(syncJobId('c1', 'daily', at)).toBe('pluggy-sync-c1-daily-2026101109');
+        expect(manualStampOf(at)).toBe('202610110940');
+        expect(syncJobId('c1', 'initial', at)).toBe('pluggy-sync-c1-initial-2026101109');
+        expect(syncJobId('c1', 'daily', at)).toBe('pluggy-sync-c1-daily-20261011');
+        expect(syncJobId('c1', 'manual', at)).toBe('pluggy-sync-c1-manual-202610110940');
+        expect(syncJobId('c1', 'credentials_rotated', at)).toBe('pluggy-sync-c1-credentials_rotated-20261011094512345');
+    });
+
+    it('duas rotações de credencial na mesma hora não colidem no job id', () => {
+        const first: string = syncJobId('c1', 'credentials_rotated', new Date('2026-10-11T09:10:00.000Z'));
+        const second: string = syncJobId('c1', 'credentials_rotated', new Date('2026-10-11T09:50:30.100Z'));
+
+        expect(first).not.toBe(second);
+    });
+
+    it('o daily usa o dia de São Paulo e duas execuções do mesmo dia compartilham o job id', () => {
+        const morning: string = syncJobId('c1', 'daily', new Date('2026-10-11T10:00:00.000Z'));
+        const evening: string = syncJobId('c1', 'daily', new Date('2026-10-12T01:00:00.000Z'));
+        const next: string = syncJobId('c1', 'daily', new Date('2026-10-12T10:00:00.000Z'));
+
+        expect(evening).toBe(morning);
+        expect(next).not.toBe(morning);
     });
 
     it('falha de fila depois do commit vira warn e não derruba a chamada', async () => {
@@ -104,7 +125,7 @@ describe('BankSyncPublisherService', () => {
         const logs: BankConnectionsLogService = new BankConnectionsLogService({ warn } as unknown as LogService);
         const publisher: BankSyncPublisherService = new BankSyncPublisherService(
             { publish: vi.fn().mockRejectedValue(new Error('redis fora')) },
-            { getOrNull: () => ({ companyId: 'company-1' }) } as never,
+            { getOrNull: () => ({ companyId: COMPANY_ID }) } as never,
             logs
         );
 
@@ -134,8 +155,8 @@ describe('PluggyCredentialsEraser e exportação', () => {
         await fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: SENTINEL });
 
         expect(fixture.eraser.area).toBe('pluggy_credentials');
-        expect(await fixture.eraser.eraseAll('company-1')).toBe(1);
-        expect(await fixture.eraser.eraseAll('company-1')).toBe(0);
+        expect(await fixture.eraser.eraseAll(COMPANY_ID)).toBe(1);
+        expect(await fixture.eraser.eraseAll(COMPANY_ID)).toBe(0);
     });
 
     it('exporta dica, status e conexões sem selado, client id nem item id inteiro', async () => {
@@ -145,7 +166,7 @@ describe('PluggyCredentialsEraser e exportação', () => {
             lastSuccessAt: new Date('2026-10-10T10:00:00.000Z')
         };
 
-        const exported = await fixture.exporter.exportAll('company-1');
+        const exported = await fixture.exporter.exportAll(COMPANY_ID);
 
         expect(fixture.exporter.area).toBe('bank_connections');
         expect(exported.credentials).toEqual({ configured: true, clientIdHint: '3f9a…a5b6', status: 'valid' });
@@ -168,7 +189,7 @@ describe('PluggyCredentialsEraser e exportação', () => {
     it('exporta null quando não há credencial', async () => {
         const fixture: Fixture = buildFixture();
 
-        expect(await fixture.exporter.exportAll('company-1')).toEqual({ credentials: null, connections: [] });
+        expect(await fixture.exporter.exportAll(COMPANY_ID)).toEqual({ credentials: null, connections: [] });
     });
 });
 
@@ -177,12 +198,12 @@ describe('PluggyCredentialsResealer', () => {
         const fixture: Fixture = buildFixture();
         await fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: SENTINEL });
         const resealer: PluggyCredentialsResealer = new PluggyCredentialsResealer(fixture.credentialsDomain, fixture.sealer);
-        const [record] = await resealer.listSealed('company-1');
+        const [record] = await resealer.listSealed(COMPANY_ID);
 
-        await resealer.replaceSealed('company-1', record?.id ?? '', 'novo-selado');
+        await resealer.replaceSealed(COMPANY_ID, record?.id ?? '', 'novo-selado');
 
         expect(resealer.purpose).toBe('pluggy-credentials');
-        expect(await resealer.listCompanyIds()).toEqual(['company-1']);
+        expect(await resealer.listCompanyIds()).toEqual([COMPANY_ID]);
         expect(fixture.credentials.rows[0]).toMatchObject({ sealed: 'novo-selado', sealerDriver: 'local' });
     });
 
@@ -190,7 +211,7 @@ describe('PluggyCredentialsResealer', () => {
         const fixture: Fixture = buildFixture();
         const resealer: PluggyCredentialsResealer = new PluggyCredentialsResealer(fixture.credentialsDomain, fixture.sealer);
 
-        expect(await resealer.listSealed('company-1')).toEqual([]);
+        expect(await resealer.listSealed(COMPANY_ID)).toEqual([]);
     });
 });
 

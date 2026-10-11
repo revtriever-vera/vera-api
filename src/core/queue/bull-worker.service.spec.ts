@@ -24,16 +24,23 @@ interface FakeJob {
 type Processor = (job: FakeJob) => Promise<void>;
 type FailedHandler = (job: FakeJob | undefined, error: Error) => void;
 
-const state: { processors: Processor[]; errorHandlers: ((error: Error) => void)[]; failedHandlers: FailedHandler[] } = vi.hoisted(() => ({
+const state: {
+    processors: Processor[];
+    options: Record<string, unknown>[];
+    errorHandlers: ((error: Error) => void)[];
+    failedHandlers: FailedHandler[];
+} = vi.hoisted(() => ({
     processors: [],
+    options: [],
     errorHandlers: [],
     failedHandlers: []
 }));
 
 vi.mock('bullmq', () => {
     class Worker {
-        public constructor(_name: string, processor: Processor) {
+        public constructor(_name: string, processor: Processor, options: Record<string, unknown>) {
             state.processors.push(processor);
+            state.options.push(options);
         }
 
         public on(event: string, handler: ((error: Error) => void) | FailedHandler): void {
@@ -118,6 +125,7 @@ function logsStub(): LogsStub {
 describe('BullWorkerService', () => {
     beforeEach(() => {
         state.processors = [];
+        state.options = [];
         state.errorHandlers = [];
         state.failedHandlers = [];
     });
@@ -250,5 +258,44 @@ describe('BullWorkerService', () => {
         worker.onApplicationBootstrap();
 
         await expect(worker.onModuleDestroy()).resolves.toBeUndefined();
+    });
+
+    it('uses the default concurrency and no limiter when no handler asks for options', async () => {
+        const { BullWorkerService } = await import('./bull-worker.service');
+        const context: AppContext = new AlsAppContext();
+        const worker = new BullWorkerService(
+            discoveryWith([new SampleHandler(context)]),
+            { connection: {} } as unknown as RedisConnection,
+            context,
+            new TracingService(),
+            logsStub().logs
+        );
+
+        worker.onApplicationBootstrap();
+
+        expect(state.options[0]).toMatchObject({ concurrency: 5, limiter: undefined });
+    });
+
+    it('forwards the concurrency and the limiter declared by a handler of the queue', async () => {
+        const { BullWorkerService } = await import('./bull-worker.service');
+        const context: AppContext = new AlsAppContext();
+
+        class LimitedHandler extends SampleHandler {
+            public override readonly type: string = 'limited.type';
+            public override readonly workerOptions = { concurrency: 2, limiter: { max: 30, duration: 60_000 } };
+        }
+
+        const worker = new BullWorkerService(
+            discoveryWith([new SampleHandler(context), new LimitedHandler(context)]),
+            { connection: {} } as unknown as RedisConnection,
+            context,
+            new TracingService(),
+            logsStub().logs
+        );
+
+        worker.onApplicationBootstrap();
+
+        expect(state.options).toHaveLength(1);
+        expect(state.options[0]).toMatchObject({ concurrency: 2, limiter: { max: 30, duration: 60_000 } });
     });
 });

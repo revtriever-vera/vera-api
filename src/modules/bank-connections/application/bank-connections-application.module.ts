@@ -85,6 +85,15 @@ import { SyncFanoutApplication } from './sync-fanout.application';
             ): PluggyClientPort => new ObservedPluggyClient(config.PLUGGY_DRIVER === 'mock' ? mock : live, logs, metrics)
         }
     ],
-    exports: [CredentialsApplication, ConnectionsApplication, CredentialsVaultService, BankConnectionReaderService, PluggyClientPort]
+    exports: [
+        CredentialsApplication,
+        ConnectionsApplication,
+        ConnectionSyncApplication,
+        SyncFanoutApplication,
+        ManualSyncApplication,
+        CredentialsVaultService,
+        BankConnectionReaderService,
+        PluggyClientPort
+    ]
 })
 export class BankConnectionsApplicationModule {}

@@ -130,6 +130,17 @@ describe('BullQueuePublisher', () => {
         expect(state.added[0]?.opts.jobId).toBe('sample-job-1');
     });
 
+    it('uses the default attempts and backoff, and honors the ones asked for', async () => {
+        const { publish, flush } = await publisherOf();
+
+        await publish('sample.type', { id: '1' });
+        await publish('sample.type', { id: '2' }, { attempts: 3, backoffDelayMs: 60_000 });
+        await flush();
+
+        expect(state.added[0]?.opts).toMatchObject({ attempts: 5, backoff: { type: 'exponential', delay: 5000 } });
+        expect(state.added[1]?.opts).toMatchObject({ attempts: 3, backoff: { type: 'exponential', delay: 60_000 } });
+    });
+
     it('removes a non-active superseded job before re-enqueueing under replaceExisting', async () => {
         const remove: ReturnType<typeof vi.fn> = vi.fn(async (): Promise<void> => Promise.resolve());
         state.jobs.set('sample-job-1', { isActive: async (): Promise<boolean> => Promise.resolve(false), remove });
