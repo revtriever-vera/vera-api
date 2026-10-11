@@ -55,6 +55,10 @@ export class TransactionImportDomain {
         return this.imports.page(page, pageSize);
     }
 
+    public async findCompletedByHash(fileSha256: string): Promise<TransactionImport | null> {
+        return this.imports.findCompletedByHash(fileSha256);
+    }
+
     public async countCompleted(): Promise<number> {
         return this.imports.countCompleted();
     }

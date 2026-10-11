@@ -24,6 +24,7 @@ function build(): {
         findByIds: vi
             .fn()
             .mockResolvedValue([makeFinancialAccount({ id: 'p', provider: 'pluggy', externalId: 'x' }), makeFinancialAccount({ id: 'f' })]),
+        listAll: vi.fn().mockResolvedValue([makeFinancialAccount({ id: 'f' })]),
         removeMany: vi.fn().mockImplementation((ids: string[]) => Promise.resolve(ids.map((id: string) => makeFinancialAccount({ id }))))
     };
     const transactions: Record<string, ReturnType<typeof vi.fn>> = { removeByAccounts: vi.fn().mockResolvedValue(4) };
@@ -86,5 +87,11 @@ describe('FinancialAccountService', () => {
 
         await expect(service.removeFileAccount('p')).rejects.toMatchObject({ code: 'transactions.account_managed_by_connection' });
         expect(transactions['removeByAccounts']).not.toHaveBeenCalled();
+    });
+
+    it('lista as contas da empresa pelo domínio', async () => {
+        const { service } = build();
+
+        await expect(service.list()).resolves.toHaveLength(1);
     });
 });
