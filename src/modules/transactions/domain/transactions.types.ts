@@ -182,6 +182,7 @@ export interface ExportTransaction {
     readonly id: string;
     readonly accountId: string;
     readonly accountName: string;
+    readonly institutionName: string | null;
     readonly date: string;
     readonly amountMinor: number;
     readonly currency: string;

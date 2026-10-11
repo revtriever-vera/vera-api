@@ -135,8 +135,8 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
 
     public async listAfter(filter: TransactionFilter, cursor: ExportCursor | null, size: number): Promise<Transaction[]> {
         const query: TransactionsQuery<Transaction> = this.filtered(this.scopedSelect().selectAll(), filter);
-        const ordered: TransactionsQuery<Transaction> = cursor === null ? query : query.where((eb) => this.beforeCursor(eb, cursor));
-        return ordered.orderBy('date', 'desc').orderBy('id', 'desc').limit(size).execute();
+        const ordered: TransactionsQuery<Transaction> = cursor === null ? query : query.where((eb) => this.afterCursor(eb, cursor));
+        return ordered.orderBy('date', 'asc').orderBy('id', 'asc').limit(size).execute();
     }
 
     public async totals(filter: TransactionFilter): Promise<TransactionTotals> {
@@ -267,9 +267,9 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
         return eb.cast<Date>(eb.val(value), 'date');
     }
 
-    private beforeCursor(eb: TransactionsBuilder, cursor: ExportCursor): Expression<SqlBool> {
+    private afterCursor(eb: TransactionsBuilder, cursor: ExportCursor): Expression<SqlBool> {
         const day: Expression<Date> = this.day(eb, cursor.date);
-        return eb.or([eb('date', '<', day), eb.and([eb('date', '=', day), eb('id', '<', cursor.id)])]);
+        return eb.or([eb('date', '>', day), eb.and([eb('date', '=', day), eb('id', '>', cursor.id)])]);
     }
 
     private filtered<O>(query: TransactionsQuery<O>, filter: TransactionFilter): TransactionsQuery<O> {
