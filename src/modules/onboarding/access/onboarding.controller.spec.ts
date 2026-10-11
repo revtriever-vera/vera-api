@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { OnboardingStateApplication, OnboardingStateView } from '../application/onboarding-state.application';
+import { OnboardingStateApplication } from '../application/onboarding-state.application';
+import { OnboardingStateView } from '../application/onboarding-state.view';
 import { OnboardingSummaryApplication } from '../application/onboarding-summary.application';
 import { OnboardingController } from './onboarding.controller';
 

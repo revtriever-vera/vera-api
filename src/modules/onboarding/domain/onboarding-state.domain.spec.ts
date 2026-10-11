@@ -110,6 +110,33 @@ describe('OnboardingStateDomain', () => {
         await expect(dismissed.domain.close('finished')).rejects.toBeInstanceOf(OnboardingAlreadyClosedError);
     });
 
+    it('markSampleLoaded carimba uma vez e preserva o carimbo existente', async () => {
+        const fresh = domainOver(stateOf());
+        expect((await fresh.domain.markSampleLoaded()).sampleLoadedAt).toBeInstanceOf(Date);
+
+        const loaded = domainOver(stateOf({ sampleLoadedAt: T0 }));
+        await expect(loaded.domain.markSampleLoaded()).resolves.toMatchObject({ sampleLoadedAt: T0 });
+        expect(loaded.stamp).not.toHaveBeenCalled();
+    });
+
+    it('clearSampleMark zera o carimbo e é idempotente sem exemplo ativo', async () => {
+        const loaded = domainOver(stateOf({ sampleLoadedAt: T0 }));
+        expect((await loaded.domain.clearSampleMark()).sampleLoadedAt).toBeNull();
+
+        const clean = domainOver(stateOf());
+        await clean.domain.clearSampleMark();
+        expect(clean.stamp).not.toHaveBeenCalled();
+    });
+
+    it('dismissIfOpen fecha só o onboarding aberto e não mexe no fechado', async () => {
+        const open = domainOver(stateOf());
+        expect((await open.domain.dismissIfOpen()).dismissedAt).toBeInstanceOf(Date);
+
+        const finished = domainOver(stateOf({ completedAt: T0 }));
+        await expect(finished.domain.dismissIfOpen()).resolves.toMatchObject({ completedAt: T0, dismissedAt: null });
+        expect(finished.stamp).not.toHaveBeenCalled();
+    });
+
     it('current delega ao repositório', async () => {
         const { domain } = domainOver(stateOf());
         await expect(domain.current()).resolves.toMatchObject({ id: 'state-1' });

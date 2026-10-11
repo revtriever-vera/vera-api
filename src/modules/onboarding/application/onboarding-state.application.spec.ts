@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { OnboardingStateDomain } from '../domain/onboarding-state.domain';
 import { OnboardingState } from '../domain/onboarding.types';
 import { OnboardingLogService } from '../services/onboarding-log.service';
+import { SampleDataRegistry } from '../services/sample-data.registry';
 import { OnboardingStateApplication } from './onboarding-state.application';
 
 const T0: Date = new Date('2026-10-11T10:00:00.000Z');
@@ -36,7 +37,8 @@ function build(domain: Partial<Record<keyof OnboardingStateDomain, unknown>>): {
     };
     const application: OnboardingStateApplication = new OnboardingStateApplication(
         domain as unknown as OnboardingStateDomain,
-        log as unknown as OnboardingLogService
+        log as unknown as OnboardingLogService,
+        { available: () => true } as unknown as SampleDataRegistry
     );
     return { application, log };
 }
@@ -56,7 +58,7 @@ describe('OnboardingStateApplication', () => {
             },
             completedAt: null,
             dismissedAt: null,
-            sample: { active: true, available: false }
+            sample: { active: true, available: true }
         });
     });
 
