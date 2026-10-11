@@ -8,17 +8,11 @@ import { TransactionImportDomain } from '../domain/transaction-import.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { DatasetAccount, DatasetTransaction, SpendingDataset } from '../domain/spending-dataset';
 import { AccountStats, FinancialAccount, IncomingTransaction, IngestionResult, TRANSACTION_SOURCES } from '../domain/transactions.types';
-import { SpendingDatasetService } from './spending-dataset.service';
+import { SpendingSampleDatasetService } from './spending-sample-dataset.service';
 import { TransactionIngestionService } from './transaction-ingestion.service';
 import { TransactionsLogService } from './transactions-log.service';
 
 export const SPENDING_SAMPLE_AREA: string = 'spending';
-
-const SAMPLE_ACCOUNT_NAMES: Readonly<Record<string, string>> = {
-    'nubank-card': 'Cartão de exemplo',
-    'nubank-checking': 'Conta de exemplo',
-    'itau-checking': 'Conta 2 de exemplo'
-};
 
 @Injectable()
 export class SpendingSampleDataService extends SampleDataPort {
@@ -30,7 +24,7 @@ export class SpendingSampleDataService extends SampleDataPort {
         private readonly imports: TransactionImportDomain,
         private readonly categories: CategoryReaderService,
         private readonly rules: CategoryRuleService,
-        private readonly dataset: SpendingDatasetService,
+        private readonly dataset: SpendingSampleDatasetService,
         private readonly ingestion: TransactionIngestionService,
         private readonly logs: TransactionsLogService
     ) {
@@ -80,7 +74,7 @@ export class SpendingSampleDataService extends SampleDataPort {
     private async createAccount(spec: DatasetAccount): Promise<FinancialAccount> {
         return this.accounts.createFile({
             kind: spec.kind,
-            name: SAMPLE_ACCOUNT_NAMES[spec.key] ?? spec.name,
+            name: spec.name,
             institutionName: spec.institutionName,
             numberLast4: spec.numberLast4,
             currency: spec.currency,

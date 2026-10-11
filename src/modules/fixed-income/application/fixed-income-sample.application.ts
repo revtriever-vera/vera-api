@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppContext } from '../../../core/context/app-context.port';
 import { SampleDataPort } from '../../onboarding/services/sample-data.port';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
@@ -16,7 +17,8 @@ export class FixedIncomeSampleApplication extends SampleDataPort {
     public constructor(
         private readonly titles: FixedIncomeTitleDomain,
         private readonly classResolver: ClassResolverService,
-        private readonly assignments: ClassAssignmentService
+        private readonly assignments: ClassAssignmentService,
+        private readonly context: AppContext
     ) {
         super();
     }
@@ -27,7 +29,7 @@ export class FixedIncomeSampleApplication extends SampleDataPort {
         if (real.length > 0 || samples.length > 0) {
             return 0;
         }
-        const drafts: TitleDraft[] = sampleTitleDrafts(DateUtil.todayInBrazil());
+        const drafts: TitleDraft[] = sampleTitleDrafts(DateUtil.todayInBrazil(), this.context.get().locale);
         for (const draft of drafts) {
             const created: FixedIncomeTitle = await this.titles.createSample(draft);
             const classId: string = (await this.classResolver.resolveBySystemKey(SUGGESTED_CLASS_KEY_BY_INDEXER[draft.indexer])).id;

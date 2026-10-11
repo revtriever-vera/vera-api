@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
+import { AppContext } from '../../../core/context/app-context.port';
+import { AppLocale } from '../../../shared/i18n/locale';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
 import { FixedIncomeTitleDomain } from '../domain/fixed-income-title.domain';
 import { makeTitle } from '../../../../test/support/fixed-income-fixtures';
 import { FixedIncomeSampleApplication } from './fixed-income-sample.application';
 
-function build(options: { real?: number; samples?: number } = {}) {
+function build(options: { real?: number; samples?: number; locale?: AppLocale } = {}) {
     const titles = {
         listReal: vi.fn().mockResolvedValue(Array.from({ length: options.real ?? 0 }, () => makeTitle())),
         listSamples: vi
@@ -21,7 +23,8 @@ function build(options: { real?: number; samples?: number } = {}) {
     const application = new FixedIncomeSampleApplication(
         titles as unknown as FixedIncomeTitleDomain,
         resolver as unknown as ClassResolverService,
-        assignments as unknown as ClassAssignmentService
+        assignments as unknown as ClassAssignmentService,
+        { get: () => ({ requestId: 'r', locale: options.locale ?? 'pt-BR' }) } as unknown as AppContext
     );
     return { application, titles, resolver, assignments };
 }
@@ -36,6 +39,16 @@ describe('FixedIncomeSampleApplication', () => {
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'CDB Exemplo 110% CDI', 'class-rf_pos', true);
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'LCI Exemplo Pré 11,5%', 'class-rf_pre', true);
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Debênture Exemplo IPCA+6%', 'class-rf_ipca', true);
+    });
+
+    it('semeia os títulos com nomes em inglês numa sessão em inglês', async () => {
+        const { application, assignments } = build({ locale: 'en' });
+
+        await expect(application.seed()).resolves.toBe(3);
+
+        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample CDB 110% CDI', 'class-rf_pos', true);
+        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample LCI Fixed 11.5%', 'class-rf_pre', true);
+        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample Debenture IPCA+6%', 'class-rf_ipca', true);
     });
 
     it('não semeia quando já há título real', async () => {
