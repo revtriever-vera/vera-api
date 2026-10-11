@@ -61,6 +61,30 @@ export class OnboardingStateDomain {
         return this.states.stamp(state.id, patch);
     }
 
+    public async markSampleLoaded(): Promise<OnboardingState> {
+        const state: OnboardingState = await this.current();
+        if (state.sampleLoadedAt !== null) {
+            return state;
+        }
+        return this.states.stamp(state.id, { sampleLoadedAt: new Date() });
+    }
+
+    public async clearSampleMark(): Promise<OnboardingState> {
+        const state: OnboardingState = await this.current();
+        if (state.sampleLoadedAt === null) {
+            return state;
+        }
+        return this.states.stamp(state.id, { sampleLoadedAt: null });
+    }
+
+    public async dismissIfOpen(): Promise<OnboardingState> {
+        const state: OnboardingState = await this.current();
+        if (isClosed(state)) {
+            return state;
+        }
+        return this.states.stamp(state.id, { dismissedAt: new Date() });
+    }
+
     private async openState(): Promise<OnboardingState> {
         const state: OnboardingState = await this.current();
         if (isClosed(state)) {

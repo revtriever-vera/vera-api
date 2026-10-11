@@ -20,3 +20,24 @@ export class OnboardingAlreadyClosedError extends AppError {
         });
     }
 }
+
+export class SampleUnavailableError extends AppError {
+    public constructor() {
+        super({
+            code: 'onboarding.sample_unavailable',
+            status: 409,
+            detail: 'No module registered sample data, so there is nothing to load.'
+        });
+    }
+}
+
+export class SampleFailedError extends AppError {
+    public constructor(area: string) {
+        super({
+            code: 'onboarding.sample_failed',
+            status: 500,
+            detail: 'A module failed while handling its sample data and everything was rolled back.',
+            meta: { area }
+        });
+    }
+}
