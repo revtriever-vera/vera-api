@@ -11,7 +11,7 @@ const ITEM_BODY: Record<string, unknown> = {
     id: 'ITEM-1',
     status: 'UPDATED',
     executionStatus: 'SUCCESS',
-    connector: { id: 1, name: 'Nubank' },
+    connector: { id: 1, name: 'Nubank', imageUrl: 'https://logos.example/connectors/nubank.png' },
     lastUpdatedAt: '2026-10-10T10:00:00.000Z',
     consentExpiresAt: '2027-01-10T10:00:00.000Z',
     ignored: 'x'
@@ -69,10 +69,23 @@ describe('LivePluggyClientDriver', () => {
             status: 'UPDATED',
             executionStatus: 'SUCCESS',
             connectorName: 'Nubank',
+            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
             lastUpdatedAt: new Date('2026-10-10T10:00:00.000Z'),
             consentExpiresAt: new Date('2027-01-10T10:00:00.000Z')
         });
     });
+
+    it.each(['javascript:alert(1)', 'data:image/png;base64,AAAA', 'http://logos.example/a.png'])(
+        'descarta a logo do conector %s',
+        async (imageUrl: string) => {
+            vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, { ...ITEM_BODY, connector: { name: 'Nubank', imageUrl } })));
+
+            const item = await driver.getItem(new PluggySession('jwt-1'), 'item-1');
+
+            expect(item?.institutionLogoUrl).toBeNull();
+            expect(item?.connectorName).toBe('Nubank');
+        }
+    );
 
     it('aceita item sem conector e datas ausentes ou inválidas', async () => {
         vi.stubGlobal(

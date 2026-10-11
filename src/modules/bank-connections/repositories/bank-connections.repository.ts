@@ -60,6 +60,7 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
                 provider: PLUGGY_PROVIDER,
                 externalItemId: draft.externalItemId,
                 connectorName: draft.connectorName,
+                institutionLogoUrl: draft.institutionLogoUrl,
                 status: draft.status,
                 statusReason: draft.statusReason,
                 providerStatus: draft.providerStatus,

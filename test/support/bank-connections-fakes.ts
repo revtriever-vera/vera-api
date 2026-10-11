@@ -234,6 +234,7 @@ export class InMemoryConnectionsRepository {
             provider: 'pluggy',
             externalItemId: draft.externalItemId,
             connectorName: draft.connectorName,
+            institutionLogoUrl: draft.institutionLogoUrl,
             status: draft.status,
             statusReason: draft.statusReason,
             providerStatus: draft.providerStatus,

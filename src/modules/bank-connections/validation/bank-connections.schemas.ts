@@ -89,6 +89,12 @@ export const connectionViewSchema = z.object({
     id: z.string().uuid().describe('Bank connection id'),
     itemIdHint: z.string().describe('First and last 4 characters of the Item ID'),
     connectorName: z.string().nullable().describe('Name of the bank connector'),
+    institutionLogoUrl: z
+        .string()
+        .max(500)
+        .startsWith('https://')
+        .nullable()
+        .describe('HTTPS URL of the bank logo returned by Pluggy; null when unknown, the client falls back to initials'),
     status: z
         .enum([CONNECTION_STATUSES.active, CONNECTION_STATUSES.needsAttention, CONNECTION_STATUSES.revoked, CONNECTION_STATUSES.paused])
         .describe('Connection status'),

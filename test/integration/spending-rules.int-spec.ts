@@ -328,7 +328,8 @@ describe('spending rules', () => {
                 { ...base, normalizedDescription: 'IFOOD RESTAURANTE SABOR' },
                 { ...base, normalizedDescription: 'RAPPI PEDIDO' },
                 { ...base, normalizedDescription: 'LOJINHA DO ZE', providerCategoryId: '09010000' },
-                { ...base, normalizedDescription: 'MARIA SOUZA', providerCategoryId: '06000000' }
+                { ...base, normalizedDescription: 'MARIA SOUZA', providerCategoryId: '06000000' },
+                { ...base, normalizedDescription: 'RAPPI PEDIDO', providerCategoryId: '09010000' }
             ])
         );
 
@@ -336,7 +337,8 @@ describe('spending rules', () => {
             { categoryId: groceries, source: 'rule', ruleId: created.body.rule.id },
             { categoryId: eatingOut, source: 'dictionary', ruleId: null },
             { categoryId: shopping, source: 'provider', ruleId: null },
-            { categoryId: null, source: 'none', ruleId: null }
+            { categoryId: null, source: 'none', ruleId: null },
+            { categoryId: shopping, source: 'provider', ruleId: null }
         ]);
     });
 

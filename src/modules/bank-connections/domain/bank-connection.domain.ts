@@ -121,6 +121,7 @@ export class BankConnectionDomain {
             statusReason: derived.statusReason,
             providerStatus: item.status,
             connectorName: item.connectorName,
+            institutionLogoUrl: item.institutionLogoUrl,
             consentExpiresAt: item.consentExpiresAt
         });
     }

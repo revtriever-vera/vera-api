@@ -59,7 +59,7 @@ export class TransactionCategorizerService {
     }
 
     private categorizeOne(context: CategorizationContext, input: CategorizationInput): CategorizationResult {
-        return this.byRule(context, input) ?? this.byDictionary(context, input) ?? this.byProvider(context, input) ?? UNCATEGORIZED;
+        return this.byRule(context, input) ?? this.byProvider(context, input) ?? this.byDictionary(context, input) ?? UNCATEGORIZED;
     }
 
     private byRule(context: CategorizationContext, input: CategorizationInput): CategorizationResult | null {

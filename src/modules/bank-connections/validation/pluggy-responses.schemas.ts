@@ -8,7 +8,7 @@ export const pluggyItemResponseSchema = z.object({
     id: z.string().min(1),
     status: z.string().min(1),
     executionStatus: z.string().nullish(),
-    connector: z.object({ name: z.string().nullish() }).nullish(),
+    connector: z.object({ name: z.string().nullish(), imageUrl: z.string().nullish() }).nullish(),
     lastUpdatedAt: z.string().nullish(),
     consentExpiresAt: z.string().nullish()
 });

@@ -162,6 +162,12 @@ export const accountViewSchema = z.object({
     name: z.string().describe('Name of the account'),
     kind: z.nativeEnum(ACCOUNT_KINDS).describe('Kind of account'),
     institutionName: z.string().nullable().describe('Name of the bank or institution'),
+    institutionLogoUrl: z
+        .string()
+        .max(500)
+        .startsWith('https://')
+        .nullable()
+        .describe('HTTPS URL of the bank logo returned by Pluggy; null for file and sample accounts, the client falls back to initials'),
     numberLast4: z
         .string()
         .length(4)

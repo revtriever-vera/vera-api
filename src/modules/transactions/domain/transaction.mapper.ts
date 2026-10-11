@@ -73,6 +73,7 @@ export function toAccountView(account: FinancialAccount, stats: AccountStats | u
         name: account.name,
         kind: toAccountKind(account.kind),
         institutionName: account.institutionName,
+        institutionLogoUrl: account.institutionLogoUrl,
         numberLast4: account.numberLast4,
         currency: account.currency,
         source: account.provider === null ? 'file' : 'pluggy',

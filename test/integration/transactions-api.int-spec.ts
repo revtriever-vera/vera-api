@@ -76,7 +76,14 @@ describe('transactions api', () => {
     async function seedAccount(owner: Account, kind: 'provider' | 'file', name: string): Promise<string> {
         const created = await harness.inCompany(owner.company.id, async () =>
             kind === 'provider'
-                ? accounts.upsertProviderAccount({ provider: 'pluggy', externalId: `ext-${name}`, kind: 'checking', name, currency: 'BRL' })
+                ? accounts.upsertProviderAccount({
+                      provider: 'pluggy',
+                      externalId: `ext-${name}`,
+                      kind: 'checking',
+                      name,
+                      institutionLogoUrl: 'https://logos.example/connectors/itau.png',
+                      currency: 'BRL'
+                  })
                 : accounts.createFileAccount({ kind: 'checking', name, currency: 'BRL' })
         );
         return created.id;
@@ -297,6 +304,7 @@ describe('transactions api', () => {
         ]);
         expect(september.body.totals).toEqual({ inMinor: 2800000, outMinor: -140590, count: 4 });
         expect(september.body.data[0]).toMatchObject({ accountName: 'Nubank', source: 'ofx', categorySource: 'dictionary' });
+        expect(september.body.data[2]).toMatchObject({ description: 'SUPERMERCADO BOM PRECO', categorySource: 'provider' });
         expect(byAccount.body.data).toHaveLength(1);
         expect(byAccount.body.totals).toEqual({ inMinor: 0, outMinor: -5590, count: 1 });
         expect(byCategory.body.data.map((row: TransactionBody) => row.description)).toEqual(['SUPERMERCADO BOM PRECO']);
@@ -381,8 +389,15 @@ describe('transactions api', () => {
         const again = await harness.call<ProblemBody>(owner.token, 'DELETE', `/spending/accounts/${file}`);
 
         expect(listed.body.accounts).toMatchObject([
-            { id: provider, name: 'Itaú', source: 'pluggy', transactionCount: 2, lastTransactionDate: '2026-09-12' },
-            { id: file, name: 'Extrato', source: 'file', transactionCount: 1, lastTransactionDate: '2026-09-11' }
+            {
+                id: provider,
+                name: 'Itaú',
+                source: 'pluggy',
+                institutionLogoUrl: 'https://logos.example/connectors/itau.png',
+                transactionCount: 2,
+                lastTransactionDate: '2026-09-12'
+            },
+            { id: file, name: 'Extrato', source: 'file', institutionLogoUrl: null, transactionCount: 1, lastTransactionDate: '2026-09-11' }
         ]);
         expect(renamed.body).toMatchObject({ name: 'Itaú Principal', transactionCount: 2 });
         expect(managed).toMatchObject({ status: 422, body: { type: 'transactions.account_managed_by_connection' } });

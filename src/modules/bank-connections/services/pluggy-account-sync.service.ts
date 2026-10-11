@@ -45,7 +45,9 @@ export class PluggyAccountSyncService {
 
     private async linkOne(connection: BankConnection, account: PluggyAccount): Promise<LinkedPluggyAccount | null> {
         try {
-            const local: FinancialAccount = await this.accounts.upsertProviderAccount(mapAccount(account, connection.connectorName));
+            const local: FinancialAccount = await this.accounts.upsertProviderAccount(
+                mapAccount(account, connection.connectorName, connection.institutionLogoUrl)
+            );
             const link: BankConnectionAccount = await this.links.link(connection.id, local.id, account.id);
             return { link, account, local };
         } catch (error: unknown) {

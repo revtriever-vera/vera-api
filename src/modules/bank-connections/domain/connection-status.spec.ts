@@ -7,6 +7,7 @@ const ITEM: PluggyItem = {
     status: 'UPDATED',
     executionStatus: 'SUCCESS',
     connectorName: 'Nubank',
+    institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
     lastUpdatedAt: new Date('2026-10-01T10:00:00.000Z'),
     consentExpiresAt: new Date('2027-01-01T00:00:00.000Z')
 };
@@ -35,6 +36,7 @@ describe('draftOfItem', () => {
         expect(draftOfItem({ ...ITEM, status: 'LOGIN_ERROR' })).toEqual({
             externalItemId: 'item-1',
             connectorName: 'Nubank',
+            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
             status: 'needs_attention',
             statusReason: 'login_error',
             providerStatus: 'LOGIN_ERROR',

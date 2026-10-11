@@ -27,13 +27,18 @@ function last4Of(number: string | null): string | null {
     return digits.length < LAST_DIGITS ? null : digits.slice(-LAST_DIGITS);
 }
 
-export function mapAccount(account: PluggyAccount, connectorName: string | null): UpsertProviderAccountInput {
+export function mapAccount(
+    account: PluggyAccount,
+    connectorName: string | null,
+    institutionLogoUrl: string | null
+): UpsertProviderAccountInput {
     return {
         provider: 'pluggy',
         externalId: account.id,
         kind: kindOf(account),
         name: nameOf(account),
         institutionName: connectorName,
+        institutionLogoUrl,
         numberLast4: last4Of(account.number),
         currency: account.currencyCode.toUpperCase()
     };

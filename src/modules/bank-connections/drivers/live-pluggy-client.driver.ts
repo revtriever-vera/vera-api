@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { z } from 'zod';
 import { bankConnectionsConfig } from '../config/bank-connections.config';
+import { sanitizeLogoUrl } from '../domain/institution-logo-url';
 import { PluggyAccount, PluggyClientPort, PluggyItem, PluggyTransactionPage, PluggyTransactionQuery } from '../ports/pluggy-client.port';
 import { PluggyNotFoundError, PluggyUnavailableError } from '../ports/pluggy-client.errors';
 import {
@@ -78,6 +79,7 @@ export class LivePluggyClientDriver extends PluggyClientPort {
             status: item.status,
             executionStatus: item.executionStatus ?? null,
             connectorName: item.connector?.name ?? null,
+            institutionLogoUrl: sanitizeLogoUrl(item.connector?.imageUrl),
             lastUpdatedAt: dateOf(item.lastUpdatedAt),
             consentExpiresAt: dateOf(item.consentExpiresAt)
         };
