@@ -4,12 +4,13 @@ import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { Job, Worker } from 'bullmq';
 import { v7 as uuidV7 } from 'uuid';
 import { AppLocale, DEFAULT_LOCALE } from '../../shared/i18n/locale';
-import { BULL_PREFIX, QueueName } from '../../shared/constants/queues.constants';
+import { QueueName } from '../../shared/constants/queues.constants';
 import { AppContext } from '../context/app-context.port';
 import { TracingService } from '../observability/tracing.service';
 import { QueueLogService } from './queue-log.service';
 import { RedisConnection } from './redis.connection';
 import { QueueEnvelope, QueueHandlerPort } from './queue.types';
+import { bullPrefixFromEnvironment } from '../../shared/config/bull-prefix';
 
 const CONCURRENCY: number = 5;
 
@@ -53,7 +54,7 @@ export class BullWorkerService implements OnApplicationBootstrap, OnModuleDestro
     private startWorker(queue: QueueName, handlers: QueueHandlerPort[]): void {
         const worker: Worker = new Worker(queue, async (job: Job) => this.dispatch(queue, handlers, job), {
             connection: this.redis.connection,
-            prefix: BULL_PREFIX,
+            prefix: bullPrefixFromEnvironment(),
             concurrency: CONCURRENCY
         });
         worker.on('error', (error: Error) => {

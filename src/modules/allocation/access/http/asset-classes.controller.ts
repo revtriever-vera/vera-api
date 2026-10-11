@@ -37,7 +37,11 @@ export class AssetClassesController {
             'that sums to 100%. Default classes carry a null name until the user renames them: the client shows the translated name.'
     })
     @ApiZodResponse({ status: 200, description: 'Classes of the company', schema: assetClassListSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async list(): Promise<{ data: AssetClassView[] }> {
         return { data: await this.classes.list() };
     }
@@ -51,10 +55,26 @@ export class AssetClassesController {
     })
     @ApiZodBody(createAssetClassSchema)
     @ApiZodResponse({ status: 201, description: 'Class created', schema: assetClassViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 409, description: 'Another class already uses this name (allocation.class_name_taken)' })
-    @ApiProblemResponse({ status: 422, description: 'The company reached 30 classes (allocation.class_limit_reached)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Another class already uses this name (allocation.class_name_taken)',
+        example: { type: 'allocation.class_name_taken', title: 'ClassNameTakenError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'The company reached 30 classes (allocation.class_limit_reached)',
+        example: { type: 'allocation.class_limit_reached', title: 'ClassLimitReachedError', status: 422 }
+    })
     public async create(@Body() body: CreateAssetClassDto): Promise<AssetClassView> {
         return this.classes.create(body);
     }
@@ -69,11 +89,31 @@ export class AssetClassesController {
     @ApiParam(CLASS_ID_PARAM)
     @ApiZodBody(updateAssetClassSchema)
     @ApiZodResponse({ status: 200, description: 'Class updated', schema: assetClassViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
-    @ApiProblemResponse({ status: 409, description: 'Another class already uses this name (allocation.class_name_taken)' })
-    @ApiProblemResponse({ status: 422, description: 'Null name on a class created by the user (allocation.class_name_required)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Another class already uses this name (allocation.class_name_taken)',
+        example: { type: 'allocation.class_name_taken', title: 'ClassNameTakenError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Null name on a class created by the user (allocation.class_name_required)',
+        example: { type: 'allocation.class_name_required', title: 'ClassNameRequiredError', status: 422 }
+    })
     public async update(@Param() params: ClassIdParamsDto, @Body() body: UpdateAssetClassDto): Promise<AssetClassView> {
         return this.classes.update(params.id, body);
     }
@@ -89,10 +129,26 @@ export class AssetClassesController {
     @ApiParam(CLASS_ID_PARAM)
     @ApiZodBody(mergeAssetClassSchema)
     @ApiZodResponse({ status: 200, description: 'Destination class after the merge', schema: assetClassViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
-    @ApiProblemResponse({ status: 422, description: 'Origin and destination are the same class (allocation.cannot_merge_into_self)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Origin and destination are the same class (allocation.cannot_merge_into_self)',
+        example: { type: 'allocation.cannot_merge_into_self', title: 'CannotMergeIntoSelfError', status: 422 }
+    })
     public async merge(@Param() params: ClassIdParamsDto, @Body() body: MergeAssetClassDto): Promise<AssetClassView> {
         return this.classes.merge(params.id, body.intoClassId);
     }
@@ -107,10 +163,26 @@ export class AssetClassesController {
     })
     @ApiParam(CLASS_ID_PARAM)
     @ApiNoContentResponse({ description: 'Class deleted' })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
-    @ApiProblemResponse({ status: 409, description: 'The class still has assets (allocation.class_not_empty)' })
-    @ApiProblemResponse({ status: 422, description: 'Default classes cannot be deleted (allocation.system_class_not_deletable)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'The class still has assets (allocation.class_not_empty)',
+        example: { type: 'allocation.class_not_empty', title: 'ClassNotEmptyError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Default classes cannot be deleted (allocation.system_class_not_deletable)',
+        example: { type: 'allocation.system_class_not_deletable', title: 'SystemClassNotDeletableError', status: 422 }
+    })
     public async remove(@Param() params: ClassIdParamsDto): Promise<void> {
         await this.classes.remove(params.id);
     }

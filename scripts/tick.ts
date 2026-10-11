@@ -9,7 +9,8 @@ try {
 import { Queue } from 'bullmq';
 import { Cluster, ClusterNode, Redis } from 'ioredis';
 import { v7 as uuidV7 } from 'uuid';
-import { MESSAGE_TYPES, BULL_PREFIX, QUEUES } from '../src/shared/constants/queues.constants';
+import { MESSAGE_TYPES, QUEUES } from '../src/shared/constants/queues.constants';
+import { bullPrefixFromEnvironment } from '../src/shared/config/bull-prefix';
 
 const DEFAULT_NODES: string = 'localhost:7200,localhost:7201,localhost:7202';
 const QUEUE_NAMES: string[] = Object.values(QUEUES);
@@ -72,7 +73,7 @@ async function tick(): Promise<void> {
     }
     const types: string[] = tickTypesFor(queue, process.argv[3]);
     const connection: Cluster | Redis = connect();
-    const client: Queue = new Queue(queue, { connection, prefix: BULL_PREFIX });
+    const client: Queue = new Queue(queue, { connection, prefix: bullPrefixFromEnvironment() });
     for (const type of types) {
         await enqueue(client, type);
     }

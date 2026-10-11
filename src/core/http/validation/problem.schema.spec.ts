@@ -4,7 +4,7 @@ import { problemSchema } from './problem.schema';
 describe('problemSchema', () => {
     it('accepts a well-formed problem+json body', () => {
         const result = problemSchema.safeParse({
-            type: 'stores.connection_not_found',
+            type: 'positions.position_not_found',
             title: 'ConnectionNotFoundError',
             status: 404,
             detail: 'Connection does not exist.',

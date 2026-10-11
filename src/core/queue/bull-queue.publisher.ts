@@ -1,12 +1,13 @@
 import { BeforeApplicationShutdown, Injectable } from '@nestjs/common';
 import { Job, Queue } from 'bullmq';
-import { BULL_PREFIX, QueueName } from '../../shared/constants/queues.constants';
+import { QueueName } from '../../shared/constants/queues.constants';
 import { AppContext, AppContextData } from '../context/app-context.port';
 import { DatabaseClient } from '../database/database.client';
 import { TracingService } from '../observability/tracing.service';
 import { QueueLogService } from './queue-log.service';
 import { RedisConnection } from './redis.connection';
 import { PublishOptions, QueueEnvelope, QueuePublisherPort } from './queue.types';
+import { bullPrefixFromEnvironment } from '../../shared/config/bull-prefix';
 
 const KEEP_COMPLETED: number = 1000;
 const KEEP_FAILED: number = 5000;
@@ -71,11 +72,17 @@ export class BullQueuePublisher extends QueuePublisherPort implements BeforeAppl
     }
 
     private async clearSuperseded(queue: Queue, options?: PublishOptions): Promise<boolean> {
-        if (options?.replaceExisting !== true || options.jobId === undefined) {
+        if (options?.jobId === undefined || (options.replaceExisting !== true && options.retryFailed !== true)) {
             return true;
         }
         const previous: Job | undefined = await queue.getJob(options.jobId);
         if (!previous) {
+            return true;
+        }
+        if (options.replaceExisting !== true) {
+            if (await previous.isFailed()) {
+                await previous.remove();
+            }
             return true;
         }
         if (await previous.isActive()) {
@@ -94,7 +101,7 @@ export class BullQueuePublisher extends QueuePublisherPort implements BeforeAppl
         if (existing) {
             return existing;
         }
-        const created: Queue = new Queue(name, { connection: this.redis.connection, prefix: BULL_PREFIX });
+        const created: Queue = new Queue(name, { connection: this.redis.connection, prefix: bullPrefixFromEnvironment() });
         created.on('error', (error: Error) => {
             this.logs.connectionFailed(name, 'producer', error);
         });

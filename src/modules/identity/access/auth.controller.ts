@@ -55,10 +55,26 @@ export class AuthController {
     })
     @ApiZodBody(googleLoginSchema)
     @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
-    @ApiProblemResponse({ status: 401, description: 'Invalid Google token (identity.invalid_google_token)' })
-    @ApiProblemResponse({ status: 409, description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)' })
-    @ApiProblemResponse({ status: 429, description: 'Too many attempts from this IP (core.too_many_attempts)' })
-    @ApiProblemResponse({ status: 503, description: 'Google sign-in not configured (identity.provider_disabled)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Invalid Google token (identity.invalid_google_token)',
+        example: { type: 'identity.invalid_google_token', title: 'InvalidGoogleTokenError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)',
+        example: { type: 'identity.email_in_use', title: 'EmailInUseError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'Too many attempts from this IP (core.too_many_attempts)',
+        example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
+    })
+    @ApiProblemResponse({
+        status: 503,
+        description: 'Google sign-in not configured (identity.provider_disabled)',
+        example: { type: 'identity.provider_disabled', title: 'ProviderDisabledError', status: 503 }
+    })
     public async google(
         @Body() body: GoogleLoginDto,
         @Req() req: Request,
@@ -83,12 +99,36 @@ export class AuthController {
     })
     @ApiZodBody(facebookLoginSchema)
     @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
-    @ApiProblemResponse({ status: 401, description: 'Invalid Facebook token (identity.invalid_facebook_token)' })
-    @ApiProblemResponse({ status: 409, description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)' })
-    @ApiProblemResponse({ status: 422, description: 'Facebook account did not share an email (identity.email_not_provided)' })
-    @ApiProblemResponse({ status: 429, description: 'Too many attempts from this IP (core.too_many_attempts)' })
-    @ApiProblemResponse({ status: 502, description: 'Facebook did not answer (identity.provider_unavailable)' })
-    @ApiProblemResponse({ status: 503, description: 'Facebook sign-in not configured (identity.provider_disabled)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Invalid Facebook token (identity.invalid_facebook_token)',
+        example: { type: 'identity.invalid_facebook_token', title: 'InvalidFacebookTokenError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 409,
+        description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)',
+        example: { type: 'identity.email_in_use', title: 'EmailInUseError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Facebook account did not share an email (identity.email_not_provided)',
+        example: { type: 'identity.email_not_provided', title: 'EmailNotProvidedError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'Too many attempts from this IP (core.too_many_attempts)',
+        example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
+    })
+    @ApiProblemResponse({
+        status: 502,
+        description: 'Facebook did not answer (identity.provider_unavailable)',
+        example: { type: 'identity.provider_unavailable', title: 'ProviderUnavailableError', status: 502 }
+    })
+    @ApiProblemResponse({
+        status: 503,
+        description: 'Facebook sign-in not configured (identity.provider_disabled)',
+        example: { type: 'identity.provider_disabled', title: 'ProviderDisabledError', status: 503 }
+    })
     public async facebook(
         @Body() body: FacebookLoginDto,
         @Req() req: Request,
@@ -106,7 +146,11 @@ export class AuthController {
             'is marked as replaced. Presenting an already-rotated token revokes the entire session family.'
     })
     @ApiZodResponse({ status: 200, description: 'New access token — new refresh cookie set', schema: sessionResponseSchema })
-    @ApiProblemResponse({ status: 401, description: 'Missing, expired, revoked or reused refresh token (identity.invalid_refresh)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing, expired, revoked or reused refresh token (identity.invalid_refresh)',
+        example: { type: 'identity.invalid_refresh', title: 'InvalidRefreshTokenError', status: 401 }
+    })
     public async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<SessionResponse> {
         const tokens: AuthTokens = await this.session.refresh(this.refreshCookie.read(req), this.meta(req));
         this.refreshCookie.write(res, tokens.refreshToken);
@@ -133,7 +177,11 @@ export class AuthController {
         description: 'Returns the user, company, effective locale and sign-in provider of the presented access token.'
     })
     @ApiZodResponse({ status: 200, description: 'Authenticated identity', schema: meResponseSchema })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async me(): Promise<SessionProfile> {
         return this.profile.current();
     }
@@ -149,8 +197,16 @@ export class AuthController {
     })
     @ApiZodBody(updatePreferencesSchema)
     @ApiZodResponse({ status: 200, description: 'Identity with the saved preferences', schema: meResponseSchema })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
-    @ApiProblemResponse({ status: 400, description: 'Invalid payload (zod validation details in meta.errors)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Invalid payload (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
     public async updatePreferences(@Body() body: UpdatePreferencesDto): Promise<SessionProfile> {
         return this.profile.updatePreferences(body);
     }

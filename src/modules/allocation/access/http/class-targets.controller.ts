@@ -38,10 +38,26 @@ export class ClassTargetsController {
     })
     @ApiZodBody(classTargetsBodySchema)
     @ApiZodResponse({ status: 200, description: 'Classes after the change', schema: classTargetsViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
-    @ApiProblemResponse({ status: 422, description: MUST_SUM })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: MUST_SUM,
+        example: { type: 'allocation.targets_must_sum_100', title: 'TargetsMustSum100Error', status: 422 }
+    })
     public async saveClasses(@Body() body: ClassTargetsBodyDto): Promise<{ data: AssetClassView[] }> {
         return { data: await this.targets.saveClassTargets(body.targets) };
     }
@@ -58,14 +74,27 @@ export class ClassTargetsController {
     @ApiParam({ name: 'classId', format: 'uuid', description: 'Class id' })
     @ApiZodBody(assetTargetsBodySchema)
     @ApiZodResponse({ status: 200, description: 'Asset targets of the class', schema: assetTargetsViewSchema })
-    @ApiProblemResponse({ status: 400, description: INVALID })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
+    @ApiProblemResponse({
+        status: 400,
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
+    })
     @ApiProblemResponse({
         status: 422,
         description:
             'The body misses an asset of the class, repeats one or lists an asset of another class (allocation.targets_incomplete); ' +
-            'or the sum is not 10000 and not all zero (allocation.targets_must_sum_100)'
+            'or the sum is not 10000 and not all zero (allocation.targets_must_sum_100)',
+        example: { type: 'allocation.targets_incomplete', title: 'TargetsIncompleteError', status: 422 }
     })
     public async saveAssets(@Param() params: TargetsClassParamsDto, @Body() body: AssetTargetsBodyDto): Promise<AssetTargetsView> {
         return this.targets.saveAssetTargets(params.classId, body.targets);
@@ -80,7 +109,11 @@ export class ClassTargetsController {
             'of the keys it answers to; classes created by the user go to 0. The targets of the assets are not touched.'
     })
     @ApiZodResponse({ status: 200, description: 'Classes after the reset', schema: classTargetsViewSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async reset(): Promise<{ data: AssetClassView[] }> {
         return { data: await this.targets.reset() };
     }

@@ -1,8 +1,9 @@
 import { Injectable, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { Job, JobSchedulerJson, Queue } from 'bullmq';
-import { BULL_PREFIX, QUEUES, QueueName } from '../../shared/constants/queues.constants';
+import { QUEUES, QueueName } from '../../shared/constants/queues.constants';
 import { QueueLogService } from './queue-log.service';
 import { RedisConnection } from './redis.connection';
+import { bullPrefixFromEnvironment } from '../../shared/config/bull-prefix';
 
 const SAMPLE_INTERVAL_MS: number = 30_000;
 const MS_PER_SECOND: number = 1000;
@@ -80,7 +81,7 @@ export class QueueTelemetryService implements OnApplicationBootstrap, OnModuleDe
         if (existing) {
             return existing;
         }
-        const created: Queue = new Queue(name, { connection: this.redis.connection, prefix: BULL_PREFIX });
+        const created: Queue = new Queue(name, { connection: this.redis.connection, prefix: bullPrefixFromEnvironment() });
         created.on('error', (error: Error) => {
             this.logs.connectionFailed(name, 'producer', error);
         });

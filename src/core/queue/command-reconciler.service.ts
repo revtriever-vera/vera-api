@@ -3,11 +3,12 @@ import { DiscoveryService } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { JobSchedulerJson, Queue } from 'bullmq';
 import { CRON_TIMEZONE } from '../../shared/constants/commands.constants';
-import { BULL_PREFIX, QueueName } from '../../shared/constants/queues.constants';
+import { QueueName } from '../../shared/constants/queues.constants';
 import { BaseCommand } from './base.command';
 import { QueueLogService } from './queue-log.service';
 import { RedisConnection } from './redis.connection';
 import { ScheduledEnvelope } from './queue.types';
+import { bullPrefixFromEnvironment } from '../../shared/config/bull-prefix';
 
 const COMMAND_KEY_SUFFIX: string = '-command';
 
@@ -84,7 +85,7 @@ export class CommandReconcilerService implements OnApplicationBootstrap, BeforeA
         if (existing) {
             return existing;
         }
-        const created: Queue = new Queue(name, { connection: this.redis.connection, prefix: BULL_PREFIX });
+        const created: Queue = new Queue(name, { connection: this.redis.connection, prefix: bullPrefixFromEnvironment() });
         created.on('error', (error: Error) => {
             this.logs.connectionFailed(name, 'producer', error);
         });

@@ -33,7 +33,11 @@ export class PortfolioController {
             'from quantity x latest quote, or from the curve for fixed income, converted by the latest PTAX. Ordered by class and value.'
     })
     @ApiZodResponse({ status: 200, description: 'Holdings of the company', schema: holdingsResponseSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async holdings(): Promise<HoldingsResponse> {
         return this.portfolio.holdings();
     }
@@ -47,7 +51,11 @@ export class PortfolioController {
             'are integers in the minor unit of the base currency and every share is in basis points.'
     })
     @ApiZodResponse({ status: 200, description: 'Overview of the company portfolio', schema: overviewResponseSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     public async overview(): Promise<OverviewResponse> {
         return this.portfolio.overview();
     }
@@ -61,8 +69,16 @@ export class PortfolioController {
     })
     @ApiParam({ name: 'classId', format: 'uuid', description: 'Asset class id' })
     @ApiZodResponse({ status: 200, description: 'Class with its holdings', schema: classDetailResponseSchema })
-    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
-    @ApiProblemResponse({ status: 404, description: NOT_FOUND })
+    @ApiProblemResponse({
+        status: 401,
+        description: UNAUTHORIZED,
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: NOT_FOUND,
+        example: { type: 'allocation.class_not_found', title: 'PortfolioClassNotFoundError', status: 404 }
+    })
     public async classDetail(@Param() params: ClassIdParamsDto): Promise<ClassDetailResponse> {
         return this.portfolio.classDetail(params.classId);
     }

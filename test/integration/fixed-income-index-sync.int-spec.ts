@@ -6,6 +6,7 @@ import { IndexSyncApplication } from '../../src/modules/fixed-income/application
 import { IndexSeriesDomain } from '../../src/modules/fixed-income/domain/index-series.domain';
 import { MOCK_MONTHLY_IPCA } from '../../src/modules/fixed-income/drivers/mock-index-series.driver';
 import { AllocationHarness } from './support/allocation-harness';
+import { bullPrefixFromEnvironment } from '../../src/shared/config/bull-prefix';
 
 process.env['FIXED_INCOME_INDEX_DRIVER'] = 'mock';
 
@@ -36,7 +37,7 @@ describe('fixed income index sync', () => {
             db: Number(process.env['REDIS_DB'] ?? '0'),
             maxRetriesPerRequest: null
         });
-        queue = new Queue('vera-fixed-income', { connection: redis, prefix: '{vera}' });
+        queue = new Queue('vera-fixed-income', { connection: redis, prefix: bullPrefixFromEnvironment() });
     });
 
     afterAll(async () => {

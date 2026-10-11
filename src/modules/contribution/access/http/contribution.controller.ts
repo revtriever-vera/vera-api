@@ -39,11 +39,24 @@ export class ContributionController {
     @ApiZodResponse({ status: 200, description: 'The suggestion on both layers', schema: suggestResponseSchema })
     @ApiProblemResponse({
         status: 400,
-        description: 'Invalid amount: not an integer from 1 to 100,000,000,000 (zod validation details in meta.errors)'
+        description: 'Invalid amount: not an integer from 1 to 100,000,000,000 (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
     })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
-    @ApiProblemResponse({ status: 422, description: 'Every class target is zero (contribution.targets_not_set)' })
-    @ApiProblemResponse({ status: 429, description: 'More than 60 suggestions in a minute for the company' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'Every class target is zero (contribution.targets_not_set)',
+        example: { type: 'contribution.targets_not_set', title: 'ContributionTargetsNotSetError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'More than 60 suggestions in a minute for the company',
+        example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
+    })
     public async suggest(@Body() body: SuggestRequestDto): Promise<SuggestResponse> {
         return this.suggestions.suggest(body.amountMinor);
     }

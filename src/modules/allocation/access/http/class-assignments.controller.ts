@@ -26,12 +26,21 @@ export class ClassAssignmentsController {
     @ApiParam({ name: 'subjectId', format: 'uuid', description: 'Id of the position or of the fixed income security' })
     @ApiZodBody(reassignSchema)
     @ApiZodResponse({ status: 200, description: 'Assignment after the change', schema: classAssignmentViewSchema })
-    @ApiProblemResponse({ status: 400, description: 'Invalid payload (zod validation details in meta.errors)' })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Invalid payload (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 404,
         description:
-            'The class (allocation.class_not_found) or the assignment of the asset (allocation.assignment_not_found) does not exist'
+            'The class (allocation.class_not_found) or the assignment of the asset (allocation.assignment_not_found) does not exist',
+        example: { type: 'allocation.class_not_found', title: 'ClassNotFoundError', status: 404 }
     })
     public async reassign(@Param() params: AssignmentParamsDto, @Body() body: ReassignDto): Promise<ClassAssignmentView> {
         return this.assignments.reassign(params.subjectType, params.subjectId, body.classId);

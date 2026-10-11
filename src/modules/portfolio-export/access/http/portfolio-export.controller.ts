@@ -55,7 +55,11 @@ export class PortfolioExportController {
             requestId: '0199c3a0-0000-7000-8000-000000000001'
         }
     })
-    @ApiProblemResponse({ status: 401, description: 'Missing or invalid access token (identity.unauthorized)' })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
     @ApiProblemResponse({
         status: 429,
         description: 'More than 10 exports in a minute for the company',

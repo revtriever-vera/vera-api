@@ -1,5 +1,3 @@
-export const BULL_PREFIX: string = '{vera}';
-
 export const QUEUES = {
     emailSend: 'vera-email-send',
     catalog: 'vera-catalog',

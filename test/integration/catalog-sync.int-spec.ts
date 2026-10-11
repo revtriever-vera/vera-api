@@ -6,7 +6,6 @@ import { Client } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 import { AppModule } from '../../src/app.module';
 import { CommandReconcilerService } from '../../src/core/queue/command-reconciler.service';
-import { BULL_PREFIX } from '../../src/shared/constants/queues.constants';
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { CatalogSyncTickHandler } from '../../src/modules/catalog/access/commands/catalog-sync.command';
 import { CatalogSyncApplication } from '../../src/modules/catalog/application/catalog-sync.application';
@@ -14,6 +13,7 @@ import { SyncRunOutcome } from '../../src/modules/catalog/domain/catalog.types';
 import { ASSET_SOURCES, AssetSourcePort, SourceAsset } from '../../src/modules/catalog/ports/asset-source.port';
 import { createIsolatedDatabase, IsolatedDatabase } from './support/isolated-database';
 import { isolateRedisForWorker } from './support/queue';
+import { bullPrefixFromEnvironment } from '../../src/shared/config/bull-prefix';
 
 interface AssetRow {
     readonly externalId: string;
@@ -83,7 +83,7 @@ describe('catalog sync', () => {
         await pg.connect();
         const [host, port] = inject('redisNode').split(':');
         redis = new Redis({ host, port: Number(port), db: Number(process.env['REDIS_DB']), maxRetriesPerRequest: null });
-        queue = new Queue('vera-catalog', { connection: redis, prefix: BULL_PREFIX });
+        queue = new Queue('vera-catalog', { connection: redis, prefix: bullPrefixFromEnvironment() });
     });
 
     afterAll(async () => {
