@@ -51,12 +51,9 @@ Each service/flow declares one stable constant. It is the grep handle for "all l
 component", independent of message wording.
 
 ```typescript
-const LOG_IDENTIFIER: string = "transactions-import";
+const LOG_IDENTIFIER: string = 'transactions-import';
 
-this.logger.info(
-  { identifier: LOG_IDENTIFIER, meta: { connectionId, imported } },
-  "import finished",
-);
+this.logger.info({ identifier: LOG_IDENTIFIER, meta: { connectionId, imported } }, 'import finished');
 ```
 
 Naming: kebab-case, `<feature>-<operation>`. Renaming one is a breaking change for saved Grafana
@@ -117,6 +114,7 @@ table — same rule as renaming one.
 | `catalog-sync`                | Catalog sync round per source (fetched, upserted, delisted, status)    | `source`, `fetched`, `upserted`, `delisted`, `status`                     |
 | `catalog-source`              | Catalog provider failure (neutral error code, never the provider body) | `source`, `errorCode`                                                     |
 | `catalog-search`              | Catalog search errors only                                             | —                                                                         |
+| `portfolio-export`            | Portfolio spreadsheet download (never the file content)                | `format`, `rows`, `durationMs`                                            |
 
 `message` is static by rule, so it is a reliable filter — but it travels as the **log line**, not as
 structured metadata, so the filter is the line filter: ``|= `import failed` `` works
