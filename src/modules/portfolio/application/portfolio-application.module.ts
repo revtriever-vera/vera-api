@@ -33,6 +33,6 @@ import { PortfolioViewApplication } from './portfolio-view.application';
         ModulesPortfolioSourceDriver,
         { provide: PortfolioSourcePort, useExisting: ModulesPortfolioSourceDriver }
     ],
-    exports: [PortfolioSnapshotService]
+    exports: [PortfolioViewApplication, PortfolioSnapshotService]
 })
 export class PortfolioApplicationModule {}

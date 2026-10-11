@@ -38,7 +38,7 @@ export function makeSourceClasses(): SourceClass[] {
     }));
 }
 
-interface PositionSeed {
+export interface PositionSeed {
     readonly symbol: string;
     readonly classKey: string;
     readonly market: string;
@@ -50,7 +50,7 @@ interface PositionSeed {
     readonly provider: string;
 }
 
-const POSITION_SEEDS: readonly PositionSeed[] = [
+export const POSITION_SEEDS: readonly PositionSeed[] = [
     {
         symbol: 'TESOURO-SELIC-2029',
         classKey: 'rf_pos',
