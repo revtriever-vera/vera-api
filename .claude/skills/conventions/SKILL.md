@@ -57,6 +57,15 @@ Three consequences worth spelling out, because each one has already caused a wro
 | orçamento                  | budget                            |
 | moeda base                 | base currency                     |
 | cotação (PTAX)             | exchange rate                     |
+| classe de ativo            | asset class (`assetClass`)        |
+| meta                       | target (`target`)                 |
+| faixa de tolerância        | tolerance (`tolerance`)           |
+| aporte                     | contribution (`contribution`)     |
+| posição                    | position (`position`)             |
+| renda fixa                 | fixed income (`fixedIncome`)      |
+| cotação de ativo           | quote (`quote`)                   |
+| exposição                  | exposure (`exposure`)             |
+| carteira                   | portfolio (`portfolio`)           |
 
 A term missing from this table is a term that has not been decided: add the row in the same PR that
 introduces it, so the second person to need it does not invent a synonym.

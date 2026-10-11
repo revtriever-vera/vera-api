@@ -104,16 +104,19 @@ Where a field lands decides what it costs. Loki bills by stream: every distinct 
 What exists to search on, by `identifier`. Adding an identifier or a `meta` key means updating this
 table — same rule as renaming one.
 
-| `identifier`                  | Covers                                               | Distinctive `meta` keys                                                   |
-| ----------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------- |
-| `identity-auth`               | Social login (Google, Facebook), session lifecycle   | `userId`                                                                  |
-| `auth-refresh-reuse`          | Refresh token reuse — family revoked                 | `familyId`, `revokedSessions`, `userId`                                   |
-| `identity-company-onboarding` | Company creation (first login → company)             | `companyId`, `ownerUserId`                                                |
-| `onboarding-step`             | Wizard step completed/skipped, activation gate       | `companyId`, `step`                                                       |
-| `queue-consumer`              | Worker startup, enqueue failure, missing handler     | `queue`, `type`, `detail`                                                 |
-| `email-send`                  | Delivery                                             | `template`                                                                |
-| `email-feedback`              | SES feedback: stored, suppressed, unroutable, failed | `type`, `eventType`, `providerMessageId`, `messageId`, `reason`, `detail` |
-| `http-error`                  | Unhandled exceptions, untranslated error codes       | `code`, `err`                                                             |
+| `identifier`                  | Covers                                                                 | Distinctive `meta` keys                                                   |
+| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `identity-auth`               | Social login (Google, Facebook), session lifecycle                     | `userId`                                                                  |
+| `auth-refresh-reuse`          | Refresh token reuse — family revoked                                   | `familyId`, `revokedSessions`, `userId`                                   |
+| `identity-company-onboarding` | Company creation (first login → company)                               | `companyId`, `ownerUserId`                                                |
+| `onboarding-step`             | Wizard step completed/skipped, activation gate                         | `companyId`, `step`                                                       |
+| `queue-consumer`              | Worker startup, enqueue failure, missing handler                       | `queue`, `type`, `detail`                                                 |
+| `email-send`                  | Delivery                                                               | `template`                                                                |
+| `email-feedback`              | SES feedback: stored, suppressed, unroutable, failed                   | `type`, `eventType`, `providerMessageId`, `messageId`, `reason`, `detail` |
+| `http-error`                  | Unhandled exceptions, untranslated error codes                         | `code`, `err`                                                             |
+| `catalog-sync`                | Catalog sync round per source (fetched, upserted, delisted, status)    | `source`, `fetched`, `upserted`, `delisted`, `status`                     |
+| `catalog-source`              | Catalog provider failure (neutral error code, never the provider body) | `source`, `errorCode`                                                     |
+| `catalog-search`              | Catalog search errors only                                             | —                                                                         |
 
 `message` is static by rule, so it is a reliable filter — but it travels as the **log line**, not as
 structured metadata, so the filter is the line filter: ``|= `import failed` `` works
