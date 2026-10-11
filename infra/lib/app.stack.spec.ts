@@ -12,6 +12,7 @@ interface ContainerResource {
     readonly Environment?: readonly { readonly Name: string; readonly Value: unknown }[];
     readonly Secrets?: readonly { readonly Name: string; readonly ValueFrom: unknown }[];
     readonly PortMappings?: readonly { readonly ContainerPort: number }[];
+    readonly Command?: readonly string[];
     readonly Essential?: boolean;
     readonly DependsOn?: readonly { readonly ContainerName: string; readonly Condition: string }[];
 }
@@ -139,6 +140,7 @@ describe('a task de migração', () => {
         const containers: readonly ContainerResource[] = taskContainers(appTemplate('prod'), 'vera-migrate-prod');
 
         expect(containers.map((entry: ContainerResource): string => entry.Name)).toEqual(['migrate']);
+        expect(container(containers, 'migrate').Command).toEqual(['npm', 'run', 'migrate:latest']);
     });
 });
 
@@ -152,6 +154,16 @@ describe('o off-hours', () => {
             ScheduleExpressionTimezone: 'America/Sao_Paulo'
         });
         template.hasResourceProperties('AWS::Scheduler::Schedule', { ScheduleExpression: 'cron(0 8 * * ? *)' });
+    });
+
+    it('para o serviço com DesiredCount 0 e o religa com 1', () => {
+        const schedules: Record<string, { Properties: { Target: { Input: unknown } } }> =
+            appTemplate('dev').findResources('AWS::Scheduler::Schedule');
+        const counts: string[] = Object.values(schedules).map(
+            (schedule): string => /DesiredCount\\?":(\d+)/.exec(JSON.stringify(schedule.Properties.Target.Input))?.[1] ?? ''
+        );
+
+        expect(counts.sort()).toEqual(['0', '1']);
     });
 
     it('não existe em prod', () => {
@@ -190,6 +202,17 @@ describe('o escopo da pilha', () => {
         const queues: string = JSON.stringify(template.findResources('AWS::SQS::Queue'));
         expect(queues).not.toContain('webhook');
         expect(JSON.stringify(template.toJSON())).not.toMatch(/bedrock:|s3:/);
+    });
+});
+
+describe('a permissão de envio de e-mail', () => {
+    it('limita o SES à identidade do domínio e ao conjunto vera-<env>', () => {
+        const template: Template = appTemplate('prod');
+        const statements: string = JSON.stringify(template.findResources('AWS::IAM::Policy'));
+
+        expect(statements).toContain(`:identity/${FAKE_DOMAIN}`);
+        expect(statements).toContain(':configuration-set/vera-prod');
+        expect(statements).not.toMatch(/"ses:SendEmail"[^}]*"Resource":"\*"/);
     });
 });
 
