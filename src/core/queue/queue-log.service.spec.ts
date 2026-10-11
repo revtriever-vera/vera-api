@@ -48,6 +48,14 @@ describe('QueueLogService telemetry', () => {
         expect(metrics.gaugeValue('queue_oldest_waiting_job_age_seconds', { queue: SAMPLE_QUEUE })).toBe(42);
     });
 
+    it('exposes the failed job count per queue as a gauge', () => {
+        const { logs, metrics }: Harness = harness();
+
+        logs.failedJobs(SAMPLE_QUEUE, 3);
+
+        expect(metrics.gaugeValue('queue_failed_jobs', { queue: SAMPLE_QUEUE })).toBe(3);
+    });
+
     it('warns with the queue and the detail when a telemetry sample fails', () => {
         const { logs, warn }: Harness = harness();
 

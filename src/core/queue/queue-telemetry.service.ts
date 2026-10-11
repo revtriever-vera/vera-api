@@ -41,6 +41,7 @@ export class QueueTelemetryService implements OnApplicationBootstrap, OnModuleDe
         const queue: Queue = this.queueFor(name);
         try {
             this.logs.oldestWaitingJobAge(name, await this.oldestWaitingAgeSeconds(queue, now));
+            this.logs.failedJobs(name, await queue.getFailedCount());
             for (const scheduler of await queue.getJobSchedulers()) {
                 this.reportNextRun(scheduler);
             }
