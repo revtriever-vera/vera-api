@@ -66,6 +66,8 @@ Three consequences worth spelling out, because each one has already caused a wro
 | cotação de ativo           | quote (`quote`)                   |
 | exposição                  | exposure (`exposure`)             |
 | carteira                   | portfolio (`portfolio`)           |
+| catálogo (de ativos)       | catalog (`catalog`)               |
+| dados de mercado           | market data (`marketData`)        |
 
 A term missing from this table is a term that has not been decided: add the row in the same PR that
 introduces it, so the second person to need it does not invent a synonym.
