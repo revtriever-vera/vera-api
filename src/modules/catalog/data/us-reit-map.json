@@ -1,0 +1,142 @@
+[
+  {
+    "symbol": "AMT",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "ARE",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "AVB",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "CCI",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "DLR",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "EQIX",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "EQR",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "EXR",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "FREL",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "ICF",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "INVH",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "IRM",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "IYR",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "MAA",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "O",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "PLD",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "PSA",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "REM",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "RWR",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "SCHH",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "SPG",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "USRT",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "VICI",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "VNQ",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "VTR",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "WELL",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "WPC",
+    "classKey": "reits",
+    "dollarExposure": true
+  },
+  {
+    "symbol": "XLRE",
+    "classKey": "reits",
+    "dollarExposure": true
+  }
+]

@@ -15,7 +15,9 @@ const DEFAULT_NODES: string = 'localhost:7200,localhost:7201,localhost:7202';
 const QUEUE_NAMES: string[] = Object.values(QUEUES);
 const MESSAGE_TYPE_VALUES: string[] = Object.values(MESSAGE_TYPES);
 
-const TICK_TYPE_BY_QUEUE: Record<string, string> = {};
+const TICK_TYPE_BY_QUEUE: Record<string, string> = {
+    [QUEUES.catalog]: MESSAGE_TYPES.catalogSyncTickRequested
+};
 
 function connect(): Cluster | Redis {
     const nodes: ClusterNode[] = (process.env['REDIS_NODES'] ?? DEFAULT_NODES).split(',').map((entry: string) => {

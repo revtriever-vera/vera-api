@@ -1,4 +1,5 @@
 import { ExecutionContext } from '@nestjs/common';
+import { AppContext } from '../context/app-context.port';
 import { Reflector } from '@nestjs/core';
 import { describe, expect, it, vi } from 'vitest';
 import { RateLimitOptions, RateLimitSubject } from './rate-limit.decorator';
@@ -16,6 +17,8 @@ function reflectorReturning(options: RateLimitOptions | undefined): Reflector {
     return { get: () => options } as unknown as Reflector;
 }
 
+const CONTEXT: AppContext = { getOrNull: () => ({ requestId: 'req-1', companyId: 'company-1' }) } as unknown as AppContext;
+
 function throttleStub(): { throttle: ThrottleService; assertAllowed: ReturnType<typeof vi.fn> } {
     const assertAllowed: ReturnType<typeof vi.fn> = vi.fn();
     return { throttle: { assertAllowed } as unknown as ThrottleService, assertAllowed };
@@ -24,7 +27,7 @@ function throttleStub(): { throttle: ThrottleService; assertAllowed: ReturnType<
 describe('RateLimitGuard', () => {
     it('allows the request through when no @RateLimit metadata is present', async () => {
         const { throttle, assertAllowed } = throttleStub();
-        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(undefined), throttle);
+        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(undefined), throttle, CONTEXT);
 
         await expect(guard.canActivate(contextWith({}, {}, '127.0.0.1'))).resolves.toBe(true);
         expect(assertAllowed).not.toHaveBeenCalled();
@@ -33,7 +36,7 @@ describe('RateLimitGuard', () => {
     it('allows the request through when identify() finds nothing to key on', async () => {
         const { throttle, assertAllowed } = throttleStub();
         const options: RateLimitOptions = { key: 'login', limit: 5, windowSeconds: 60, identify: () => null };
-        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(options), throttle);
+        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(options), throttle, CONTEXT);
 
         await expect(guard.canActivate(contextWith({}, {}, '127.0.0.1'))).resolves.toBe(true);
         expect(assertAllowed).not.toHaveBeenCalled();
@@ -47,10 +50,25 @@ describe('RateLimitGuard', () => {
             windowSeconds: 60,
             identify: (subject: RateLimitSubject): string | null => subject.body['email'] as string
         };
-        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(options), throttle);
+        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(options), throttle, CONTEXT);
 
         await guard.canActivate(contextWith({ email: 'ana@cliente.com' }, {}, '127.0.0.1'));
 
         expect(assertAllowed).toHaveBeenCalledWith('login:ana@cliente.com', 5, 60);
+    });
+
+    it('exposes the company of the session to identify()', async () => {
+        const { throttle, assertAllowed } = throttleStub();
+        const options: RateLimitOptions = {
+            key: 'catalog-search',
+            limit: 60,
+            windowSeconds: 60,
+            identify: (subject: RateLimitSubject): string | null => subject.companyId ?? null
+        };
+        const guard: RateLimitGuard = new RateLimitGuard(reflectorReturning(options), throttle, CONTEXT);
+
+        await guard.canActivate(contextWith({}, {}, '127.0.0.1'));
+
+        expect(assertAllowed).toHaveBeenCalledWith('catalog-search:company-1', 60, 60);
     });
 });

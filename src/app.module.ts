@@ -13,6 +13,7 @@ import { AppErrorFilter } from './core/http/app-error.filter';
 import { ObservabilityModule } from './core/observability/observability.module';
 import { QueueModule } from './core/queue/queue.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
@@ -44,7 +45,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         HealthModule,
         IdentityModule,
         AllocationModule,
-        OnboardingModule
+        OnboardingModule,
+        CatalogModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },

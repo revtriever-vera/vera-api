@@ -57,6 +57,29 @@ export interface AssetClasses {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface Assets {
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    dollarExposure: Generated<boolean>;
+    externalId: string;
+    id: string;
+    kind: string;
+    market: string;
+    maturityDate: Timestamp | null;
+    name: string;
+    popularRank: number | null;
+    quantityDecimals: number;
+    quotesProvider: string;
+    rank: number | null;
+    seenAt: Generated<Timestamp>;
+    sourceHash: string | null;
+    status: Generated<string>;
+    suggestedClassKey: string | null;
+    symbol: string;
+    typeGroup: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AuthIdentities {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -69,6 +92,19 @@ export interface AuthIdentities {
     subject: string;
     updatedAt: Generated<Timestamp>;
     userId: string;
+}
+
+export interface CatalogSyncRuns {
+    delisted: Generated<number>;
+    errorCode: string | null;
+    fetched: Generated<number>;
+    finishedAt: Timestamp | null;
+    id: string;
+    source: string;
+    startedAt: Generated<Timestamp>;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+    upserted: Generated<number>;
 }
 
 export interface Companies {
@@ -152,7 +188,9 @@ export interface DB {
     AccountDeletionLog: AccountDeletionLog;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
+    Assets: Assets;
     AuthIdentities: AuthIdentities;
+    CatalogSyncRuns: CatalogSyncRuns;
     Companies: Companies;
     OnboardingStates: OnboardingStates;
     PortfolioSettings: PortfolioSettings;

@@ -1,0 +1,790 @@
+[
+  {
+    "market": "B3",
+    "externalId": "ITUB4",
+    "symbol": "ITUB4",
+    "name": "Itau Unibanco PN",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "WEGE3",
+    "symbol": "WEGE3",
+    "name": "WEG ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "PETR4",
+    "symbol": "PETR4",
+    "name": "Petrobras PN",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "VALE3",
+    "symbol": "VALE3",
+    "name": "Vale ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "BBAS3",
+    "symbol": "BBAS3",
+    "name": "Banco do Brasil ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "BBDC4",
+    "symbol": "BBDC4",
+    "name": "Bradesco PN",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "ABEV3",
+    "symbol": "ABEV3",
+    "name": "Ambev ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "RENT3",
+    "symbol": "RENT3",
+    "name": "Localiza ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "B3SA3",
+    "symbol": "B3SA3",
+    "name": "B3 ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "SUZB3",
+    "symbol": "SUZB3",
+    "name": "Suzano ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "ITSA4",
+    "symbol": "ITSA4",
+    "name": "Itausa PN",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "EGIE3",
+    "symbol": "EGIE3",
+    "name": "Engie Brasil ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "TAEE11",
+    "symbol": "TAEE11",
+    "name": "Taesa UNT",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "BBSE3",
+    "symbol": "BBSE3",
+    "name": "BB Seguridade ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "PRIO3",
+    "symbol": "PRIO3",
+    "name": "PRIO ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "LREN3",
+    "symbol": "LREN3",
+    "name": "Lojas Renner ON",
+    "kind": "stock",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "HGLG11",
+    "symbol": "HGLG11",
+    "name": "CSHG Logistica FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "KNRI11",
+    "symbol": "KNRI11",
+    "name": "Kinea Renda Imobiliaria FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "MXRF11",
+    "symbol": "MXRF11",
+    "name": "Maxi Renda FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "XPML11",
+    "symbol": "XPML11",
+    "name": "XP Malls FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "VISC11",
+    "symbol": "VISC11",
+    "name": "Vinci Shopping Centers FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "BTLG11",
+    "symbol": "BTLG11",
+    "name": "BTG Pactual Logistica FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "XPLG11",
+    "symbol": "XPLG11",
+    "name": "XP Log FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "KNCR11",
+    "symbol": "KNCR11",
+    "name": "Kinea Rendimentos Imobiliarios FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "TGAR11",
+    "symbol": "TGAR11",
+    "name": "TG Ativo Real FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "PVBI11",
+    "symbol": "PVBI11",
+    "name": "VBI Prime Properties FII",
+    "kind": "fii",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "BOVA11",
+    "symbol": "BOVA11",
+    "name": "iShares Ibovespa ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "BOVV11",
+    "symbol": "BOVV11",
+    "name": "It Now Ibovespa ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "DIVO11",
+    "symbol": "DIVO11",
+    "name": "It Now IDIV ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "ETHE11",
+    "symbol": "ETHE11",
+    "name": "Hashdex Ethereum ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "EURP11",
+    "symbol": "EURP11",
+    "name": "Trend Europa ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "GOLD11",
+    "symbol": "GOLD11",
+    "name": "Trend Ouro ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "HASH11",
+    "symbol": "HASH11",
+    "name": "Hashdex Nasdaq Crypto Index ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "IMAB11",
+    "symbol": "IMAB11",
+    "name": "It Now IMA-B ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "IRFM11",
+    "symbol": "IRFM11",
+    "name": "It Now IRF-M ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "IVVB11",
+    "symbol": "IVVB11",
+    "name": "iShares S&P 500 FIC FI Cotas ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "LFTS11",
+    "symbol": "LFTS11",
+    "name": "Tesouro Selic ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "NASD11",
+    "symbol": "NASD11",
+    "name": "Trend Nasdaq 100 ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "QBTC11",
+    "symbol": "QBTC11",
+    "name": "QR Bitcoin ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "SMAL11",
+    "symbol": "SMAL11",
+    "name": "iShares Small Cap ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "SPXI11",
+    "symbol": "SPXI11",
+    "name": "iShares S&P 500 ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "XINA11",
+    "symbol": "XINA11",
+    "name": "Trend China ETF",
+    "kind": "etf",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "AAPL34",
+    "symbol": "AAPL34",
+    "name": "Apple BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "MSFT34",
+    "symbol": "MSFT34",
+    "name": "Microsoft BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "AMZO34",
+    "symbol": "AMZO34",
+    "name": "Amazon BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "GOGL34",
+    "symbol": "GOGL34",
+    "name": "Alphabet BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "TSLA34",
+    "symbol": "TSLA34",
+    "name": "Tesla BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "NVDC34",
+    "symbol": "NVDC34",
+    "name": "Nvidia BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "COCA34",
+    "symbol": "COCA34",
+    "name": "Coca-Cola BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "B3",
+    "externalId": "JNJB34",
+    "symbol": "JNJB34",
+    "name": "Johnson & Johnson BDR",
+    "kind": "bdr",
+    "currency": "BRL"
+  },
+  {
+    "market": "US",
+    "externalId": "AAPL",
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "MSFT",
+    "symbol": "MSFT",
+    "name": "Microsoft Corp",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "GOOGL",
+    "symbol": "GOOGL",
+    "name": "Alphabet Inc Class A",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "AMZN",
+    "symbol": "AMZN",
+    "name": "Amazon.com Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "NVDA",
+    "symbol": "NVDA",
+    "name": "NVIDIA Corp",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "META",
+    "symbol": "META",
+    "name": "Meta Platforms Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "TSLA",
+    "symbol": "TSLA",
+    "name": "Tesla Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "JPM",
+    "symbol": "JPM",
+    "name": "JPMorgan Chase & Co",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "KO",
+    "symbol": "KO",
+    "name": "Coca-Cola Co",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "JNJ",
+    "symbol": "JNJ",
+    "name": "Johnson & Johnson",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "VOO",
+    "symbol": "VOO",
+    "name": "Vanguard S&P 500 ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "SPY",
+    "symbol": "SPY",
+    "name": "SPDR S&P 500 ETF Trust",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "QQQ",
+    "symbol": "QQQ",
+    "name": "Invesco QQQ Trust",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "IVV",
+    "symbol": "IVV",
+    "name": "iShares Core S&P 500 ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "VTI",
+    "symbol": "VTI",
+    "name": "Vanguard Total Stock Market ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "SCHD",
+    "symbol": "SCHD",
+    "name": "Schwab US Dividend Equity ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "O",
+    "symbol": "O",
+    "name": "Realty Income Corp",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "VNQ",
+    "symbol": "VNQ",
+    "name": "Vanguard Real Estate ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "SCHH",
+    "symbol": "SCHH",
+    "name": "Schwab US REIT ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "XLRE",
+    "symbol": "XLRE",
+    "name": "Real Estate Select Sector SPDR Fund",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "PLD",
+    "symbol": "PLD",
+    "name": "Prologis Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "AMT",
+    "symbol": "AMT",
+    "name": "American Tower Corp",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "IYR",
+    "symbol": "IYR",
+    "name": "iShares US Real Estate ETF",
+    "kind": "etf",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "EQIX",
+    "symbol": "EQIX",
+    "name": "Equinix Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "PSA",
+    "symbol": "PSA",
+    "name": "Public Storage",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "US",
+    "externalId": "SPG",
+    "symbol": "SPG",
+    "name": "Simon Property Group Inc",
+    "kind": "stock",
+    "currency": "USD"
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "bitcoin",
+    "symbol": "BTC",
+    "name": "Bitcoin",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 1
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "ethereum",
+    "symbol": "ETH",
+    "name": "Ethereum",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 2
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "tether",
+    "symbol": "USDT",
+    "name": "Tether",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 3
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "binancecoin",
+    "symbol": "BNB",
+    "name": "BNB",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 4
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "solana",
+    "symbol": "SOL",
+    "name": "Solana",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 5
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "ripple",
+    "symbol": "XRP",
+    "name": "XRP",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 6
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "usd-coin",
+    "symbol": "USDC",
+    "name": "USDC",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 7
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "dogecoin",
+    "symbol": "DOGE",
+    "name": "Dogecoin",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 8
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "cardano",
+    "symbol": "ADA",
+    "name": "Cardano",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 9
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "tron",
+    "symbol": "TRX",
+    "name": "TRON",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 10
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "chainlink",
+    "symbol": "LINK",
+    "name": "Chainlink",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 11
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "avalanche-2",
+    "symbol": "AVAX",
+    "name": "Avalanche",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 12
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "polkadot",
+    "symbol": "DOT",
+    "name": "Polkadot",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 13
+  },
+  {
+    "market": "CRYPTO",
+    "externalId": "litecoin",
+    "symbol": "LTC",
+    "name": "Litecoin",
+    "kind": "crypto",
+    "currency": "USD",
+    "rank": 14
+  },
+  {
+    "market": "TESOURO",
+    "externalId": "selic:2029-03-01",
+    "symbol": "Tesouro Selic 2029",
+    "name": "Tesouro Selic 2029-03-01",
+    "kind": "treasury",
+    "currency": "BRL",
+    "maturityDate": "2029-03-01"
+  },
+  {
+    "market": "TESOURO",
+    "externalId": "prefixado:2029-01-01",
+    "symbol": "Tesouro Prefixado 2029",
+    "name": "Tesouro Prefixado 2029-01-01",
+    "kind": "treasury",
+    "currency": "BRL",
+    "maturityDate": "2029-01-01"
+  },
+  {
+    "market": "TESOURO",
+    "externalId": "prefixado-juros-semestrais:2033-01-01",
+    "symbol": "Tesouro Prefixado com Juros Semestrais 2033",
+    "name": "Tesouro Prefixado com Juros Semestrais 2033-01-01",
+    "kind": "treasury",
+    "currency": "BRL",
+    "maturityDate": "2033-01-01"
+  },
+  {
+    "market": "TESOURO",
+    "externalId": "ipca:2035-05-15",
+    "symbol": "Tesouro IPCA+ 2035",
+    "name": "Tesouro IPCA+ 2035-05-15",
+    "kind": "treasury",
+    "currency": "BRL",
+    "maturityDate": "2035-05-15"
+  },
+  {
+    "market": "TESOURO",
+    "externalId": "ipca-juros-semestrais:2040-08-15",
+    "symbol": "Tesouro IPCA+ com Juros Semestrais 2040",
+    "name": "Tesouro IPCA+ com Juros Semestrais 2040-08-15",
+    "kind": "treasury",
+    "currency": "BRL",
+    "maturityDate": "2040-08-15"
+  },
+  {
+    "market": "TESOURO",
+    "externalId": "renda-mais:2049-12-15",
+    "symbol": "Tesouro Renda+ 2049",
+    "name": "Tesouro Renda+ 2049-12-15",
+    "kind": "treasury",
+    "currency": "BRL",
+    "maturityDate": "2049-12-15"
+  }
+]
