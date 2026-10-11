@@ -99,7 +99,7 @@ extension and ends the round.
 | ----------------------------------- | ------------------------------------------------------------ |
 | a scheduled step really fires       | `npm run tick -- <name>` instead of waiting for the boundary |
 | a provider callback arrives         | the replay script the repo provides, with a stored fixture   |
-| an email went out, and what it says | Mailpit at `localhost:8025` (also has a REST API)            |
+| an email went out, and what it says | Mailpit at `localhost:8027` (also has a REST API)            |
 | what the flow actually did          | the structured log — `requestId` ties the whole run together |
 | the state that resulted             | the database, read-only                                      |
 

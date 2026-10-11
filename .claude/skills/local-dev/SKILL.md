@@ -16,18 +16,19 @@ Everything runs in `docker compose`; the app runs on the host (`npm run start:de
 
 | Service    | Image                                       | Ports                   | Purpose                                                 |
 | ---------- | ------------------------------------------- | ----------------------- | ------------------------------------------------------- |
-| postgres   | postgres:16                                 | 5436                    | dev database (normal volume; tmpfs is for tests)        |
-| redis      | grokzen/redis-cluster:7.0.10                | 7100–7105               | Redis Cluster, same topology as the hosted Redis/Valkey |
-| localstack | localstack/localstack:4                     | 4576                    | SSM + AWS adapters                                      |
-| mailpit    | axllent/mailpit                             | 1026 (SMTP) / 8026 (UI) | catches all outbound email                              |
-| lgtm       | grafana/otel-lgtm (profile `observability`) | 4319 (OTLP) / 3002 (UI) | local Grafana+Loki+Tempo+Prometheus                     |
+| postgres   | postgres:16                                 | 5437                    | dev database (normal volume; tmpfs is for tests)        |
+| redis      | grokzen/redis-cluster:7.0.10                | 7200–7205               | Redis Cluster, same topology as the hosted Redis/Valkey |
+| localstack | localstack/localstack:4                     | 4577                    | SSM + AWS adapters                                      |
+| mailpit    | axllent/mailpit                             | 1027 (SMTP) / 8027 (UI) | catches all outbound email                              |
+| lgtm       | grafana/otel-lgtm (profile `observability`) | 4320 (OTLP) / 3003 (UI) | local Grafana+Loki+Tempo+Prometheus                     |
 
-Ports are Vera's own on purpose, so the stack can run next to other projects' compose stacks that use the
-default ports (5432, 7000–7005, 4566, 1025/8025, 3001/4318). The API itself listens on 3333.
+Ports are Vera's own on purpose, so the stack can run next to other projects' compose stacks on the same
+machine. The defaults (5432, 7000–7005, 4566, 1025/8025, 3001/4318) and the previous offset
+(5436, 7100–7105, 4576, 1026/8026, 4319/3002) may already be taken by other projects. The API itself listens on 3333.
 
-- **Mailpit, not Mailhog** (Mailhog is unmaintained). MailPort's SMTP driver points at 1026; every
-  email the app sends appears at `localhost:8026` — also queryable via REST API in E2E tests.
-- **LocalStack**: AWS SDK v3 redirects via `AWS_ENDPOINT_URL=http://localhost:4576` — an env var,
+- **Mailpit, not Mailhog** (Mailhog is unmaintained). MailPort's SMTP driver points at 1027; every
+  email the app sends appears at `localhost:8027` — also queryable via REST API in E2E tests.
+- **LocalStack**: AWS SDK v3 redirects via `AWS_ENDPOINT_URL=http://localhost:4577` — an env var,
   never conditional code. `compose/localstack-init/` holds the bootstrap script creating AWS-side resources
   on container start (names imported from the same shared constants the CDK uses).
 - **lgtm**: local telemetry stays local — dev traffic never pollutes the real Grafana. Same OTLP
