@@ -20,7 +20,12 @@ export class InvalidRefreshTokenError extends AppError {
     }
 }
 
-export class ReusedRefreshTokenError extends InvalidRefreshTokenError {}
+export class ReusedRefreshTokenError extends InvalidRefreshTokenError {
+    public constructor() {
+        super();
+        this.name = InvalidRefreshTokenError.name;
+    }
+}
 
 export class AccountClosedError extends AppError {
     public constructor(companyId: string) {
