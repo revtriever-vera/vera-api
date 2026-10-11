@@ -17,6 +17,10 @@ interface ContainerResource {
     readonly DependsOn?: readonly { readonly ContainerName: string; readonly Condition: string }[];
 }
 
+interface ScheduleResource {
+    readonly Properties: { readonly Target: { readonly Input: unknown } };
+}
+
 interface TaskDefinitionResource {
     readonly Properties: { readonly Family: string; readonly ContainerDefinitions: readonly ContainerResource[] };
 }
@@ -157,10 +161,13 @@ describe('o off-hours', () => {
     });
 
     it('para o serviço com DesiredCount 0 e o religa com 1', () => {
-        const schedules: Record<string, { Properties: { Target: { Input: unknown } } }> =
-            appTemplate('dev').findResources('AWS::Scheduler::Schedule');
+        const schedules: Record<string, ScheduleResource> = appTemplate('dev').findResources('AWS::Scheduler::Schedule') as Record<
+            string,
+            ScheduleResource
+        >;
         const counts: string[] = Object.values(schedules).map(
-            (schedule): string => /DesiredCount\\?":(\d+)/.exec(JSON.stringify(schedule.Properties.Target.Input))?.[1] ?? ''
+            (schedule: ScheduleResource): string =>
+                /DesiredCount\\?":(\d+)/.exec(JSON.stringify(schedule.Properties.Target.Input))?.[1] ?? ''
         );
 
         expect(counts.sort()).toEqual(['0', '1']);
