@@ -11,10 +11,10 @@ export interface TargetUpdate {
 export class ClassAssignmentDomain {
     public constructor(private readonly assignments: ClassAssignmentsRepository) {}
 
-    public async assign(subjectType: SubjectType, subjectId: string, classId: string): Promise<ClassAssignment> {
+    public async assign(subjectType: SubjectType, subjectId: string, classId: string, isSample: boolean = false): Promise<ClassAssignment> {
         const current: ClassAssignment | null = await this.assignments.findBySubject(subjectType, subjectId);
         if (current === null) {
-            return this.assignments.create({ subjectType, subjectId, classId });
+            return this.assignments.create({ subjectType, subjectId, classId, isSample });
         }
         return this.moveIfChanged(current, classId);
     }

@@ -16,6 +16,7 @@ import {
     OnboardingAreaSummaryPort
 } from '../../../src/modules/onboarding/services/onboarding-area-summary.port';
 import { createIsolatedDatabase, IsolatedDatabase } from '../support/isolated-database';
+import { withoutBusinessPorts } from '../support/inert-ports';
 import { isolateRedisForWorker } from '../support/queue';
 
 interface Account {
@@ -81,10 +82,12 @@ describe('onboarding flow', () => {
         process.env['IS_LOCAL'] = 'true';
         process.env['DEPLOY_ENV'] = 'local';
 
-        const testing: TestingModule = await Test.createTestingModule({
-            imports: [AppModule],
-            providers: [AssetsTestPort, BanksTestPort]
-        }).compile();
+        const testing: TestingModule = await withoutBusinessPorts(
+            Test.createTestingModule({
+                imports: [AppModule],
+                providers: [AssetsTestPort, BanksTestPort]
+            })
+        ).compile();
         app = testing.createNestApplication();
         app.use(cookieParser());
         await app.init();

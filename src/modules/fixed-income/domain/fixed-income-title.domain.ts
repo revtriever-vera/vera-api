@@ -13,6 +13,22 @@ export class FixedIncomeTitleDomain {
         return toFixedIncomeTitle(await this.titles.insert({ ...draft, taxRegime: TAX_REGIME_BY_KIND[draft.kind] }));
     }
 
+    public async createSample(draft: TitleDraft): Promise<FixedIncomeTitle> {
+        return toFixedIncomeTitle(await this.titles.insertSample({ ...draft, taxRegime: TAX_REGIME_BY_KIND[draft.kind] }));
+    }
+
+    public async listReal(): Promise<FixedIncomeTitle[]> {
+        return (await this.titles.listReal()).map(toFixedIncomeTitle);
+    }
+
+    public async listSamples(): Promise<FixedIncomeTitle[]> {
+        return (await this.titles.listSamples()).map(toFixedIncomeTitle);
+    }
+
+    public async removeSamples(): Promise<number> {
+        return this.titles.hardDeleteSamples();
+    }
+
     public async findById(id: string): Promise<FixedIncomeTitle | null> {
         const row: FixedIncomeTitleRow | null = await this.titles.findById(id);
         return row === null ? null : toFixedIncomeTitle(row);

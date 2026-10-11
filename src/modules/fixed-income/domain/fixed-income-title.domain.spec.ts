@@ -23,6 +23,7 @@ function row(overrides: Partial<FixedIncomeTitleRow> = {}): FixedIncomeTitleRow 
         appliedAt: new Date(2025, 0, 6),
         maturityDate: new Date(2027, 0, 6),
         taxRegime: 'exempt',
+        isSample: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
@@ -37,7 +38,11 @@ function build() {
         listAll: vi.fn().mockResolvedValue([row(), row({ id: 'b' })]),
         countActive: vi.fn().mockResolvedValue(2),
         patch: vi.fn().mockResolvedValue(row({ rateBps: 1200 })),
-        softDelete: vi.fn().mockResolvedValue(row())
+        softDelete: vi.fn().mockResolvedValue(row()),
+        insertSample: vi.fn().mockResolvedValue(row({ isSample: true })),
+        listReal: vi.fn().mockResolvedValue([row()]),
+        listSamples: vi.fn().mockResolvedValue([row({ isSample: true })]),
+        hardDeleteSamples: vi.fn().mockResolvedValue(1)
     };
     return { domain: new FixedIncomeTitleDomain(repository as unknown as FixedIncomeTitlesRepository), repository };
 }
@@ -77,5 +82,16 @@ describe('FixedIncomeTitleDomain', () => {
         const { domain } = build();
 
         expect(await domain.remove('a')).toBe(true);
+    });
+
+    it('cria, lista e remove os títulos de exemplo', async () => {
+        const { domain, repository } = build();
+
+        await domain.createSample(DRAFT);
+
+        expect(repository.insertSample).toHaveBeenCalledWith({ ...DRAFT, taxRegime: 'exempt' });
+        expect(await domain.listReal()).toHaveLength(1);
+        expect(await domain.listSamples()).toHaveLength(1);
+        expect(await domain.removeSamples()).toBe(1);
     });
 });

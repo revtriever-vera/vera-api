@@ -14,8 +14,16 @@ describe('ClassAssignmentDomain.assign', () => {
 
         const result = await build({ findBySubject: vi.fn().mockResolvedValue(null), create }).assign('position', 's1', 'c1');
 
-        expect(create).toHaveBeenCalledWith({ subjectType: 'position', subjectId: 's1', classId: 'c1' });
+        expect(create).toHaveBeenCalledWith({ subjectType: 'position', subjectId: 's1', classId: 'c1', isSample: false });
         expect(result).toBe(created);
+    });
+
+    it('marca a atribuição como exemplo quando pedido', async () => {
+        const create: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(makeAssignment());
+
+        await build({ findBySubject: vi.fn().mockResolvedValue(null), create }).assign('fixed_income', 's1', 'c1', true);
+
+        expect(create).toHaveBeenCalledWith({ subjectType: 'fixed_income', subjectId: 's1', classId: 'c1', isSample: true });
     });
 
     it('mesma classe não mexe na atribuição nem zera a meta', async () => {

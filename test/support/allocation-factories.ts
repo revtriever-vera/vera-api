@@ -29,6 +29,7 @@ export function makeAssignment(overrides: Partial<ClassAssignment> = {}): ClassA
         subjectId: `subject-${String(sequence)}`,
         classId: 'class-1',
         targetInClassBps: 0,
+        isSample: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,

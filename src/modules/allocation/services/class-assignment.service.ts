@@ -13,12 +13,12 @@ export class ClassAssignmentService {
         private readonly logs: AllocationLogService
     ) {}
 
-    public async assign(subjectType: SubjectType, subjectId: string, classId: string): Promise<void> {
+    public async assign(subjectType: SubjectType, subjectId: string, classId: string, isSample: boolean = false): Promise<void> {
         const assetClass: AssetClass | null = await this.classes.findById(classId);
         if (assetClass === null) {
             throw new ClassNotFoundError(classId);
         }
-        await this.assignments.assign(subjectType, subjectId, assetClass.id);
+        await this.assignments.assign(subjectType, subjectId, assetClass.id, isSample);
         this.logs.assignmentChanged(subjectType, subjectId, assetClass.id);
     }
 

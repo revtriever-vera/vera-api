@@ -18,6 +18,7 @@ import { AccountDataEraserPort } from '../../../src/modules/identity/services/ac
 import { AccountDataExporterPort } from '../../../src/modules/identity/services/account-data-exporter.port';
 import { tablesWithCompanyId } from '../support/company-cascade';
 import { createIsolatedDatabase, IsolatedDatabase } from '../support/isolated-database';
+import { withoutBusinessPorts } from '../support/inert-ports';
 import { CapturingPublisher, isolateRedisForWorker } from '../support/queue';
 
 class ScriptedEraser extends AccountDataEraserPort {
@@ -111,7 +112,7 @@ describe('identity account deletion and export', () => {
         process.env['IS_LOCAL'] = 'true';
         process.env['DEPLOY_ENV'] = 'local';
 
-        const testing: TestingModule = await Test.createTestingModule({ imports: [AppModule, ScriptedAreasModule] })
+        const testing: TestingModule = await withoutBusinessPorts(Test.createTestingModule({ imports: [AppModule, ScriptedAreasModule] }))
             .overrideProvider(QueuePublisherPort)
             .useValue(publisher)
             .compile();

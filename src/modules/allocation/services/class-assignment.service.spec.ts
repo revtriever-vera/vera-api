@@ -33,8 +33,16 @@ describe('ClassAssignmentService', () => {
 
         await doubles.service.assign('position', 'subject-1', 'class-x');
 
-        expect(doubles.assign).toHaveBeenCalledWith('position', 'subject-1', 'class-x');
+        expect(doubles.assign).toHaveBeenCalledWith('position', 'subject-1', 'class-x', false);
         expect(doubles.assignmentChanged).toHaveBeenCalledWith('position', 'subject-1', 'class-x');
+    });
+
+    it('repassa o marcador de exemplo ao domínio', async () => {
+        const doubles: Doubles = build(true);
+
+        await doubles.service.assign('fixed_income', 'subject-1', 'class-x', true);
+
+        expect(doubles.assign).toHaveBeenCalledWith('fixed_income', 'subject-1', 'class-x', true);
     });
 
     it('classe inexistente (ou de outra company) lança class_not_found sem gravar', async () => {

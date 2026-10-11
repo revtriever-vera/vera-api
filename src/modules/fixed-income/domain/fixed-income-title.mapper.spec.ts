@@ -17,6 +17,7 @@ describe('fixed income title mapper', () => {
             appliedAt: new Date(2025, 2, 9),
             maturityDate: new Date(2027, 11, 31),
             taxRegime: 'exempt',
+            isSample: false,
             createdAt: new Date('2025-03-09T10:00:00Z'),
             updatedAt: new Date('2025-03-09T10:00:00Z'),
             deletedAt: null

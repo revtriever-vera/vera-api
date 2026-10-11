@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { ContextModule } from '../../../core/context/context.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { AllocationDomainModule } from '../domain/allocation-domain.module';
+import { AllocationAccountExporter } from '../services/allocation-account.exporter';
 import { AllocationLogService } from '../services/allocation-log.service';
 import { AllocationMetricsService } from '../services/allocation-metrics.service';
+import { AllocationTargetSummary } from '../services/allocation-target.summary';
 import { ClassAssignmentService } from '../services/class-assignment.service';
 import { ClassDisplayNameService } from '../services/class-display-name.service';
 import { ClassReaderService } from '../services/class-reader.service';
@@ -23,6 +25,8 @@ import { PortfolioSettingsApplication } from './portfolio-settings.application';
         PortfolioSettingsApplication,
         AllocationLogService,
         AllocationMetricsService,
+        AllocationAccountExporter,
+        AllocationTargetSummary,
         ClassAssignmentService,
         ClassResolverService,
         ClassReaderService,

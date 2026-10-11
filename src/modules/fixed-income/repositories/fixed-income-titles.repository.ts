@@ -23,6 +23,22 @@ export class FixedIncomeTitlesRepository extends TenantRepository<'FixedIncomeTi
         return this.createRow({ id: IdUtil.newId(), companyId: this.companyId, ...fields });
     }
 
+    public async insertSample(fields: TitleFields): Promise<FixedIncomeTitleRow> {
+        return this.createRow({ id: IdUtil.newId(), companyId: this.companyId, isSample: true, ...fields });
+    }
+
+    public async listReal(): Promise<FixedIncomeTitleRow[]> {
+        return this.findMany({ isSample: false }, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
+    }
+
+    public async listSamples(): Promise<FixedIncomeTitleRow[]> {
+        return this.findMany({ isSample: true }, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
+    }
+
+    public async hardDeleteSamples(): Promise<number> {
+        return this.hardDeleteWhere({ isSample: true }, LIST_LIMIT);
+    }
+
     public async listAll(): Promise<FixedIncomeTitleRow[]> {
         return this.findMany({}, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
     }

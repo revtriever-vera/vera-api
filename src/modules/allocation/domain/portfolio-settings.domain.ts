@@ -6,6 +6,10 @@ import { PortfolioSettingsRow } from './allocation.types';
 export class PortfolioSettingsDomain {
     public constructor(private readonly settings: PortfolioSettingsRepository) {}
 
+    public async current(): Promise<PortfolioSettingsRow | null> {
+        return this.settings.findCurrent();
+    }
+
     public async ensure(): Promise<PortfolioSettingsRow> {
         const current: PortfolioSettingsRow | null = await this.settings.findCurrent();
         if (current !== null) {
