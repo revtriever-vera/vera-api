@@ -93,6 +93,7 @@ export const MAX_PAGE_SIZE: number = 200;
 export const MAX_CROSS_SOURCE_DAYS: number = 1;
 export const ACCOUNT_LIST_LIMIT: number = 100;
 export const IMPORT_LIST_PAGE_SIZE: number = 50;
+export const IMPORT_EXPORT_LIMIT: number = 10_000;
 export const BASE_CURRENCY: string = 'BRL';
 export const LABEL_MAX_LENGTH: number = 80;
 
@@ -153,6 +154,7 @@ export interface TransactionFilter {
     readonly uncategorized?: boolean;
     readonly direction?: Direction;
     readonly search?: string;
+    readonly excludeSamples?: boolean;
 }
 
 export interface TransactionTotals {

@@ -5,7 +5,7 @@ import { TenantRepository } from '../../../core/database/repositories/tenant.rep
 import { IdUtil } from '../../../shared/utils/id.util';
 import { CategoryRule, NewCategoryRule, RULE_LIST_LIMIT, RuleDirection, RuleMatchType } from '../domain/categories.types';
 
-type CreateRuleData = Pick<NewCategoryRule, 'categoryId' | 'matchType' | 'pattern' | 'label' | 'appliesTo'>;
+type CreateRuleData = Pick<NewCategoryRule, 'categoryId' | 'matchType' | 'pattern' | 'label' | 'appliesTo' | 'isSample'>;
 type UpdateRuleData = Partial<Pick<NewCategoryRule, 'categoryId' | 'appliesTo' | 'label'>>;
 
 @Injectable()
@@ -54,6 +54,10 @@ export class CategoryRulesRepository extends TenantRepository<'CategoryRules'> {
 
     public async softDelete(id: string): Promise<void> {
         await this.softDeleteRow(id);
+    }
+
+    public async softDeleteSamples(): Promise<CategoryRule[]> {
+        return this.updateManyRows({ isSample: true }, { deletedAt: new Date() });
     }
 
     public async softDeleteByCategory(categoryId: string): Promise<CategoryRule[]> {

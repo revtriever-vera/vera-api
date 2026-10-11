@@ -12,6 +12,7 @@ import { MockPluggyClientDriver } from '../drivers/mock-pluggy-client.driver';
 import { ObservedPluggyClient } from '../drivers/observed-pluggy-client';
 import { PluggyClientPort } from '../ports/pluggy-client.port';
 import { BankConnectionReaderService } from '../services/bank-connection-reader.service';
+import { BanksOnboardingSummary } from '../services/banks-onboarding.summary';
 import { BankConnectionsExporter } from '../services/bank-connections.exporter';
 import { BankConnectionsLogService } from '../services/bank-connections-log.service';
 import { BankConnectionsMetricsService } from '../services/bank-connections-metrics.service';
@@ -48,6 +49,7 @@ import { CredentialsApplication } from './credentials.application';
         BankConnectionReaderService,
         PluggyCredentialsEraser,
         BankConnectionsExporter,
+        BanksOnboardingSummary,
         PluggyCredentialsResealer,
         LivePluggyClientDriver,
         MockPluggyClientDriver,

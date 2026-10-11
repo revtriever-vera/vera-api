@@ -88,12 +88,21 @@ describe('TransactionRecategorizeApplication', () => {
             pattern: 'k'.repeat(64),
             label: 'Maria Souza',
             appliesTo: 'out',
-            categoryId: 'cat-1'
+            categoryId: 'cat-1',
+            isSample: false
         });
         expect(built.recategorize).toHaveBeenCalledWith({ kind: 'rule_saved', ruleId: 'rule-1' });
         expect(saved.recategorized).toBe(3);
         expect(saved.rule).toMatchObject({ id: 'rule-1', matchType: 'counterparty', label: 'Maria Souza' });
         expect(built.recategorizedLog).toHaveBeenCalledWith('t1', expect.any(Boolean), 3);
+    });
+
+    it('a regra criada a partir de uma transação de exemplo nasce marcada como exemplo', async () => {
+        const built: Built = build(makeTransaction({ ...outgoing, isSample: true }));
+
+        await built.application.recategorize('t1', { categoryId: 'cat-1', rule: { scope: 'counterparty' } });
+
+        expect(built.upsert).toHaveBeenCalledWith(expect.objectContaining({ isSample: true }));
     });
 
     it('regra por descrição usa a descrição normalizada como padrão e como rótulo, e entrada vira appliesTo in', async () => {
@@ -112,7 +121,8 @@ describe('TransactionRecategorizeApplication', () => {
             pattern: 'ESTORNO LOJA',
             label: 'ESTORNO LOJA',
             appliesTo: 'in',
-            categoryId: 'cat-1'
+            categoryId: 'cat-1',
+            isSample: false
         });
     });
 

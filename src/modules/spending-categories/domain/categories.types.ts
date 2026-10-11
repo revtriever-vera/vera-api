@@ -171,4 +171,5 @@ export interface CorrectionRuleInput {
     readonly label: string;
     readonly appliesTo: RuleDirection;
     readonly categoryId: string;
+    readonly isSample?: boolean;
 }

@@ -12,8 +12,8 @@ describe('SpendingCategoriesAccountExporter', () => {
                 listActive: vi
                     .fn()
                     .mockResolvedValue([
-                        makeRule({ id: 'r1', matchType: 'contains', pattern: 'PADARIA', label: 'padaria' }),
-                        makeRule({ id: 'r2', matchType: 'counterparty', pattern: 'hmac-key', label: 'Maria Souza' }),
+                        makeRule({ id: 'r1', categoryId: 'c1', matchType: 'contains', pattern: 'PADARIA', label: 'padaria' }),
+                        makeRule({ id: 'r2', categoryId: 'c1', matchType: 'counterparty', pattern: 'hmac-key', label: 'Maria Souza' }),
                         makeRule({ id: 'r3', isSample: true })
                     ])
             } as unknown as CategoryRuleDomain
@@ -22,11 +22,12 @@ describe('SpendingCategoriesAccountExporter', () => {
         const exported = await exporter.exportAll();
 
         expect(exporter.area).toBe('spending_categories');
-        expect(exported.categories).toMatchObject([{ id: 'c1', name: 'Pets', kind: 'expense' }]);
-        expect(exported.rules.map((rule) => [rule.id, rule.pattern])).toEqual([
-            ['r1', 'PADARIA'],
-            ['r2', null]
+        expect(exported.categories).toMatchObject([{ name: 'Pets', kind: 'expense' }]);
+        expect(exported.rules.map((rule) => [rule.label, rule.pattern, rule.categoryKey])).toEqual([
+            ['padaria', 'PADARIA', 'Pets'],
+            ['Maria Souza', null, 'Pets']
         ]);
         expect(JSON.stringify(exported)).not.toContain('hmac-key');
+        expect(JSON.stringify(exported)).not.toContain('c1');
     });
 });

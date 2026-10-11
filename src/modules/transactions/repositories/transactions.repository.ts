@@ -134,6 +134,19 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
         return numeric(row?.total);
     }
 
+    public async countReal(): Promise<number> {
+        return this.countBySample(false);
+    }
+
+    public async countSamples(): Promise<number> {
+        return this.countBySample(true);
+    }
+
+    public async softDeleteSamples(): Promise<number> {
+        const removed: Transaction[] = await this.updateManyRows({ isSample: true }, { deletedAt: new Date() });
+        return removed.length;
+    }
+
     public async countUncategorizedOutgoing(): Promise<number> {
         const row: { total: string | number | bigint } | undefined = await this.scopedSelect()
             .select((builder) => builder.fn.countAll().as('total'))
@@ -258,6 +271,14 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
         return IdUtil.newId();
     }
 
+    private async countBySample(isSample: boolean): Promise<number> {
+        const row: { total: string | number | bigint } | undefined = await this.scopedSelect()
+            .select((builder) => builder.fn.countAll().as('total'))
+            .where('isSample', '=', isSample)
+            .executeTakeFirst();
+        return numeric(row?.total);
+    }
+
     private scopedSelect(): TransactionsQuery<object> {
         return this.db
             .selectFrom('Transactions')
@@ -313,6 +334,9 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
         }
         if (filter.uncategorized === true) {
             conditions.push(eb('categoryId', 'is', null));
+        }
+        if (filter.excludeSamples === true) {
+            conditions.push(eb('isSample', '=', false));
         }
         return [...conditions, ...this.directionConditions(eb, filter), ...this.searchConditions(eb, filter)];
     }
