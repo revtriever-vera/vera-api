@@ -324,6 +324,7 @@ export default tseslint.config(
         ignores: [
             'src/**/domain/**',
             'src/**/*.repository.ts',
+            'src/core/database/repositories/*.repository.spec.ts',
             'src/**/*.module.ts',
             'src/modules/*/access/**',
             'src/modules/*/application/**'
