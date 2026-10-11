@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { AppContext } from '../context/app-context.port';
 import { RATE_LIMIT_KEY, RateLimitOptions, RateLimitSubject } from './rate-limit.decorator';
 import { ThrottleService } from './throttle.service';
 
@@ -8,7 +9,8 @@ import { ThrottleService } from './throttle.service';
 export class RateLimitGuard implements CanActivate {
     public constructor(
         private readonly reflector: Reflector,
-        private readonly throttle: ThrottleService
+        private readonly throttle: ThrottleService,
+        private readonly context: AppContext
     ) {}
 
     public async canActivate(executionContext: ExecutionContext): Promise<boolean> {
@@ -23,7 +25,8 @@ export class RateLimitGuard implements CanActivate {
         const subject: RateLimitSubject = {
             body: (request.body ?? {}) as Readonly<Record<string, unknown>>,
             params: request.params as Readonly<Record<string, string>>,
-            ip: request.ip ?? ''
+            ip: request.ip ?? '',
+            companyId: this.context.getOrNull()?.companyId
         };
         const identity: string | null = options.identify(subject);
         if (!identity) {

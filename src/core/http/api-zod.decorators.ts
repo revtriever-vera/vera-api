@@ -7,6 +7,7 @@ export interface ZodResponseDoc {
     readonly status: number;
     readonly description: string;
     readonly schema: ZodTypeAny;
+    readonly example?: unknown;
 }
 
 export function ApiZodBody(schema: ZodTypeAny): MethodDecorator {
@@ -30,7 +31,7 @@ export function ApiZodResponse(doc: ZodResponseDoc): MethodDecorator {
         ApiResponse({
             status: doc.status,
             description: doc.description,
-            schema: zodToOpenAPI(doc.schema)
+            schema: { ...zodToOpenAPI(doc.schema), example: doc.example }
         })
     );
 }
