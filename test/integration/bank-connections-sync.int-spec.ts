@@ -25,6 +25,7 @@ interface ConnectionBody {
     readonly id: string;
     readonly status: string;
     readonly statusReason: string | null;
+    readonly institutionLogoUrl: string | null;
     readonly syncing: boolean;
     readonly lastSyncAt: string | null;
     readonly lastSuccessAt: string | null;
@@ -178,6 +179,20 @@ describe('bank connections sync', () => {
             ['Nubank Cartão', 'Nubank Conta'],
             ['Itaú Conta Corrente']
         ]);
+        expect(connections.map((connection) => connection.institutionLogoUrl)).toEqual([
+            'https://logos.example/connectors/nubank.png',
+            'https://logos.example/connectors/itau.png'
+        ]);
+        const listedAccounts = await harness.call<{ accounts: { name: string; institutionLogoUrl: string | null }[] }>(
+            account.token,
+            'GET',
+            '/spending/accounts'
+        );
+        expect(listedAccounts.body.accounts.map((entry) => [entry.name, entry.institutionLogoUrl]).sort()).toEqual([
+            ['Itaú Conta Corrente', 'https://logos.example/connectors/itau.png'],
+            ['Nubank Cartão', 'https://logos.example/connectors/nubank.png'],
+            ['Nubank Conta', 'https://logos.example/connectors/nubank.png']
+        ]);
         expect(connections.every((connection) => connection.status === 'active' && !connection.syncing)).toBe(true);
         expect(connections.every((connection) => connection.lastRun?.status === 'succeeded')).toBe(true);
         expect(connections.every((connection) => connection.lastSuccessAt !== null)).toBe(true);
@@ -185,6 +200,12 @@ describe('bank connections sync', () => {
         expect(rows).toHaveLength(dataset.transactions.length);
         const netflix = rows.find((row) => row.externalId.endsWith(':nubank-card:netflix') && row.accountName === 'Nubank Cartão');
         expect(Number(netflix?.amountMinor)).toBe(-5590);
+        const origins = await harness.pg.query<{ description: string; categorySource: string }>(
+            `SELECT "description", "categorySource" FROM "Transactions" WHERE "companyId" = $1 AND "description" = 'SALARIO EMPRESA X'`,
+            [account.company.id]
+        );
+        expect(origins.rows.length).toBeGreaterThan(0);
+        expect(origins.rows.every((row) => row.categorySource === 'provider')).toBe(true);
         const strip = (_key: string, value: unknown): unknown => (_key === 'id' || _key === 'categoryId' ? undefined : value);
         expect(JSON.stringify(await summary(account), strip)).toBe(JSON.stringify(await summary(control), strip));
         const closed = dataset.transactions.filter((transaction) => transaction.month === dataset.closedMonth);

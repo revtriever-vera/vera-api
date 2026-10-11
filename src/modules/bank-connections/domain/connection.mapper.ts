@@ -70,6 +70,7 @@ export function toConnectionView(details: ConnectionDetails, accounts: ReadonlyM
         id: connection.id,
         itemIdHint: hintOf(connection.externalItemId),
         connectorName: connection.connectorName,
+        institutionLogoUrl: connection.institutionLogoUrl,
         status: connection.status as ConnectionStatus,
         statusReason: connection.statusReason,
         consentExpiresAt: isoOrNull(connection.consentExpiresAt),

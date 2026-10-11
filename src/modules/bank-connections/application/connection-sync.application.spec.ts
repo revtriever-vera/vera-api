@@ -203,6 +203,7 @@ describe('ConnectionSyncApplication', () => {
             status: 'UPDATED',
             executionStatus: 'SUCCESS',
             connectorName: 'Banco Novo',
+            institutionLogoUrl: 'https://logos.example/connectors/banco-novo.png',
             lastUpdatedAt: new Date(),
             consentExpiresAt: new Date('2027-01-01T00:00:00Z')
         });

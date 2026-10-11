@@ -129,6 +129,7 @@ export interface BankConnections {
     deletedAt: Timestamp | null;
     externalItemId: string;
     id: string;
+    institutionLogoUrl: string | null;
     lastSuccessAt: Timestamp | null;
     lastSyncAt: Timestamp | null;
     provider: string;
@@ -211,6 +212,7 @@ export interface FinancialAccounts {
     deletedAt: Timestamp | null;
     externalId: string | null;
     id: string;
+    institutionLogoUrl: string | null;
     institutionName: string | null;
     isSample: Generated<boolean>;
     kind: string;

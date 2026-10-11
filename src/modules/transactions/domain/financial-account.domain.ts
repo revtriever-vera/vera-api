@@ -27,6 +27,7 @@ export class FinancialAccountDomain {
             kind: input.kind,
             name: input.name,
             institutionName: input.institutionName ?? null,
+            institutionLogoUrl: input.institutionLogoUrl ?? null,
             numberLast4: input.numberLast4 ?? null,
             currency: input.currency,
             provider: input.provider,

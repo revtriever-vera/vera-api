@@ -3,7 +3,15 @@ import { buildFixture, Fixture } from '../../../../test/support/bank-connections
 import { ConnectionDraft } from './bank-connections.types';
 
 function draft(externalItemId: string): ConnectionDraft {
-    return { externalItemId, connectorName: null, status: 'active', statusReason: null, providerStatus: null, consentExpiresAt: null };
+    return {
+        externalItemId,
+        connectorName: null,
+        institutionLogoUrl: null,
+        status: 'active',
+        statusReason: null,
+        providerStatus: null,
+        consentExpiresAt: null
+    };
 }
 
 describe('BankConnectionDomain', () => {

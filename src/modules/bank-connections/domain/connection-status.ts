@@ -26,6 +26,7 @@ export function draftOfItem(item: PluggyItem): ConnectionDraft {
     return {
         externalItemId: item.id,
         connectorName: item.connectorName,
+        institutionLogoUrl: item.institutionLogoUrl,
         status: derived.status,
         statusReason: derived.statusReason,
         providerStatus: item.status,

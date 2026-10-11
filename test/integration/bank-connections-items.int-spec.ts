@@ -104,7 +104,8 @@ describe('bank connections items', () => {
         expect(response.body.results[0]?.connection).toMatchObject({
             status: 'needs_attention',
             statusReason: 'login_error',
-            connectorName: 'Banco Teste'
+            connectorName: 'Banco Teste',
+            institutionLogoUrl: 'https://logos.example/connectors/banco-teste.png'
         });
     });
 
@@ -147,6 +148,7 @@ describe('bank connections items', () => {
         expect(overview.body.connections).toHaveLength(1);
         expect(overview.body.connections[0]).toMatchObject({
             connectorName: 'Nubank',
+            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
             syncing: true,
             accounts: [{ accountId: linked.id, name: 'Nubank Cartão', kind: 'credit_card', numberLast4: '4321' }],
             lastRun: { trigger: 'initial', status: 'running', inserted: 5 }

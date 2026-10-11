@@ -61,7 +61,12 @@ describe('MockPluggyClientDriver', () => {
     it('devolve os itens do mock e nulo para o inexistente, o desconhecido e o revogado', async () => {
         const driver: MockPluggyClientDriver = driverOf({ MOCK_PLUGGY_REVOKED_ITEMS: [ITEM_ITAU] });
 
-        expect(await driver.getItem(SESSION, ITEM_NUBANK)).toMatchObject({ connectorName: 'Nubank', status: 'UPDATED', id: ITEM_NUBANK });
+        expect(await driver.getItem(SESSION, ITEM_NUBANK)).toMatchObject({
+            connectorName: 'Nubank',
+            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
+            status: 'UPDATED',
+            id: ITEM_NUBANK
+        });
         expect(await driver.getItem(SESSION, ITEM_LOGIN_ERROR)).toMatchObject({ status: 'LOGIN_ERROR', executionStatus: 'LOGIN_ERROR' });
         expect(await driver.getItem(SESSION, ITEM_MISSING)).toBeNull();
         expect(await driver.getItem(SESSION, ITEM_ITAU)).toBeNull();

@@ -7,6 +7,7 @@ export interface PluggyItem {
     readonly status: string;
     readonly executionStatus: string | null;
     readonly connectorName: string | null;
+    readonly institutionLogoUrl: string | null;
     readonly lastUpdatedAt: Date | null;
     readonly consentExpiresAt: Date | null;
 }

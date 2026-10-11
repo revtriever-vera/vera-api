@@ -86,6 +86,7 @@ export function makeFinancialAccount(overrides: Partial<FinancialAccount> = {}):
         kind: 'checking',
         name: `Conta ${String(sequence)}`,
         institutionName: null,
+        institutionLogoUrl: null,
         numberLast4: null,
         currency: 'BRL',
         provider: null,

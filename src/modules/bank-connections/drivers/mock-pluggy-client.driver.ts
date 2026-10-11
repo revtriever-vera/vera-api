@@ -39,14 +39,39 @@ const SERVICE_UNAVAILABLE: number = 503;
 
 interface MockItem {
     readonly connectorName: string;
+    readonly institutionLogoUrl: string;
     readonly status: string;
     readonly accountKeys: readonly string[];
 }
 
 const MOCK_ITEMS: ReadonlyMap<string, MockItem> = new Map<string, MockItem>([
-    [MOCK_ITEM_NUBANK, { connectorName: 'Nubank', status: 'UPDATED', accountKeys: ['nubank-checking', 'nubank-card'] }],
-    [MOCK_ITEM_ITAU, { connectorName: 'Itaú', status: 'UPDATED', accountKeys: ['itau-checking'] }],
-    [MOCK_ITEM_LOGIN_ERROR, { connectorName: 'Banco Teste', status: 'LOGIN_ERROR', accountKeys: [] }]
+    [
+        MOCK_ITEM_NUBANK,
+        {
+            connectorName: 'Nubank',
+            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
+            status: 'UPDATED',
+            accountKeys: ['nubank-checking', 'nubank-card']
+        }
+    ],
+    [
+        MOCK_ITEM_ITAU,
+        {
+            connectorName: 'Itaú',
+            institutionLogoUrl: 'https://logos.example/connectors/itau.png',
+            status: 'UPDATED',
+            accountKeys: ['itau-checking']
+        }
+    ],
+    [
+        MOCK_ITEM_LOGIN_ERROR,
+        {
+            connectorName: 'Banco Teste',
+            institutionLogoUrl: 'https://logos.example/connectors/banco-teste.png',
+            status: 'LOGIN_ERROR',
+            accountKeys: []
+        }
+    ]
 ]);
 
 function cursorOffset(cursor: string | null): number {
@@ -84,6 +109,7 @@ export class MockPluggyClientDriver extends PluggyClientPort {
             status: mock.status,
             executionStatus: mock.status === 'UPDATED' ? 'SUCCESS' : 'LOGIN_ERROR',
             connectorName: mock.connectorName,
+            institutionLogoUrl: mock.institutionLogoUrl,
             lastUpdatedAt: new Date(),
             consentExpiresAt: new Date(Date.now() + CONSENT_DAYS * 86_400_000)
         });

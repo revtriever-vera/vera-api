@@ -148,6 +148,7 @@ export interface ConnectionView {
     readonly id: string;
     readonly itemIdHint: string;
     readonly connectorName: string | null;
+    readonly institutionLogoUrl: string | null;
     readonly status: ConnectionStatus;
     readonly statusReason: string | null;
     readonly consentExpiresAt: string | null;
@@ -167,6 +168,7 @@ export interface ItemResultView {
 export interface ConnectionDraft {
     readonly externalItemId: string;
     readonly connectorName: string | null;
+    readonly institutionLogoUrl: string | null;
     readonly status: ConnectionStatus;
     readonly statusReason: StatusReason | null;
     readonly providerStatus: string | null;
@@ -180,7 +182,7 @@ export interface ConnectionIdentity {
 
 export type ConnectionStatePatch = Pick<
     Updateable<BankConnections>,
-    'status' | 'statusReason' | 'providerStatus' | 'connectorName' | 'consentExpiresAt'
+    'status' | 'statusReason' | 'providerStatus' | 'connectorName' | 'institutionLogoUrl' | 'consentExpiresAt'
 >;
 
 export interface StatusCount {

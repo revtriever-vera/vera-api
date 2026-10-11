@@ -8,7 +8,7 @@ import { ACCOUNT_LIST_LIMIT, FinancialAccount, NewFinancialAccount } from '../do
 type CreateAccountData = Pick<NewFinancialAccount, 'kind' | 'name' | 'institutionName' | 'numberLast4' | 'currency' | 'isSample'>;
 type UpsertProviderData = Pick<
     NewFinancialAccount,
-    'kind' | 'name' | 'institutionName' | 'numberLast4' | 'currency' | 'provider' | 'externalId' | 'isSample'
+    'kind' | 'name' | 'institutionName' | 'institutionLogoUrl' | 'numberLast4' | 'currency' | 'provider' | 'externalId' | 'isSample'
 >;
 
 @Injectable()
@@ -33,6 +33,7 @@ export class FinancialAccountsRepository extends TenantRepository<'FinancialAcco
                     .doUpdateSet({
                         kind: data.kind,
                         institutionName: data.institutionName ?? null,
+                        institutionLogoUrl: data.institutionLogoUrl ?? null,
                         numberLast4: data.numberLast4 ?? null,
                         currency: data.currency,
                         updatedAt: new Date()

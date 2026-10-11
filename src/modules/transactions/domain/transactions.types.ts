@@ -219,6 +219,7 @@ export interface AccountView {
     readonly name: string;
     readonly kind: AccountKind;
     readonly institutionName: string | null;
+    readonly institutionLogoUrl: string | null;
     readonly numberLast4: string | null;
     readonly currency: string;
     readonly source: 'pluggy' | 'file';
@@ -249,6 +250,7 @@ export interface UpsertProviderAccountInput {
     readonly kind: AccountKind;
     readonly name: string;
     readonly institutionName?: string | null;
+    readonly institutionLogoUrl?: string | null;
     readonly numberLast4?: string | null;
     readonly currency: string;
     readonly isSample?: boolean;
