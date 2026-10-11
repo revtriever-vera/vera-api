@@ -15,6 +15,7 @@ import { AccountDeletionRecord, Company, User } from '../../../src/modules/ident
 import { UserDomain } from '../../../src/modules/identity/domain/user.domain';
 import { AuthTokens, SessionIssuerPort } from '../../../src/modules/identity/ports/session-issuer.port';
 import { AccountDataEraserPort } from '../../../src/modules/identity/services/account-data-eraser.port';
+import { PositionsAccountExporter } from '../../../src/modules/positions/services/positions-account.exporter';
 import { AccountDataExporterPort } from '../../../src/modules/identity/services/account-data-exporter.port';
 import { tablesWithCompanyId } from '../support/company-cascade';
 import { createIsolatedDatabase, IsolatedDatabase } from '../support/isolated-database';
@@ -115,6 +116,8 @@ describe('identity account deletion and export', () => {
         const testing: TestingModule = await withoutBusinessPorts(Test.createTestingModule({ imports: [AppModule, ScriptedAreasModule] }))
             .overrideProvider(QueuePublisherPort)
             .useValue(publisher)
+            .overrideProvider(PositionsAccountExporter)
+            .useValue({})
             .compile();
         app = testing.createNestApplication();
         app.use(cookieParser());

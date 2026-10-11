@@ -44,6 +44,7 @@ function makePosition(overrides: Partial<Position> = {}): Position {
         createdAt: new Date('2026-10-11T10:00:00.000Z'),
         updatedAt: new Date('2026-10-11T10:00:00.000Z'),
         deletedAt: null,
+        isSample: false,
         ...overrides
     };
 }

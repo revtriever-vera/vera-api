@@ -12,7 +12,8 @@ describe('toPositionView', () => {
             averagePrice: '545.50000000',
             createdAt: new Date('2026-10-11T10:00:00.000Z'),
             updatedAt: new Date('2026-10-11T11:00:00.000Z'),
-            deletedAt: null
+            deletedAt: null,
+            isSample: false
         };
 
         expect(toPositionView(position, 'class-1')).toEqual({

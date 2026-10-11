@@ -6,6 +6,7 @@ export interface NewPositionData {
     readonly assetId: string;
     readonly quantity: string;
     readonly averagePrice: string | null;
+    readonly isSample?: boolean;
 }
 
 @Injectable()
@@ -26,6 +27,22 @@ export class PositionDomain {
 
     public async listAll(): Promise<Position[]> {
         return this.positions.listAll();
+    }
+
+    public async listReal(): Promise<Position[]> {
+        return this.positions.listReal();
+    }
+
+    public async countReal(): Promise<number> {
+        return this.positions.countReal();
+    }
+
+    public async hasSamples(): Promise<boolean> {
+        return (await this.positions.listAll()).some((position: Position): boolean => position.isSample);
+    }
+
+    public async removeSamples(): Promise<Position[]> {
+        return this.positions.softDeleteSamples();
     }
 
     public async countAll(): Promise<number> {

@@ -181,6 +181,7 @@ export interface Positions {
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
     id: string;
+    isSample: Generated<boolean>;
     quantity: Numeric;
     updatedAt: Generated<Timestamp>;
 }

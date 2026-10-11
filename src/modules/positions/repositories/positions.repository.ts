@@ -5,7 +5,7 @@ import { TenantRepository } from '../../../core/database/repositories/tenant.rep
 import { IdUtil } from '../../../shared/utils/id.util';
 import { NewPosition, Position, PositionPatch } from '../domain/positions.types';
 
-type CreatePositionData = Pick<NewPosition, 'assetId' | 'quantity' | 'averagePrice'>;
+type CreatePositionData = Pick<NewPosition, 'assetId' | 'quantity' | 'averagePrice' | 'isSample'>;
 
 const POSITION_LIMIT: number = 1000;
 
@@ -31,6 +31,18 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
 
     public async listAll(): Promise<Position[]> {
         return this.findMany({}, { limit: POSITION_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
+    }
+
+    public async listReal(): Promise<Position[]> {
+        return this.findMany({ isSample: false }, { limit: POSITION_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
+    }
+
+    public async countReal(): Promise<number> {
+        return (await this.findMany({ isSample: false }, { limit: POSITION_LIMIT })).length;
+    }
+
+    public async softDeleteSamples(): Promise<Position[]> {
+        return this.updateManyRows({ isSample: true }, { deletedAt: new Date() });
     }
 
     public async countAll(): Promise<number> {
