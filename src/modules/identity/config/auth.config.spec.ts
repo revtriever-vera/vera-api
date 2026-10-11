@@ -41,4 +41,36 @@ describe('authConfig', () => {
 
         expect(() => authConfig()).toThrow();
     });
+
+    it('deixa os provedores sociais desligados por padrão', () => {
+        process.env['IS_LOCAL'] = 'true';
+        delete process.env['GOOGLE_CLIENT_ID'];
+        delete process.env['FACEBOOK_APP_ID'];
+        delete process.env['FACEBOOK_APP_SECRET'];
+        delete process.env['FACEBOOK_GRAPH_VERSION'];
+
+        const config: AuthConfig = authConfig();
+
+        expect(config.GOOGLE_CLIENT_ID).toBe('');
+        expect(config.FACEBOOK_APP_ID).toBe('');
+        expect(config.FACEBOOK_GRAPH_VERSION).toMatch(/^v\d+\.\d+$/);
+    });
+
+    it('exige o segredo do app quando o app id do Facebook está preenchido', () => {
+        process.env['IS_LOCAL'] = 'true';
+        process.env['FACEBOOK_APP_ID'] = 'fake-app-id';
+        delete process.env['FACEBOOK_APP_SECRET'];
+
+        expect(() => authConfig()).toThrow('FACEBOOK_APP_SECRET');
+
+        process.env['FACEBOOK_APP_SECRET'] = 'fake-app-secret';
+        expect(authConfig().FACEBOOK_APP_SECRET).toBe('fake-app-secret');
+    });
+
+    it('recusa versão da Graph API fora do formato vN.M', () => {
+        process.env['IS_LOCAL'] = 'true';
+        process.env['FACEBOOK_GRAPH_VERSION'] = '23';
+
+        expect(() => authConfig()).toThrow();
+    });
 });

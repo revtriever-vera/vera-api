@@ -17,6 +17,21 @@ export const sessionResponseSchema = z.object({
     user: authUserSchema
 });
 
+export const loginResponseSchema = sessionResponseSchema.extend({
+    outcome: z.literal('authenticated').describe('The provider credential was verified and a session was issued'),
+    isNewAccount: z.boolean().describe('True when this login created the company and the user')
+});
+
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
+
+export const googleLoginSchema = z.object({ idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)') }).strict();
+
+export class GoogleLoginDto extends createZodDto(googleLoginSchema) {}
+
+export const facebookLoginSchema = z.object({ accessToken: z.string().min(20).describe('Facebook JS SDK user access token') }).strict();
+
+export class FacebookLoginDto extends createZodDto(facebookLoginSchema) {}
+
 export type SessionResponse = z.infer<typeof sessionResponseSchema>;
 
 export const meResponseSchema = z.object({

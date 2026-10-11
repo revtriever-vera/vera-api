@@ -10,6 +10,20 @@ export type Generated<T> =
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AuthIdentities {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    email: string | null;
+    emailVerified: Generated<boolean>;
+    id: string;
+    lastLoginAt: Timestamp | null;
+    provider: string;
+    subject: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface Companies {
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
@@ -62,6 +76,7 @@ export interface Users {
 }
 
 export interface DB {
+    AuthIdentities: AuthIdentities;
     Companies: Companies;
     Sessions: Sessions;
     Throttles: Throttles;

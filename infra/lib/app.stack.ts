@@ -46,7 +46,10 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     CRYPTO_KEY_HEX: '/vera/crypto-key-hex',
     JWT_SECRET: '/vera/jwt-secret',
     SWAGGER_PASSWORD: '/vera/swagger-password',
-    QUEUES_DASHBOARD_PASSWORD: '/vera/queues-dashboard-password'
+    QUEUES_DASHBOARD_PASSWORD: '/vera/queues-dashboard-password',
+    GOOGLE_CLIENT_ID: '/vera/google-client-id',
+    FACEBOOK_APP_ID: '/vera/facebook-app-id',
+    FACEBOOK_APP_SECRET: '/vera/facebook-app-secret'
 };
 const OTLP_PROTOCOL: string = 'http/protobuf';
 const TUNNEL_TOKEN_PARAMETER: string = '/vera/tunnel-token';

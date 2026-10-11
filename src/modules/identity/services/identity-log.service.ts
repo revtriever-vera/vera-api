@@ -3,6 +3,7 @@ import { LogService } from '../../../core/observability/log.service';
 import { LoginProvider } from '../domain/identity.types';
 
 const AUTH: string = 'identity-auth';
+const PROVISIONING: string = 'identity-provisioning';
 const REFRESH_REUSE: string = 'auth-refresh-reuse';
 
 @Injectable()
@@ -11,6 +12,22 @@ export class IdentityLogService {
 
     public loginSucceeded(userId: string, provider: LoginProvider): void {
         this.logService.info({ message: 'login succeeded', identifier: AUTH, meta: { userId, provider } });
+    }
+
+    public providerTokenRejected(provider: LoginProvider, reason: string): void {
+        this.logService.warn({ message: 'provider token rejected', identifier: AUTH, meta: { provider, reason } });
+    }
+
+    public companyProvisioned(companyId: string, userId: string, provider: LoginProvider): void {
+        this.logService.info({ message: 'company provisioned', identifier: PROVISIONING, meta: { companyId, userId, provider } });
+    }
+
+    public identityLinked(userId: string, provider: LoginProvider): void {
+        this.logService.info({ message: 'identity linked to existing user', identifier: PROVISIONING, meta: { userId, provider } });
+    }
+
+    public emailNotProvided(provider: LoginProvider): void {
+        this.logService.warn({ message: 'email not provided by provider', identifier: PROVISIONING, meta: { provider } });
     }
 
     public refreshed(userId: string): void {

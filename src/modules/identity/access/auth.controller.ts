@@ -4,12 +4,21 @@ import { Request, Response } from 'express';
 import { ApiProblemResponse } from '../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../core/http/api-zod.decorators';
 import { clientIp } from '../../../core/http/client-ip';
+import { RateLimit } from '../../../core/throttle/rate-limit.decorator';
 import { ProfileApplication, SessionProfile } from '../application/profile.application';
 import { SessionApplication } from '../application/session.application';
+import { SocialLoginApplication, SocialLoginResult } from '../application/social-login.application';
+import { LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
 import { AuthTokens, RequestMeta } from '../ports/session-issuer.port';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import {
+    FacebookLoginDto,
+    facebookLoginSchema,
+    GoogleLoginDto,
+    googleLoginSchema,
+    LoginResponse,
+    loginResponseSchema,
     meResponseSchema,
     SessionResponse,
     sessionResponseSchema,
@@ -17,14 +26,76 @@ import {
     updatePreferencesSchema
 } from '../validation/auth.schemas';
 
+const SOCIAL_LOGIN_LIMIT: number = 30;
+const SOCIAL_LOGIN_WINDOW_SECONDS: number = 15 * 60;
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     public constructor(
         private readonly session: SessionApplication,
+        private readonly socialLogin: SocialLoginApplication,
         private readonly profile: ProfileApplication,
         private readonly refreshCookie: RefreshCookieAdapter
     ) {}
+
+    @Post('google')
+    @HttpCode(HttpStatus.OK)
+    @RateLimit({
+        key: 'auth-social',
+        limit: SOCIAL_LOGIN_LIMIT,
+        windowSeconds: SOCIAL_LOGIN_WINDOW_SECONDS,
+        identify: (subject) => subject.ip
+    })
+    @ApiOperation({
+        summary: 'Sign in (or sign up) with a Google ID token',
+        description:
+            'Verifies the ID token against Google, then signs the person in. A person never seen before gets a company and an ' +
+            'owner user in the same call. Sets the rt_refresh cookie.'
+    })
+    @ApiZodBody(googleLoginSchema)
+    @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
+    @ApiProblemResponse({ status: 401, description: 'Invalid Google token (identity.invalid_google_token)' })
+    @ApiProblemResponse({ status: 409, description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)' })
+    @ApiProblemResponse({ status: 429, description: 'Too many attempts from this IP (core.too_many_attempts)' })
+    @ApiProblemResponse({ status: 503, description: 'Google sign-in not configured (identity.provider_disabled)' })
+    public async google(
+        @Body() body: GoogleLoginDto,
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response
+    ): Promise<LoginResponse> {
+        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, req, res);
+    }
+
+    @Post('facebook')
+    @HttpCode(HttpStatus.OK)
+    @RateLimit({
+        key: 'auth-social',
+        limit: SOCIAL_LOGIN_LIMIT,
+        windowSeconds: SOCIAL_LOGIN_WINDOW_SECONDS,
+        identify: (subject) => subject.ip
+    })
+    @ApiOperation({
+        summary: 'Sign in (or sign up) with a Facebook access token',
+        description:
+            'Verifies the access token against the Graph API, then signs the person in. A person never seen before gets a company ' +
+            'and an owner user in the same call. Facebook never links to an existing account by email. Sets the rt_refresh cookie.'
+    })
+    @ApiZodBody(facebookLoginSchema)
+    @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
+    @ApiProblemResponse({ status: 401, description: 'Invalid Facebook token (identity.invalid_facebook_token)' })
+    @ApiProblemResponse({ status: 409, description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)' })
+    @ApiProblemResponse({ status: 422, description: 'Facebook account did not share an email (identity.email_not_provided)' })
+    @ApiProblemResponse({ status: 429, description: 'Too many attempts from this IP (core.too_many_attempts)' })
+    @ApiProblemResponse({ status: 502, description: 'Facebook did not answer (identity.provider_unavailable)' })
+    @ApiProblemResponse({ status: 503, description: 'Facebook sign-in not configured (identity.provider_disabled)' })
+    public async facebook(
+        @Body() body: FacebookLoginDto,
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response
+    ): Promise<LoginResponse> {
+        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, req, res);
+    }
 
     @Post('refresh')
     @HttpCode(HttpStatus.OK)
@@ -82,6 +153,17 @@ export class AuthController {
     @ApiProblemResponse({ status: 400, description: 'Invalid payload (zod validation details in meta.errors)' })
     public async updatePreferences(@Body() body: UpdatePreferencesDto): Promise<SessionProfile> {
         return this.profile.updatePreferences(body);
+    }
+
+    private async signIn(provider: LoginProvider, credential: string, req: Request, res: Response): Promise<LoginResponse> {
+        const result: SocialLoginResult = await this.socialLogin.login(provider, credential, this.meta(req));
+        this.refreshCookie.write(res, result.tokens.refreshToken);
+        return {
+            outcome: 'authenticated',
+            accessToken: result.tokens.accessToken,
+            user: result.tokens.user,
+            isNewAccount: result.isNewAccount
+        };
     }
 
     private meta(req: Request): RequestMeta {
