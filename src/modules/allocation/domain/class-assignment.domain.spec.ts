@@ -118,3 +118,13 @@ describe('ClassAssignmentDomain delegations', () => {
         expect(repository['setTargetInClass']).toHaveBeenCalledTimes(2);
     });
 });
+
+describe('ClassAssignmentDomain.find', () => {
+    it('devolve a atribuição do sujeito', async () => {
+        const current = makeAssignment();
+        const findBySubject: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(current);
+
+        await expect(build({ findBySubject }).find('position', 's1')).resolves.toBe(current);
+        expect(findBySubject).toHaveBeenCalledWith('position', 's1');
+    });
+});

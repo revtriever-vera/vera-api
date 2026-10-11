@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeAssignment, makeClass } from '../../../../test/support/allocation-factories';
 import { AssetClassDomain } from '../domain/asset-class.domain';
 import { ClassAssignmentDomain } from '../domain/class-assignment.domain';
-import { ClassNotFoundError } from '../domain/allocation.errors';
+import { AssignmentNotFoundError, ClassNotFoundError } from '../domain/allocation.errors';
 import { AllocationLogService } from './allocation-log.service';
 import { ClassAssignmentService } from './class-assignment.service';
 
@@ -64,5 +64,20 @@ describe('ClassAssignmentService', () => {
 
     it('lista as atribuições da company', async () => {
         await expect(build(true).service.listForCompany()).resolves.toHaveLength(1);
+    });
+
+    it('requireClassId devolve a classe da atribuição e lança assignment_not_found sem ela', async () => {
+        const find: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValueOnce(makeAssignment({ classId: 'class-x' }))
+            .mockResolvedValueOnce(null);
+        const service: ClassAssignmentService = new ClassAssignmentService(
+            {} as unknown as AssetClassDomain,
+            { find } as unknown as ClassAssignmentDomain,
+            {} as unknown as AllocationLogService
+        );
+
+        await expect(service.requireClassId('position', 's1')).resolves.toBe('class-x');
+        await expect(service.requireClassId('position', 's2')).rejects.toBeInstanceOf(AssignmentNotFoundError);
     });
 });
