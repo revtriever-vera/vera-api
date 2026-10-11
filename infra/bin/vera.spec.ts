@@ -19,13 +19,15 @@ describe('selectedEnvironments', () => {
 });
 
 describe('synthesizeFromEnvironment', () => {
-    it('sintetiza as quatro pilhas de cada ambiente', () => {
+    it('sintetiza as cinco pilhas de cada ambiente', () => {
         const ids: string[] = synthesizeFromEnvironment(fakeEnvironment())
             .node.children.map((child): string => child.node.id)
             .sort();
 
         expect(ids).toEqual(
             [
+                'vera-app-dev',
+                'vera-app-prod',
                 'vera-cert-dev',
                 'vera-cert-prod',
                 'vera-data-dev',
@@ -36,13 +38,13 @@ describe('synthesizeFromEnvironment', () => {
                 'vera-network-prod'
             ].filter((id: string): boolean => ids.includes(id))
         );
-        expect(ids).toHaveLength(8);
+        expect(ids).toHaveLength(10);
     });
 
     it('sintetiza só prod sem exigir as variáveis de dev', () => {
         const env = fakeEnvironment({ VERA_ENVIRONMENTS: 'prod', AWS_ACCOUNT_ID_DEV: undefined, SHARED_INFRA_DEV: undefined });
 
-        expect(synthesizeFromEnvironment(env).node.children).toHaveLength(4);
+        expect(synthesizeFromEnvironment(env).node.children).toHaveLength(5);
     });
 
     it('falha com mensagem clara quando falta variável', () => {
