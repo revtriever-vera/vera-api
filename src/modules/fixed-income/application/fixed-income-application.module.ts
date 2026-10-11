@@ -11,6 +11,7 @@ import { MockIndexSeriesDriver } from '../drivers/mock-index-series.driver';
 import { IndexSeriesSourcePort } from '../ports/index-series-source.port';
 import { FixedIncomeServicesModule } from '../services/fixed-income-services.module';
 import { FixedIncomePreviewApplication } from './fixed-income-preview.application';
+import { FixedIncomeSampleApplication } from './fixed-income-sample.application';
 import { FixedIncomeTitleApplication } from './fixed-income-title.application';
 import { IndexSyncApplication } from './index-sync.application';
 
@@ -38,6 +39,7 @@ import { IndexSyncApplication } from './index-sync.application';
         },
         FixedIncomeTitleApplication,
         FixedIncomePreviewApplication,
+        FixedIncomeSampleApplication,
         IndexSyncApplication
     ],
     exports: [FixedIncomeTitleApplication, FixedIncomePreviewApplication, IndexSyncApplication, FixedIncomeServicesModule]

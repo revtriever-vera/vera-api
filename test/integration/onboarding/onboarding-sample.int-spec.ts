@@ -14,6 +14,7 @@ import { UserDomain } from '../../../src/modules/identity/domain/user.domain';
 import { SessionIssuerPort } from '../../../src/modules/identity/ports/session-issuer.port';
 import { SampleDataPort } from '../../../src/modules/onboarding/services/sample-data.port';
 import { createIsolatedDatabase, IsolatedDatabase } from '../support/isolated-database';
+import { withoutBusinessPorts } from '../support/inert-ports';
 import { isolateRedisForWorker } from '../support/queue';
 
 interface Account {
@@ -108,10 +109,12 @@ describe('onboarding sample data', () => {
         `);
         await pg.query(`CREATE UNIQUE INDEX "SampleProbe_sample_unique" ON "SampleProbe" ("companyId", "area", "label") WHERE "isSample"`);
 
-        const testing: TestingModule = await Test.createTestingModule({
-            imports: [AppModule],
-            providers: [AssetsProbePort, SpendingProbePort]
-        }).compile();
+        const testing: TestingModule = await withoutBusinessPorts(
+            Test.createTestingModule({
+                imports: [AppModule],
+                providers: [AssetsProbePort, SpendingProbePort]
+            })
+        ).compile();
         app = testing.createNestApplication();
         app.use(cookieParser());
         await app.init();

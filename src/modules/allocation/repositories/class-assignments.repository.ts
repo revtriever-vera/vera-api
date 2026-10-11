@@ -5,7 +5,7 @@ import { TenantRepository } from '../../../core/database/repositories/tenant.rep
 import { IdUtil } from '../../../shared/utils/id.util';
 import { ClassAssignment, NewClassAssignment } from '../domain/allocation.types';
 
-type CreateAssignmentData = Pick<NewClassAssignment, 'subjectType' | 'subjectId' | 'classId'>;
+type CreateAssignmentData = Pick<NewClassAssignment, 'subjectType' | 'subjectId' | 'classId' | 'isSample'>;
 
 const ASSIGNMENT_LIMIT: number = 10000;
 

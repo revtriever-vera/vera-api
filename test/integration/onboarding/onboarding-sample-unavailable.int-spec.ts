@@ -10,6 +10,7 @@ import { Company, User } from '../../../src/modules/identity/domain/identity.typ
 import { UserDomain } from '../../../src/modules/identity/domain/user.domain';
 import { SessionIssuerPort } from '../../../src/modules/identity/ports/session-issuer.port';
 import { createIsolatedDatabase, IsolatedDatabase } from '../support/isolated-database';
+import { withoutBusinessPorts } from '../support/inert-ports';
 import { isolateRedisForWorker } from '../support/queue';
 
 interface StateBody {
@@ -31,7 +32,7 @@ describe('onboarding sample data without registered ports', () => {
         process.env['IS_LOCAL'] = 'true';
         process.env['DEPLOY_ENV'] = 'local';
 
-        const testing: TestingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
+        const testing: TestingModule = await withoutBusinessPorts(Test.createTestingModule({ imports: [AppModule] })).compile();
         app = testing.createNestApplication();
         app.use(cookieParser());
         await app.init();

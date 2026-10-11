@@ -41,6 +41,7 @@ export interface AssetClassAssignments {
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
     id: string;
+    isSample: Generated<boolean>;
     subjectId: string;
     subjectType: string;
     targetInClassBps: Generated<number>;
@@ -130,6 +131,7 @@ export interface FixedIncomeTitles {
     deletedAt: Timestamp | null;
     id: string;
     indexer: string;
+    isSample: Generated<boolean>;
     kind: string;
     maturityDate: Timestamp;
     name: string;
