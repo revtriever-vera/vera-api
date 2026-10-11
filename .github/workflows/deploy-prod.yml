@@ -31,7 +31,7 @@ env:
   VERA_DOMAIN: ${{ vars.VERA_DOMAIN }}
 
 jobs:
-  deploy:
+  guard:
     if: >-
       vars.PROD_DEPLOY_ENABLED == 'true'
       && (
@@ -44,6 +44,34 @@ jobs:
           && github.event.workflow_run.head_repository.full_name == github.repository
         )
       )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TIP="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "$TIP" != "$HEAD_SHA" ]; then
+            echo "::notice::commit $HEAD_SHA não é mais o tip da main; deploy pulado."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: guard
+    if: needs.guard.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: production
@@ -88,9 +116,10 @@ jobs:
           docker push "$REGISTRY/$ECR_REPOSITORY:$TAG"
           docker push "$REGISTRY/$ECR_REPOSITORY:latest"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$TAG" >> "$GITHUB_ENV"
 
       - name: fundação (roles de deploy e rede)
-        run: npx cdk deploy "$NETWORK_STACK" --require-approval never --context imageTag=${{ steps.image.outputs.tag }}
+        run: bash .github/scripts/cdk-deploy.sh "$NETWORK_STACK"
 
       - name: bootstrap do stack no primeiro deploy
         run: |
@@ -98,7 +127,7 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='MigrationTaskFamily'].OutputValue" --output text 2>/dev/null || true)"
           if [ -z "$FAMILY" ] || [ "$FAMILY" = "None" ]; then
             echo "stack sem a task de migração — fazendo o primeiro deploy antes de migrar"
-            npx cdk deploy "$APP_STACK" --require-approval never --context imageTag=${{ steps.image.outputs.tag }}
+            bash .github/scripts/cdk-deploy.sh "$APP_STACK"
           fi
 
       - name: Mascara outputs do stack da aplicação
@@ -113,7 +142,7 @@ jobs:
           bash .github/scripts/run-migration.sh "$APP_STACK" "$AWS_REGION"
 
       - name: cdk deploy
-        run: npx cdk deploy "$APP_STACK" --require-approval never --context imageTag=${{ steps.image.outputs.tag }}
+        run: bash .github/scripts/cdk-deploy.sh "$APP_STACK"
 
       - name: wait for the service to stabilise
         run: |
@@ -136,5 +165,9 @@ jobs:
               --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text 2>/dev/null || true
           }
           URL="$(output ApiUrl)"
-          curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors "$URL/health" | tee /dev/stderr | grep -q '"status":"ok"'
-          curl --fail --silent --show-error "$URL/health/ready" | tee /dev/stderr | grep -q '"database":true'
+          BODY="$(curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors "$URL/health")"
+          echo "$BODY"
+          grep -q '"status":"ok"' <<<"$BODY"
+          BODY="$(curl --fail --silent --show-error "$URL/health/ready")"
+          echo "$BODY"
+          grep -q '"database":true' <<<"$BODY"

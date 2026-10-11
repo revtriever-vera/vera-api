@@ -65,9 +65,10 @@ jobs:
           docker push "$REGISTRY/$ECR_REPOSITORY:$TAG"
           docker push "$REGISTRY/$ECR_REPOSITORY:latest"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$TAG" >> "$GITHUB_ENV"
 
       - name: fundação (roles de deploy e rede)
-        run: npx cdk deploy "$NETWORK_STACK" --require-approval never --context imageTag=${{ steps.image.outputs.tag }}
+        run: bash .github/scripts/cdk-deploy.sh "$NETWORK_STACK"
 
       - name: acorda o banco, que pode estar desligado fora do horário
         run: bash .github/scripts/wake-database.sh "$DATA_STACK" "$AWS_REGION"
@@ -78,7 +79,7 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='MigrationTaskFamily'].OutputValue" --output text 2>/dev/null || true)"
           if [ -z "$FAMILY" ] || [ "$FAMILY" = "None" ]; then
             echo "stack sem a task de migração — fazendo o primeiro deploy antes de migrar"
-            npx cdk deploy "$APP_STACK" --require-approval never --context imageTag=${{ steps.image.outputs.tag }}
+            bash .github/scripts/cdk-deploy.sh "$APP_STACK"
           fi
 
       - name: Mascara outputs do stack da aplicação
@@ -93,7 +94,7 @@ jobs:
           bash .github/scripts/run-migration.sh "$APP_STACK" "$AWS_REGION"
 
       - name: cdk deploy
-        run: npx cdk deploy "$APP_STACK" --require-approval never --context imageTag=${{ steps.image.outputs.tag }}
+        run: bash .github/scripts/cdk-deploy.sh "$APP_STACK"
 
       - name: wait for the service to stabilise
         run: |
@@ -116,8 +117,12 @@ jobs:
               --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text 2>/dev/null || true
           }
           URL="$(output ApiUrl)"
-          curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors "$URL/health" | tee /dev/stderr | grep -q '"status":"ok"'
-          curl --fail --silent --show-error "$URL/health/ready" | tee /dev/stderr | grep -q '"database":true'
+          BODY="$(curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors "$URL/health")"
+          echo "$BODY"
+          grep -q '"status":"ok"' <<<"$BODY"
+          BODY="$(curl --fail --silent --show-error "$URL/health/ready")"
+          echo "$BODY"
+          grep -q '"database":true' <<<"$BODY"
           MAIL="$(output MailUrl)"
           if [ -n "$MAIL" ] && [ "$MAIL" != "None" ]; then
             CODE="$(curl --silent --output /dev/null --write-out '%{http_code}' "$MAIL/" || true)"

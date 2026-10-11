@@ -48,7 +48,9 @@ LOG_GROUP="$(aws ecs describe-task-definition --task-definition "$FAMILY" --regi
   --query 'taskDefinition.containerDefinitions[0].logConfiguration.options."awslogs-group"' --output text)"
 aws logs get-log-events --log-group-name "$LOG_GROUP" \
   --log-stream-name "migrate/migrate/$(basename "$ARN")" --region "$REGION" \
-  --query 'events[].message' --output text 2>/dev/null | tr '\t' '\n' || true
+  --query 'events[].message' --output text 2>/dev/null | tr '\t' '\n' \
+  | grep -iE 'migration|error|fail' \
+  | sed -E 's/[A-Za-z0-9.-]+\.(rds|amazonaws)\.com[A-Za-z0-9.:\/_-]*/***/g; s/[0-9]{1,3}(\.[0-9]{1,3}){3}/***/g; s#postgres(ql)?://[^ ]*#***#g' || true
 
 EXIT_CODE="$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$ARN" --region "$REGION" \
   --query 'tasks[0].containers[0].exitCode' --output text)"

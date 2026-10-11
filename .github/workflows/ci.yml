@@ -132,7 +132,7 @@ jobs:
 
       - name: cdk diff
         run: |
-          npx cdk diff 'vera-*-dev' --no-color --context imageTag=latest > diff-raw.txt 2>&1 \
+          npx cdk diff 'vera-*-dev' --no-color > diff-raw.txt 2>&1 \
             || { echo "::error::cdk diff falhou; saída omitida porque o log é público."; exit 1; }
           awk '/^Stack / {print} /^\[[-+~]\] AWS::/ {print $1, $2, $3}' diff-raw.txt \
             | sed -E 's/[0-9]{12}/************/g' > diff-body.txt
