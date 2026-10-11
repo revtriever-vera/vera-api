@@ -10,6 +10,32 @@ export type Generated<T> =
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AssetClassAssignments {
+    classId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    subjectId: string;
+    subjectType: string;
+    targetInClassBps: Generated<number>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface AssetClasses {
+    aliasKeys: Generated<string[]>;
+    colorKey: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    name: string | null;
+    sortOrder: number;
+    systemKey: string | null;
+    targetBps: Generated<number>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AuthIdentities {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -76,6 +102,8 @@ export interface Users {
 }
 
 export interface DB {
+    AssetClassAssignments: AssetClassAssignments;
+    AssetClasses: AssetClasses;
     AuthIdentities: AuthIdentities;
     Companies: Companies;
     Sessions: Sessions;
