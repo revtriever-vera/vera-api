@@ -4,6 +4,8 @@ import { AssetClass, CLASS_ACTIONS } from '../domain/allocation.types';
 import { AllocationLogService } from './allocation-log.service';
 import { AllocationMetricsService } from './allocation-metrics.service';
 
+export type { AssetClass };
+
 @Injectable()
 export class ClassReaderService {
     public constructor(

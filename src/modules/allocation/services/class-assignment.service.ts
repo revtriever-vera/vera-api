@@ -5,6 +5,8 @@ import { AssignmentNotFoundError, ClassNotFoundError } from '../domain/allocatio
 import { AssetClass, ClassAssignment, SubjectType } from '../domain/allocation.types';
 import { AllocationLogService } from './allocation-log.service';
 
+export type { ClassAssignment };
+
 @Injectable()
 export class ClassAssignmentService {
     public constructor(

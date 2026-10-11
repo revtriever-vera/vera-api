@@ -9,6 +9,8 @@ import { IndexSeriesDomain } from '../domain/index-series.domain';
 import { FixedIncomeLogService } from './fixed-income-log.service';
 import { FixedIncomeMetricsService } from './fixed-income-metrics.service';
 
+export type { ValuedTitle };
+
 @Injectable()
 export class FixedIncomeValuationService {
     public constructor(

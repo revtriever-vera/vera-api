@@ -4,6 +4,8 @@ import { decimalStringOf } from '../../../shared/utils/decimal.util';
 import { ExchangeRateDomain } from '../domain/exchange-rate.domain';
 import { BASE_CURRENCY, StoredRate } from '../domain/market-data.types';
 
+export type { StoredRate };
+
 export const BUILTIN_SOURCE: string = 'builtin';
 
 @Injectable()

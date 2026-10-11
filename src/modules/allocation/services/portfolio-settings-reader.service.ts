@@ -3,6 +3,8 @@ import { toPortfolioSettingsView } from '../domain/asset-class.mapper';
 import { PortfolioSettingsView } from '../domain/allocation.types';
 import { PortfolioSettingsDomain } from '../domain/portfolio-settings.domain';
 
+export type { PortfolioSettingsView };
+
 @Injectable()
 export class PortfolioSettingsReaderService {
     public constructor(private readonly settings: PortfolioSettingsDomain) {}
