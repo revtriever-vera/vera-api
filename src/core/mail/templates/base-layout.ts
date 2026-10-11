@@ -1,4 +1,7 @@
+import { AppLocale, DEFAULT_LOCALE } from '../../../shared/i18n/locale';
+
 export interface BaseLayoutInput {
+    readonly locale?: AppLocale;
     readonly title: string;
     readonly heading?: string | null;
     readonly bodyHtml: string;
@@ -7,6 +10,16 @@ export interface BaseLayoutInput {
     readonly footnote?: string;
     readonly unsubscribeUrl?: string;
 }
+
+interface FooterCopy {
+    readonly automatic: string;
+    readonly unsubscribe: string;
+}
+
+const FOOTER_COPY: Readonly<Record<AppLocale, FooterCopy>> = {
+    'pt-BR': { automatic: 'Este e-mail foi enviado automaticamente.', unsubscribe: 'Não quero mais receber estes avisos' },
+    en: { automatic: 'This email was sent automatically.', unsubscribe: 'I no longer want to receive these notices' }
+};
 
 const BRAND: string = '#16A34A';
 const BRAND_DEEP: string = '#0F172A';
@@ -31,8 +44,8 @@ function banner(): string {
     </td></tr>`;
 }
 
-function unsubscribeLine(url: string): string {
-    return `<br><a href="${url}" style="color:${INK_SUBTLE};text-decoration:underline">Não quero mais receber estes avisos</a>`;
+function unsubscribeLine(url: string, label: string): string {
+    return `<br><a href="${url}" style="color:${INK_SUBTLE};text-decoration:underline">${label}</a>`;
 }
 
 function headingOf(input: BaseLayoutInput): string {
@@ -57,21 +70,23 @@ function contentBlockOf(input: BaseLayoutInput, button: string, footnote: string
     </td></tr>`;
 }
 
-function footerOf(unsubscribe: string): string {
+function footerOf(unsubscribe: string, automatic: string): string {
     return `<tr><td style="border-top:1px solid ${BORDER};padding:20px 40px;background-color:#fbfcfe">
         <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:${INK_SUBTLE}">
             Vera.<br>
-            Este e-mail foi enviado automaticamente.${unsubscribe}
+            ${automatic}${unsubscribe}
         </p>
     </td></tr>`;
 }
 
 export function baseLayout(input: BaseLayoutInput): string {
+    const locale: AppLocale = input.locale ?? DEFAULT_LOCALE;
+    const copy: FooterCopy = FOOTER_COPY[locale];
     const button: string = input.ctaLabel && input.ctaUrl ? cta(input.ctaLabel, input.ctaUrl) : '';
-    const unsubscribe: string = input.unsubscribeUrl ? unsubscribeLine(input.unsubscribeUrl) : '';
+    const unsubscribe: string = input.unsubscribeUrl ? unsubscribeLine(input.unsubscribeUrl, copy.unsubscribe) : '';
     const footnote: string = footnoteOf(input.footnote);
     return `<!doctype html>
-<html lang="pt-BR">
+<html lang="${locale}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${input.title}</title></head>
 <body style="margin:0;padding:0;background-color:${CANVAS}">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${CANVAS}">
@@ -79,7 +94,7 @@ export function baseLayout(input: BaseLayoutInput): string {
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border:1px solid ${BORDER};border-radius:12px;overflow:hidden">
                 ${banner()}
                 ${contentBlockOf(input, button, footnote)}
-                ${footerOf(unsubscribe)}
+                ${footerOf(unsubscribe, copy.automatic)}
             </table>
         </td></tr>
     </table>

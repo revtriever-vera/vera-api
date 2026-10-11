@@ -6,7 +6,6 @@ import { PositionsDomainModule } from '../domain/positions-domain.module';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { PositionReaderService } from '../services/position-reader.service';
 import { PositionsAccountExporter } from '../services/positions-account.exporter';
-import { PositionsOnboardingSummary } from '../services/positions-onboarding.summary';
 import { PositionsSampleDataService } from '../services/positions-sample-data.service';
 import { PositionsLogService } from '../services/positions-log.service';
 import { PositionsMetricsService } from '../services/positions-metrics.service';
@@ -21,7 +20,6 @@ import { PositionApplication } from './position.application';
         PositionReaderService,
         HeldAssetsService,
         PositionsAccountExporter,
-        PositionsOnboardingSummary,
         PositionsSampleDataService
     ],
     exports: [PositionApplication, PositionReaderService, HeldAssetsService]

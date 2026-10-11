@@ -10,6 +10,7 @@ import { ModulesPortfolioSourceDriver } from '../drivers/modules-portfolio-sourc
 import { PortfolioSourcePort } from '../ports/portfolio-source.port';
 import { PortfolioClassInputsService } from '../services/portfolio-class-inputs.service';
 import { PortfolioLogService } from '../services/portfolio-log.service';
+import { PortfolioOnboardingSummary } from '../services/portfolio-onboarding.summary';
 import { PortfolioMetricsService } from '../services/portfolio-metrics.service';
 import { PortfolioSnapshotService } from '../services/portfolio-snapshot.service';
 import { PortfolioViewApplication } from './portfolio-view.application';
@@ -30,6 +31,7 @@ import { PortfolioViewApplication } from './portfolio-view.application';
         PortfolioClassInputsService,
         PortfolioLogService,
         PortfolioMetricsService,
+        PortfolioOnboardingSummary,
         ModulesPortfolioSourceDriver,
         { provide: PortfolioSourcePort, useExisting: ModulesPortfolioSourceDriver }
     ],
