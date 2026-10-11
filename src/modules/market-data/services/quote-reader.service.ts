@@ -8,6 +8,8 @@ import { AssetQuoteDomain } from '../domain/asset-quote.domain';
 import { LatestQuotes, QUOTE_MARKETS, QuotableAsset, QuoteMarket, QuoteRecord, StoredQuote } from '../domain/market-data.types';
 import { isQuoteStale } from '../domain/quote-staleness';
 
+export type { StoredQuote };
+
 @Injectable()
 export class QuoteReaderService {
     public constructor(
