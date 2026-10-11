@@ -153,6 +153,7 @@ export interface TransactionFilter {
     readonly uncategorized?: boolean;
     readonly direction?: Direction;
     readonly search?: string;
+    readonly excludeSamples?: boolean;
 }
 
 export interface TransactionTotals {

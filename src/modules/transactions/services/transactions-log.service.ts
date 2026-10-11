@@ -5,6 +5,9 @@ import { IngestionResult, TransactionSource } from '../domain/transactions.types
 const INGEST: string = 'transactions-ingest';
 const RECATEGORIZE: string = 'transactions-recategorize';
 const PORT: string = 'transactions-port';
+const SAMPLE: string = 'transactions-sample';
+
+export type SampleAction = 'seeded' | 'cleared' | 'skipped';
 
 @Injectable()
 export class TransactionsLogService {
@@ -38,5 +41,9 @@ export class TransactionsLogService {
 
     public portScope(scope: string, affected: number): void {
         this.logService.info({ message: 'recategorization port ran', identifier: PORT, meta: { scope, affected } });
+    }
+
+    public sample(action: SampleAction, count: number): void {
+        this.logService.info({ message: 'spending sample data', identifier: SAMPLE, meta: { action, count } });
     }
 }

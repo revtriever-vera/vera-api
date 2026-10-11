@@ -123,7 +123,8 @@ export class TransactionRecategorizeApplication {
             pattern,
             label: ((isCounterparty ? current.counterpartyName : null) ?? current.normalizedDescription).slice(0, LABEL_MAX_LENGTH),
             appliesTo: Number(current.amountMinor) < 0 ? 'out' : 'in',
-            categoryId
+            categoryId,
+            isSample: current.isSample
         };
     }
 }

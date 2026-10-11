@@ -87,6 +87,18 @@ export class TransactionDomain {
         return this.transactions.totals(filter);
     }
 
+    public async countReal(): Promise<number> {
+        return this.transactions.countReal();
+    }
+
+    public async countSamples(): Promise<number> {
+        return this.transactions.countSamples();
+    }
+
+    public async removeSamples(): Promise<number> {
+        return this.transactions.softDeleteSamples();
+    }
+
     public async countUncategorizedOutgoing(): Promise<number> {
         return this.transactions.countUncategorizedOutgoing();
     }

@@ -102,6 +102,10 @@ export class BankConnectionDomain {
         return this.connections.countAll();
     }
 
+    public async countConnected(): Promise<number> {
+        return this.connections.countConnected();
+    }
+
     private async register(draft: ConnectionDraft, total: number): Promise<Registration> {
         if (total >= MAX_ACTIVE_CONNECTIONS) {
             return { externalItemId: draft.externalItemId, outcome: ITEM_OUTCOMES.limitReached, connection: null };

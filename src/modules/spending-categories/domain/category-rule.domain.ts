@@ -10,6 +10,7 @@ export interface CreateRuleInput {
     readonly pattern: string;
     readonly label: string;
     readonly appliesTo: RuleDirection;
+    readonly isSample?: boolean;
 }
 
 export interface UpdateRuleInput {
@@ -55,6 +56,10 @@ export class CategoryRuleDomain {
 
     public async remove(id: string): Promise<void> {
         await this.rules.softDelete(id);
+    }
+
+    public async removeSamples(): Promise<number> {
+        return (await this.rules.softDeleteSamples()).length;
     }
 
     public async removeByCategory(categoryId: string): Promise<CategoryRule[]> {

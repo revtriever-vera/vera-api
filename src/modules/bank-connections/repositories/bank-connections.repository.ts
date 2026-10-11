@@ -37,6 +37,17 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
         return Number(row?.total ?? 0);
     }
 
+    public async countConnected(): Promise<number> {
+        const row: { total: string | number | bigint } | undefined = await this.db
+            .selectFrom('BankConnections')
+            .select((builder) => builder.fn.countAll().as('total'))
+            .where('companyId', '=', this.companyId)
+            .where('deletedAt', 'is', null)
+            .where('status', 'in', [...SYNCABLE_CONNECTION_STATUSES])
+            .executeTakeFirst();
+        return Number(row?.total ?? 0);
+    }
+
     public async insertIfAbsent(draft: ConnectionDraft): Promise<BankConnection | null> {
         const row: BankConnection | undefined = await this.db
             .insertInto('BankConnections')

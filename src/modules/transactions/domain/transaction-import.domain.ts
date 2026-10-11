@@ -63,6 +63,14 @@ export class TransactionImportDomain {
         return this.imports.countCompleted();
     }
 
+    public async listRealPage(offset: number, size: number): Promise<TransactionImport[]> {
+        return this.imports.listRealPage(offset, size);
+    }
+
+    public async removeSamples(): Promise<number> {
+        return (await this.imports.softDeleteSamples()).length;
+    }
+
     public async removeByAccounts(accountIds: readonly string[]): Promise<void> {
         if (accountIds.length > 0) {
             await this.imports.softDeleteByAccounts(accountIds);

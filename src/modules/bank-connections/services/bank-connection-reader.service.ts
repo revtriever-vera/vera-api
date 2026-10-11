@@ -12,6 +12,10 @@ export class BankConnectionReaderService {
         return this.connections.countAll();
     }
 
+    public async countConnected(): Promise<number> {
+        return this.connections.countConnected();
+    }
+
     public async listActiveAcrossTenants(): Promise<readonly ConnectionIdentity[]> {
         return this.connections.listSyncableAcrossTenants();
     }

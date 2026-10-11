@@ -22,7 +22,21 @@ describe('account deletion cascade guard', () => {
         const tenantTables: string[] = await tablesWithCompanyId(pg);
 
         expect(tenantTables).toEqual(
-            expect.arrayContaining(['AuthIdentities', 'FinancialAccounts', 'Sessions', 'TransactionImports', 'Transactions', 'Users'])
+            expect.arrayContaining([
+                'AuthIdentities',
+                'BankConnectionAccounts',
+                'BankConnections',
+                'BankSyncRuns',
+                'CategoryRules',
+                'FinancialAccounts',
+                'PluggyCredentials',
+                'Sessions',
+                'SpendingCategories',
+                'SpendingSettings',
+                'TransactionImports',
+                'Transactions',
+                'Users'
+            ])
         );
         expect(await tablesWithoutCompanyCascade(pg)).toEqual([]);
     });

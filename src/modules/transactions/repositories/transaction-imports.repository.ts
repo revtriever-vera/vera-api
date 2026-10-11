@@ -62,6 +62,24 @@ export class TransactionImportsRepository extends TenantRepository<'TransactionI
         return row ?? null;
     }
 
+    public async listRealPage(offset: number, size: number): Promise<TransactionImport[]> {
+        return this.findMany(
+            { isSample: false },
+            {
+                limit: size,
+                offset,
+                orderBy: [
+                    { property: 'createdAt', direction: 'asc' },
+                    { property: 'id', direction: 'asc' }
+                ]
+            }
+        );
+    }
+
+    public async softDeleteSamples(): Promise<TransactionImport[]> {
+        return this.updateManyRows({ isSample: true }, { deletedAt: new Date() });
+    }
+
     public async softDeleteByAccounts(accountIds: readonly string[]): Promise<TransactionImport[]> {
         return this.updateManyRows({ accountId: [...accountIds] }, { deletedAt: new Date() });
     }

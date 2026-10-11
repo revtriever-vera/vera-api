@@ -39,11 +39,16 @@ export class CategoryRuleService {
                       matchType: input.matchType,
                       pattern,
                       label,
-                      appliesTo: input.appliesTo
+                      appliesTo: input.appliesTo,
+                      isSample: input.isSample ?? false
                   })
                 : ((await this.rules.update(existing.id, { categoryId: input.categoryId, label }, existing)) ?? existing);
         this.record(saved, existing === null ? RULE_ACTIONS.learned : RULE_ACTIONS.updated);
         return saved;
+    }
+
+    public async removeSamples(): Promise<number> {
+        return this.rules.removeSamples();
     }
 
     private record(rule: CategoryRule, action: typeof RULE_ACTIONS.learned | typeof RULE_ACTIONS.updated): void {

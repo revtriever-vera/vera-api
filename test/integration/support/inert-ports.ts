@@ -8,6 +8,10 @@ import { PositionsAccountExporter } from '../../../src/modules/positions/service
 import { SpendingCategoriesAccountExporter } from '../../../src/modules/spending-categories/services/spending-categories-account.exporter';
 import { BankConnectionsExporter } from '../../../src/modules/bank-connections/services/bank-connections.exporter';
 import { PluggyCredentialsEraser } from '../../../src/modules/bank-connections/services/pluggy-credentials.eraser';
+import { BanksOnboardingSummary } from '../../../src/modules/bank-connections/services/banks-onboarding.summary';
+import { SpendingSettingsAccountExporter } from '../../../src/modules/spending-summary/services/spending-settings-account.exporter';
+import { SpendingSampleDataService } from '../../../src/modules/transactions/services/spending-sample-data.service';
+import { TransactionsAccountExporter } from '../../../src/modules/transactions/services/transactions-account.exporter';
 import { PositionsSampleDataService } from '../../../src/modules/positions/services/positions-sample-data.service';
 
 export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
@@ -39,5 +43,13 @@ function withoutSpendingPorts(builder: TestingModuleBuilder): TestingModuleBuild
         .overrideProvider(BankConnectionsExporter)
         .useValue({})
         .overrideProvider(PluggyCredentialsEraser)
+        .useValue({})
+        .overrideProvider(TransactionsAccountExporter)
+        .useValue({})
+        .overrideProvider(SpendingSampleDataService)
+        .useValue({})
+        .overrideProvider(SpendingSettingsAccountExporter)
+        .useValue({})
+        .overrideProvider(BanksOnboardingSummary)
         .useValue({});
 }

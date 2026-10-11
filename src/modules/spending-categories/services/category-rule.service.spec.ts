@@ -58,7 +58,8 @@ describe('CategoryRuleService.upsertFromCorrection', () => {
             matchType: 'description',
             pattern: 'PADARIA ESTRELA',
             label: 'Padaria Estrela',
-            appliesTo: 'out'
+            appliesTo: 'out',
+            isSample: false
         });
         expect(rule.pattern).toBe('PADARIA ESTRELA');
         expect(built.ruleWritten).toHaveBeenCalledWith(rule.id, 'description', 'learned', 0);
@@ -148,5 +149,39 @@ describe('CategoryRuleService.listForCompany', () => {
         const built: Built = build(null);
 
         await expect(built.service.listForCompany()).resolves.toEqual([]);
+    });
+});
+
+describe('CategoryRuleService samples', () => {
+    it('marca a regra criada a partir de uma transação de exemplo', async () => {
+        const built: Built = build(null);
+
+        const rule: CategoryRule = await built.service.upsertFromCorrection({
+            matchType: 'description',
+            pattern: 'PADARIA',
+            label: 'Padaria',
+            appliesTo: 'out',
+            categoryId: 'c1',
+            isSample: true
+        });
+
+        expect(rule.isSample).toBe(true);
+        expect(built.rules['create']).toHaveBeenCalledWith(expect.objectContaining({ isSample: true }));
+    });
+
+    it('cria regra real por padrão e remove só as de exemplo', async () => {
+        const built: Built = build(null);
+        built.rules['removeSamples'] = vi.fn().mockResolvedValue(2);
+
+        await built.service.upsertFromCorrection({
+            matchType: 'description',
+            pattern: 'PADARIA',
+            label: 'Padaria',
+            appliesTo: 'out',
+            categoryId: 'c1'
+        });
+
+        expect(built.rules['create']).toHaveBeenCalledWith(expect.objectContaining({ isSample: false }));
+        await expect(built.service.removeSamples()).resolves.toBe(2);
     });
 });

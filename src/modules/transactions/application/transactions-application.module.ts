@@ -7,6 +7,8 @@ import { SpendingCategoriesApplicationModule } from '../../spending-categories/a
 import { TransactionsDomainModule } from '../domain/transactions-domain.module';
 import { FinancialAccountService } from '../services/financial-account.service';
 import { SpendingDatasetService } from '../services/spending-dataset.service';
+import { SpendingSampleDataService } from '../services/spending-sample-data.service';
+import { TransactionsAccountExporter } from '../services/transactions-account.exporter';
 import { TransactionAggregatesService } from '../services/transaction-aggregates.service';
 import { TransactionFingerprintService } from '../services/transaction-fingerprint.service';
 import { TransactionImportService } from '../services/transaction-import.service';
@@ -41,7 +43,9 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         TransactionAggregatesService,
         TransactionReaderService,
         TransactionFingerprintService,
-        SpendingDatasetService
+        SpendingDatasetService,
+        TransactionsAccountExporter,
+        SpendingSampleDataService
     ],
     exports: [
         TransactionListApplication,
