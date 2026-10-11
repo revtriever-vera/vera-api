@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AppLocale } from '../../../shared/i18n/locale';
-import { decimalValueOf, writeCsv } from './csv-writer';
+import { writeCsv } from './csv-writer';
 import { buildExportTable } from './export-rows';
 import { holdingOf, snapshotOf } from './export-fixtures';
 import { ExportHoldingInput } from './export.types';
@@ -81,13 +81,5 @@ describe('writeCsv', () => {
 
     it('writes only the header for an empty portfolio', () => {
         expect(csvOf([], 'pt-BR').split('\r\n')).toEqual(['﻿Ativo;Nome;Classe;Quantidade;Valor (BRL);Fonte do valor', '']);
-    });
-});
-
-describe('decimalValueOf', () => {
-    it('applies the exponent of the currency', () => {
-        expect(decimalValueOf(7_560_000, 'BRL')).toBe('75600.00');
-        expect(decimalValueOf(5, 'USD')).toBe('0.05');
-        expect(decimalValueOf(500, 'JPY')).toBe('500');
     });
 });

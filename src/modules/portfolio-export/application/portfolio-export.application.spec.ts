@@ -5,7 +5,6 @@ import { PortfolioSnapshotService } from '../../portfolio/services/portfolio-sna
 import { holdingOf, snapshotOf } from '../domain/export-fixtures';
 import { PortfolioExportLogService } from '../services/portfolio-export-log.service';
 import { PortfolioExportMetricsService } from '../services/portfolio-export-metrics.service';
-import { XlsxWriterService } from '../services/xlsx-writer.service';
 import { PortfolioExportApplication } from './portfolio-export.application';
 
 function build() {
@@ -16,7 +15,7 @@ function build() {
         {
             build: vi.fn().mockResolvedValue(snapshotOf([holdingOf({}), holdingOf({ symbol: 'PETR4' })]))
         } as unknown as PortfolioSnapshotService,
-        xlsx as unknown as XlsxWriterService,
+        xlsx,
         { todayInCompany: vi.fn().mockResolvedValue('2026-10-11') } as unknown as CompanyTimezoneService,
         { get: vi.fn().mockReturnValue({ requestId: 'req', locale: 'pt-BR' }) } as unknown as AppContext,
         logs as unknown as PortfolioExportLogService,

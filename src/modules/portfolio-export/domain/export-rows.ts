@@ -1,6 +1,6 @@
 import { AppLocale } from '../../../shared/i18n/locale';
+import { spreadsheetSafeText } from '../../../shared/spreadsheet/spreadsheet-safe-text';
 import { sourceLabelOf } from './export-labels';
-import { spreadsheetSafeText } from './spreadsheet-safe-text';
 import { ExportClassInput, ExportHoldingInput, ExportRow, ExportSnapshotInput, ExportTable } from './export.types';
 
 function classNameOf(classId: string | null, names: ReadonlyMap<string, string>): string {

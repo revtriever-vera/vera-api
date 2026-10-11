@@ -48,7 +48,7 @@ describe('TransactionReaderService.pagesForExport', () => {
         const service: TransactionReaderService = new TransactionReaderService(
             { listAfter: vi.fn().mockResolvedValueOnce([row]) } as unknown as TransactionDomain,
             {
-                findByIds: vi.fn().mockResolvedValue([makeFinancialAccount({ id: 'a1', name: 'Itaú' })])
+                findByIds: vi.fn().mockResolvedValue([makeFinancialAccount({ id: 'a1', name: 'Itaú', institutionName: 'Itaú Unibanco' })])
             } as unknown as FinancialAccountDomain
         );
 
@@ -59,6 +59,7 @@ describe('TransactionReaderService.pagesForExport', () => {
 
         expect(pages[0]?.[0]).toMatchObject({
             accountName: 'Itaú',
+            institutionName: 'Itaú Unibanco',
             amountMinor: -1234,
             counterpartyName: 'Maria',
             categorySource: 'user',
@@ -73,5 +74,18 @@ describe('TransactionReaderService.pagesForExport', () => {
         );
 
         await expect(collect(service)).resolves.toEqual([]);
+    });
+});
+
+describe('TransactionReaderService.countForExport', () => {
+    it('conta as linhas do filtro pelos totais', async () => {
+        const totals = vi.fn().mockResolvedValue({ count: 42, inMinor: 0, outMinor: 0 });
+        const service: TransactionReaderService = new TransactionReaderService(
+            { totals } as unknown as TransactionDomain,
+            {} as unknown as FinancialAccountDomain
+        );
+
+        await expect(service.countForExport(FILTER)).resolves.toBe(42);
+        expect(totals).toHaveBeenCalledWith(FILTER);
     });
 });

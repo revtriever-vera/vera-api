@@ -23,16 +23,21 @@ export class TransactionReaderService {
         }
     }
 
+    public async countForExport(filter: TransactionFilter): Promise<number> {
+        return (await this.transactions.totals(filter)).count;
+    }
+
     private async toExport(rows: readonly Transaction[]): Promise<ExportTransaction[]> {
         const accountIds: string[] = [...new Set<string>(rows.map((row: Transaction): string => row.accountId))];
         const accounts: FinancialAccount[] = await this.accounts.findByIds(accountIds);
-        const names: Map<string, string> = new Map<string, string>(
-            accounts.map((account: FinancialAccount): [string, string] => [account.id, account.name])
+        const byId: Map<string, FinancialAccount> = new Map<string, FinancialAccount>(
+            accounts.map((account: FinancialAccount): [string, FinancialAccount] => [account.id, account])
         );
         return rows.map((row: Transaction): ExportTransaction => ({
             id: row.id,
             accountId: row.accountId,
-            accountName: names.get(row.accountId) ?? '',
+            accountName: byId.get(row.accountId)?.name ?? '',
+            institutionName: byId.get(row.accountId)?.institutionName ?? null,
             date: toDateString(row.date),
             amountMinor: Number(row.amountMinor),
             currency: row.currency,
