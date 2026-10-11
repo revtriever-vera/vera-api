@@ -24,6 +24,12 @@ export interface ApiResponse<T> {
     readonly body: T;
 }
 
+export interface RawResponse {
+    readonly status: number;
+    readonly headers: Headers;
+    readonly bytes: Buffer;
+}
+
 export class AllocationHarness {
     public constructor(
         public readonly app: INestApplication,
@@ -93,5 +99,11 @@ export class AllocationHarness {
         });
         const text: string = await response.text();
         return { status: response.status, body: (text.length > 0 ? JSON.parse(text) : null) as T };
+    }
+
+    public async callRaw(token: string | null, path: string): Promise<RawResponse> {
+        const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {};
+        const response: Response = await fetch(`${this.origin}${path}`, { headers });
+        return { status: response.status, headers: response.headers, bytes: Buffer.from(await response.arrayBuffer()) };
     }
 }
