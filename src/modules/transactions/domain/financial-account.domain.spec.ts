@@ -12,6 +12,7 @@ function build(
         create: vi.fn().mockImplementation((data: object) => Promise.resolve(makeFinancialAccount({ ...data }))),
         upsertProvider: vi.fn().mockImplementation((data: object) => Promise.resolve(makeFinancialAccount({ ...data }))),
         findById: vi.fn().mockResolvedValue(found),
+        findByProvider: vi.fn().mockResolvedValue(null),
         lockById: vi.fn().mockResolvedValue(found),
         rename: vi.fn().mockResolvedValue(found),
         findByIds: vi.fn().mockResolvedValue([]),
@@ -63,6 +64,16 @@ describe('FinancialAccountDomain', () => {
         await expect(
             domain.upsertProvider({ provider: 'pluggy', externalId: 'x', kind: 'other', name: 'X', currency: 'BRL' })
         ).rejects.toMatchObject({ code: 'transactions.limit_reached' });
+    });
+
+    it('atualizar uma conta da Pluggy que já existe não esbarra no limite de contas', async () => {
+        const { domain, repo } = build(30);
+        repo['findByProvider']?.mockResolvedValue(makeFinancialAccount({ id: 'a1', provider: 'pluggy', externalId: 'x' }));
+
+        await expect(
+            domain.upsertProvider({ provider: 'pluggy', externalId: 'x', kind: 'other', name: 'X', currency: 'BRL' })
+        ).resolves.toBeDefined();
+        expect(repo['upsertProvider']).toHaveBeenCalled();
     });
 
     it('require, lock e rename levantam 404 quando a conta não existe', async () => {

@@ -20,7 +20,9 @@ export class FinancialAccountDomain {
     }
 
     public async upsertProvider(input: UpsertProviderAccountInput): Promise<FinancialAccount> {
-        await this.assertRoom();
+        if ((await this.accounts.findByProvider(input.provider, input.externalId)) === null) {
+            await this.assertRoom();
+        }
         return this.accounts.upsertProvider({
             kind: input.kind,
             name: input.name,

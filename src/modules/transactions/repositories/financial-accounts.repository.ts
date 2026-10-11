@@ -42,6 +42,10 @@ export class FinancialAccountsRepository extends TenantRepository<'FinancialAcco
             .executeTakeFirstOrThrow();
     }
 
+    public async findByProvider(provider: string, externalId: string): Promise<FinancialAccount | null> {
+        return this.findOne({ provider, externalId });
+    }
+
     public async findByIds(ids: readonly string[]): Promise<FinancialAccount[]> {
         return this.findManyWhereIn('id', ids);
     }

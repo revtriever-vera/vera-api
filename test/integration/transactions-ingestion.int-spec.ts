@@ -367,6 +367,26 @@ describe('transactions ingestion', () => {
         expect(await rows(owner, accountId)).toHaveLength(60);
     });
 
+    it('atualizar a conta da Pluggy pelo id externo mantém a mesma conta e o nome escolhido pelo usuário', async () => {
+        const owner: Account = await harness.signUp('upsert');
+        const first: string = await providerAccount(owner, 'acc-up', 'Nome do banco');
+        await harness.call(owner.token, 'PATCH', `/spending/accounts/${first}`, { name: 'Meu nome' });
+
+        const second = await harness.inCompany(owner.company.id, async () =>
+            accounts.upsertProviderAccount({
+                provider: 'pluggy',
+                externalId: 'acc-up',
+                kind: 'savings',
+                name: 'Outro nome do banco',
+                numberLast4: '9999',
+                currency: 'BRL'
+            })
+        );
+
+        expect(second.id).toBe(first);
+        expect(second).toMatchObject({ name: 'Meu nome', kind: 'savings', numberLast4: '9999' });
+    });
+
     it('excluir a company remove contas, lotes e transações em cascata', async () => {
         const owner: Account = await harness.signUp('cascade');
         const accountId: string = await providerAccount(owner, 'acc-10');
