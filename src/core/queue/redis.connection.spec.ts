@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const state: { instances: { set: ReturnType<typeof vi.fn>; eval: ReturnType<typeof vi.fn>; quit: ReturnType<typeof vi.fn> }[] } =
-    vi.hoisted(() => ({ instances: [] }));
+const state: {
+    args: unknown[][];
+    instances: { set: ReturnType<typeof vi.fn>; eval: ReturnType<typeof vi.fn>; quit: ReturnType<typeof vi.fn> }[];
+} = vi.hoisted(() => ({ args: [], instances: [] }));
 
 vi.mock('ioredis', () => {
     class Redis {
@@ -10,7 +12,8 @@ vi.mock('ioredis', () => {
         public readonly quit: ReturnType<typeof vi.fn> = vi.fn(async (): Promise<void> => Promise.resolve());
         public readonly duplicate: () => Redis;
 
-        public constructor() {
+        public constructor(...args: unknown[]) {
+            state.args.push(args);
             state.instances.push(this);
             this.duplicate = (): Redis => this;
         }
@@ -24,6 +27,7 @@ const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
 describe('RedisConnection', () => {
     beforeEach(() => {
         state.instances = [];
+        state.args = [];
         process.env = { ...ORIGINAL_ENV, REDIS_CLUSTER: 'false', REDIS_NODES: 'localhost:6379', REDIS_DB: '0' };
     });
 
@@ -54,5 +58,14 @@ describe('RedisConnection', () => {
         await connection.onApplicationShutdown();
 
         expect(state.instances[0]?.quit).toHaveBeenCalledOnce();
+    });
+
+    it('falls back to port 7200 when a cluster node has no port', async () => {
+        process.env = { ...ORIGINAL_ENV, REDIS_CLUSTER: 'true', REDIS_NODES: 'localhost' };
+        const { RedisConnection } = await import('./redis.connection');
+
+        new RedisConnection();
+
+        expect(state.args[0]?.[0]).toEqual([{ host: 'localhost', port: 7200 }]);
     });
 });

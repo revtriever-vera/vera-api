@@ -56,4 +56,19 @@ describe('QueueTelemetryService', () => {
 
         expect(logs['telemetrySampleFailed']).toHaveBeenCalled();
     });
+
+    it('keeps reporting next runs when the failed count cannot be read', async () => {
+        const NEXT_MS: number = 5000;
+        queueMock.getFailedCount.mockRejectedValue(new Error('redis away'));
+        queueMock.getJobs.mockResolvedValue([]);
+        queueMock.getJobSchedulers.mockResolvedValue([{ key: 'cmd', next: NEXT_MS }]);
+        const { service, logs } = harness();
+
+        await service.sample();
+
+        expect(logs['commandNextRun']).toHaveBeenCalledWith('cmd', NEXT_MS / 1000);
+        expect(logs['oldestWaitingJobAge']).toHaveBeenCalled();
+        expect(logs['failedJobs']).not.toHaveBeenCalled();
+        expect(logs['telemetrySampleFailed']).toHaveBeenCalled();
+    });
 });

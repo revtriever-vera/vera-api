@@ -39,12 +39,22 @@ export class QueueTelemetryService implements OnApplicationBootstrap, OnModuleDe
 
     private async sampleQueue(name: QueueName, now: number): Promise<void> {
         const queue: Queue = this.queueFor(name);
-        try {
+        await this.isolated(name, async () => {
             this.logs.oldestWaitingJobAge(name, await this.oldestWaitingAgeSeconds(queue, now));
+        });
+        await this.isolated(name, async () => {
             this.logs.failedJobs(name, await queue.getFailedCount());
+        });
+        await this.isolated(name, async () => {
             for (const scheduler of await queue.getJobSchedulers()) {
                 this.reportNextRun(scheduler);
             }
+        });
+    }
+
+    private async isolated(name: QueueName, read: () => Promise<void>): Promise<void> {
+        try {
+            await read();
         } catch (error: unknown) {
             this.logs.telemetrySampleFailed(name, error);
         }
