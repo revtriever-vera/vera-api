@@ -9,6 +9,7 @@ import { DB } from './generated/database.types';
 import { LogService } from '../observability/log.service';
 
 const AFTER_COMMIT: string = 'database-after-commit';
+const POOL_ERROR: string = 'database-pool';
 
 @Injectable()
 export class KyselyDatabaseClient extends DatabaseClient implements BeforeApplicationShutdown {
@@ -21,11 +22,11 @@ export class KyselyDatabaseClient extends DatabaseClient implements BeforeApplic
         private readonly logService: LogService
     ) {
         super();
-        this.root = new Kysely<DB>({
-            dialect: new PostgresDialect({
-                pool: new Pool({ connectionString: config.DATABASE_URL, max: config.DATABASE_POOL_MAX })
-            })
+        const pool: Pool = new Pool({ connectionString: config.DATABASE_URL, max: config.DATABASE_POOL_MAX });
+        pool.on('error', (error: Error): void => {
+            this.logService.error({ message: 'idle database connection failed', identifier: POOL_ERROR, error });
         });
+        this.root = new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });
     }
 
     public get executor(): Kysely<DB> {
