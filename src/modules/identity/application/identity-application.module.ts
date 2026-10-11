@@ -10,6 +10,7 @@ import { IdentityDomainModule } from '../domain/identity-domain.module';
 import { SessionIssuerPort } from '../ports/session-issuer.port';
 import { AccountDataRegistry } from '../services/account-data.registry';
 import { AccountProvisioningService } from '../services/account-provisioning.service';
+import { CompanyTimezoneService } from '../services/company-timezone.service';
 import { CurrentUserService } from '../services/current-user.service';
 import { FacebookGraphClient } from '../services/facebook-graph.client';
 import { FacebookIdentityVerifier } from '../services/facebook-identity.verifier';
@@ -56,6 +57,7 @@ import { SocialLoginApplication } from './social-login.application';
         SessionIssuerService,
         { provide: SessionIssuerPort, useExisting: SessionIssuerService },
         CurrentUserService,
+        CompanyTimezoneService,
         JwtAuthGuard,
         RefreshCookieAdapter,
         TokenService,
@@ -69,6 +71,7 @@ import { SocialLoginApplication } from './social-login.application';
         AccountExportApplication,
         AccountDeletionApplication,
         CurrentUserService,
+        CompanyTimezoneService,
         JwtAuthGuard,
         TokenService,
         RefreshCookieAdapter,
