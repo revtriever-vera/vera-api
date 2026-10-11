@@ -45,4 +45,15 @@ describe('quantity', () => {
         expect(normalizeDecimal('0.0000000000')).toBe('0');
         expect(normalizeDecimal('100')).toBe('100');
     });
+
+    it('normaliza decimais preservando o comportamento anterior', () => {
+        expect(normalizeDecimal('10')).toBe('10');
+        expect(normalizeDecimal('10.50')).toBe('10.5');
+        expect(normalizeDecimal('10.00')).toBe('10');
+        expect(normalizeDecimal('100.000')).toBe('100');
+        expect(normalizeDecimal('0.0')).toBe('0');
+        expect(normalizeDecimal('0.10')).toBe('0.1');
+        expect(normalizeDecimal('1.')).toBe('1');
+        expect(normalizeDecimal(`1.${'0'.repeat(100_000)}`)).toBe('1');
+    });
 });
