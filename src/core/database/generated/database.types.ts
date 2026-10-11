@@ -109,6 +109,54 @@ export interface AuthIdentities {
     userId: string;
 }
 
+export interface BankConnectionAccounts {
+    accountId: string;
+    companyId: string;
+    connectionId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    externalAccountId: string;
+    id: string;
+    syncedThrough: Timestamp | null;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface BankConnections {
+    companyId: string;
+    connectorName: string | null;
+    consentExpiresAt: Timestamp | null;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    externalItemId: string;
+    id: string;
+    lastSuccessAt: Timestamp | null;
+    lastSyncAt: Timestamp | null;
+    provider: string;
+    providerStatus: string | null;
+    status: string;
+    statusReason: string | null;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface BankSyncRuns {
+    accounts: Generated<number>;
+    companyId: string;
+    connectionId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    duplicates: Generated<number>;
+    failureCode: string | null;
+    fetched: Generated<number>;
+    finishedAt: Timestamp | null;
+    id: string;
+    inserted: Generated<number>;
+    startedAt: Generated<Timestamp>;
+    status: string;
+    trigger: string;
+    updated: Generated<number>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface CatalogSyncRuns {
     delisted: Generated<number>;
     errorCode: string | null;
@@ -212,6 +260,21 @@ export interface OnboardingStates {
     sampleLoadedAt: Timestamp | null;
     startedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
+}
+
+export interface PluggyCredentials {
+    clientIdHint: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    lastErrorCode: string | null;
+    lastVerifiedAt: Timestamp;
+    sealed: string;
+    sealerDriver: string;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+    verifiedWith: Generated<string>;
 }
 
 export interface PortfolioSettings {
@@ -377,6 +440,9 @@ export interface DB {
     AssetQuotes: AssetQuotes;
     Assets: Assets;
     AuthIdentities: AuthIdentities;
+    BankConnectionAccounts: BankConnectionAccounts;
+    BankConnections: BankConnections;
+    BankSyncRuns: BankSyncRuns;
     CatalogSyncRuns: CatalogSyncRuns;
     CategoryRules: CategoryRules;
     Companies: Companies;
@@ -385,6 +451,7 @@ export interface DB {
     FixedIncomeTitles: FixedIncomeTitles;
     IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
+    PluggyCredentials: PluggyCredentials;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;
     ProviderUsage: ProviderUsage;

@@ -32,6 +32,10 @@ export class FinancialAccountService {
         return this.accounts.require(id);
     }
 
+    public async findByIds(ids: readonly string[]): Promise<FinancialAccount[]> {
+        return this.accounts.findByIds(ids);
+    }
+
     @UsingTransaction()
     public async removeProviderAccounts(ids: readonly string[]): Promise<number> {
         const owned: FinancialAccount[] = (await this.accounts.findByIds(ids)).filter(

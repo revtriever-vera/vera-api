@@ -2,7 +2,8 @@ export const QUEUES = {
     emailSend: 'vera-email-send',
     catalog: 'vera-catalog',
     fixedIncome: 'vera-fixed-income',
-    marketData: 'vera-market-data'
+    marketData: 'vera-market-data',
+    bankConnections: 'vera-bank-connections'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -15,7 +16,8 @@ export const MESSAGE_TYPES = {
     marketDataQuotesChunkRequested: 'market-data.quotes.chunk.requested',
     marketDataReferenceRequested: 'market-data.reference.requested',
     marketDataPtaxRequested: 'market-data.ptax.requested',
-    marketDataQuoteOndemandRequested: 'market-data.quote.ondemand.requested'
+    marketDataQuoteOndemandRequested: 'market-data.quote.ondemand.requested',
+    bankConnectionsSyncRequested: 'bank-connections.sync.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

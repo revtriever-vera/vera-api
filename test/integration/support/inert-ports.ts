@@ -6,9 +6,15 @@ import { AllocationTargetSummary } from '../../../src/modules/allocation/service
 import { PortfolioOnboardingSummary } from '../../../src/modules/portfolio/services/portfolio-onboarding.summary';
 import { PositionsAccountExporter } from '../../../src/modules/positions/services/positions-account.exporter';
 import { SpendingCategoriesAccountExporter } from '../../../src/modules/spending-categories/services/spending-categories-account.exporter';
+import { BankConnectionsExporter } from '../../../src/modules/bank-connections/services/bank-connections.exporter';
+import { PluggyCredentialsEraser } from '../../../src/modules/bank-connections/services/pluggy-credentials.eraser';
 import { PositionsSampleDataService } from '../../../src/modules/positions/services/positions-sample-data.service';
 
 export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
+    return withoutSpendingPorts(withoutPortfolioPorts(builder));
+}
+
+function withoutPortfolioPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
     return builder
         .overrideProvider(FixedIncomeSampleApplication)
         .useValue({})
@@ -23,7 +29,15 @@ export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModu
         .overrideProvider(PositionsAccountExporter)
         .useValue({})
         .overrideProvider(PositionsSampleDataService)
-        .useValue({})
+        .useValue({});
+}
+
+function withoutSpendingPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
+    return builder
         .overrideProvider(SpendingCategoriesAccountExporter)
+        .useValue({})
+        .overrideProvider(BankConnectionsExporter)
+        .useValue({})
+        .overrideProvider(PluggyCredentialsEraser)
         .useValue({});
 }

@@ -330,6 +330,7 @@ export class AppStack extends Stack {
             LOG_LEVEL: 'info',
             DOCS_ENABLED: 'true',
             QUEUES_DASHBOARD_ENABLED: 'true',
+            PLUGGY_DRIVER: 'mock',
             APP_VERSION: props.imageTag,
             COOKIE_SECURE: 'true',
             CORS_ORIGINS: `https://${props.config.appHost}`
