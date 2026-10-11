@@ -129,6 +129,8 @@ table — same rule as renaming one.
 | `portfolio-orphan-holding`    | Holding with no asset class assignment (data bug)                              | `subjectType`, `subjectId`                                                |
 | `portfolio-export`            | Portfolio export generated                                                     | `format`, `rows`, `durationMs`                                            |
 | `contribution-suggest`        | Contribution suggestion computed, or refused because class targets are not set | `classesFunded`, `assetsFunded`, `warnings`, `result`                     |
+| `spending-categories-write`   | Spending category created, renamed, flexibility changed or removed             | `categoryId`, `action`, `recategorized`                                   |
+| `spending-rules-write`        | Categorization rule written, or recategorization skipped (no driver, debug)    | `ruleId`, `matchType`, `action`, `recategorized`                          |
 
 `message` is static by rule, so it is a reliable filter — but it travels as the **log line**, not as
 structured metadata, so the filter is the line filter: ``|= `import failed` `` works

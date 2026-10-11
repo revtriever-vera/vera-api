@@ -46,28 +46,37 @@ Three consequences worth spelling out, because each one has already caused a wro
   `netWorth`, the docs say "patrimônio". The mapping is fixed here instead of being decided again
   at each call site:
 
-| pt-BR (fala, docs, issues) | English (code, route, identifier) |
-| -------------------------- | --------------------------------- |
-| empresa / conta do cliente | company (tenant, `companyId`)     |
-| patrimônio                 | net worth                         |
-| ativo                      | asset                             |
-| gasto                      | expense                           |
-| transação                  | transaction                       |
-| categoria                  | category                          |
-| orçamento                  | budget                            |
-| moeda base                 | base currency                     |
-| cotação (PTAX)             | exchange rate                     |
-| classe de ativo            | asset class (`assetClass`)        |
-| meta                       | target (`target`)                 |
-| faixa de tolerância        | tolerance (`tolerance`)           |
-| aporte                     | contribution (`contribution`)     |
-| posição                    | position (`position`)             |
-| renda fixa                 | fixed income (`fixedIncome`)      |
-| cotação de ativo           | quote (`quote`)                   |
-| exposição                  | exposure (`exposure`)             |
-| carteira                   | portfolio (`portfolio`)           |
-| catálogo (de ativos)       | catalog (`catalog`)               |
-| dados de mercado           | market data (`marketData`)        |
+| pt-BR (fala, docs, issues)         | English (code, route, identifier)      |
+| ---------------------------------- | -------------------------------------- |
+| empresa / conta do cliente         | company (tenant, `companyId`)          |
+| patrimônio                         | net worth                              |
+| ativo                              | asset                                  |
+| gasto                              | expense                                |
+| transação                          | transaction                            |
+| categoria                          | category                               |
+| orçamento                          | budget                                 |
+| moeda base                         | base currency                          |
+| cotação (PTAX)                     | exchange rate                          |
+| classe de ativo                    | asset class (`assetClass`)             |
+| meta                               | target (`target`)                      |
+| faixa de tolerância                | tolerance (`tolerance`)                |
+| aporte                             | contribution (`contribution`)          |
+| posição                            | position (`position`)                  |
+| renda fixa                         | fixed income (`fixedIncome`)           |
+| cotação de ativo                   | quote (`quote`)                        |
+| exposição                          | exposure (`exposure`)                  |
+| carteira                           | portfolio (`portfolio`)                |
+| catálogo (de ativos)               | catalog (`catalog`)                    |
+| dados de mercado                   | market data (`marketData`)             |
+| gastos (a área, não um lançamento) | spending (`spending`)                  |
+| regra (de categorização)           | rule (`rule`)                          |
+| fixa / flexível                    | fixed / flexible (`fixed`, `flexible`) |
+| conexão (com o banco)              | connection (`connection`)              |
+| item (da Pluggy)                   | item (`item`)                          |
+| importação (de extrato)            | statement import (`statementImport`)   |
+| meta de economia                   | savings goal (`savingsGoal`)           |
+| corte (sugestão de limite)         | cut (`cut`)                            |
+| conta financeira                   | financial account (`financialAccount`) |
 
 A term missing from this table is a term that has not been decided: add the row in the same PR that
 introduces it, so the second person to need it does not invent a synonym.
