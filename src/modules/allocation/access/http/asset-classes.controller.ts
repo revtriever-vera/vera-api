@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiParamOptions, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiParamOptions, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
@@ -106,6 +106,7 @@ export class AssetClassesController {
             'The target of the deleted class leaves the sum, which may stop being 100%.'
     })
     @ApiParam(CLASS_ID_PARAM)
+    @ApiNoContentResponse({ description: 'Class deleted' })
     @ApiProblemResponse({ status: 401, description: UNAUTHORIZED })
     @ApiProblemResponse({ status: 404, description: NOT_FOUND })
     @ApiProblemResponse({ status: 409, description: 'The class still has assets (allocation.class_not_empty)' })
