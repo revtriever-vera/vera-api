@@ -11,7 +11,8 @@ import {
     ITEM_ITAU,
     ITEM_MISSING,
     ITEM_NUBANK,
-    SENTINEL
+    SENTINEL,
+    COMPANY_ID
 } from '../../../test/support/bank-connections-fakes';
 import { PluggyCredentialsPlain } from './drivers/pluggy-session';
 import { PluggyUnavailableError } from './ports/pluggy-client.errors';
@@ -33,7 +34,7 @@ function captureFilter(): Capture {
         error: (...args: unknown[]): number => lines.push(args),
         debug: (...args: unknown[]): number => lines.push(args)
     } as unknown as PinoLogger;
-    const context: AppContext = { getOrNull: () => ({ requestId: 'request-1', companyId: 'company-1' }) } as unknown as AppContext;
+    const context: AppContext = { getOrNull: () => ({ requestId: 'request-1', companyId: COMPANY_ID }) } as unknown as AppContext;
     const filter: AppErrorFilter = new AppErrorFilter(context, new LogService(pino, context));
     return { lines, filter, bodies };
 }
@@ -66,7 +67,7 @@ describe('sigilo do segredo da Pluggy', () => {
         outputs.push(await fixture.credentialsApplication.test());
         outputs.push(await fixture.connectionsApplication.connect([ITEM_NUBANK, ITEM_ITAU, ITEM_MISSING]));
         outputs.push(await fixture.connectionsApplication.overview());
-        outputs.push(await fixture.exporter.exportAll('company-1'));
+        outputs.push(await fixture.exporter.exportAll(COMPANY_ID));
         outputs.push(await fixture.credentialsApplication.save({ ...secret, clientSecret: `${SENTINEL}-rotacionado` }));
 
         const rejecting: Fixture = buildFixture({ config: { MOCK_PLUGGY_FORCE_401: true } });
@@ -77,7 +78,7 @@ describe('sigilo do segredo da Pluggy', () => {
                 authenticate: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
                 getItem: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
                 listAccounts: () => Promise.resolve([]),
-                listTransactions: () => Promise.resolve({ results: [], nextCursor: null })
+                listTransactions: () => Promise.resolve({ items: [], next: null })
             }
         });
         outputs.push(await attempt(capture, async () => down.credentialsApplication.save(secret)));

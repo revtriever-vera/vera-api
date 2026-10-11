@@ -6,6 +6,7 @@ import { SpendingDatasetService } from '../../src/modules/transactions/services/
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { fixture } from '../support/statement-fixtures';
 import { Account, AllocationHarness } from './support/allocation-harness';
+import { CapturingPublisher } from './support/queue';
 
 const CLIENT_ID: string = '3f9a1b2c-4d5e-4f60-8a9b-c2e1d3f4a5b6';
 const SECRET: string = 'vera-sentinel-1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d';
@@ -40,7 +41,7 @@ describe('spending ports', () => {
     let origin: string;
 
     beforeAll(async () => {
-        harness = await AllocationHarness.start('spending_ports');
+        harness = await AllocationHarness.start('spending_ports', new CapturingPublisher());
         const address: AddressInfo = (harness.app.getHttpServer() as Server).address() as AddressInfo;
         origin = `http://127.0.0.1:${String(address.port)}`;
     });

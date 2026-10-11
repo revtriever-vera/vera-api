@@ -9,7 +9,10 @@ import {
     CONNECTION_STATUSES,
     ConnectionDraft,
     ConnectionIdentity,
+    ConnectionStatePatch,
     PLUGGY_PROVIDER,
+    STATUS_REASONS,
+    StatusCount,
     SYNCABLE_CONNECTION_STATUSES
 } from '../domain/bank-connections.types';
 
@@ -80,6 +83,38 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
 
     public async disconnectOne(id: string): Promise<BankConnection | null> {
         return this.updateRow(id, { status: CONNECTION_STATUSES.disconnected, statusReason: null, deletedAt: new Date() });
+    }
+
+    public async listSyncable(): Promise<BankConnection[]> {
+        return this.findMany(
+            { status: [...SYNCABLE_CONNECTION_STATUSES] },
+            { limit: CONNECTION_LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] }
+        );
+    }
+
+    public async applyState(id: string, state: ConnectionStatePatch): Promise<BankConnection | null> {
+        return this.updateRow(id, state);
+    }
+
+    public async pauseSyncable(): Promise<BankConnection[]> {
+        return this.updateManyRows(
+            { status: [...SYNCABLE_CONNECTION_STATUSES] },
+            { status: CONNECTION_STATUSES.paused, statusReason: STATUS_REASONS.credentialsInvalid }
+        );
+    }
+
+    public async recordSync(id: string, at: Date, succeeded: boolean): Promise<BankConnection | null> {
+        return this.updateRow(id, succeeded ? { lastSyncAt: at, lastSuccessAt: at } : { lastSyncAt: at });
+    }
+
+    public async countByStatusAcrossTenants(): Promise<StatusCount[]> {
+        const rows: { status: string; total: string | number | bigint }[] = await this.db
+            .selectFrom('BankConnections')
+            .select(['status', (builder) => builder.fn.countAll().as('total')])
+            .where('deletedAt', 'is', null)
+            .groupBy('status')
+            .execute();
+        return rows.map((row): StatusCount => ({ status: row.status, total: Number(row.total) }));
     }
 
     public async listSyncableAcrossTenants(): Promise<ConnectionIdentity[]> {

@@ -4,6 +4,7 @@ import { ContextModule } from '../../../core/context/context.module';
 import { CryptoModule } from '../../../core/crypto/crypto.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { QueueModule } from '../../../core/queue/queue.module';
+import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { TransactionsApplicationModule } from '../../transactions/application/transactions-application.module';
 import { bankConnectionsConfig } from '../config/bank-connections.config';
 import { BankConnectionsDomainModule } from '../domain/bank-connections-domain.module';
@@ -19,18 +20,25 @@ import { BankConnectionsMetricsService } from '../services/bank-connections-metr
 import { BankSyncPublisherService } from '../services/bank-sync-publisher.service';
 import { ConnectionViewService } from '../services/connection-view.service';
 import { CredentialsVaultService } from '../services/credentials-vault.service';
+import { ConnectionDataSyncService } from '../services/connection-data-sync.service';
+import { PluggyAccountSyncService } from '../services/pluggy-account-sync.service';
+import { PluggyTransactionSyncService } from '../services/pluggy-transaction-sync.service';
 import { PluggyAvailabilityService } from '../services/pluggy-availability.service';
 import { PluggyAuthenticatorService } from '../services/pluggy-authenticator.service';
 import { PluggyCredentialsEraser } from '../services/pluggy-credentials.eraser';
 import { PluggyCredentialsResealer } from '../services/pluggy-credentials.resealer';
+import { ConnectionSyncApplication } from './connection-sync.application';
 import { ConnectionsApplication } from './connections.application';
 import { CredentialsApplication } from './credentials.application';
+import { ManualSyncApplication } from './manual-sync.application';
+import { SyncFanoutApplication } from './sync-fanout.application';
 
 @Module({
     imports: [
         ConfigModule.forFeature(bankConnectionsConfig),
         BankConnectionsDomainModule,
         TransactionsApplicationModule,
+        IdentityApplicationModule,
         CryptoModule,
         ContextModule,
         QueueModule,
@@ -39,6 +47,12 @@ import { CredentialsApplication } from './credentials.application';
     providers: [
         CredentialsApplication,
         ConnectionsApplication,
+        ConnectionSyncApplication,
+        SyncFanoutApplication,
+        ManualSyncApplication,
+        PluggyAccountSyncService,
+        ConnectionDataSyncService,
+        PluggyTransactionSyncService,
         BankConnectionsLogService,
         BankConnectionsMetricsService,
         CredentialsVaultService,
@@ -71,6 +85,15 @@ import { CredentialsApplication } from './credentials.application';
             ): PluggyClientPort => new ObservedPluggyClient(config.PLUGGY_DRIVER === 'mock' ? mock : live, logs, metrics)
         }
     ],
-    exports: [CredentialsApplication, ConnectionsApplication, CredentialsVaultService, BankConnectionReaderService, PluggyClientPort]
+    exports: [
+        CredentialsApplication,
+        ConnectionsApplication,
+        ConnectionSyncApplication,
+        SyncFanoutApplication,
+        ManualSyncApplication,
+        CredentialsVaultService,
+        BankConnectionReaderService,
+        PluggyClientPort
+    ]
 })
 export class BankConnectionsApplicationModule {}

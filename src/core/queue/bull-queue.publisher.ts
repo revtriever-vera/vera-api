@@ -22,6 +22,10 @@ export function retryWindowSeconds(): number {
     return delays.reduce((total: number, delay: number) => total + delay, 0) / 1000;
 }
 
+function backoffOf(options: PublishOptions | undefined): number {
+    return options?.backoffDelayMs ?? BACKOFF_DELAY_MS;
+}
+
 @Injectable()
 export class BullQueuePublisher extends QueuePublisherPort implements BeforeApplicationShutdown {
     private readonly queues: Map<QueueName, Queue> = new Map<QueueName, Queue>();
@@ -61,7 +65,7 @@ export class BullQueuePublisher extends QueuePublisherPort implements BeforeAppl
                 jobId: options?.jobId,
                 delay: options?.delayMs,
                 attempts: options?.attempts ?? DEFAULT_ATTEMPTS,
-                backoff: { type: 'exponential', delay: BACKOFF_DELAY_MS },
+                backoff: { type: 'exponential', delay: backoffOf(options) },
                 removeOnComplete: KEEP_COMPLETED,
                 removeOnFail: KEEP_FAILED
             });

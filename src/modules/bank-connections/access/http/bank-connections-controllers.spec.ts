@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RATE_LIMIT_KEY, RateLimitOptions } from '../../../../core/throttle/rate-limit.decorator';
 import { ConnectionsApplication } from '../../application/connections.application';
 import { CredentialsApplication } from '../../application/credentials.application';
+import { ManualSyncApplication } from '../../application/manual-sync.application';
 import { ConnectionsController } from './connections.controller';
 import { CredentialsController } from './credentials.controller';
+import { SyncController } from './sync.controller';
 
 const VIEW: Record<string, unknown> = {
     configured: true,
@@ -64,5 +67,38 @@ describe('ConnectionsController', () => {
 
         expect(application['connect']).toHaveBeenCalledWith(['a']);
         expect(application['disconnect']).toHaveBeenCalledWith('c1', true);
+    });
+});
+
+function rateLimitOf(method: 'syncOne' | 'syncAll'): RateLimitOptions {
+    const handler: object | undefined = Object.getOwnPropertyDescriptor(SyncController.prototype, method)?.value as object | undefined;
+    return Reflect.getMetadata(RATE_LIMIT_KEY, handler as object) as RateLimitOptions;
+}
+
+describe('SyncController', () => {
+    it('delega a sincronização de uma conexão e de todas à application', async () => {
+        const application: Record<string, ReturnType<typeof vi.fn>> = {
+            syncOne: vi.fn().mockResolvedValue({ queued: true }),
+            syncAll: vi.fn().mockResolvedValue({ queued: 2 })
+        };
+        const controller: SyncController = new SyncController(application as unknown as ManualSyncApplication);
+
+        expect(await controller.syncOne({ id: 'c1' })).toEqual({ queued: true });
+        expect(await controller.syncAll()).toEqual({ queued: 2 });
+
+        expect(application['syncOne']).toHaveBeenCalledWith('c1');
+    });
+
+    it('limita a sincronização manual por company e conexão (3 em 10 minutos) e a geral por company (2 em 10 minutos)', () => {
+        const one: RateLimitOptions = rateLimitOf('syncOne');
+        const all: RateLimitOptions = rateLimitOf('syncAll');
+        const subject = { body: {}, params: { id: 'c1' }, ip: '203.0.113.7', companyId: 'co1' };
+
+        expect([one.limit, one.windowSeconds, all.limit, all.windowSeconds]).toEqual([3, 600, 2, 600]);
+        expect(one.identify(subject)).toBe('co1:c1');
+        expect(one.identify({ ...subject, companyId: undefined })).toBeNull();
+        expect(one.identify({ ...subject, params: {} })).toBe('co1:');
+        expect(all.identify(subject)).toBe('co1');
+        expect(all.identify({ ...subject, companyId: undefined })).toBeNull();
     });
 });

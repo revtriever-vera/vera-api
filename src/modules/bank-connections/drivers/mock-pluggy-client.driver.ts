@@ -13,6 +13,8 @@ import {
     PluggyAccount,
     PluggyClientPort,
     PluggyItem,
+    PluggyParty,
+    PluggyPaymentData,
     PluggyTransaction,
     PluggyTransactionPage,
     PluggyTransactionQuery
@@ -96,6 +98,7 @@ export class MockPluggyClientDriver extends PluggyClientPort {
                 type: account.kind === CREDIT_KIND ? CREDIT_ACCOUNT_TYPE : BANK_ACCOUNT_TYPE,
                 subtype: account.kind === CREDIT_KIND ? 'CREDIT_CARD' : 'CHECKING_ACCOUNT',
                 name: account.name,
+                marketingName: null,
                 number: account.numberLast4,
                 currencyCode: account.currency
             }));
@@ -109,15 +112,15 @@ export class MockPluggyClientDriver extends PluggyClientPort {
         );
         const matching: DatasetTransaction[] = dataset.transactions.filter(
             (transaction: DatasetTransaction): boolean =>
-                transaction.accountKey === query.accountId && (query.from === null || transaction.date >= query.from)
+                transaction.accountKey === query.accountId && transaction.date >= query.from && transaction.date <= query.to
         );
         const offset: number = cursorOffset(query.cursor);
         const next: number = offset + MOCK_PAGE_SIZE;
         return Promise.resolve({
-            results: matching
+            items: matching
                 .slice(offset, next)
                 .map((transaction: DatasetTransaction): PluggyTransaction => this.toTransaction(transaction, credit)),
-            nextCursor: next < matching.length ? String(next) : null
+            next: next < matching.length ? String(next) : null
         });
     }
 
@@ -132,13 +135,24 @@ export class MockPluggyClientDriver extends PluggyClientPort {
             accountId: transaction.accountKey,
             date: transaction.date,
             description: transaction.description,
+            descriptionRaw: null,
             amount: signed / MINOR_UNITS,
             currencyCode: 'BRL',
             amountInAccountCurrency: null,
             status: 'POSTED',
             categoryId: transaction.providerCategoryId,
-            receiverName: transaction.counterpartyName,
-            receiverDocument: transaction.counterpartyDocument
+            paymentData: this.paymentDataOf(transaction),
+            merchant: null,
+            installmentNumber: null,
+            installmentTotal: null
         };
+    }
+
+    private paymentDataOf(transaction: DatasetTransaction): PluggyPaymentData | null {
+        if (transaction.counterpartyName === null) {
+            return null;
+        }
+        const party: PluggyParty = { name: transaction.counterpartyName, documentNumber: transaction.counterpartyDocument };
+        return transaction.amountMinor < 0 ? { payer: null, receiver: party } : { payer: party, receiver: null };
     }
 }

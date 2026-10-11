@@ -31,6 +31,19 @@ export class PluggyAuthenticatorService {
         }
     }
 
+    public async openSession(): Promise<PluggySession> {
+        this.availability.assertEnabled();
+        const credentials: PluggyCredentialsPlain = await this.vault.openForCurrentCompany();
+        try {
+            return await this.client.authenticate(credentials);
+        } catch (error: unknown) {
+            if (error instanceof PluggyAuthRejectedError) {
+                await this.vault.markInvalid(REJECTED_CODE);
+            }
+            throw error;
+        }
+    }
+
     public async authenticateStored(retryInvalid: boolean): Promise<PluggySession> {
         this.availability.assertEnabled();
         const credentials: PluggyCredentialsPlain = retryInvalid ? await this.vault.openStored() : await this.vault.openForCurrentCompany();

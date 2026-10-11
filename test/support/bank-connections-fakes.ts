@@ -37,7 +37,7 @@ import { PluggyCredentialsEraser } from '../../src/modules/bank-connections/serv
 import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
 import { SpendingDatasetService } from '../../src/modules/transactions/services/spending-dataset.service';
 
-export const COMPANY_ID: string = 'company-1';
+export const COMPANY_ID: string = '00000000-0000-4000-8000-0000000000c1';
 export const CLIENT_ID: string = '3f9a1b2c-4d5e-4f60-8a9b-c2e1d3f4a5b6';
 export const SENTINEL: string = 'vera-sentinel-0f3c9d2a-77aa-4b1e-9c11-0123456789ab';
 export const ITEM_NUBANK: string = '00000000-0000-4000-8000-00000000a001';
@@ -47,9 +47,9 @@ export const ITEM_LOGIN_ERROR: string = '00000000-0000-4000-8000-00000000a409';
 
 let sequence: number = 0;
 
-function nextId(prefix: string): string {
+function nextId(_prefix: string): string {
     sequence += 1;
-    return `${prefix}-${String(sequence)}`;
+    return `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`;
 }
 
 export class InMemoryCredentialsRepository {
@@ -174,6 +174,38 @@ export class InMemoryConnectionsRepository {
         return Promise.resolve(row === undefined ? null : { id: row.id, companyId: row.companyId });
     }
 
+    public listSyncable(): Promise<BankConnection[]> {
+        return Promise.resolve(
+            this.active().filter((row: BankConnection): boolean => row.status === 'active' || row.status === 'needs_attention')
+        );
+    }
+
+    public applyState(id: string, state: Partial<BankConnection>): Promise<BankConnection | null> {
+        return Promise.resolve(this.mutate((row: BankConnection): boolean => row.id === id, state)[0] ?? null);
+    }
+
+    public pauseSyncable(): Promise<BankConnection[]> {
+        return Promise.resolve(
+            this.mutate((row: BankConnection): boolean => row.status === 'active' || row.status === 'needs_attention', {
+                status: 'paused',
+                statusReason: 'credentials_invalid'
+            })
+        );
+    }
+
+    public recordSync(id: string, at: Date, succeeded: boolean): Promise<BankConnection | null> {
+        const patch: Partial<BankConnection> = succeeded ? { lastSyncAt: at, lastSuccessAt: at } : { lastSyncAt: at };
+        return Promise.resolve(this.mutate((row: BankConnection): boolean => row.id === id, patch)[0] ?? null);
+    }
+
+    public countByStatusAcrossTenants(): Promise<{ status: string; total: number }[]> {
+        const totals: Map<string, number> = new Map<string, number>();
+        for (const row of this.active()) {
+            totals.set(row.status, (totals.get(row.status) ?? 0) + 1);
+        }
+        return Promise.resolve([...totals.entries()].map(([status, total]) => ({ status, total })));
+    }
+
     public setStatus(id: string, status: string): void {
         this.mutate((row: BankConnection): boolean => row.id === id, { status });
     }
@@ -241,6 +273,39 @@ export class InMemoryLinksRepository {
         );
     }
 
+    public upsertLink(connectionId: string, accountId: string, externalAccountId: string): Promise<BankConnectionAccount> {
+        const existing: BankConnectionAccount | undefined = this.rows.find(
+            (row: BankConnectionAccount): boolean =>
+                row.deletedAt === null && row.connectionId === connectionId && row.externalAccountId === externalAccountId
+        );
+        if (existing !== undefined) {
+            return Promise.resolve(existing);
+        }
+        const created: BankConnectionAccount = {
+            id: nextId('link'),
+            companyId: COMPANY_ID,
+            connectionId,
+            accountId,
+            externalAccountId,
+            syncedThrough: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null
+        };
+        this.rows = [...this.rows, created];
+        return Promise.resolve(created);
+    }
+
+    public advance(id: string, syncedThrough: string): Promise<BankConnectionAccount | null> {
+        const current: BankConnectionAccount | undefined = this.rows.find((row: BankConnectionAccount): boolean => row.id === id);
+        if (current === undefined) {
+            return Promise.resolve(null);
+        }
+        const updated: BankConnectionAccount = { ...current, syncedThrough: new Date(`${syncedThrough}T12:00:00`) };
+        this.rows = this.rows.map((row: BankConnectionAccount): BankConnectionAccount => (row.id === id ? updated : row));
+        return Promise.resolve(updated);
+    }
+
     public unlinkConnections(ids: readonly string[]): Promise<BankConnectionAccount[]> {
         const removed: BankConnectionAccount[] = this.rows.filter(
             (row: BankConnectionAccount): boolean => row.deletedAt === null && ids.includes(row.connectionId)
@@ -257,6 +322,75 @@ export class InMemoryRunsRepository {
 
     public latestByConnections(ids: readonly string[]): Promise<BankSyncRun[]> {
         return Promise.resolve(this.rows.filter((row: BankSyncRun): boolean => ids.includes(row.connectionId)));
+    }
+
+    public begin(connectionId: string, trigger: string): Promise<BankSyncRun> {
+        const run: BankSyncRun = {
+            id: nextId('run'),
+            companyId: COMPANY_ID,
+            connectionId,
+            trigger,
+            status: 'running',
+            accounts: 0,
+            fetched: 0,
+            inserted: 0,
+            updated: 0,
+            duplicates: 0,
+            failureCode: null,
+            startedAt: new Date(),
+            finishedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null
+        };
+        this.rows = [...this.rows, run];
+        return Promise.resolve(run);
+    }
+
+    public conclude(
+        id: string,
+        status: string,
+        counts: { accounts: number; fetched: number; inserted: number; updated: number; duplicates: number },
+        failureCode: string | null
+    ): Promise<BankSyncRun | null> {
+        return Promise.resolve(this.patch(id, { status, ...counts, failureCode, finishedAt: new Date() }));
+    }
+
+    public interruptStale(connectionId: string, startedBefore: Date): Promise<BankSyncRun[]> {
+        const stale: BankSyncRun[] = this.rows.filter(
+            (row: BankSyncRun): boolean => row.connectionId === connectionId && row.status === 'running' && row.startedAt < startedBefore
+        );
+        stale.forEach((row: BankSyncRun): void => {
+            this.patch(row.id, { status: 'failed', failureCode: 'interrupted', finishedAt: new Date() });
+        });
+        return Promise.resolve(stale);
+    }
+
+    public findRunningSince(ids: readonly string[], since: Date): Promise<BankSyncRun[]> {
+        return Promise.resolve(
+            this.rows.filter(
+                (row: BankSyncRun): boolean => ids.includes(row.connectionId) && row.status === 'running' && row.startedAt >= since
+            )
+        );
+    }
+
+    public pruneBeyond(connectionId: string, keep: number): Promise<number> {
+        const own: BankSyncRun[] = this.rows
+            .filter((row: BankSyncRun): boolean => row.connectionId === connectionId)
+            .sort((left: BankSyncRun, right: BankSyncRun): number => right.startedAt.getTime() - left.startedAt.getTime());
+        const surplus: Set<string> = new Set<string>(own.slice(keep).map((row: BankSyncRun): string => row.id));
+        this.rows = this.rows.filter((row: BankSyncRun): boolean => !surplus.has(row.id));
+        return Promise.resolve(surplus.size);
+    }
+
+    private patch(id: string, patch: Partial<BankSyncRun>): BankSyncRun | null {
+        const current: BankSyncRun | undefined = this.rows.find((row: BankSyncRun): boolean => row.id === id);
+        if (current === undefined) {
+            return null;
+        }
+        const updated: BankSyncRun = { ...current, ...patch, updatedAt: new Date() };
+        this.rows = this.rows.map((row: BankSyncRun): BankSyncRun => (row.id === id ? updated : row));
+        return updated;
     }
 }
 
@@ -283,6 +417,14 @@ export function configOf(overrides: Partial<ConfigType<typeof bankConnectionsCon
         PLUGGY_HTTP_TIMEOUT_MS: 1000,
         PLUGGY_AUTH_PATH: '/auth',
         PLUGGY_ITEM_PATH: '/items',
+        PLUGGY_ACCOUNTS_PATH: '/accounts',
+        PLUGGY_TRANSACTIONS_V2_PATH: '/v2/transactions',
+        PLUGGY_TRANSACTIONS_LEGACY_PATH: '/transactions',
+        PLUGGY_TRANSACTIONS_API: 'v2',
+        PLUGGY_SYNC_JOBS_PER_MINUTE: 30,
+        PLUGGY_SYNC_SPACING_MS: 2000,
+        PLUGGY_INITIAL_HISTORY_DAYS: 365,
+        PLUGGY_SHIFT_INSTALLMENT_DATES: false,
         PLUGGY_MOCK_ALLOWED: true,
         MOCK_PLUGGY_FORCE_401: false,
         MOCK_PLUGGY_REVOKED_ITEMS: [],

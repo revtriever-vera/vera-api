@@ -27,10 +27,3 @@ export class PluggyUnavailableError extends Error {
         this.retryAfterSeconds = retryAfterSeconds;
     }
 }
-
-export class PluggyOperationNotSupportedError extends Error {
-    public constructor(operation: string) {
-        super(`pluggy_operation_not_supported:${operation}`);
-        this.name = 'PluggyOperationNotSupportedError';
-    }
-}

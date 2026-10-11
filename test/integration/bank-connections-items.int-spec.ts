@@ -1,9 +1,7 @@
-import Redis from 'ioredis';
-import { Queue } from 'bullmq';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { bullPrefixFromEnvironment } from '../../src/shared/config/bull-prefix';
 import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
 import { Account, AllocationHarness } from './support/allocation-harness';
+import { CapturingPublisher, PublishedMessage } from './support/queue';
 
 const CLIENT_ID: string = '3f9a1b2c-4d5e-4f60-8a9b-c2e1d3f4a5b6';
 const SECRET: string = 'vera-sentinel-1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d';
@@ -32,22 +30,23 @@ interface OverviewBody {
 }
 
 describe('bank connections items', () => {
+    const publisher: CapturingPublisher = new CapturingPublisher();
     let harness: AllocationHarness;
-    let queue: Queue;
-    let redis: Redis;
 
     beforeAll(async () => {
-        harness = await AllocationHarness.start('bank_items');
-        const [host, port] = (process.env['REDIS_NODES'] ?? '').split(':');
-        redis = new Redis({ host, port: Number(port), db: Number(process.env['REDIS_DB'] ?? '0'), maxRetriesPerRequest: null });
-        queue = new Queue('vera-bank-connections', { connection: redis, prefix: bullPrefixFromEnvironment() });
+        harness = await AllocationHarness.start('bank_items', publisher);
     });
 
     afterAll(async () => {
-        await queue.close();
-        redis.disconnect();
         await harness.stop();
     });
+
+    function messageOf(connectionId: string, trigger: string): PublishedMessage | undefined {
+        return publisher.published.find((message) => {
+            const payload: { connectionId?: string; trigger?: string } = message.payload as { connectionId?: string; trigger?: string };
+            return payload.connectionId === connectionId && payload.trigger === trigger;
+        });
+    }
 
     async function withCredentials(label: string): Promise<Account> {
         const account: Account = await harness.signUp(label);
@@ -85,14 +84,16 @@ describe('bank connections items', () => {
         expect(again.body.results.map((result) => result.outcome)).toEqual(['already_connected']);
 
         const connectionId: string = first.body.results[0]?.connection?.id ?? '';
-        const job = await queue.getJob(
-            `pluggy-sync-${connectionId}-initial-${new Date().toISOString().replace(/[-T:]/g, '').slice(0, 10)}`
-        );
-        expect(job?.name).toBe('bank-connections.sync.requested');
-        expect(job?.data).toMatchObject({
+        const message: PublishedMessage | undefined = messageOf(connectionId, 'initial');
+        expect(message).toMatchObject({
+            queue: 'vera-bank-connections',
+            type: 'bank-connections.sync.requested',
             payload: { connectionId, companyId: account.company.id, trigger: 'initial' }
         });
-        expect(await queue.getJobCountByTypes('waiting', 'delayed', 'active')).toBeGreaterThanOrEqual(2);
+        expect(message?.options?.jobId).toBe(
+            `pluggy-sync-${connectionId}-initial-${new Date().toISOString().replace(/[-T:]/g, '').slice(0, 10)}`
+        );
+        expect(publisher.published.length).toBeGreaterThanOrEqual(2);
     });
 
     it('cria o item com LOGIN_ERROR como needs_attention', async () => {
@@ -222,10 +223,7 @@ describe('bank connections items', () => {
 
         const overview = await harness.call<OverviewBody>(account.token, 'GET', CONNECTIONS);
         expect(overview.body.connections[0]).toMatchObject({ status: 'active', statusReason: null });
-        const job = await queue.getJob(
-            `pluggy-sync-${connectionId}-credentials_rotated-${new Date().toISOString().replace(/[-T:]/g, '').slice(0, 10)}`
-        );
-        expect(job?.data).toMatchObject({ payload: { connectionId, trigger: 'credentials_rotated' } });
+        expect(messageOf(connectionId, 'credentials_rotated')?.payload).toMatchObject({ connectionId, trigger: 'credentials_rotated' });
     });
 
     it('isola as companies: B não vê nem remove as conexões de A', async () => {

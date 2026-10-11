@@ -17,6 +17,7 @@ export interface PublishOptions {
     readonly jobId?: string;
     readonly delayMs?: number;
     readonly attempts?: number;
+    readonly backoffDelayMs?: number;
     readonly replaceExisting?: boolean;
     readonly retryFailed?: boolean;
 }
@@ -32,7 +33,13 @@ export interface RunningJob {
     moveToDelayed(timestamp: number): Promise<void>;
 }
 
+export interface QueueWorkerOptions {
+    readonly concurrency?: number;
+    readonly limiter?: { readonly max: number; readonly duration: number };
+}
+
 export abstract class QueueHandlerPort<TPayload = unknown> {
+    public readonly workerOptions?: QueueWorkerOptions;
     public abstract readonly queue: QueueName;
     public abstract readonly type: string;
     public abstract handle(envelope: QueueEnvelope<TPayload>, job?: RunningJob): Promise<void>;
