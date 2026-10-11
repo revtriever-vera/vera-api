@@ -26,6 +26,7 @@ import { PortfolioExportModule } from './modules/portfolio-export/portfolio-expo
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { PositionsModule } from './modules/positions/positions.module';
 import { SpendingCategoriesModule } from './modules/spending-categories/spending-categories.module';
+import { SpendingCutsModule } from './modules/spending-cuts/spending-cuts.module';
 import { SpendingSummaryModule } from './modules/spending-summary/spending-summary.module';
 import { StatementImportModule } from './modules/statement-import/statement-import.module';
 import { TransactionsExportModule } from './modules/transactions-export/transactions-export.module';
@@ -70,6 +71,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         SpendingCategoriesModule,
         TransactionsModule,
         SpendingSummaryModule,
+        SpendingCutsModule,
         TransactionsExportModule,
         StatementImportModule,
         BankConnectionsModule
