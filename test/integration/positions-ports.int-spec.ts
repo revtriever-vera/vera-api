@@ -108,9 +108,10 @@ describe('positions ports', () => {
             { symbol: 'VOO', isSample: true },
             { symbol: 'WEGE3', isSample: true }
         ]);
-        const assignments = await harness.pg.query('SELECT 1 FROM "AssetClassAssignments" WHERE "companyId" = $1 AND "deletedAt" IS NULL', [
-            account.company.id
-        ]);
+        const assignments = await harness.pg.query(
+            'SELECT 1 FROM "AssetClassAssignments" WHERE "companyId" = $1 AND "deletedAt" IS NULL AND "isSample" = true AND "subjectType" = \'position\'',
+            [account.company.id]
+        );
         expect(assignments.rowCount).toBe(4);
         expect((await summary(account)).assets?.items).toBe(0);
         const exported = await harness.call<ExportBody>(account.token, 'GET', '/account/export');

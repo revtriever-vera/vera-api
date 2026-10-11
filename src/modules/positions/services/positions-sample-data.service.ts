@@ -73,7 +73,8 @@ export class PositionsSampleDataService extends SampleDataPort {
         await this.assignments.assign(
             POSITION_SUBJECT_TYPE,
             created.id,
-            (await this.resolver.resolveBySystemKey(asset.suggestedClassKey)).id
+            (await this.resolver.resolveBySystemKey(asset.suggestedClassKey)).id,
+            true
         );
         return true;
     }

@@ -50,6 +50,7 @@ describe('PositionsSampleDataService', () => {
 
         expect(createIfAbsent).toHaveBeenCalledWith(expect.objectContaining({ isSample: true }));
         expect(assign).toHaveBeenCalledTimes(4);
+        expect(assign).toHaveBeenCalledWith('position', 'p1', 'class-1', true);
     });
 
     it('não escreve nada quando já há dado real ou exemplo', async () => {
