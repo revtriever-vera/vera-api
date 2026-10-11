@@ -2,6 +2,7 @@ import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { Cluster, ClusterNode, ClusterOptions, Redis } from 'ioredis';
 
 const DEFAULT_NODES: string = 'localhost:7200,localhost:7201,localhost:7202';
+const DEFAULT_PORT: number = 7200;
 const SLOTS_REFRESH_INTERVAL_MS: number = 60_000;
 const SLOTS_REFRESH_TIMEOUT_MS: number = 10_000;
 const CONNECT_TIMEOUT_MS: number = 10_000;
@@ -11,7 +12,7 @@ const MAX_RETRY_DELAY_MS: number = 2000;
 function nodesFromEnv(): ClusterNode[] {
     return (process.env['REDIS_NODES'] ?? DEFAULT_NODES).split(',').map((entry: string) => {
         const [host, port] = entry.trim().split(':');
-        return { host: host ?? 'localhost', port: Number(port ?? 7000) };
+        return { host: host ?? 'localhost', port: Number(port ?? DEFAULT_PORT) };
     });
 }
 
