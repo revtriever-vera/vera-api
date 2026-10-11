@@ -62,6 +62,7 @@ function appStack(app: App, config: EnvironmentConfig, network: NetworkStack, da
         repository: network.repository,
         appSecurityGroup: data.appSecurityGroup,
         redisEndpoint: data.redisEndpoint,
+        secretsKey: data.secretsKey,
         imageTag,
         description: `Fargate service with the Cloudflare tunnel, migration task and mail feedback - ${config.name}`
     });
