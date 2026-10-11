@@ -76,6 +76,16 @@ export interface OnboardingStates {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface PortfolioSettings {
+    baseCurrency: Generated<string>;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    toleranceBps: Generated<number>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Sessions {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -123,6 +133,7 @@ export interface DB {
     AuthIdentities: AuthIdentities;
     Companies: Companies;
     OnboardingStates: OnboardingStates;
+    PortfolioSettings: PortfolioSettings;
     Sessions: Sessions;
     Throttles: Throttles;
     Users: Users;
