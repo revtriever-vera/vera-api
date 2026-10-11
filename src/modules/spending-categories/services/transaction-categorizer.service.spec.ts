@@ -42,15 +42,27 @@ function input(overrides: Partial<CategorizationInput> = {}): CategorizationInpu
 }
 
 describe('TransactionCategorizerService', () => {
-    it('a regra do usuário vence o dicionário e a Pluggy', async () => {
+    it('a regra do usuário vence a Pluggy e o dicionário', async () => {
         const rule: CategoryRule = makeRule({ id: 'r1', categoryId: CUSTOM.id, pattern: 'IFOOD' });
         const result: CategorizationResult = await build([rule]).service.categorize(input({ providerCategoryId: '09000000' }));
 
         expect(result).toEqual({ categoryId: CUSTOM.id, source: 'rule', ruleId: 'r1' });
     });
 
-    it('o dicionário vence a categoria da Pluggy', async () => {
+    it('a categoria da Pluggy vence o dicionário', async () => {
         const result: CategorizationResult = await build([]).service.categorize(input({ providerCategoryId: '09000000' }));
+
+        expect(result).toEqual({ categoryId: 'sys-shopping', source: 'provider', ruleId: null });
+    });
+
+    it('o dicionário vale quando a Pluggy não traz categoria', async () => {
+        const result: CategorizationResult = await build([]).service.categorize(input({ providerCategoryId: null }));
+
+        expect(result).toEqual({ categoryId: 'sys-eating_out', source: 'dictionary', ruleId: null });
+    });
+
+    it('o dicionário vale quando a categoria da Pluggy não mapeia para nenhuma categoria', async () => {
+        const result: CategorizationResult = await build([]).service.categorize(input({ providerCategoryId: '99999999' }));
 
         expect(result).toEqual({ categoryId: 'sys-eating_out', source: 'dictionary', ruleId: null });
     });
