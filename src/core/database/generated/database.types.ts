@@ -60,6 +60,22 @@ export interface Companies {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface OnboardingStates {
+    assetsDoneAt: Timestamp | null;
+    assetsSkippedAt: Timestamp | null;
+    banksDoneAt: Timestamp | null;
+    banksSkippedAt: Timestamp | null;
+    companyId: string;
+    completedAt: Timestamp | null;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    dismissedAt: Timestamp | null;
+    id: string;
+    sampleLoadedAt: Timestamp | null;
+    startedAt: Timestamp | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Sessions {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -106,6 +122,7 @@ export interface DB {
     AssetClasses: AssetClasses;
     AuthIdentities: AuthIdentities;
     Companies: Companies;
+    OnboardingStates: OnboardingStates;
     Sessions: Sessions;
     Throttles: Throttles;
     Users: Users;
