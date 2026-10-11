@@ -30,6 +30,7 @@
     "check:migrations": "tsx scripts/check-migration-names.ts",
     "env:pull": "tsx scripts/env-pull.ts",
     "tick": "tsx scripts/tick.ts",
+    "catalog:seed": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/catalog-seed.js",
     "cdk": "cdk"
   },
   "dependencies": {
