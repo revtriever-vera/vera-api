@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { HeldAssetsPort } from '../ports/held-assets.port';
+import { HeldAssetsPort } from '../services/held-assets.port';
 
 @Injectable()
 export class HeldAssetsService {

@@ -4,7 +4,7 @@ import { parseMarketDataConfig } from '../config/market-data.config';
 import { ExchangeRateDomain } from '../domain/exchange-rate.domain';
 import { EmptyHeldAssetsDriver } from '../drivers/empty-held-assets.driver';
 import { MockQuoteDriver } from '../drivers/mock-quote.driver';
-import { HeldAssetsPort } from '../ports/held-assets.port';
+import { HeldAssetsPort } from '../services/held-assets.port';
 import { QuoteProviderPort } from '../ports/quote-provider.port';
 import { ExchangeRateReaderService } from './exchange-rate-reader.service';
 import { HeldAssetsService } from './held-assets.service';

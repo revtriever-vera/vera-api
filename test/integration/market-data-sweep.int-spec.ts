@@ -8,7 +8,7 @@ import { CatalogSyncApplication } from '../../src/modules/catalog/application/ca
 import { QuotesChunkApplication } from '../../src/modules/market-data/application/quotes-chunk.application';
 import { QuotesSweepApplication } from '../../src/modules/market-data/application/quotes-sweep.application';
 import { ReferenceDataApplication } from '../../src/modules/market-data/application/reference-data.application';
-import { HeldAssetsPort } from '../../src/modules/market-data/ports/held-assets.port';
+import { HeldAssetsPort } from '../../src/modules/market-data/services/held-assets.port';
 import { QUOTE_PROVIDERS, QuoteProviderPort } from '../../src/modules/market-data/ports/quote-provider.port';
 import { ProviderBudgetService } from '../../src/modules/market-data/services/provider-budget.service';
 import { createIsolatedDatabase, IsolatedDatabase } from './support/isolated-database';
@@ -98,6 +98,21 @@ describe('market-data sweep', () => {
     async function idsOf(externalIds: string[]): Promise<string[]> {
         const result = await pg.query<{ id: string }>('SELECT id FROM "Assets" WHERE "externalId" = ANY($1)', [externalIds]);
         return result.rows.map((row) => row.id);
+    }
+
+    async function newCompany(): Promise<string> {
+        const id: string = crypto.randomUUID();
+        await pg.query(`INSERT INTO "Companies" (id, name) VALUES ($1, 'Empresa posicao')`, [id]);
+        return id;
+    }
+
+    async function addPosition(companyId: string, assetId: string, removed: boolean): Promise<void> {
+        await pg.query(`INSERT INTO "Positions" (id, "companyId", "assetId", quantity, "deletedAt") VALUES ($1, $2, $3, 1, $4)`, [
+            crypto.randomUUID(),
+            companyId,
+            assetId,
+            removed ? new Date() : null
+        ]);
     }
 
     async function quotes(): Promise<QuoteRow[]> {
@@ -196,5 +211,23 @@ describe('market-data sweep', () => {
 
         const remaining = await pg.query<{ count: number }>(`SELECT count FROM "ProviderUsage" WHERE provider = 'brapi'`);
         expect(remaining.rows).toEqual([{ count: 1 }]);
+    });
+
+    it('picks up the assets of real positions across companies, once each, and ignores removed ones', async () => {
+        const [petr, bbas, vale] = await idsOf(['PETR4', 'BBAS3', 'VALE3']);
+        const companyA: string = await newCompany();
+        const companyB: string = await newCompany();
+        await addPosition(companyA, petr ?? '', false);
+        await addPosition(companyB, petr ?? '', false);
+        await addPosition(companyB, bbas ?? '', false);
+        await addPosition(companyA, vale ?? '', true);
+        HeldByCompanyA.ids = [];
+        HeldByCompanyB.ids = [];
+        publisher.published.length = 0;
+
+        await app.get(QuotesSweepApplication, { strict: false }).handleTick();
+
+        const published: string[] = publisher.published.flatMap((message) => (message.payload as { assetIds: string[] }).assetIds);
+        expect([...published].sort()).toEqual([petr ?? '', bbas ?? ''].sort());
     });
 });

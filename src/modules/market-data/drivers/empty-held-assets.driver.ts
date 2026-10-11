@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { HeldAssetsPort } from '../ports/held-assets.port';
+import { HeldAssetsPort } from '../services/held-assets.port';
 
 @Injectable()
 export class EmptyHeldAssetsDriver extends HeldAssetsPort {
