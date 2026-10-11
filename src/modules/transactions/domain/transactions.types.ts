@@ -170,6 +170,9 @@ export interface MonthlyCategoryNet {
     readonly month: string;
     readonly categoryId: string | null;
     readonly netMinor: number;
+    readonly outflowMinor: number;
+    readonly outflowCount: number;
+    readonly transactionCount: number;
 }
 
 export interface AccountStats {
