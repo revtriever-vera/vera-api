@@ -28,7 +28,12 @@ function connect(): Cluster | Redis {
     });
     if (process.env['REDIS_CLUSTER'] === 'false') {
         const [node] = nodes as { host: string; port: number }[];
-        return new Redis({ host: node?.host ?? 'localhost', port: node?.port ?? 6379, maxRetriesPerRequest: null });
+        return new Redis({
+            host: node?.host ?? 'localhost',
+            port: node?.port ?? 6379,
+            db: Number(process.env['REDIS_DB'] ?? 0),
+            maxRetriesPerRequest: null
+        });
     }
     return new Cluster(nodes, { redisOptions: { maxRetriesPerRequest: null } });
 }

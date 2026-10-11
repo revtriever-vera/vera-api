@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DateUtil } from '../../../shared/utils/date.util';
+import { decimalStringOf } from '../../../shared/utils/decimal.util';
 import { ExchangeRateDomain } from '../domain/exchange-rate.domain';
 import { BASE_CURRENCY, StoredRate } from '../domain/market-data.types';
 
@@ -14,6 +15,7 @@ export class ExchangeRateReaderService {
         if (currency === BASE_CURRENCY) {
             return { currency, brlPerUnit: '1', date: day, source: BUILTIN_SOURCE };
         }
-        return this.rates.latestOnOrBefore(currency, day);
+        const stored: StoredRate | null = await this.rates.latestOnOrBefore(currency, day);
+        return stored === null ? null : { ...stored, brlPerUnit: decimalStringOf(stored.brlPerUnit) };
     }
 }

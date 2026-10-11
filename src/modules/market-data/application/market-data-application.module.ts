@@ -101,6 +101,14 @@ import { ReferenceDataApplication } from './reference-data.application';
             ): ExchangeRatePort => (config.DRIVER === 'mock' ? mock : live)
         }
     ],
-    exports: [QuoteReaderService, ExchangeRateReaderService]
+    exports: [
+        QuoteReadApplication,
+        QuotesChunkApplication,
+        QuotesSweepApplication,
+        ReferenceDataApplication,
+        QuoteReaderService,
+        ExchangeRateReaderService,
+        ProviderBudgetService
+    ]
 })
 export class MarketDataApplicationModule {}

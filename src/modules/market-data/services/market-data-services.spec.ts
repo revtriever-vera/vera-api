@@ -61,7 +61,7 @@ describe('ExchangeRateReaderService', () => {
     it('reads the latest rate on or before the Brazilian date', async () => {
         const latestOnOrBefore: ReturnType<typeof vi.fn> = vi
             .fn()
-            .mockResolvedValue({ currency: 'USD', brlPerUnit: '5.42', date: '2026-10-09', source: 'bcb-ptax' });
+            .mockResolvedValue({ currency: 'USD', brlPerUnit: '5.4200000000', date: '2026-10-09', source: 'bcb-ptax' });
         const service: ExchangeRateReaderService = new ExchangeRateReaderService({ latestOnOrBefore } as unknown as ExchangeRateDomain);
 
         const rate = await service.latest('USD', new Date('2026-10-11T01:00:00Z'));
