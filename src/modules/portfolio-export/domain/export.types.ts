@@ -1,11 +1,7 @@
 import { AppLocale } from '../../../shared/i18n/locale';
 
-export const EXPORT_FORMATS = {
-    xlsx: 'xlsx',
-    csv: 'csv'
-} as const;
-
-export type ExportFormat = (typeof EXPORT_FORMATS)[keyof typeof EXPORT_FORMATS];
+export { EXPORT_FORMATS } from '../../../shared/spreadsheet/spreadsheet.types';
+export type { ExportFile, ExportFormat } from '../../../shared/spreadsheet/spreadsheet.types';
 
 export interface ExportRow {
     readonly symbol: string;
@@ -42,11 +38,4 @@ export interface ExportTable {
     readonly locale: AppLocale;
     readonly baseCurrency: string;
     readonly rows: readonly ExportRow[];
-}
-
-export interface ExportFile {
-    readonly filename: string;
-    readonly contentType: string;
-    readonly content: Buffer;
-    readonly rows: number;
 }

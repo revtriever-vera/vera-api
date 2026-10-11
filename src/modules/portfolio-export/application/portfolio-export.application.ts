@@ -2,17 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
+import { EXPORT_CONTENT_TYPES } from '../../../shared/spreadsheet/spreadsheet.types';
 import { writeCsv } from '../domain/csv-writer';
 import { buildExportTable } from '../domain/export-rows';
 import { EXPORT_FORMATS, ExportFile, ExportFormat, ExportTable } from '../domain/export.types';
 import { PortfolioExportLogService } from '../services/portfolio-export-log.service';
 import { PortfolioExportMetricsService } from '../services/portfolio-export-metrics.service';
 import { XlsxWriterService } from '../services/xlsx-writer.service';
-
-const CONTENT_TYPES: Readonly<Record<ExportFormat, string>> = {
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    csv: 'text/csv; charset=utf-8'
-};
 
 @Injectable()
 export class PortfolioExportApplication {
@@ -32,6 +28,11 @@ export class PortfolioExportApplication {
         const today: string = await this.timezones.todayInCompany();
         this.logs.exported(format, table.rows.length, Math.round(performance.now() - startedAt));
         this.metrics.exported(format);
-        return { filename: `vera-carteira-${today}.${format}`, contentType: CONTENT_TYPES[format], content, rows: table.rows.length };
+        return {
+            filename: `vera-carteira-${today}.${format}`,
+            contentType: EXPORT_CONTENT_TYPES[format],
+            content,
+            rows: table.rows.length
+        };
     }
 }
