@@ -103,7 +103,13 @@ export class NetworkStack extends Stack {
         const migrationTaskArn: string = `arn:aws:ecs:${region}:${account}:task-definition/vera-migrate-${config.name}:*`;
         const clusterTaskArn: string = `arn:aws:ecs:${region}:${account}:task/${cluster}/*`;
         return [
-            this.policyStatement(['ecs:RunTask', 'ecs:DescribeTasks'], [migrationTaskArn, clusterTaskArn]),
+            new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['ecs:RunTask'],
+                resources: [migrationTaskArn],
+                conditions: { ArnEquals: { 'ecs:cluster': `arn:aws:ecs:${region}:${account}:cluster/${cluster}` } }
+            }),
+            this.policyStatement(['ecs:DescribeTasks'], [clusterTaskArn]),
             this.policyStatement(['ecs:DescribeServices'], [`arn:aws:ecs:${region}:${account}:service/${cluster}/*`]),
             this.policyStatement(['ecs:RegisterTaskDefinition', 'ecs:DescribeTaskDefinition'], ['*'])
         ];
@@ -121,7 +127,7 @@ export class NetworkStack extends Stack {
             new PolicyStatement({
                 effect: Effect.ALLOW,
                 actions: ['rds:DescribeDBInstances', 'rds:StartDBInstance'],
-                resources: [`arn:aws:rds:${config.region}:${config.account}:db:*`]
+                resources: [`arn:aws:rds:${config.region}:${config.account}:db:${config.shared.databaseInstanceId}`]
             })
         ];
     }

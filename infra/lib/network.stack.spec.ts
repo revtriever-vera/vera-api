@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { synthesize } from '../bin/vera';
-import { FAKE_ACCOUNT_PROD, fakeConfig } from '../test/fixtures';
+import { FAKE_ACCOUNT_PROD, FAKE_SHARED, fakeConfig } from '../test/fixtures';
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -63,6 +63,19 @@ describe('a rede', () => {
         expect(statements).toContain('task-definition/vera-migrate-dev');
         expect(statements).toContain('ecs:RunTask');
         expect(statements).not.toContain('task-definition/vera-migrate-prod');
+    });
+
+    it('limita o ecs:RunTask ao cluster vera-<env> por condição ArnEquals', () => {
+        const statements: string = statementsOf(networkTemplate(synthesize([fakeConfig('dev')]), 'dev'));
+
+        expect(statements).toContain('"ArnEquals":{"ecs:cluster":"arn:aws:ecs:us-east-1:000000000001:cluster/vera-dev"}');
+    });
+
+    it('restringe o acordar do banco à instância compartilhada, sem curinga', () => {
+        const statements: string = statementsOf(networkTemplate(synthesize([fakeConfig('dev')]), 'dev'));
+
+        expect(statements).toContain(`:db:${FAKE_SHARED.databaseInstanceId}`);
+        expect(statements).not.toContain(':db:*');
     });
 
     it('amarra o papel de dev ao main e a pull request do próprio repositório, nunca a fork', () => {
