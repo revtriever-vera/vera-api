@@ -15,7 +15,7 @@ NestJS + TypeScript · Kysely + Postgres 16 · BullMQ + Redis · pino + OpenTele
 | E-mail          | `src/core/mail`                            | `MailPort` com SES e SMTP, allowlist de destinatário, template por `(nome, locale)` com fallback para pt-BR             |
 | Filas           | `src/core/queue`                           | Publisher/worker BullMQ, `BULL_PREFIX = '{vera}'`, comando agendado reconciliado, `@JobMutex`, `@HandleJobFailure`      |
 | Rate limit      | `src/core/throttle`                        | `@RateLimit`/`RateLimitGuard`, janela persistida na tabela `Throttles`                                                  |
-| Criptografia    | `src/core/crypto`                          | `CryptoPort` (AES-GCM) e `HmacPort` (HMAC-SHA256)                                                                       |
+| Criptografia    | `src/core/crypto`                          | `CryptoPort` (AES-GCM), `HmacPort` (HMAC-SHA256) e `SecretSealerPort` (cofre de segredos por envelope, KMS ou chave local) |
 | Observabilidade | `src/core/observability`, `src/tracing.ts` | pino + OpenTelemetry, `requestId` em todo ponto de entrada                                                              |
 | Health          | `src/modules/health`                       | `GET /health` (liveness), `GET /health/ready` (banco)                                                                   |
 | Qualidade       | `eslint.config.mjs`, `eslint-rules/`       | Fronteiras de camada, zero comentários, sem `else`; Vitest unitário e de integração                                     |
@@ -90,6 +90,15 @@ O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reapr
 #### Exclusão de conta e dados pessoais
 
 Toda tabela com a coluna `companyId` precisa de chave estrangeira para `Companies` com `ON DELETE CASCADE`: `DELETE /account` apaga a linha da company e deixa o banco apagar o resto. O spec `test/integration/account-deletion-cascade.int-spec.ts` consulta o catálogo do Postgres e quebra o CI de quem esquecer. O que o cascade não alcança (segredo cifrado, chave no KMS, arquivo, cache, fila) entra por uma subclasse de `AccountDataEraserPort`, e o que a pessoa pode baixar por uma de `AccountDataExporterPort` (ambas em `src/modules/identity/services/`). Basta registrar a subclasse como provider no módulo dono; o `AccountDataRegistry` as descobre sozinho.
+
+### Cofre de segredos
+
+Credenciais de terceiros guardadas por company passam pelo `SecretSealerPort`, escolhido por `SECRET_SEALER_DRIVER`:
+
+- `local` (padrão em `IS_LOCAL=true`): deriva uma chave por company e finalidade de `CRYPTO_KEY_HEX` (HKDF-SHA256) e cifra com AES-256-GCM. Não precisa de conta na nuvem. A segurança é a do segredo `CRYPTO_KEY_HEX`: guarde-o fora do repositório e faça cópia, porque perdê-lo ou trocá-lo faz os segredos selados deixarem de abrir (o usuário cola a credencial de novo).
+- `kms`: envelope com AWS KMS, usado na versão hospedada. Exige `SECRET_SEALER_KMS_KEY_ID` (alias ou ARN da chave).
+
+Fora do ambiente local a variável é obrigatória, e com `DEPLOY_ENV=prod` o driver `local` só inicia com `SECRET_SEALER_ALLOW_LOCAL_IN_PROD=true`, o escape de quem hospeda sozinho em produção sem AWS. Para migrar de `local` para `kms`, use `SECRET_SEALER_ALLOW_LEGACY_LOCAL=true` e rode `npm run secrets:reseal`. O checklist de segurança está em `docs/security/gastos-revisao.md`.
 
 ## Verificação
 

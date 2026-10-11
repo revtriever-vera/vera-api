@@ -233,6 +233,66 @@ describe('a permissão de envio de e-mail', () => {
     });
 });
 
+interface PolicyStatementJson {
+    readonly Action: string | readonly string[];
+    readonly Condition?: Record<string, Record<string, string>>;
+    readonly Resource: unknown;
+}
+
+interface PolicyResource {
+    readonly Properties: {
+        readonly PolicyName: string;
+        readonly Roles: readonly { readonly Ref: string }[];
+        readonly PolicyDocument: { readonly Statement: readonly PolicyStatementJson[] };
+    };
+}
+
+function kmsStatements(template: Template): PolicyStatementJson[] {
+    const policies: PolicyResource[] = Object.values(template.findResources('AWS::IAM::Policy') as Record<string, PolicyResource>);
+    return policies.flatMap((policy: PolicyResource): PolicyStatementJson[] =>
+        policy.Properties.PolicyDocument.Statement.filter((statement: PolicyStatementJson): boolean =>
+            JSON.stringify(statement.Action).includes('kms:')
+        )
+    );
+}
+
+describe('a permissão do cofre de segredos', () => {
+    it('dá GenerateDataKey e Decrypt só com o contexto de criptografia da Vera', () => {
+        const statements: PolicyStatementJson[] = kmsStatements(appTemplate('prod'));
+
+        expect(statements).toHaveLength(1);
+        expect(statements[0]?.Action).toEqual(['kms:GenerateDataKey', 'kms:Decrypt']);
+        expect(statements[0]?.Condition).toEqual({
+            StringEquals: { 'kms:EncryptionContext:app': 'vera' },
+            Null: { 'kms:EncryptionContextKeys': 'false' }
+        });
+        expect(JSON.stringify(statements[0]?.Resource)).not.toBe('"*"');
+    });
+
+    it('não dá a permissão à task de migração', () => {
+        const template: Template = appTemplate('prod');
+        const policies: PolicyResource[] = Object.values(template.findResources('AWS::IAM::Policy') as Record<string, PolicyResource>);
+        const withKms: PolicyResource[] = policies.filter((policy: PolicyResource): boolean =>
+            policy.Properties.PolicyDocument.Statement.some((statement: PolicyStatementJson): boolean =>
+                JSON.stringify(statement.Action).includes('kms:GenerateDataKey')
+            )
+        );
+
+        expect(withKms).toHaveLength(1);
+        expect(withKms[0]?.Properties.Roles[0]?.Ref).toContain('ApiTaskTaskRole');
+    });
+
+    it.each(['dev', 'prod'] as const)('em %s usa o driver kms com o alias, nunca o ARN', (environment) => {
+        const api: ContainerResource = container(taskContainers(appTemplate(environment), `vera-api-${environment}`), 'api');
+        const environmentVariables: Record<string, unknown> = Object.fromEntries(
+            (api.Environment ?? []).map((entry: { readonly Name: string; readonly Value: unknown }) => [entry.Name, entry.Value])
+        );
+
+        expect(environmentVariables['SECRET_SEALER_DRIVER']).toBe('kms');
+        expect(environmentVariables['SECRET_SEALER_KMS_KEY_ID']).toBe(`alias/vera-secrets-${environment}`);
+    });
+});
+
 describe('os logs', () => {
     it('cria um grupo por container com retenção de uma semana', () => {
         const template: Template = appTemplate('dev');

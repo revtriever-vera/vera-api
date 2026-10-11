@@ -17,6 +17,7 @@ import {
     Secret as EcsSecret
 } from 'aws-cdk-lib/aws-ecs';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { IKey } from 'aws-cdk-lib/aws-kms';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ConfigurationSet, EmailSendingEvent, EventDestination } from 'aws-cdk-lib/aws-ses';
 import { Topic } from 'aws-cdk-lib/aws-sns';
@@ -26,6 +27,7 @@ import { IStringParameter, StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { EnvironmentConfig, MailpitEnvironmentConfig } from '../config/environment';
 import { APP_PORT, MAILPIT_SMTP_PORT, MAILPIT_UI_PORT } from '../config/ports';
+import { secretsKeyAlias } from './data.stack';
 import { OffHoursSchedule } from './off-hours-schedule';
 
 const MIGRATION_CPU: number = 256;
@@ -59,6 +61,7 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
 const OTLP_PROTOCOL: string = 'http/protobuf';
 const TUNNEL_TOKEN_PARAMETER: string = '/vera/tunnel-token';
 const EVERYONE: string = '*';
+const SEALER_APP_CONTEXT: string = 'vera';
 
 export interface AppStackProps extends StackProps {
     readonly config: EnvironmentConfig;
@@ -66,6 +69,7 @@ export interface AppStackProps extends StackProps {
     readonly repository: IRepository;
     readonly appSecurityGroup: ISecurityGroup;
     readonly redisEndpoint: string;
+    readonly secretsKey: IKey;
     readonly imageTag: string;
 }
 
@@ -291,6 +295,17 @@ export class AppStack extends Stack {
                 resources: [this.sesArn('identity', props.config.domain), this.sesArn('configuration-set', `vera-${props.config.name}`)]
             })
         );
+        task.addToTaskRolePolicy(
+            new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+                resources: [props.secretsKey.keyArn],
+                conditions: {
+                    StringEquals: { 'kms:EncryptionContext:app': SEALER_APP_CONTEXT },
+                    Null: { 'kms:EncryptionContextKeys': 'false' }
+                }
+            })
+        );
     }
 
     private sesArn(resource: string, name: string): string {
@@ -301,6 +316,7 @@ export class AppStack extends Stack {
         return {
             ...this.appEnvironment(props),
             ...this.infraEnvironment(props),
+            ...this.sealerEnvironment(props),
             ...this.mailEnvironment(props)
         };
     }
@@ -329,6 +345,10 @@ export class AppStack extends Stack {
             OTEL_EXPORTER_OTLP_ENDPOINT: StringParameter.valueForStringParameter(this, props.config.otlpEndpointParameter),
             OTEL_EXPORTER_OTLP_PROTOCOL: OTLP_PROTOCOL
         };
+    }
+
+    private sealerEnvironment(props: AppStackProps): Record<string, string> {
+        return { SECRET_SEALER_DRIVER: 'kms', SECRET_SEALER_KMS_KEY_ID: secretsKeyAlias(props.config.name) };
     }
 
     private oneShotEnvironment(props: AppStackProps): Record<string, string> {
