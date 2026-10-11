@@ -24,35 +24,66 @@ Idiomas suportados: `pt-BR` (padrão) e `en`.
 
 ## Ambiente local
 
-Pré-requisitos: Node 22 (`.nvmrc`), Docker e npm. Nada exige acesso à AWS: o e-mail local usa SMTP e a fila usa um Redis local.
+Pré-requisitos: Node 22 (`.nvmrc`), Docker e npm. Nada exige acesso à AWS: o e-mail local usa SMTP, a fila usa um Redis Cluster local e SSM/SQS são emulados pelo LocalStack.
 
 ```bash
 npm install
 npm run env:pull
-```
-
-`env:pull` copia o `.env.example` para `.env` (só valores de desenvolvimento, nenhum segredo). Suba um Postgres 16 e um Redis compatíveis com o `.env`; o `docker-compose.yml` do repositório (card #33) faz isso. Sem ele, dá para subir na mão:
-
-```bash
-docker run -d --rm -p 5436:5432 -e POSTGRES_USER=vera -e POSTGRES_PASSWORD=vera -e POSTGRES_DB=vera postgres:16
-docker run -d --rm -p 6379:6379 redis:7-alpine
-```
-
-Com o Redis avulso, ajuste no `.env` `REDIS_CLUSTER=false` e `REDIS_NODES=localhost:6379`. Depois:
-
-```bash
+docker compose up -d
 npm run migrate:latest
 npm run start:dev
 ```
 
-Smoke manual, com a API de pé:
+`env:pull` copia o `.env.example` para `.env` (só valores de desenvolvimento, nenhum segredo) e não sobrescreve um `.env` existente.
+
+### Serviços do compose
+
+| Serviço      | Imagem                         | Porta local                    | Para quê                                                 |
+| ------------ | ------------------------------ | ------------------------------ | -------------------------------------------------------- |
+| `postgres`   | `postgres:16`                  | 5437                           | banco (`vera`/`vera`/`vera`), volume persistente         |
+| `redis`      | `grokzen/redis-cluster:7.0.10` | 7200-7205                      | Redis Cluster, igual à topologia hospedada               |
+| `localstack` | `localstack/localstack:4`      | 4577                           | SSM e SQS (`SERVICES: sqs,ssm`), nenhuma fila criada     |
+| `mailpit`    | `axllent/mailpit`              | 1027 (SMTP) e 8027 (interface) | captura todo e-mail enviado pela API                     |
+| `lgtm`       | `grafana/otel-lgtm`            | 3003 (Grafana) e 4320 (OTLP)   | opcional: `docker compose --profile observability up -d` |
+
+As portas são próprias da Vera para convivência com outros stacks de compose na mesma máquina (que costumam usar 5432, 7000-7005, 4566, 1025/8025, 3001/4318). A API escuta em `3333`; se ela estiver ocupada, suba com `PORT=3334 npm run start:dev`.
+
+`docker compose up -d --wait` espera os quatro serviços padrão ficarem saudáveis.
+
+### Smoke manual
+
+Com a API de pé:
 
 ```bash
 curl -s localhost:3333/health
 curl -s localhost:3333/health/ready
 ```
 
-A API sobe em `http://localhost:3333` (ou na porta de `PORT`), com o Swagger em `/docs` (quando `DOCS_ENABLED=true`) e o painel de filas em `/admin/queues` (quando `QUEUES_DASHBOARD_ENABLED=true`).
+O e-mail enviado pela API aparece em `http://localhost:8027`. A API sobe com o Swagger em `/docs` (quando `DOCS_ENABLED=true`) e o painel de filas em `/admin/queues` (quando `QUEUES_DASHBOARD_ENABLED=true`).
+
+### Tick de fila
+
+```bash
+npm run tick -- <parte-do-nome-da-fila> [parte-do-tipo]
+```
+
+Publica uma mensagem de fumaça na fila cujo nome contém o argumento, com o mesmo `BULL_PREFIX` e `QUEUES` do app. Fila inexistente falha listando as disponíveis. O mapa `TICK_TYPE_BY_QUEUE` em `scripts/tick.ts` está vazio: cada épico acrescenta a entrada da sua fila.
+
+### Túnel Cloudflare (opcional)
+
+Só para quem precisa receber chamadas externas no computador de desenvolvimento. Nada disso é necessário para desenvolver.
+
+```bash
+export VERA_DOMAIN=<dominio-da-vera>
+export CLOUDFLARE_ACCOUNT_ID=<id-da-conta-cloudflare>
+export CLOUDFLARE_API_TOKEN=<token-da-api-cloudflare>
+export AWS_PROFILE=<perfil-aws-do-ambiente>
+npx tsx scripts/tunnel.ts dev
+```
+
+O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reaproveita o túnel `vera-<ambiente>`, publica `api[-dev].<domínio>` (em dev também `mail-dev.<domínio>`, o Mailpit), cria ou atualiza os CNAMEs e grava o token do túnel no SSM em `/vera/tunnel-token` usando o perfil AWS informado. Com `--routes-only` só mexe em rotas e DNS, sem AWS. `PORT`, `MAILPIT_UI_PORT` e `AWS_REGION` ajustam as portas locais e a região. Atenção: rodar com `prod` e o perfil de produção troca o túnel de produção.
+
+### Banco
 
 `npm run codegen` regenera `src/core/database/generated/database.types.ts` a partir do banco migrado; o arquivo gerado é versionado.
 
