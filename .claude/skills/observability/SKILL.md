@@ -134,6 +134,12 @@ table — same rule as renaming one.
 | `transactions-ingest`         | Batch of transactions ingested from any source (Pluggy, file, example data)    | `source`, `accountId`, `inserted`, `updated`, `unchanged`, `duplicates`, `superseded`, `rejected`, `durationMs` |
 | `transactions-recategorize`   | Transaction recategorized by the user, with or without a "always to" rule      | `transactionId`, `ruleCreated`, `recategorized`                           |
 | `transactions-port`           | Recategorization port ran after a rule or category change                      | `scope`, `affected`                                                       |
+| `bank-connections-credentials` | Pluggy credentials saved, rotated, tested, removed or rejected (never the secret) | `action`, `status`                                                     |
+| `bank-connections-item`       | Pluggy item checked when a bank is connected                                   | `connectionId`, `outcome`, `providerStatus`                               |
+| `bank-connections-provider`   | One request to Pluggy finished (debug on success, warn on failure)             | `endpoint`, `status`, `reason`, `retryAfterSeconds`                       |
+| `bank-connections-sync-publish` | A synchronization request could not be queued (warn)                         | `connectionId`, `trigger`                                                 |
+| `bank-connections-sync-fanout` | Daily synchronization fan-out queued one job per synchronizable connection    | `connections`                                                             |
+| `bank-connections-sync`       | One connection synchronization finished, was skipped, refused (`company_mismatch`) or had an account fail | `connectionId`, `runId`, `trigger`, `status`, `accounts`, `fetched`, `inserted`, `updated`, `duplicates`, `skippedPending`, `durationMs`, `failureCode`, `reason`, `errorName` |
 
 `message` is static by rule, so it is a reliable filter — but it travels as the **log line**, not as
 structured metadata, so the filter is the line filter: ``|= `import failed` `` works
