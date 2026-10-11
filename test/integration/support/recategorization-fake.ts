@@ -40,7 +40,7 @@ export function registerFakeDriver(app: INestApplication, recategorized: number,
     const original: DiscoveryService['getProviders'] = discovery.getProviders.bind(discovery);
     const spy = vi
         .spyOn(discovery, 'getProviders')
-        .mockImplementation(() => [...original(), { instance: driver } as unknown as ReturnType<DiscoveryService['getProviders']>[number]]);
+        .mockImplementation(() => [{ instance: driver } as unknown as ReturnType<DiscoveryService['getProviders']>[number], ...original()]);
     return {
         driver,
         restore: (): void => {

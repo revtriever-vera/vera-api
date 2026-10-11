@@ -21,7 +21,9 @@ describe('account deletion cascade guard', () => {
     it('toda tabela com companyId nas migrations reais tem FK em cascata para Companies', async () => {
         const tenantTables: string[] = await tablesWithCompanyId(pg);
 
-        expect(tenantTables).toEqual(expect.arrayContaining(['AuthIdentities', 'Sessions', 'Users']));
+        expect(tenantTables).toEqual(
+            expect.arrayContaining(['AuthIdentities', 'FinancialAccounts', 'Sessions', 'TransactionImports', 'Transactions', 'Users'])
+        );
         expect(await tablesWithoutCompanyCascade(pg)).toEqual([]);
     });
 

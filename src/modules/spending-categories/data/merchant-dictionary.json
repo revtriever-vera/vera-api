@@ -954,12 +954,6 @@
     "direction": "out"
   },
   {
-    "pattern": "PADARIA",
-    "match": "contains",
-    "category": "eating_out",
-    "direction": "out"
-  },
-  {
     "pattern": "PAGAMENTO CARTAO",
     "match": "contains",
     "category": "card_payment",
