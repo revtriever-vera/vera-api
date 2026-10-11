@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { synthesize } from '../bin/vera';
-import { FAKE_ACCOUNT_PROD, FAKE_SHARED, fakeConfig } from '../test/fixtures';
+import { FAKE_ACCOUNT_DEV, FAKE_ACCOUNT_PROD, FAKE_SHARED, fakeConfig } from '../test/fixtures';
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -68,7 +68,7 @@ describe('a rede', () => {
     it('limita o ecs:RunTask ao cluster vera-<env> por condição ArnEquals', () => {
         const statements: string = statementsOf(networkTemplate(synthesize([fakeConfig('dev')]), 'dev'));
 
-        expect(statements).toContain('"ArnEquals":{"ecs:cluster":"arn:aws:ecs:us-east-1:000000000001:cluster/vera-dev"}');
+        expect(statements).toContain(`"ArnEquals":{"ecs:cluster":"arn:aws:ecs:us-east-1:${FAKE_ACCOUNT_DEV}:cluster/vera-dev"}`);
     });
 
     it('restringe o acordar do banco à instância compartilhada, sem curinga', () => {
