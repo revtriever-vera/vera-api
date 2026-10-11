@@ -63,6 +63,16 @@ export class SyncInProgressError extends AppError {
     }
 }
 
+export class SyncQueueUnavailableError extends AppError {
+    public constructor() {
+        super({
+            code: 'connections.sync_unavailable',
+            status: 503,
+            detail: 'The synchronization could not be queued. Try again shortly.'
+        });
+    }
+}
+
 export class ItemNotFoundError extends AppError {
     public constructor(connectionId: string) {
         super({

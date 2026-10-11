@@ -214,7 +214,8 @@ function syncApplicationOf(
         authenticator,
         dataSyncOf(fixture, parts, observability, config),
         observability.logs,
-        observability.metrics
+        observability.metrics,
+        fixture.vault
     );
 }
 

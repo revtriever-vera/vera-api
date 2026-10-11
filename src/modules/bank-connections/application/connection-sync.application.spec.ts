@@ -149,6 +149,20 @@ describe('ConnectionSyncApplication', () => {
         expect(connectionOf(fixture).lastSuccessAt).toBeNull();
     });
 
+    it('401 depois do authenticate (item, contas ou transações) também marca a credencial inválida e pausa tudo', async () => {
+        const calls: ('getItem' | 'listAccounts' | 'listTransactions')[] = ['getItem', 'listAccounts', 'listTransactions'];
+        for (const call of calls) {
+            const fixture: SyncFixture = await seeded([ITEM_NUBANK, ITEM_LOGIN_ERROR]);
+            vi.spyOn(fixture.client, call).mockRejectedValue(new PluggyAuthRejectedError());
+
+            await fixture.syncApplication.handle(payloadOf(fixture));
+
+            expect(fixture.credentials.rows[0]).toMatchObject({ status: 'invalid', lastErrorCode: 'invalid_credentials' });
+            expect(fixture.connections.rows.map((row) => row.status)).toEqual(['paused', 'paused']);
+            expect(runsOf(fixture)[0]).toMatchObject({ status: 'failed', failureCode: 'invalid_credentials' });
+        }
+    });
+
     it('credencial já marcada inválida também pausa sem chamar a Pluggy', async () => {
         const fixture: SyncFixture = await seeded();
         await fixture.vault.markInvalid('invalid_credentials');

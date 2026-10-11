@@ -22,6 +22,7 @@ import { PluggyAuthRejectedError, PluggyUnavailableError } from '../ports/pluggy
 import { BankConnectionReaderService } from '../services/bank-connection-reader.service';
 import { BankConnectionsLogService } from '../services/bank-connections-log.service';
 import { BankConnectionsMetricsService } from '../services/bank-connections-metrics.service';
+import { CredentialsVaultService } from '../services/credentials-vault.service';
 import { ConnectionDataSyncService, DataPull } from '../services/connection-data-sync.service';
 import { PluggyAuthenticatorService } from '../services/pluggy-authenticator.service';
 import { SyncRequestedBody, syncRequestedPayloadSchema } from '../validation/bank-connections.schemas';
@@ -65,7 +66,8 @@ export class ConnectionSyncApplication {
         private readonly authenticator: PluggyAuthenticatorService,
         private readonly data: ConnectionDataSyncService,
         private readonly logs: BankConnectionsLogService,
-        private readonly metrics: BankConnectionsMetricsService
+        private readonly metrics: BankConnectionsMetricsService,
+        private readonly vault: CredentialsVaultService
     ) {}
 
     public async handle(payload: unknown): Promise<SyncDirective> {
@@ -130,6 +132,7 @@ export class ConnectionSyncApplication {
             return failed(SYNC_FAILURE_CODES.credentialsMissing);
         }
         if (error instanceof InvalidPluggyCredentialsError || error instanceof PluggyAuthRejectedError) {
+            await this.vault.markInvalid(SYNC_FAILURE_CODES.invalidCredentials);
             await this.connections.pauseSyncable();
             return failed(SYNC_FAILURE_CODES.invalidCredentials);
         }

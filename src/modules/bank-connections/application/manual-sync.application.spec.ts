@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CLIENT_ID, ITEM_ITAU, ITEM_LOGIN_ERROR, ITEM_NUBANK, SENTINEL } from '../../../../test/support/bank-connections-fakes';
 import { buildSyncFixture, connectionOf, SyncFixture } from '../../../../test/support/bank-sync-fakes';
 
@@ -93,6 +93,24 @@ describe('ManualSyncApplication', () => {
         expect(fixture.publisher.published.map((entry) => (entry.payload as { connectionId: string }).connectionId)).toEqual([
             connectionOf(fixture, 0).id
         ]);
+    });
+
+    it('falha ao publicar sobe como 503 e a contagem reflete o que foi publicado', async () => {
+        const fixture: SyncFixture = await seeded();
+        const publish = vi.spyOn(fixture.publisher, 'publish').mockRejectedValue(new Error('redis fora'));
+
+        await expect(fixture.manualApplication.syncOne(connectionOf(fixture).id)).rejects.toMatchObject({
+            code: 'connections.sync_unavailable',
+            status: 503
+        });
+        await expect(fixture.manualApplication.syncAll()).rejects.toMatchObject({ code: 'connections.sync_unavailable' });
+
+        publish.mockRestore();
+        const original = fixture.publisher.publish.bind(fixture.publisher);
+        vi.spyOn(fixture.publisher, 'publish')
+            .mockImplementationOnce(() => Promise.reject(new Error('redis fora')))
+            .mockImplementation(original);
+        expect(await fixture.manualApplication.syncAll()).toEqual({ queued: 2 });
     });
 
     it('sincronizar tudo sem conexões devolve zero', async () => {

@@ -129,7 +129,7 @@ describe('BankSyncPublisherService', () => {
             logs
         );
 
-        await expect(publisher.publishAll(['c1', 'c2'], 'initial')).resolves.toBeUndefined();
+        await expect(publisher.publishAll(['c1', 'c2'], 'initial')).resolves.toBe(0);
 
         expect(warn).toHaveBeenCalledTimes(2);
         expect(warn.mock.calls[0]?.[0]).toMatchObject({

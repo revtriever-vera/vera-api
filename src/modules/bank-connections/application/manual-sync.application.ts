@@ -4,7 +4,8 @@ import {
     CredentialsMissingError,
     InvalidPluggyCredentialsError,
     ItemNotFoundError,
-    SyncInProgressError
+    SyncInProgressError,
+    SyncQueueUnavailableError
 } from '../domain/bank-connections.errors';
 import {
     BankConnection,
@@ -42,7 +43,9 @@ export class ManualSyncApplication {
         if ((await this.runs.runningConnectionIds([id])).has(id)) {
             throw new SyncInProgressError(id);
         }
-        await this.publisher.publishAll([id], SYNC_TRIGGERS.manual);
+        if ((await this.publisher.publishAll([id], SYNC_TRIGGERS.manual)) === 0) {
+            throw new SyncQueueUnavailableError();
+        }
         return { queued: true };
     }
 
@@ -55,8 +58,11 @@ export class ManualSyncApplication {
         const ids: string[] = syncable
             .map((connection: BankConnection): string => connection.id)
             .filter((id: string): boolean => !running.has(id));
-        await this.publisher.publishAll(ids, SYNC_TRIGGERS.manual);
-        return { queued: ids.length };
+        const queued: number = await this.publisher.publishAll(ids, SYNC_TRIGGERS.manual);
+        if (ids.length > 0 && queued === 0) {
+            throw new SyncQueueUnavailableError();
+        }
+        return { queued };
     }
 
     private assertSyncable(connection: BankConnection): void {

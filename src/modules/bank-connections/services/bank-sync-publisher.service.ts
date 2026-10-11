@@ -62,19 +62,22 @@ export class BankSyncPublisherService {
         private readonly logs: BankConnectionsLogService
     ) {}
 
-    public async publishAll(connectionIds: readonly string[], trigger: SyncTrigger): Promise<void> {
+    public async publishAll(connectionIds: readonly string[], trigger: SyncTrigger): Promise<number> {
         const companyId: string | undefined = this.context.getOrNull()?.companyId;
         if (companyId === undefined) {
             throw new MissingTenantContextError('BankConnections');
         }
         const now: Date = new Date();
+        let published: number = 0;
         for (const connectionId of connectionIds) {
             const payload: SyncRequestedPayload = { connectionId, companyId, trigger };
-            await this.publishOne(payload, {
+            const sent: boolean = await this.publishOne(payload, {
                 jobId: syncJobId(connectionId, trigger, now),
                 replaceExisting: trigger === SYNC_TRIGGERS.manual
             });
+            published += sent ? 1 : 0;
         }
+        return published;
     }
 
     public async publishDaily(connections: readonly ConnectionIdentity[], spacingMs: number): Promise<void> {
@@ -92,15 +95,17 @@ export class BankSyncPublisherService {
         }
     }
 
-    private async publishOne(payload: SyncRequestedPayload, options: PublishOptions): Promise<void> {
+    private async publishOne(payload: SyncRequestedPayload, options: PublishOptions): Promise<boolean> {
         try {
             await this.publisher.publish(QUEUES.bankConnections, MESSAGE_TYPES.bankConnectionsSyncRequested, payload, {
                 ...options,
                 attempts: SYNC_ATTEMPTS,
                 backoffDelayMs: SYNC_BACKOFF_MS
             });
+            return true;
         } catch (error: unknown) {
             this.logs.syncPublishFailed(payload.connectionId, payload.trigger, error);
+            return false;
         }
     }
 }

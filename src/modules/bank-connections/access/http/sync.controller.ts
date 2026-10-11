@@ -54,6 +54,11 @@ export class SyncController {
             'No usable credentials: none saved (connections.credentials_missing) or Pluggy rejected them (connections.invalid_credentials)',
         example: MISSING_EXAMPLE
     })
+    @ApiProblemResponse({
+        status: 503,
+        description: 'No synchronization could be queued (connections.sync_unavailable)',
+        example: { type: 'connections.sync_unavailable', title: 'SyncQueueUnavailableError', status: 503 }
+    })
     @ApiProblemResponse({ status: 429, description: 'More than 2 requests in 10 minutes for the company', example: TOO_MANY_EXAMPLE })
     public async syncAll(): Promise<{ queued: number }> {
         return this.sync.syncAll();
@@ -92,6 +97,11 @@ export class SyncController {
         description:
             'The item was revoked at Pluggy (connections.item_not_found) or there are no usable credentials (connections.credentials_missing, connections.invalid_credentials)',
         example: { type: 'connections.item_not_found', title: 'ItemNotFoundError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 503,
+        description: 'The synchronization could not be queued (connections.sync_unavailable)',
+        example: { type: 'connections.sync_unavailable', title: 'SyncQueueUnavailableError', status: 503 }
     })
     @ApiProblemResponse({ status: 429, description: 'More than 3 requests in 10 minutes for the connection', example: TOO_MANY_EXAMPLE })
     public async syncOne(@Param() params: ConnectionIdParamsDto): Promise<{ queued: true }> {
