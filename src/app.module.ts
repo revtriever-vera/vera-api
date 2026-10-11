@@ -13,6 +13,7 @@ import { AppErrorFilter } from './core/http/app-error.filter';
 import { ObservabilityModule } from './core/observability/observability.module';
 import { QueueModule } from './core/queue/queue.module';
 import { HealthModule } from './modules/health/health.module';
+import { IdentityModule } from './modules/identity/identity.module';
 
 const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'];
 
@@ -38,7 +39,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         ObservabilityModule,
         QueueModule,
         HttpModule,
-        HealthModule
+        HealthModule,
+        IdentityModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
