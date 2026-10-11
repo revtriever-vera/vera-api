@@ -156,6 +156,22 @@ export interface ExchangeRates {
     source: string;
 }
 
+export interface FinancialAccounts {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    deletedAt: Timestamp | null;
+    externalId: string | null;
+    id: string;
+    institutionName: string | null;
+    isSample: Generated<boolean>;
+    kind: string;
+    name: string;
+    numberLast4: string | null;
+    provider: string | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface FixedIncomeTitles {
     appliedAt: Timestamp;
     appliedMinor: Int8;
@@ -280,6 +296,55 @@ export interface Throttles {
     windowStartedAt: Timestamp;
 }
 
+export interface TransactionImports {
+    accountId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    duplicates: Generated<number>;
+    fileName: string;
+    fileSha256: string;
+    format: string;
+    id: string;
+    inserted: Generated<number>;
+    isSample: Generated<boolean>;
+    periodEnd: Timestamp | null;
+    periodStart: Timestamp | null;
+    rejected: Generated<number>;
+    rows: Generated<number>;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface Transactions {
+    absorbedExternalId: string | null;
+    absorbedImportId: string | null;
+    accountId: string;
+    amountMinor: Int8;
+    categoryId: string | null;
+    categorySource: string;
+    companyId: string;
+    counterpartyKey: string | null;
+    counterpartyName: string | null;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    date: Timestamp;
+    deletedAt: Timestamp | null;
+    description: string;
+    externalId: string;
+    id: string;
+    importId: string | null;
+    installmentNumber: number | null;
+    installmentTotal: number | null;
+    isSample: Generated<boolean>;
+    normalizedDescription: string;
+    providerCategoryId: string | null;
+    ruleId: string | null;
+    source: string;
+    supersededById: string | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Users {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -305,6 +370,7 @@ export interface DB {
     CategoryRules: CategoryRules;
     Companies: Companies;
     ExchangeRates: ExchangeRates;
+    FinancialAccounts: FinancialAccounts;
     FixedIncomeTitles: FixedIncomeTitles;
     IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
@@ -315,5 +381,7 @@ export interface DB {
     Sessions: Sessions;
     SpendingCategories: SpendingCategories;
     Throttles: Throttles;
+    TransactionImports: TransactionImports;
+    Transactions: Transactions;
     Users: Users;
 }

@@ -25,6 +25,7 @@ import { PortfolioExportModule } from './modules/portfolio-export/portfolio-expo
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { PositionsModule } from './modules/positions/positions.module';
 import { SpendingCategoriesModule } from './modules/spending-categories/spending-categories.module';
+import { TransactionsModule } from './modules/transactions/transactions.module';
 
 const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'];
 
@@ -62,7 +63,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         PortfolioModule,
         PortfolioExportModule,
         ContributionModule,
-        SpendingCategoriesModule
+        SpendingCategoriesModule,
+        TransactionsModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
