@@ -224,6 +224,77 @@ touches the outside world: cache, third-party providers, queue producer, mail, c
 Do NOT create a port for something with exactly one conceivable implementation — that's ceremony,
 not architecture.
 
+## Cross-module ports discovered at runtime
+
+When a central module must call every business module without importing any of them, it declares
+an abstract-class port and a registry that finds implementations with `DiscoveryService`
+(`getProviders()` filtered by `instanceof`). A business module opts in by registering a subclass
+as a provider in its own module — nothing else. The central module never imports the business
+modules. Ports below live in `identity/services/` and `onboarding/services/`.
+
+### Account erasure and export (`identity`)
+
+```typescript
+export abstract class AccountDataEraserPort {
+    abstract readonly area: string;
+    abstract eraseAll(companyId: string): Promise<number>;
+}
+export abstract class AccountDataExporterPort {
+    abstract readonly area: string;
+    abstract exportAll(companyId: string): Promise<unknown>;
+}
+```
+
+- **Eraser**: removes what the `ON DELETE CASCADE` will not (secrets, KMS keys, files, cache,
+  queues) for that company and returns how many items it removed. Must be idempotent: a retry
+  after a failure runs every eraser again.
+- **Order and failure**: `AccountDataRegistry.eraseAll` runs erasers sequentially, in registration
+  order, and stops at the first failure (`identity.erasure_failed`, `meta.area`). Only after all
+  erasers succeed does one transaction write the `AccountDeletionLog` row, hard-delete the
+  `Companies` row (cascade does the rest) and enqueue the confirmation email. A failing eraser
+  therefore aborts before the `DELETE`, and the user can retry.
+- **Exporter**: returns the JSON-serialisable section for `area` for that company only — no data
+  from another company, no secrets, no hashes (token hashes, `subject`). The registry puts each
+  result in `sections[area]`; an exporter that throws fails the whole export
+  (`identity.export_failed`), never a partial file. Identity data (company, user, sessions) is
+  exported by `identity` itself, not through a port. Sample rows are excluded.
+- `companyId` is a parameter supplied by the registry from the request context; ports never read
+  it from input.
+
+### Onboarding sample data (`onboarding`)
+
+```typescript
+export abstract class SampleDataPort {
+    abstract readonly area: string;
+    abstract seed(companyId: string): Promise<number>;
+    abstract clear(companyId: string): Promise<number>;
+}
+```
+
+`POST /onboarding/sample` calls `seed` on every registered port (sorted by `area`) inside one
+`@UsingTransaction`; `DELETE /onboarding/sample` calls `clear` on all of them. `onboarding` owns
+the mechanism; the owning module decides the content. Contract every implementation honours:
+
+1. **Flag**: every seeded row has `isSample = true`.
+2. **Never mix with real data**: `seed` writes nothing and returns `0` when the area already has
+   real (non-sample) data.
+3. **Idempotent**: `seed` twice does not duplicate; `clear` twice is harmless. Both return a count.
+4. **Clear only samples**: `clear` deletes rows where `isSample` is true and never touches real
+   rows.
+5. **Rollback on failure**: `seed`/`clear` run in the caller's transaction (no own transaction, no
+   external calls); a port that throws makes the registry raise `onboarding.sample_failed`
+   (`meta.area`) and every area written before it is rolled back.
+
+Fixed values (cents, dates relative to today). Sample rows are excluded from the account export and
+from `OnboardingAreaSummaryPort`.
+
+### Onboarding area summary (`onboarding`)
+
+`OnboardingAreaSummaryPort { area: 'assets' | 'banks' | 'target'; summarize(companyId) }` returns
+`{ items, amountCents, currency, breakdown? }` for the onboarding checklist.
+`OnboardingAreaRegistry.summarize` runs the ports in parallel; a port that throws yields `null`
+for its area (logged) instead of failing `GET /onboarding`.
+
 ## Config pattern (per module)
 
 ```typescript

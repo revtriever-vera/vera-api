@@ -43,6 +43,13 @@ No ORM, no entities — repositories and typed SQL.
   default `now()`), `deletedAt` (`timestamptz` nullable) when soft-deletable.
 - Tenant tables: `companyId` uuid NOT NULL referencing `Companies`. Composite indexes start with
   `companyId`.
+- **Every table with a `companyId` column has a foreign key to `Companies` with
+  `ON DELETE CASCADE`.** Account deletion removes the `Companies` row and lets the database delete
+  the rest. `test/integration/account-deletion-cascade.int-spec.ts` reads the Postgres catalog and
+  fails CI for any such table without it. What cascade cannot reach (encrypted secrets, KMS keys,
+  files, cache, queues) goes through an `AccountDataEraserPort` — see the architecture skill.
+- Sample rows (onboarding example data) live in the owning module's table, flagged with
+  `isSample boolean NOT NULL DEFAULT false`.
 - Global tables (no tenant): no `companyId` — e.g. `Companies` itself, lookup/config tables.
 - Money: `bigint` cents, never float/numeric-with-decimals ambiguity. Currency column when needed.
 - Enums: Postgres `text` + zod/const union in code (no native PG enums — migrations get painful).
