@@ -42,4 +42,21 @@ describe('base layout', () => {
         expect(baseLayout({ ...BASE, ctaLabel: 'Entrar' })).not.toContain('>Entrar</a>');
         expect(baseLayout({ ...BASE, ctaUrl: 'https://app.vera.example/login' })).not.toContain('app.vera.example/login');
     });
+
+    it('writes the footer in Portuguese by default', () => {
+        const html: string = baseLayout({ ...BASE, unsubscribeUrl: 'https://app.vera.example/sair/abc' });
+
+        expect(html).toContain('Este e-mail foi enviado automaticamente.');
+        expect(html).toContain('<html lang="pt-BR">');
+    });
+
+    it('translates the footer and the unsubscribe line for the English locale', () => {
+        const html: string = baseLayout({ ...BASE, locale: 'en', unsubscribeUrl: 'https://app.vera.example/sair/abc' });
+
+        expect(html).toContain('This email was sent automatically.');
+        expect(html).toContain('I no longer want to receive these notices');
+        expect(html).toContain('<html lang="en">');
+        expect(html).not.toContain('Este e-mail');
+        expect(html).not.toContain('Não quero mais');
+    });
 });

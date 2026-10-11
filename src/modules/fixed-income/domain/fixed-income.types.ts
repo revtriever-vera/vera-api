@@ -76,6 +76,7 @@ export interface FixedIncomeTitle extends TitleTerms {
     readonly id: string;
     readonly name: string;
     readonly taxRegime: TaxRegime;
+    readonly isSample: boolean;
     readonly createdAt: Date;
     readonly updatedAt: Date;
 }

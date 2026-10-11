@@ -58,14 +58,14 @@ describe('positions ports', () => {
         return response.body.id;
     }
 
-    it('resumo da área assets conta posições reais, com valor nulo até a consolidação', async () => {
+    it('resumo da área assets conta posições reais, com valor consolidado na moeda base', async () => {
         const account: Account = await harness.signUp('summary');
         expect((await summary(account)).assets).toEqual({ items: 0, amountCents: null, currency: null });
 
         await add(account, 'PETR4', '10');
         await add(account, 'VOO', '2');
 
-        expect((await summary(account)).assets).toEqual({ items: 2, amountCents: null, currency: null });
+        expect((await summary(account)).assets).toEqual({ items: 2, amountCents: 0, currency: 'BRL' });
     });
 
     it('exporta só as posições da company, com símbolo e classe', async () => {

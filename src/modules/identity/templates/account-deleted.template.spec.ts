@@ -19,6 +19,9 @@ describe('AccountDeletedTemplate', () => {
         expect(pt.text).toContain('Olá, Ana.');
         expect(en.subject).toBe('Your Vera account was deleted');
         expect(en.text).toContain('Hi, Ana.');
+        expect(pt.html).toContain('Este e-mail foi enviado automaticamente.');
+        expect(en.html).toContain('This email was sent automatically.');
+        expect(en.html).not.toContain('Este e-mail');
     });
 
     it('não leva link, e escapa o nome no HTML', () => {

@@ -41,6 +41,7 @@ function renderEn(props: TemplateProps): MailContent {
     return {
         subject: 'Your Vera account was deleted',
         html: baseLayout({
+            locale: 'en',
             title: 'Your account was deleted',
             bodyHtml: `<p>${escapeHtml(greeting)}</p><p>${body}</p><p>${closing}</p>`
         }),

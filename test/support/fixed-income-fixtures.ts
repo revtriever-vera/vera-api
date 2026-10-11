@@ -43,6 +43,7 @@ export function makeTitle(overrides: Partial<FixedIncomeTitle> = {}): FixedIncom
         appliedAt: '2025-01-06',
         maturityDate: '2030-01-06',
         taxRegime: 'regressive',
+        isSample: false,
         createdAt: new Date('2025-01-06T12:00:00Z'),
         updatedAt: new Date('2025-01-06T12:00:00Z'),
         ...overrides

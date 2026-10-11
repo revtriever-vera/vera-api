@@ -252,7 +252,8 @@ function positionsOf(): SourcePosition[] {
     return POSITION_SEEDS.map((seed: PositionSeed): SourcePosition => ({
         id: `position-${seed.symbol}`,
         assetId: `asset-${seed.symbol}`,
-        quantity: seed.quantity
+        quantity: seed.quantity,
+        isSample: false
     }));
 }
 
@@ -277,7 +278,8 @@ function titlesOf(): SourceTitle[] {
         estimated: false,
         matured: false,
         source: seed.source,
-        asOf: '2026-10-11'
+        asOf: '2026-10-11',
+        isSample: false
     }));
 }
 

@@ -14,6 +14,7 @@ export function toFixedIncomeTitle(row: FixedIncomeTitleRow): FixedIncomeTitle {
         appliedAt: DateUtil.onlyLocalDateString(row.appliedAt),
         maturityDate: DateUtil.onlyLocalDateString(row.maturityDate),
         taxRegime: row.taxRegime as TaxRegime,
+        isSample: row.isSample,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt
     };

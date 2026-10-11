@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { AppConfig, appConfig } from './config/app.config';
-import { isAllowedOrigin } from './core/http/cors-origin';
+import { buildCorsOptions } from './core/http/cors-options';
 import { setupQueuesDashboard } from './queues-dashboard';
 import { setupSwagger } from './swagger';
 
@@ -18,12 +18,7 @@ async function bootstrap(): Promise<void> {
     const app: INestApplication = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
     applyMiddleware(app);
     const config: AppConfig = app.get<AppConfig>(appConfig.KEY);
-    app.enableCors({
-        origin: (origin: string | undefined, decide: (error: Error | null, allowed?: boolean) => void): void => {
-            decide(null, isAllowedOrigin(origin, config.IS_LOCAL, config.CORS_ORIGINS));
-        },
-        credentials: true
-    });
+    app.enableCors(buildCorsOptions(config.IS_LOCAL, config.CORS_ORIGINS));
     applyOptionalFeatures(app, config);
     await app.listen(config.PORT);
 }
