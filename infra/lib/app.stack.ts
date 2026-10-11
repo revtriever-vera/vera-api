@@ -44,6 +44,7 @@ const MAIL_FEEDBACK_DLQ_RETENTION_DAYS: number = 14;
 const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     DATABASE_URL: '/vera/database-url',
     CRYPTO_KEY_HEX: '/vera/crypto-key-hex',
+    JWT_SECRET: '/vera/jwt-secret',
     SWAGGER_PASSWORD: '/vera/swagger-password',
     QUEUES_DASHBOARD_PASSWORD: '/vera/queues-dashboard-password'
 };
@@ -306,6 +307,7 @@ export class AppStack extends Stack {
             DOCS_ENABLED: 'true',
             QUEUES_DASHBOARD_ENABLED: 'true',
             APP_VERSION: props.imageTag,
+            COOKIE_SECURE: 'true',
             CORS_ORIGINS: `https://${props.config.appHost}`
         };
     }

@@ -87,6 +87,16 @@ describe('a task do serviço', () => {
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/crypto-key-hex');
     });
 
+    it('entrega JWT_SECRET pelo SSM e marca o cookie de sessão como seguro', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+        const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
+
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('JWT_SECRET');
+        expect(plainNames).not.toContain('JWT_SECRET');
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/jwt-secret');
+        expect(api.Environment).toContainEqual({ Name: 'COOKIE_SECURE', Value: 'true' });
+    });
+
     it('omite o cabeçalho OTLP quando o ambiente não o configura', () => {
         const api: ContainerResource = container(
             taskContainers(appTemplate('prod', { otlpHeadersParameter: null }), 'vera-api-prod'),
