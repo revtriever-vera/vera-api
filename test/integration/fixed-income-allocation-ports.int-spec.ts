@@ -93,7 +93,7 @@ describe('ports of fixed-income and allocation', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.target).toEqual({ items: 8, amountCents: null, currency: null });
-        expect(response.body.assets).toBeNull();
+        expect(response.body.assets).toEqual({ items: 0, amountCents: null, currency: null });
     });
 
     it('resumo target conta só as classes com meta depois que o usuário zera uma', async () => {

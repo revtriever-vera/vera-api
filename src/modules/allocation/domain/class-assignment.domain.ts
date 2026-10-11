@@ -19,6 +19,10 @@ export class ClassAssignmentDomain {
         return this.moveIfChanged(current, classId);
     }
 
+    public async find(subjectType: SubjectType, subjectId: string): Promise<ClassAssignment | null> {
+        return this.assignments.findBySubject(subjectType, subjectId);
+    }
+
     public async reassign(subjectType: SubjectType, subjectId: string, classId: string): Promise<ClassAssignment | null> {
         const current: ClassAssignment | null = await this.assignments.findBySubject(subjectType, subjectId);
         if (current === null) {

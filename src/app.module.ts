@@ -18,6 +18,7 @@ import { FixedIncomeModule } from './modules/fixed-income/fixed-income.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { PositionsModule } from './modules/positions/positions.module';
 
 const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'];
 
@@ -48,7 +49,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         AllocationModule,
         OnboardingModule,
         CatalogModule,
-        FixedIncomeModule
+        FixedIncomeModule,
+        PositionsModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },

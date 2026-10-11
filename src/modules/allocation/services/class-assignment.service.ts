@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AssetClassDomain } from '../domain/asset-class.domain';
 import { ClassAssignmentDomain } from '../domain/class-assignment.domain';
-import { ClassNotFoundError } from '../domain/allocation.errors';
+import { AssignmentNotFoundError, ClassNotFoundError } from '../domain/allocation.errors';
 import { AssetClass, ClassAssignment, SubjectType } from '../domain/allocation.types';
 import { AllocationLogService } from './allocation-log.service';
 
@@ -27,6 +27,14 @@ export class ClassAssignmentService {
         if (released) {
             this.logs.assignmentReleased(subjectType, subjectId);
         }
+    }
+
+    public async requireClassId(subjectType: SubjectType, subjectId: string): Promise<string> {
+        const assignment: ClassAssignment | null = await this.assignments.find(subjectType, subjectId);
+        if (assignment === null) {
+            throw new AssignmentNotFoundError(subjectType, subjectId);
+        }
+        return assignment.classId;
     }
 
     public async listForCompany(): Promise<readonly ClassAssignment[]> {
