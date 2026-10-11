@@ -5,6 +5,7 @@ import { AllocationAccountExporter } from '../../../src/modules/allocation/servi
 import { AllocationTargetSummary } from '../../../src/modules/allocation/services/allocation-target.summary';
 import { PortfolioOnboardingSummary } from '../../../src/modules/portfolio/services/portfolio-onboarding.summary';
 import { PositionsAccountExporter } from '../../../src/modules/positions/services/positions-account.exporter';
+import { SpendingCategoriesAccountExporter } from '../../../src/modules/spending-categories/services/spending-categories-account.exporter';
 import { PositionsSampleDataService } from '../../../src/modules/positions/services/positions-sample-data.service';
 
 export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
@@ -22,5 +23,7 @@ export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModu
         .overrideProvider(PositionsAccountExporter)
         .useValue({})
         .overrideProvider(PositionsSampleDataService)
+        .useValue({})
+        .overrideProvider(SpendingCategoriesAccountExporter)
         .useValue({});
 }

@@ -1,0 +1,1502 @@
+[
+  {
+    "pattern": "13 SALARIO",
+    "match": "contains",
+    "category": "income",
+    "direction": "in"
+  },
+  {
+    "pattern": "99 POP",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "99 TAXI",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "99APP",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "99FOOD",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "ACOUGUE",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "ADOBE",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "AIRBNB",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "ALIEXPRESS",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "ALUGUEL",
+    "match": "contains",
+    "category": "housing",
+    "direction": "out"
+  },
+  {
+    "pattern": "ALURA",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "AMAZON MARKETPLACE",
+    "match": "prefix",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "AMAZON PRIME",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "AMAZONMKTPLC",
+    "match": "prefix",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "AMERICANAS",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "AMIL",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "ANHANGUERA",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "ANUIDADE",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "APLICACAO",
+    "match": "contains",
+    "category": "investments",
+    "direction": "out"
+  },
+  {
+    "pattern": "APPLE COM BILL",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "ASSAI",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "ATACADAO",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "ATACAREJO",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "AUTO POSTO",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "AZUL LINHAS",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "BIG BOMPRECO",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "BILHETE UNICO",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "BLIZZARD",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "BLUEFIT",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "BOBS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "BOOKING COM",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "BR MANIA",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "BRADESCO SAUDE",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "BURGER KING",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "CABIFY",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "CAFETERIA",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "CANVA",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "CARREFOUR",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "CASAS BAHIA",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "CASHBACK",
+    "match": "contains",
+    "category": "other_income",
+    "direction": "in"
+  },
+  {
+    "pattern": "CCAA",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "CELESC",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "CEMIG",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "CENTAURO",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "CHATGPT",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "CINEMARK",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "CINEPOLIS",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "CLARO",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "CLEAR CORRETORA",
+    "match": "contains",
+    "category": "investments",
+    "direction": "any"
+  },
+  {
+    "pattern": "CLINICA",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "COCO BAMBU",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "COELBA",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "COLEGIO",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "COMGAS",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "CONDOMINIO",
+    "match": "contains",
+    "category": "housing",
+    "direction": "out"
+  },
+  {
+    "pattern": "CONECTCAR",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "CONFEITARIA",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "COPASA",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "COPEL",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "COURSERA",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "CPFL",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "CPTM",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "CRUNCHYROLL",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "CURSO",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "DAFITI",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "DARF",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "DASA",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "DECOLAR",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "DEEZER",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "DETRAN",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "DIA",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "DISNEY",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "DIVIDENDOS",
+    "match": "contains",
+    "category": "other_income",
+    "direction": "in"
+  },
+  {
+    "pattern": "DOMINOS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "DROGA RAIA",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "DROGARIA",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "DROGASIL",
+    "match": "prefix",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "DROPBOX",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "DUOLINGO",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "EMBASA",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "EMPORIO",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "ENEL",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "ENERGISA",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "EPIC GAMES",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "EQUATORIAL",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "ESCOLA",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "ESTACIO",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "ESTACIONAMENTO",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "ESTAPAR",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "EVENTIM",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "EXTRA",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "FACULDADE",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "FARMACIA",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "FAST SHOP",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "FATURA CARTAO",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "FERIAS",
+    "match": "contains",
+    "category": "income",
+    "direction": "in"
+  },
+  {
+    "pattern": "FLEURY",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "FOLHA PAGAMENTO",
+    "match": "contains",
+    "category": "income",
+    "direction": "in"
+  },
+  {
+    "pattern": "GIRAFFAS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "GITHUB",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "GLOBOPLAY",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "GOL LINHAS",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "GOOGLE ONE",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "GOOGLE STORAGE",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "GUANABARA",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "GYMPASS",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "HABIBS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "HAPVIDA",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "HBO MAX",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "HORTIFRUTI",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "HOSPITAL",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "HOTEL",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "ICLOUD",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "IFOOD",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "IMOBILIARIA",
+    "match": "contains",
+    "category": "housing",
+    "direction": "out"
+  },
+  {
+    "pattern": "INGRESSO COM",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "IOF",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "IPIRANGA",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "IPTU",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "IPVA",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "JAPONES",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "JUROS",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "JUROS SOBRE CAPITAL",
+    "match": "contains",
+    "category": "other_income",
+    "direction": "in"
+  },
+  {
+    "pattern": "KABUM",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "KEETA",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "KFC",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "KINOPLEX",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "LABORATORIO",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "LANCHONETE",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "LATAM",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "LEROY MERLIN",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "LICENCIAMENTO",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "LIGHT",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "LOCALIZA",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "MADERO",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "MAGALU",
+    "match": "prefix",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "MAGAZINE LUIZA",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "MAX",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "MCDONALDS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "MERCADINHO",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "MERCADO LIVRE",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "MERCADOLIVRE",
+    "match": "prefix",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "MESMA TITULARIDADE",
+    "match": "contains",
+    "category": "own_transfer",
+    "direction": "any"
+  },
+  {
+    "pattern": "METRO",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "MICROSOFT 365",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "MOVE MAIS",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "MOVIDA",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "MULTA",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "NATURGY",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "NETFLIX",
+    "match": "prefix",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "NETSHOES",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "NOTION",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "NUINVEST",
+    "match": "contains",
+    "category": "investments",
+    "direction": "any"
+  },
+  {
+    "pattern": "OBA HORTIFRUTI",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "ODONTO",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "OI FIBRA",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "OPENAI",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "OUTBACK",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "PACHECO",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "PADARIA",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "PAGAMENTO CARTAO",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PAGAMENTO DE FATURA",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PAGAMENTO FATURA",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PAGAMENTO RECEBIDO",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PAGTO CARTAO",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PAGTO FATURA",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PAGUE MENOS",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "PANVEL",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "PAO DE ACUCAR",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "PARAMOUNT",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "PEDAGIO",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "PGTO CARTAO",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PGTO FATURA",
+    "match": "contains",
+    "category": "card_payment",
+    "direction": "any"
+  },
+  {
+    "pattern": "PIZZA HUT",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "PIZZARIA",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "PLAYSTATION PLUS",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "PLAYSTATION STORE",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "PONTO FRIO",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "POSTO",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "PREMIERE",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "PRIME VIDEO",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "PRO LABORE",
+    "match": "contains",
+    "category": "income",
+    "direction": "in"
+  },
+  {
+    "pattern": "PROVENTOS",
+    "match": "contains",
+    "category": "income",
+    "direction": "in"
+  },
+  {
+    "pattern": "QUINTO ANDAR",
+    "match": "contains",
+    "category": "housing",
+    "direction": "out"
+  },
+  {
+    "pattern": "QUINTOANDAR",
+    "match": "contains",
+    "category": "housing",
+    "direction": "out"
+  },
+  {
+    "pattern": "QUITANDA",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "RAPPI",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "RECEITA FEDERAL",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "REEMBOLSO",
+    "match": "contains",
+    "category": "other_income",
+    "direction": "in"
+  },
+  {
+    "pattern": "RENDIMENTO",
+    "match": "contains",
+    "category": "other_income",
+    "direction": "in"
+  },
+  {
+    "pattern": "RENNER",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "RESGATE",
+    "match": "contains",
+    "category": "investments",
+    "direction": "in"
+  },
+  {
+    "pattern": "RESTAURANTE",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "RESTITUICAO",
+    "match": "contains",
+    "category": "other_income",
+    "direction": "in"
+  },
+  {
+    "pattern": "RIACHUELO",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "RICO INVESTIMENTOS",
+    "match": "contains",
+    "category": "investments",
+    "direction": "any"
+  },
+  {
+    "pattern": "RIOT GAMES",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "SABESP",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "SALARIO",
+    "match": "contains",
+    "category": "income",
+    "direction": "in"
+  },
+  {
+    "pattern": "SAMS CLUB",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "SANEPAR",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "SEM PARAR",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "SHEIN",
+    "match": "prefix",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "SHELL",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "SHOPEE",
+    "match": "prefix",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "SMART FIT",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "SONDA",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "SORVETERIA",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "SPOLETO",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "SPOTIFY",
+    "match": "prefix",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "SPTRANS",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "ST MARCHE",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "STARBUCKS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "STEAM",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "SUBWAY",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "SULAMERICA SAUDE",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "SUPERMERCADO",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "SYMPLA",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "TARIFA",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "TARIFA BANCARIA",
+    "match": "contains",
+    "category": "taxes_fees",
+    "direction": "out"
+  },
+  {
+    "pattern": "TEATRO",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "TELECINE",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "TESOURO DIRETO",
+    "match": "contains",
+    "category": "investments",
+    "direction": "any"
+  },
+  {
+    "pattern": "TICKETMASTER",
+    "match": "contains",
+    "category": "leisure",
+    "direction": "out"
+  },
+  {
+    "pattern": "TIDAL",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "TIM",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "TOK STOK",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "TOTALPASS",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "TRANSF ENTRE CONTAS",
+    "match": "contains",
+    "category": "own_transfer",
+    "direction": "any"
+  },
+  {
+    "pattern": "TRANSF PROPRIA",
+    "match": "contains",
+    "category": "own_transfer",
+    "direction": "any"
+  },
+  {
+    "pattern": "TRANSFERENCIA ENTRE CONTAS",
+    "match": "contains",
+    "category": "own_transfer",
+    "direction": "any"
+  },
+  {
+    "pattern": "TRANSFERENCIA PROPRIA",
+    "match": "contains",
+    "category": "own_transfer",
+    "direction": "any"
+  },
+  {
+    "pattern": "UBER",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "UBER EATS",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  },
+  {
+    "pattern": "UDEMY",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "ULTRAGAZ",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "UNIDAS",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "UNIMED",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "UNIVERSIDADE",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "VELOE",
+    "match": "contains",
+    "category": "transport",
+    "direction": "out"
+  },
+  {
+    "pattern": "VIVO",
+    "match": "contains",
+    "category": "home_services",
+    "direction": "out"
+  },
+  {
+    "pattern": "WELLHUB",
+    "match": "contains",
+    "category": "health",
+    "direction": "out"
+  },
+  {
+    "pattern": "WIZARD",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "XBOX GAME PASS",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "XP INVESTIMENTOS",
+    "match": "contains",
+    "category": "investments",
+    "direction": "any"
+  },
+  {
+    "pattern": "YAZIGI",
+    "match": "contains",
+    "category": "education",
+    "direction": "out"
+  },
+  {
+    "pattern": "YOUTUBE PREMIUM",
+    "match": "contains",
+    "category": "subscriptions",
+    "direction": "out"
+  },
+  {
+    "pattern": "ZAFFARI",
+    "match": "contains",
+    "category": "groceries",
+    "direction": "out"
+  },
+  {
+    "pattern": "ZARA",
+    "match": "contains",
+    "category": "shopping",
+    "direction": "out"
+  },
+  {
+    "pattern": "ZE DELIVERY",
+    "match": "contains",
+    "category": "eating_out",
+    "direction": "out"
+  }
+]

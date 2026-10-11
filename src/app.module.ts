@@ -24,6 +24,7 @@ import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PortfolioExportModule } from './modules/portfolio-export/portfolio-export.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { PositionsModule } from './modules/positions/positions.module';
+import { SpendingCategoriesModule } from './modules/spending-categories/spending-categories.module';
 
 const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'];
 
@@ -60,7 +61,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         MarketDataModule,
         PortfolioModule,
         PortfolioExportModule,
-        ContributionModule
+        ContributionModule,
+        SpendingCategoriesModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
