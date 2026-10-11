@@ -6,7 +6,10 @@ import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionImportDomain } from '../domain/transaction-import.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { FinancialAccount } from '../domain/transactions.types';
+import { AppContext } from '../../../core/context/app-context.port';
+import { AppLocale } from '../../../shared/i18n/locale';
 import { SpendingDatasetService } from './spending-dataset.service';
+import { SpendingSampleDatasetService } from './spending-sample-dataset.service';
 import { SpendingSampleDataService } from './spending-sample-data.service';
 import { TransactionIngestionService } from './transaction-ingestion.service';
 import { TransactionsLogService } from './transactions-log.service';
@@ -25,7 +28,7 @@ interface Built {
     readonly logs: ReturnType<typeof vi.fn>;
 }
 
-function build(accounts: FinancialAccount[] = [], realTransactions: number = 0): Built {
+function build(accounts: FinancialAccount[] = [], realTransactions: number = 0, locale: AppLocale = 'pt-BR'): Built {
     const store: Built['store'] = { accounts, realTransactions, sampleTransactions: 0 };
     const ingest: ReturnType<typeof vi.fn> = vi.fn().mockImplementation((batch: { items: unknown[] }) => {
         store.sampleTransactions += batch.items.length;
@@ -56,7 +59,9 @@ function build(accounts: FinancialAccount[] = [], realTransactions: number = 0):
         importDomain as unknown as TransactionImportDomain,
         { listForCompany: vi.fn().mockResolvedValue([]) } as unknown as CategoryReaderService,
         rules as unknown as CategoryRuleService,
-        new SpendingDatasetService(),
+        new SpendingSampleDatasetService(new SpendingDatasetService(), {
+            get: () => ({ requestId: 'r', locale })
+        } as unknown as AppContext),
         { ingest } as unknown as TransactionIngestionService,
         { sample } as unknown as TransactionsLogService
     );
@@ -87,6 +92,18 @@ describe('SpendingSampleDataService', () => {
             expect(batch.items.every((item: { externalId: string }): boolean => item.externalId.startsWith('sample:'))).toBe(true);
         }
         expect(built.logs).toHaveBeenCalledWith('seeded', DATASET_SIZE);
+    });
+
+    it('numa sessão em inglês, cria as contas de exemplo com nome em inglês e o mesmo conjunto canônico', async () => {
+        const built: Built = build([], 0, 'en');
+
+        await expect(built.service.seed()).resolves.toBe(DATASET_SIZE);
+
+        expect(built.store.accounts.map((account: FinancialAccount): string => account.name)).toEqual([
+            'Sample card',
+            'Sample account',
+            'Sample account 2'
+        ]);
     });
 
     it('com conta real não grava nada', async () => {
