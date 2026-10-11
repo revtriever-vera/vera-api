@@ -62,6 +62,16 @@ export interface AssetClasses {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssetQuotes {
+    assetId: string;
+    currency: string;
+    fetchedAt: Generated<Timestamp>;
+    price: Numeric;
+    priceDate: Timestamp;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Assets {
     createdAt: Generated<Timestamp>;
     currency: string;
@@ -120,6 +130,16 @@ export interface Companies {
     name: string;
     timezone: Generated<string>;
     updatedAt: Generated<Timestamp>;
+}
+
+export interface ExchangeRates {
+    brlPerUnit: Numeric;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    date: Timestamp;
+    fetchedAt: Generated<Timestamp>;
+    id: string;
+    source: string;
 }
 
 export interface FixedIncomeTitles {
@@ -186,6 +206,25 @@ export interface Positions {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface ProviderUsage {
+    count: number;
+    id: string;
+    provider: string;
+    windowKind: string;
+    windowStart: Timestamp;
+}
+
+export interface QuoteFetchFailures {
+    assetId: string | null;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    provider: string;
+    reason: string;
+    resolvedAt: Timestamp | null;
+    stage: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Sessions {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -231,15 +270,19 @@ export interface DB {
     AccountDeletionLog: AccountDeletionLog;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
+    AssetQuotes: AssetQuotes;
     Assets: Assets;
     AuthIdentities: AuthIdentities;
     CatalogSyncRuns: CatalogSyncRuns;
     Companies: Companies;
+    ExchangeRates: ExchangeRates;
     FixedIncomeTitles: FixedIncomeTitles;
     IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;
+    ProviderUsage: ProviderUsage;
+    QuoteFetchFailures: QuoteFetchFailures;
     Sessions: Sessions;
     Throttles: Throttles;
     Users: Users;

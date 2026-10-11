@@ -49,7 +49,12 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     QUEUES_DASHBOARD_PASSWORD: '/vera/queues-dashboard-password',
     GOOGLE_CLIENT_ID: '/vera/google-client-id',
     FACEBOOK_APP_ID: '/vera/facebook-app-id',
-    FACEBOOK_APP_SECRET: '/vera/facebook-app-secret'
+    FACEBOOK_APP_SECRET: '/vera/facebook-app-secret',
+    BRAPI_TOKEN: '/vera/brapi-token',
+    FINNHUB_API_KEY: '/vera/finnhub-api-key',
+    TWELVEDATA_API_KEY: '/vera/twelvedata-api-key',
+    ALPHAVANTAGE_API_KEY: '/vera/alphavantage-api-key',
+    COINGECKO_API_KEY: '/vera/coingecko-api-key'
 };
 const OTLP_PROTOCOL: string = 'http/protobuf';
 const TUNNEL_TOKEN_PARAMETER: string = '/vera/tunnel-token';

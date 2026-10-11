@@ -3,6 +3,7 @@ import { ConfigType } from '@nestjs/config';
 import { catalogConfig } from '../config/catalog.config';
 import { CatalogSourceError } from '../domain/catalog.errors';
 import { SOURCE_ERROR_CODES } from '../domain/catalog.types';
+import { treasuryTypeOf } from '../domain/treasury-types';
 import { cell, columnIndexes, linesOf } from '../drivers/line-stream';
 import { fetchSource, sourceErrorOfStatus } from '../drivers/source-fetch';
 
@@ -34,6 +35,11 @@ export function isoDateOf(brazilian: string): string | null {
 export function decimalOf(brazilian: string): string | null {
     const normalized: string = brazilian.replace(/\./g, '').replace(',', '.');
     return /^\d+(\.\d+)?$/.test(normalized) ? normalized : null;
+}
+
+export function treasuryKeyOf(bond: TesouroBond): string | null {
+    const type: { slug: string } | null = treasuryTypeOf(bond.typeName);
+    return type === null ? null : `${type.slug}:${bond.maturityDate}`;
 }
 
 class LatestBondCollector {

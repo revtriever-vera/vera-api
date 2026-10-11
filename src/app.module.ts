@@ -17,6 +17,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { FixedIncomeModule } from './modules/fixed-income/fixed-income.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { MarketDataModule } from './modules/market-data/market-data.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PositionsModule } from './modules/positions/positions.module';
 
@@ -50,7 +51,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         OnboardingModule,
         CatalogModule,
         FixedIncomeModule,
-        PositionsModule
+        PositionsModule,
+        MarketDataModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
