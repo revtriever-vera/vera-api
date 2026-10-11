@@ -1,4 +1,7 @@
-export const COMMAND_KEYS = {} as const;
+export const COMMAND_KEYS = {
+    catalogSyncWeekly: 'catalog-sync-weekly-command',
+    catalogSyncTesouroDaily: 'catalog-sync-tesouro-daily-command'
+} as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
 
@@ -9,6 +12,7 @@ export const CRON = {
     everyHour: '0 * * * *',
     everySixHours: '0 */6 * * *',
     everyDayAtMidnight: '0 0 * * *',
+    everyDayAtSixAm: '0 6 * * *',
     everyDayAtFourAm: '0 4 * * *',
     everyDayAtSevenAm: '0 7 * * *',
     everyDayAtNineAm: '0 9 * * *',
