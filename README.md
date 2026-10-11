@@ -71,7 +71,26 @@ Os testes de integração sobem Postgres e Redis por Testcontainers e são pesad
 
 ## Antes do primeiro deploy
 
-O deploy ainda não existe neste repositório. A infraestrutura (CDK) chega no card #34 e o pipeline de CI/CD no #36. Quando existirem, nenhum valor de infraestrutura (conta, rede, banco, endpoint) fica no código: tudo vem de variáveis e secrets do repositório ou do SSM Parameter Store. Este repositório é público, então nunca grave nesses arquivos IDs de conta, hosts internos, e-mails pessoais, tokens ou chaves.
+O deploy ainda não existe neste repositório. A infraestrutura de dados (CDK, pasta `infra/`) já existe e o pipeline de CI/CD chega no #36. Quando existirem, nenhum valor de infraestrutura (conta, rede, banco, endpoint) fica no código: tudo vem de variáveis e secrets do repositório ou do SSM Parameter Store. Este repositório é público, então nunca grave nesses arquivos IDs de conta, hosts internos, e-mails pessoais, tokens ou chaves.
+
+### CDK local
+
+O CDK lê tudo o que identifica a infraestrutura das variáveis de ambiente, nunca do código. Crie um `.env.local` (ignorado pelo git) com os valores da sua conta e carregue-o antes de qualquer comando `cdk`:
+
+```bash
+AWS_ACCOUNT_ID_DEV=<id da conta de dev>
+AWS_ACCOUNT_ID_PROD=<id da conta de prod>
+VERA_DOMAIN=<seu domínio>
+SHARED_INFRA_DEV='{"vpcId":"...","availabilityZones":["..."],"publicSubnetIds":["..."],"databaseInstanceId":"...","databaseEndpoint":"...","databaseSecurityGroupId":"...","redisEndpoint":"...","redisSecurityGroupId":"...","openIdConnectProviderArn":"..."}'
+SHARED_INFRA_PROD='<mesmo formato>'
+```
+
+```bash
+set -a && . ./.env.local && set +a
+npx cdk synth
+```
+
+`VERA_ENVIRONMENTS=prod` (ou `dev`) limita a síntese a um ambiente e dispensa as variáveis do outro; `IMAGE_PULL_ACCOUNTS` (IDs separados por vírgula) autoriza outras contas a puxar imagens do ECR. Se faltar variável ou o JSON for inválido, o `cdk` falha dizendo qual. O banco lógico `vera` e o papel dele na instância compartilhada são criados à mão, de uma máquina liberada no security group do RDS, e a URL de conexão é gravada no SSM em `/vera/database-url`.
 
 ## Licença
 
