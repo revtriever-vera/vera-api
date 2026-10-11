@@ -24,4 +24,8 @@ export class AuthIdentitiesRepository extends TenantRepository<'AuthIdentities'>
     public async touchLogin(id: string, at: Date): Promise<AuthIdentity | null> {
         return this.updateRow(id, { lastLoginAt: at });
     }
+
+    public async findByUser(userId: string): Promise<AuthIdentity[]> {
+        return this.findMany({ userId }, { orderBy: [{ property: 'createdAt', direction: 'asc' }] });
+    }
 }

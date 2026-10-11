@@ -1,16 +1,18 @@
 import { Insertable, Selectable } from 'kysely';
-import { AuthIdentities, Companies, Sessions, Users } from '../../../core/database/generated/database.types';
+import { AccountDeletionLog, AuthIdentities, Companies, Sessions, Users } from '../../../core/database/generated/database.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 
 export type Company = Selectable<Companies>;
 export type User = Selectable<Users>;
 export type Session = Selectable<Sessions>;
 export type AuthIdentity = Selectable<AuthIdentities>;
+export type AccountDeletionRecord = Selectable<AccountDeletionLog>;
 
 export type NewCompany = Insertable<Companies>;
 export type NewUser = Insertable<Users>;
 export type NewSession = Insertable<Sessions>;
 export type NewAuthIdentity = Insertable<AuthIdentities>;
+export type NewAccountDeletionRecord = Insertable<AccountDeletionLog>;
 
 export const USER_ROLES = {
     owner: 'owner',
@@ -60,3 +62,25 @@ export const REFRESH_OUTCOMES = {
 } as const;
 
 export type RefreshOutcome = (typeof REFRESH_OUTCOMES)[keyof typeof REFRESH_OUTCOMES];
+
+export interface ErasedArea {
+    readonly area: string;
+    readonly erased: number;
+}
+
+export const ACCOUNT_EXPORT_FORMAT: string = 'vera-export/1';
+
+export const ACCOUNT_DELETION_OUTCOMES = {
+    success: 'success',
+    erasureFailed: 'erasure_failed',
+    mismatch: 'mismatch'
+} as const;
+
+export type AccountDeletionOutcome = (typeof ACCOUNT_DELETION_OUTCOMES)[keyof typeof ACCOUNT_DELETION_OUTCOMES];
+
+export const ACCOUNT_EXPORT_OUTCOMES = {
+    success: 'success',
+    failed: 'failed'
+} as const;
+
+export type AccountExportOutcome = (typeof ACCOUNT_EXPORT_OUTCOMES)[keyof typeof ACCOUNT_EXPORT_OUTCOMES];

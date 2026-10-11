@@ -5,6 +5,8 @@ import { TenantRepository } from '../../../core/database/repositories/tenant.rep
 import { IdUtil } from '../../../shared/utils/id.util';
 import { NewSession, Session } from '../domain/identity.types';
 
+const ACTIVE_SESSIONS_LIMIT: number = 100;
+
 type CreateSessionData = Pick<NewSession, 'userId' | 'familyId' | 'tokenHash' | 'provider' | 'expiresAt'> &
     Partial<Pick<NewSession, 'ip' | 'userAgent'>>;
 
@@ -37,5 +39,12 @@ export class SessionsRepository extends TenantRepository<'Sessions'> {
     public async revokeFamily(familyId: string): Promise<number> {
         const rows: Session[] = await this.updateManyRows({ familyId, revokedAt: null }, { revokedAt: new Date() });
         return rows.length;
+    }
+
+    public async findActive(userId: string, now: Date): Promise<Session[]> {
+        return this.findMany(
+            { userId, revokedAt: null, expiresAt: { '>': now } },
+            { orderBy: [{ property: 'createdAt', direction: 'asc' }], limit: ACTIVE_SESSIONS_LIMIT }
+        );
     }
 }

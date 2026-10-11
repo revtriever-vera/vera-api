@@ -38,4 +38,8 @@ export class SessionDomain {
     public async revokeFamily(familyId: string): Promise<number> {
         return this.sessions.revokeFamily(familyId);
     }
+
+    public async listActive(userId: string): Promise<Session[]> {
+        return this.sessions.findActive(userId, new Date());
+    }
 }
