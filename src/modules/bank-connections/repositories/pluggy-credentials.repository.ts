@@ -5,7 +5,7 @@ import { TenantRepository } from '../../../core/database/repositories/tenant.rep
 import { IdUtil } from '../../../shared/utils/id.util';
 import { NewPluggyCredential, PluggyCredential } from '../domain/bank-connections.types';
 
-type ReplaceData = Pick<NewPluggyCredential, 'sealed' | 'sealerDriver' | 'clientIdHint'>;
+type ReplaceData = Pick<NewPluggyCredential, 'sealed' | 'sealerDriver' | 'clientIdHint' | 'verifiedWith'>;
 
 const ERASE_BATCH: number = 100;
 
@@ -32,8 +32,8 @@ export class PluggyCredentialsRepository extends TenantRepository<'PluggyCredent
         return { credential, replaced: replaced > 0 };
     }
 
-    public async markValid(id: string): Promise<PluggyCredential | null> {
-        return this.updateRow(id, { status: 'valid', lastVerifiedAt: new Date(), lastErrorCode: null });
+    public async markValid(id: string, verifiedWith: string): Promise<PluggyCredential | null> {
+        return this.updateRow(id, { status: 'valid', verifiedWith, lastVerifiedAt: new Date(), lastErrorCode: null });
     }
 
     public async markInvalid(id: string, errorCode: string): Promise<PluggyCredential | null> {

@@ -9,6 +9,7 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_HTTP_TIMEOUT_MS: 10_000,
             PLUGGY_AUTH_PATH: '/auth',
             PLUGGY_ITEM_PATH: '/items',
+            PLUGGY_MOCK_ALLOWED: true,
             MOCK_PLUGGY_FORCE_401: false,
             MOCK_PLUGGY_REVOKED_ITEMS: []
         });
@@ -43,6 +44,7 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_HTTP_TIMEOUT_MS: 2500,
             PLUGGY_AUTH_PATH: '/v2/auth',
             PLUGGY_ITEM_PATH: '/v2/items',
+            PLUGGY_MOCK_ALLOWED: false,
             MOCK_PLUGGY_FORCE_401: true,
             MOCK_PLUGGY_REVOKED_ITEMS: ['aaa', 'bbb']
         });

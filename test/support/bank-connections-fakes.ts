@@ -31,6 +31,7 @@ import { BankConnectionsMetricsService } from '../../src/modules/bank-connection
 import { BankSyncPublisherService } from '../../src/modules/bank-connections/services/bank-sync-publisher.service';
 import { ConnectionViewService } from '../../src/modules/bank-connections/services/connection-view.service';
 import { CredentialsVaultService } from '../../src/modules/bank-connections/services/credentials-vault.service';
+import { PluggyAvailabilityService } from '../../src/modules/bank-connections/services/pluggy-availability.service';
 import { PluggyAuthenticatorService } from '../../src/modules/bank-connections/services/pluggy-authenticator.service';
 import { PluggyCredentialsEraser } from '../../src/modules/bank-connections/services/pluggy-credentials.eraser';
 import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
@@ -62,6 +63,7 @@ export class InMemoryCredentialsRepository {
         sealed: string;
         sealerDriver: string;
         clientIdHint: string;
+        verifiedWith: string;
     }): Promise<{ credential: PluggyCredential; replaced: boolean }> {
         const replaced: boolean = this.rows.length > 0;
         const credential: PluggyCredential = {
@@ -79,8 +81,8 @@ export class InMemoryCredentialsRepository {
         return Promise.resolve({ credential, replaced });
     }
 
-    public markValid(id: string): Promise<PluggyCredential | null> {
-        return Promise.resolve(this.patch(id, { status: 'valid', lastVerifiedAt: new Date(), lastErrorCode: null }));
+    public markValid(id: string, verifiedWith: string): Promise<PluggyCredential | null> {
+        return Promise.resolve(this.patch(id, { status: 'valid', verifiedWith, lastVerifiedAt: new Date(), lastErrorCode: null }));
     }
 
     public markInvalid(id: string, errorCode: string): Promise<PluggyCredential | null> {
@@ -281,6 +283,7 @@ export function configOf(overrides: Partial<ConfigType<typeof bankConnectionsCon
         PLUGGY_HTTP_TIMEOUT_MS: 1000,
         PLUGGY_AUTH_PATH: '/auth',
         PLUGGY_ITEM_PATH: '/items',
+        PLUGGY_MOCK_ALLOWED: true,
         MOCK_PLUGGY_FORCE_401: false,
         MOCK_PLUGGY_REVOKED_ITEMS: [],
         ...overrides
@@ -386,6 +389,7 @@ interface Core {
     readonly context: AppContext;
     readonly sealer: LocalSecretSealerDriver;
     readonly vault: CredentialsVaultService;
+    readonly availability: PluggyAvailabilityService;
     readonly client: PluggyClientPort;
     readonly publisher: RecordingPublisher;
     readonly accountService: Fixture['accountService'];
@@ -401,7 +405,8 @@ function newCore(options: BuildOptions, domains: Domains, observability: Observa
     return {
         context,
         sealer,
-        vault: new CredentialsVaultService(domains.credentialsDomain, sealer, context),
+        vault: new CredentialsVaultService(domains.credentialsDomain, sealer, context, configOf(options.config)),
+        availability: new PluggyAvailabilityService(configOf(options.config)),
         client: new ObservedPluggyClient(inner, observability.logs, observability.metrics),
         publisher: new RecordingPublisher(),
         accountService: fakeAccountService()
@@ -431,8 +436,8 @@ function wireApplications(
     domains: Domains,
     observability: Observability
 ): Pick<Fixture, 'credentialsApplication' | 'connectionsApplication'> {
-    const authenticator: PluggyAuthenticatorService = new PluggyAuthenticatorService(core.client, core.vault);
-    const sync: BankSyncPublisherService = new BankSyncPublisherService(core.publisher, core.context);
+    const authenticator: PluggyAuthenticatorService = new PluggyAuthenticatorService(core.client, core.vault, core.availability);
+    const sync: BankSyncPublisherService = new BankSyncPublisherService(core.publisher, core.context, observability.logs);
     const accounts: FinancialAccountService = core.accountService as unknown as FinancialAccountService;
     const views: ConnectionViewService = new ConnectionViewService(domains.connectionDomain, accounts);
     const { logs, metrics } = observability;

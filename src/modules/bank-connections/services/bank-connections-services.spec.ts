@@ -1,12 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 import { LogService } from '../../../core/observability/log.service';
 import { MetricsService } from '../../../core/observability/metrics.service';
-import { buildFixture, CLIENT_ID, Fixture, ITEM_ITAU, ITEM_NUBANK, SENTINEL } from '../../../../test/support/bank-connections-fakes';
+import {
+    buildFixture,
+    CLIENT_ID,
+    configOf,
+    Fixture,
+    ITEM_ITAU,
+    ITEM_NUBANK,
+    SENTINEL
+} from '../../../../test/support/bank-connections-fakes';
 import { PluggyCredentialsPlain } from '../drivers/pluggy-session';
 import { BankConnectionReaderService } from './bank-connection-reader.service';
 import { BankConnectionsLogService } from './bank-connections-log.service';
 import { BankConnectionsMetricsService, statusClassOf } from './bank-connections-metrics.service';
 import { BankSyncPublisherService, hourStampOf, syncJobId } from './bank-sync-publisher.service';
+import { PluggyAvailabilityService } from './pluggy-availability.service';
 import { PluggyCredentialsResealer } from './pluggy-credentials.resealer';
 
 async function withConnections(): Promise<Fixture> {
@@ -44,7 +53,7 @@ describe('CredentialsVaultService', () => {
 
     it('trata selado que não abre mais como credencial inválida e a marca', async () => {
         const fixture: Fixture = buildFixture();
-        await fixture.vault.store({ sealed: 'lixo', sealerDriver: 'local', clientIdHint: 'abcd…wxyz' });
+        await fixture.vault.store({ sealed: 'lixo', sealerDriver: 'local', clientIdHint: 'abcd…wxyz', verifiedWith: 'mock' });
 
         await expect(fixture.vault.openForCurrentCompany()).rejects.toMatchObject({ code: 'connections.invalid_credentials' });
 
@@ -90,8 +99,30 @@ describe('BankSyncPublisherService', () => {
         expect(syncJobId('c1', 'daily', at)).toBe('pluggy-sync-c1-daily-2026101109');
     });
 
+    it('falha de fila depois do commit vira warn e não derruba a chamada', async () => {
+        const warn: ReturnType<typeof vi.fn> = vi.fn();
+        const logs: BankConnectionsLogService = new BankConnectionsLogService({ warn } as unknown as LogService);
+        const publisher: BankSyncPublisherService = new BankSyncPublisherService(
+            { publish: vi.fn().mockRejectedValue(new Error('redis fora')) },
+            { getOrNull: () => ({ companyId: 'company-1' }) } as never,
+            logs
+        );
+
+        await expect(publisher.publishAll(['c1', 'c2'], 'initial')).resolves.toBeUndefined();
+
+        expect(warn).toHaveBeenCalledTimes(2);
+        expect(warn.mock.calls[0]?.[0]).toMatchObject({
+            identifier: 'bank-connections-sync-publish',
+            meta: { connectionId: 'c1', trigger: 'initial' }
+        });
+    });
+
     it('falha alto sem contexto de company', async () => {
-        const publisher: BankSyncPublisherService = new BankSyncPublisherService({ publish: vi.fn() }, { getOrNull: () => null } as never);
+        const publisher: BankSyncPublisherService = new BankSyncPublisherService(
+            { publish: vi.fn() },
+            { getOrNull: () => null } as never,
+            {} as never
+        );
 
         await expect(publisher.publishAll(['c1'], 'initial')).rejects.toMatchObject({ code: 'core.missing_tenant_context' });
     });
@@ -208,5 +239,57 @@ describe('BankConnectionsLogService e BankConnectionsMetricsService', () => {
         [null, 'network']
     ])('classifica o status %s como %s', (status, expected) => {
         expect(statusClassOf(status)).toBe(expected);
+    });
+});
+
+describe('PluggyAvailabilityService e driver verificado', () => {
+    it('bloqueia o mock fora do ambiente local e libera no local ou com o live', () => {
+        const blocked: PluggyAvailabilityService = new PluggyAvailabilityService(configOf({ PLUGGY_MOCK_ALLOWED: false }));
+
+        expect(() => {
+            blocked.assertEnabled();
+        }).toThrowError('connections.provider_disabled');
+        expect(() => {
+            new PluggyAvailabilityService(configOf()).assertEnabled();
+        }).not.toThrow();
+        expect(() => {
+            new PluggyAvailabilityService(configOf({ PLUGGY_DRIVER: 'live', PLUGGY_MOCK_ALLOWED: false })).assertEnabled();
+        }).not.toThrow();
+        expect(blocked.driver).toBe('mock');
+    });
+
+    it('grava com qual driver a credencial foi verificada', async () => {
+        const fixture: Fixture = buildFixture();
+
+        await fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: SENTINEL });
+
+        expect(fixture.credentials.rows[0]?.verifiedWith).toBe('mock');
+    });
+
+    it('credencial verificada com outro driver exige novo teste e o teste a revalida', async () => {
+        const fixture: Fixture = buildFixture();
+        await fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: SENTINEL });
+        const live: Fixture = buildFixture({ config: { PLUGGY_DRIVER: 'live' } });
+        live.credentials.rows = fixture.credentials.rows;
+
+        await expect(live.vault.openForCurrentCompany()).rejects.toMatchObject({ code: 'connections.invalid_credentials' });
+        expect(live.credentials.rows[0]).toMatchObject({ status: 'invalid', lastErrorCode: 'driver_changed' });
+        await expect(live.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({ code: 'connections.invalid_credentials' });
+        await live.vault.markValid();
+        expect(live.credentials.rows[0]).toMatchObject({ status: 'valid', verifiedWith: 'live' });
+    });
+
+    it('as rotas de credencial e de conexão respondem provider_disabled com o mock fora do local', async () => {
+        const fixture: Fixture = buildFixture({ config: { PLUGGY_MOCK_ALLOWED: false } });
+
+        await expect(fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: SENTINEL })).rejects.toMatchObject({
+            code: 'connections.provider_disabled',
+            status: 503
+        });
+        await expect(fixture.credentialsApplication.test()).rejects.toMatchObject({ code: 'connections.provider_disabled' });
+        await expect(fixture.connectionsApplication.connect([ITEM_NUBANK])).rejects.toMatchObject({
+            code: 'connections.provider_disabled'
+        });
+        expect(fixture.credentials.rows).toEqual([]);
     });
 });

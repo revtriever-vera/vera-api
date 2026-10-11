@@ -18,6 +18,7 @@ import { BankConnectionsMetricsService } from '../services/bank-connections-metr
 import { BankSyncPublisherService } from '../services/bank-sync-publisher.service';
 import { ConnectionViewService } from '../services/connection-view.service';
 import { CredentialsVaultService } from '../services/credentials-vault.service';
+import { PluggyAvailabilityService } from '../services/pluggy-availability.service';
 import { PluggyAuthenticatorService } from '../services/pluggy-authenticator.service';
 import { PluggyCredentialsEraser } from '../services/pluggy-credentials.eraser';
 import { PluggyCredentialsResealer } from '../services/pluggy-credentials.resealer';
@@ -41,6 +42,7 @@ import { CredentialsApplication } from './credentials.application';
         BankConnectionsMetricsService,
         CredentialsVaultService,
         PluggyAuthenticatorService,
+        PluggyAvailabilityService,
         BankSyncPublisherService,
         ConnectionViewService,
         BankConnectionReaderService,

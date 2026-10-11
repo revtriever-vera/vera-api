@@ -21,6 +21,16 @@ export class PluggyProviderUnavailableError extends AppError {
     }
 }
 
+export class ProviderDisabledError extends AppError {
+    public constructor() {
+        super({
+            code: 'connections.provider_disabled',
+            status: 503,
+            detail: 'The Pluggy integration is not enabled in this environment.'
+        });
+    }
+}
+
 export class CredentialsMissingError extends AppError {
     public constructor() {
         super({

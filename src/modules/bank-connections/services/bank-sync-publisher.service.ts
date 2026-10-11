@@ -3,6 +3,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { MissingTenantContextError } from '../../../core/database/database.errors';
 import { QueuePublisherPort } from '../../../core/queue/queue.types';
 import { MESSAGE_TYPES, QUEUES } from '../../../shared/constants/queues.constants';
+import { BankConnectionsLogService } from './bank-connections-log.service';
 import { SyncRequestedPayload, SyncTrigger } from '../domain/bank-connections.types';
 
 const HOUR_STAMP_LENGTH: number = 10;
@@ -19,7 +20,8 @@ export function syncJobId(connectionId: string, trigger: SyncTrigger, at: Date):
 export class BankSyncPublisherService {
     public constructor(
         private readonly publisher: QueuePublisherPort,
-        private readonly context: AppContext
+        private readonly context: AppContext,
+        private readonly logs: BankConnectionsLogService
     ) {}
 
     public async publishAll(connectionIds: readonly string[], trigger: SyncTrigger): Promise<void> {
@@ -30,9 +32,15 @@ export class BankSyncPublisherService {
         const now: Date = new Date();
         for (const connectionId of connectionIds) {
             const payload: SyncRequestedPayload = { connectionId, companyId, trigger };
-            await this.publisher.publish(QUEUES.bankConnections, MESSAGE_TYPES.bankConnectionsSyncRequested, payload, {
-                jobId: syncJobId(connectionId, trigger, now)
-            });
+            await this.publishOne(payload, syncJobId(connectionId, trigger, now));
+        }
+    }
+
+    private async publishOne(payload: SyncRequestedPayload, jobId: string): Promise<void> {
+        try {
+            await this.publisher.publish(QUEUES.bankConnections, MESSAGE_TYPES.bankConnectionsSyncRequested, payload, { jobId });
+        } catch (error: unknown) {
+            this.logs.syncPublishFailed(payload.connectionId, payload.trigger, error);
         }
     }
 }

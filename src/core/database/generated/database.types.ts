@@ -274,6 +274,7 @@ export interface PluggyCredentials {
     sealerDriver: string;
     status: string;
     updatedAt: Generated<Timestamp>;
+    verifiedWith: Generated<string>;
 }
 
 export interface PortfolioSettings {

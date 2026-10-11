@@ -39,6 +39,7 @@ export interface BankConnectionsSettings {
     readonly PLUGGY_HTTP_TIMEOUT_MS: number;
     readonly PLUGGY_AUTH_PATH: string;
     readonly PLUGGY_ITEM_PATH: string;
+    readonly PLUGGY_MOCK_ALLOWED: boolean;
     readonly MOCK_PLUGGY_FORCE_401: boolean;
     readonly MOCK_PLUGGY_REVOKED_ITEMS: readonly string[];
 }
@@ -62,6 +63,7 @@ export function parseBankConnectionsConfig(env: NodeJS.ProcessEnv): BankConnecti
         PLUGGY_HTTP_TIMEOUT_MS: parsed.PLUGGY_HTTP_TIMEOUT_MS,
         PLUGGY_AUTH_PATH: parsed.PLUGGY_AUTH_PATH,
         PLUGGY_ITEM_PATH: parsed.PLUGGY_ITEM_PATH,
+        PLUGGY_MOCK_ALLOWED: env['IS_LOCAL'] === 'true',
         MOCK_PLUGGY_FORCE_401: parsed.MOCK_PLUGGY_FORCE_401 === 'true',
         MOCK_PLUGGY_REVOKED_ITEMS: revokedItemsOf(parsed.MOCK_PLUGGY_REVOKED_ITEMS)
     };

@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { AppContext } from '../../../core/context/app-context.port';
 import { SecretOpenFailedError } from '../../../core/crypto/secret-sealer.errors';
 import { SealContext, SecretSealerPort } from '../../../core/crypto/secret-sealer.port';
 import { MissingTenantContextError } from '../../../core/database/database.errors';
+import { bankConnectionsConfig } from '../config/bank-connections.config';
 import { InvalidPluggyCredentialsError } from '../domain/bank-connections.errors';
 import { CREDENTIAL_STATUSES, PLUGGY_CREDENTIALS_PURPOSE, PluggyCredential } from '../domain/bank-connections.types';
 import { hintOf } from '../domain/client-id-hint';
@@ -10,13 +12,15 @@ import { PluggyCredentialsDomain, ReplacedCredentials, SealedCredentials } from 
 import { PluggyCredentialsPlain } from '../drivers/pluggy-session';
 
 const UNREADABLE_CODE: string = 'secret_unreadable';
+const DRIVER_CHANGED_CODE: string = 'driver_changed';
 
 @Injectable()
 export class CredentialsVaultService {
     public constructor(
         private readonly credentials: PluggyCredentialsDomain,
         private readonly sealer: SecretSealerPort,
-        private readonly context: AppContext
+        private readonly context: AppContext,
+        @Inject(bankConnectionsConfig.KEY) private readonly config: ConfigType<typeof bankConnectionsConfig>
     ) {}
 
     public async current(): Promise<PluggyCredential | null> {
@@ -27,7 +31,8 @@ export class CredentialsVaultService {
         return {
             sealed: await this.sealer.seal(plain.toSealableJson(), this.sealContext()),
             sealerDriver: this.sealer.driver,
-            clientIdHint: hintOf(plain.clientIdValue)
+            clientIdHint: hintOf(plain.clientIdValue),
+            verifiedWith: this.config.PLUGGY_DRIVER
         };
     }
 
@@ -40,6 +45,10 @@ export class CredentialsVaultService {
         if (credential.status === CREDENTIAL_STATUSES.invalid) {
             throw new InvalidPluggyCredentialsError();
         }
+        if (credential.verifiedWith !== this.config.PLUGGY_DRIVER) {
+            await this.credentials.markInvalid(DRIVER_CHANGED_CODE);
+            throw new InvalidPluggyCredentialsError();
+        }
         return PluggyCredentialsPlain.fromSealedJson(await this.openSealed(credential));
     }
 
@@ -48,7 +57,7 @@ export class CredentialsVaultService {
     }
 
     public async markValid(): Promise<PluggyCredential> {
-        return this.credentials.markValid();
+        return this.credentials.markValid(this.config.PLUGGY_DRIVER);
     }
 
     public async markInvalid(code: string): Promise<void> {

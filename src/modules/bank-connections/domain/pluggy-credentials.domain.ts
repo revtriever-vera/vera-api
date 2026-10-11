@@ -7,6 +7,7 @@ export interface SealedCredentials {
     readonly sealed: string;
     readonly sealerDriver: string;
     readonly clientIdHint: string;
+    readonly verifiedWith: string;
 }
 
 export interface ReplacedCredentials {
@@ -34,9 +35,9 @@ export class PluggyCredentialsDomain {
         return this.credentials.replaceCurrent(sealed);
     }
 
-    public async markValid(): Promise<PluggyCredential> {
+    public async markValid(verifiedWith: string): Promise<PluggyCredential> {
         const current: PluggyCredential = await this.require();
-        return (await this.credentials.markValid(current.id)) ?? current;
+        return (await this.credentials.markValid(current.id, verifiedWith)) ?? current;
     }
 
     public async markInvalid(errorCode: string): Promise<PluggyCredential | null> {
