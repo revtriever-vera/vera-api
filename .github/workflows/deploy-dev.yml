@@ -20,6 +20,7 @@ env:
   AWS_ACCOUNT_ID_DEV: ${{ vars.AWS_ACCOUNT_ID_DEV }}
   SHARED_INFRA_DEV: ${{ vars.SHARED_INFRA_DEV }}
   VERA_DOMAIN: ${{ vars.VERA_DOMAIN }}
+  VERA_HOST_PREFIX: ${{ vars.VERA_HOST_PREFIX }}
 
 jobs:
   deploy:

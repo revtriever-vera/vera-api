@@ -53,6 +53,18 @@ describe('settingsFrom', () => {
 });
 
 describe('routesOf', () => {
+    it('applies VERA_HOST_PREFIX to every hostname', () => {
+        const prefixed: TunnelSettings = settingsFrom(['dev'], { ...ENV, VERA_HOST_PREFIX: 'vera-' });
+        expect(routesOf(prefixed).map((route) => route.hostname)).toEqual(['vera-api-dev.example.test', 'vera-mail-dev.example.test']);
+        expect(routesOf(settingsFrom(['prod'], { ...ENV, VERA_HOST_PREFIX: 'vera-' })).map((route) => route.hostname)).toEqual([
+            'vera-api.example.test'
+        ]);
+    });
+
+    it.each(['vera', 'Vera_-', 'a.b-', 'abcdefghijklmnopqrstu-'])('rejects the invalid prefix %s', (value: string) => {
+        expect(() => settingsFrom(['dev'], { ...ENV, VERA_HOST_PREFIX: value })).toThrow('VERA_HOST_PREFIX');
+    });
+
     it('routes api-dev and the mailpit webmail in dev', () => {
         expect(routesOf(settings('dev'))).toEqual([
             { hostname: 'api-dev.example.test', service: 'http://localhost:3333' },
