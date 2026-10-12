@@ -60,6 +60,29 @@ describe('fromEnvironment', () => {
         );
     });
 
+    it('prefixa todos os hosts de dev com VERA_HOST_PREFIX', () => {
+        const config = fromEnvironment('dev', fakeEnvironment({ VERA_HOST_PREFIX: 'vera-' }));
+
+        expect(config.apiHost).toBe(`vera-api-dev.${FAKE_DOMAIN}`);
+        expect(config.appHost).toBe(`vera-app-dev.${FAKE_DOMAIN}`);
+        expect(config.mailpit?.host).toBe(`vera-mail-dev.${FAKE_DOMAIN}`);
+    });
+
+    it('prefixa os hosts de prod com VERA_HOST_PREFIX', () => {
+        const config = fromEnvironment('prod', fakeEnvironment({ VERA_HOST_PREFIX: 'vera-' }));
+
+        expect(config.apiHost).toBe(`vera-api.${FAKE_DOMAIN}`);
+        expect(config.appHost).toBe(`vera-app.${FAKE_DOMAIN}`);
+    });
+
+    it('trata prefixo vazio como ausente', () => {
+        expect(fromEnvironment('prod', fakeEnvironment({ VERA_HOST_PREFIX: '  ' })).apiHost).toBe(`api.${FAKE_DOMAIN}`);
+    });
+
+    it.each(['vera', 'vera_-', 've.ra-', 'abcdefghijklmnopqrstu-'])('recusa o prefixo inválido %s', (value: string) => {
+        expect(() => fromEnvironment('dev', fakeEnvironment({ VERA_HOST_PREFIX: value }))).toThrow('VERA_HOST_PREFIX inválida');
+    });
+
     it('recusa domínio com protocolo', () => {
         expect(() => fromEnvironment('dev', fakeEnvironment({ VERA_DOMAIN: 'https://vera.example.test' }))).toThrow('VERA_DOMAIN inválida');
     });

@@ -8,17 +8,17 @@ NestJS + TypeScript · Kysely + Postgres 16 · BullMQ + Redis · pino + OpenTele
 
 ## O que já vem pronto
 
-| Peça            | Onde                                       | O que faz                                                                                                               |
-| --------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Multi-tenant    | `src/core/context`, `src/core/database`    | `AppContext` em AsyncLocalStorage (com `locale`), `TenantRepository` com `companyId` automático                         |
-| Erros           | `src/core/http`                            | problem+json por `AppErrorFilter`: `type`/código estável, `detail` técnico (nunca traduzido), sem catálogo de mensagens |
-| E-mail          | `src/core/mail`                            | `MailPort` com SES e SMTP, allowlist de destinatário, template por `(nome, locale)` com fallback para pt-BR             |
-| Filas           | `src/core/queue`                           | Publisher/worker BullMQ, `BULL_PREFIX = '{vera}'`, comando agendado reconciliado, `@JobMutex`, `@HandleJobFailure`      |
-| Rate limit      | `src/core/throttle`                        | `@RateLimit`/`RateLimitGuard`, janela persistida na tabela `Throttles`                                                  |
+| Peça            | Onde                                       | O que faz                                                                                                                  |
+| --------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Multi-tenant    | `src/core/context`, `src/core/database`    | `AppContext` em AsyncLocalStorage (com `locale`), `TenantRepository` com `companyId` automático                            |
+| Erros           | `src/core/http`                            | problem+json por `AppErrorFilter`: `type`/código estável, `detail` técnico (nunca traduzido), sem catálogo de mensagens    |
+| E-mail          | `src/core/mail`                            | `MailPort` com SES e SMTP, allowlist de destinatário, template por `(nome, locale)` com fallback para pt-BR                |
+| Filas           | `src/core/queue`                           | Publisher/worker BullMQ, `BULL_PREFIX = '{vera}'`, comando agendado reconciliado, `@JobMutex`, `@HandleJobFailure`         |
+| Rate limit      | `src/core/throttle`                        | `@RateLimit`/`RateLimitGuard`, janela persistida na tabela `Throttles`                                                     |
 | Criptografia    | `src/core/crypto`                          | `CryptoPort` (AES-GCM), `HmacPort` (HMAC-SHA256) e `SecretSealerPort` (cofre de segredos por envelope, KMS ou chave local) |
-| Observabilidade | `src/core/observability`, `src/tracing.ts` | pino + OpenTelemetry, `requestId` em todo ponto de entrada                                                              |
-| Health          | `src/modules/health`                       | `GET /health` (liveness), `GET /health/ready` (banco)                                                                   |
-| Qualidade       | `eslint.config.mjs`, `eslint-rules/`       | Fronteiras de camada, zero comentários, sem `else`; Vitest unitário e de integração                                     |
+| Observabilidade | `src/core/observability`, `src/tracing.ts` | pino + OpenTelemetry, `requestId` em todo ponto de entrada                                                                 |
+| Health          | `src/modules/health`                       | `GET /health` (liveness), `GET /health/ready` (banco)                                                                      |
+| Qualidade       | `eslint.config.mjs`, `eslint-rules/`       | Fronteiras de camada, zero comentários, sem `else`; Vitest unitário e de integração                                        |
 
 Idiomas suportados: `pt-BR` (padrão) e `en`.
 
@@ -75,13 +75,14 @@ Só para quem precisa receber chamadas externas no computador de desenvolvimento
 
 ```bash
 export VERA_DOMAIN=<dominio-da-vera>
+export VERA_HOST_PREFIX=<prefixo-opcional>
 export CLOUDFLARE_ACCOUNT_ID=<id-da-conta-cloudflare>
 export CLOUDFLARE_API_TOKEN=<token-da-api-cloudflare>
 export AWS_PROFILE=<perfil-aws-do-ambiente>
 npx tsx scripts/tunnel.ts dev
 ```
 
-O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reaproveita o túnel `vera-<ambiente>`, publica `api[-dev].<domínio>` (em dev também `mail-dev.<domínio>`, o Mailpit), cria ou atualiza os CNAMEs e grava o token do túnel no SSM em `/vera/tunnel-token` usando o perfil AWS informado. Com `--routes-only` só mexe em rotas e DNS, sem AWS. `PORT`, `MAILPIT_UI_PORT` e `AWS_REGION` ajustam as portas locais e a região. Atenção: rodar com `prod` e o perfil de produção troca o túnel de produção.
+O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reaproveita o túnel `vera-<ambiente>`, publica `<prefixo>api[-dev].<domínio>` (em dev também `<prefixo>mail-dev.<domínio>`, o Mailpit; o prefixo é o `VERA_HOST_PREFIX`, vazio por padrão), cria ou atualiza os CNAMEs e grava o token do túnel no SSM em `/vera/tunnel-token` usando o perfil AWS informado. Com `--routes-only` só mexe em rotas e DNS, sem AWS. `PORT`, `MAILPIT_UI_PORT` e `AWS_REGION` ajustam as portas locais e a região. Atenção: rodar com `prod` e o perfil de produção troca o túnel de produção.
 
 ### Banco
 
@@ -125,6 +126,7 @@ O CDK lê tudo o que identifica a infraestrutura das variáveis de ambiente, nun
 AWS_ACCOUNT_ID_DEV=<id da conta de dev>
 AWS_ACCOUNT_ID_PROD=<id da conta de prod>
 VERA_DOMAIN=<seu domínio>
+VERA_HOST_PREFIX=<opcional, por exemplo vera->
 SHARED_INFRA_DEV='{"vpcId":"...","availabilityZones":["..."],"publicSubnetIds":["..."],"databaseInstanceId":"...","databaseEndpoint":"...","databaseSecurityGroupId":"...","redisEndpoint":"...","redisSecurityGroupId":"...","openIdConnectProviderArn":"..."}'
 SHARED_INFRA_PROD='<mesmo formato>'
 ```
@@ -134,7 +136,11 @@ set -a && . ./.env.local && set +a
 npx cdk synth
 ```
 
-`VERA_ENVIRONMENTS=prod` (ou `dev`) limita a síntese a um ambiente e dispensa as variáveis do outro; `IMAGE_PULL_ACCOUNTS` (IDs separados por vírgula) autoriza outras contas a puxar imagens do ECR. Se faltar variável ou o JSON for inválido, o `cdk` falha dizendo qual. O banco lógico `vera` e o papel dele na instância compartilhada são criados à mão, de uma máquina liberada no security group do RDS, e a URL de conexão é gravada no SSM em `/vera/database-url`.
+`VERA_ENVIRONMENTS=prod` (ou `dev`) limita a síntese a um ambiente e dispensa as variáveis do outro; `IMAGE_PULL_ACCOUNTS` (IDs separados por vírgula) autoriza outras contas a puxar imagens do ECR. Se faltar variável ou o JSON for inválido, o `cdk` falha dizendo qual.
+
+#### Hosts e prefixo (`VERA_HOST_PREFIX`)
+
+Os hosts saem de `${VERA_HOST_PREFIX}<nome>[-dev].${VERA_DOMAIN}`, com `<nome>` igual a `app`, `api` ou `mail` (o Mailpit existe só em dev). Todos ficam num único nível de subdomínio, compatível com o certificado SSL gratuito do Cloudflare. `VERA_HOST_PREFIX` é opcional e vazio por padrão, então quem clona o repositório continua com `app.<domínio>` e `api.<domínio>`. Quando o domínio já tem esses nomes em uso, defina o prefixo: com `VERA_HOST_PREFIX=vera-` e `VERA_DOMAIN=exemplo.com` saem `vera-app.exemplo.com`, `vera-api.exemplo.com`, `vera-app-dev.exemplo.com`, `vera-api-dev.exemplo.com` e `vera-mail-dev.exemplo.com`. O valor só aceita `a-z`, `0-9` e hífen, até 20 caracteres, e precisa terminar em hífen. Nos workflows ele vem da variável de repositório `VERA_HOST_PREFIX` (deixe sem definir para não usar prefixo) e alimenta o CDK (host da API, `CORS_ORIGINS`, outputs `ApiUrl` e `MailUrl`) e o script do túnel. O front precisa da mesma variável para apontar para a API. O banco lógico `vera` e o papel dele na instância compartilhada são criados à mão, de uma máquina liberada no security group do RDS, e a URL de conexão é gravada no SSM em `/vera/database-url`.
 
 ## Licença
 

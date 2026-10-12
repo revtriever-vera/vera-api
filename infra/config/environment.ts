@@ -61,8 +61,15 @@ export interface EnvironmentSettings {
     readonly otlpHeadersParameter: string | null;
 }
 
+interface HostNaming {
+    readonly prefix: string;
+    readonly domain: string;
+}
+
 const SETTINGS: Readonly<Record<EnvironmentName, EnvironmentSettings>> = { dev, prod };
 const ACCOUNT_PATTERN: RegExp = /^\d{12}$/;
+const HOST_PREFIX_PATTERN: RegExp = /^[a-z0-9-]*$/;
+const HOST_PREFIX_MAX_LENGTH: number = 20;
 const DOMAIN_PATTERN: RegExp = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 
 const nonEmpty: z.ZodString = z.string().min(1);
@@ -109,6 +116,19 @@ function domain(env: NodeJS.ProcessEnv): string {
     return value;
 }
 
+function hostPrefix(env: NodeJS.ProcessEnv): string {
+    const value: string = (env['VERA_HOST_PREFIX'] ?? '').trim().toLowerCase();
+    if (value.length === 0) {
+        return value;
+    }
+    if (!HOST_PREFIX_PATTERN.test(value) || !value.endsWith('-') || value.length > HOST_PREFIX_MAX_LENGTH) {
+        throw new Error(
+            `VERA_HOST_PREFIX inválida: use até ${String(HOST_PREFIX_MAX_LENGTH)} caracteres de a-z, 0-9 e hífen, terminando em hífen, por exemplo vera-`
+        );
+    }
+    return value;
+}
+
 function parseJson(variable: string, raw: string): unknown {
     try {
         return JSON.parse(raw);
@@ -143,23 +163,27 @@ function imagePullAccounts(env: NodeJS.ProcessEnv): readonly string[] {
     return accounts;
 }
 
-function hostOf(prefix: string, settings: EnvironmentSettings, domainName: string): string {
-    return `${prefix}${settings.hostSuffix}.${domainName}`;
+function hostOf(prefix: string, settings: EnvironmentSettings, hosts: HostNaming): string {
+    const label: string = `${hosts.prefix}${prefix}${settings.hostSuffix}`;
+    if (label.includes('.')) {
+        throw new Error(`host inválido ${label}: use um único nível de subdomínio antes de ${hosts.domain}`);
+    }
+    return `${label}.${hosts.domain}`;
 }
 
-function mailpit(settings: EnvironmentSettings, domainName: string): MailpitEnvironmentConfig | null {
+function mailpit(settings: EnvironmentSettings, hosts: HostNaming): MailpitEnvironmentConfig | null {
     if (settings.mailpit === null) {
         return null;
     }
     return {
-        host: hostOf(settings.mailpit.hostPrefix, settings, domainName),
+        host: hostOf(settings.mailpit.hostPrefix, settings, hosts),
         uiAuthParameter: settings.mailpit.uiAuthParameter
     };
 }
 
 function operationalSettings(
     settings: EnvironmentSettings,
-    domainName: string
+    hosts: HostNaming
 ): Omit<EnvironmentConfig, 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'> {
     return {
         githubRepository: settings.githubRepository,
@@ -168,7 +192,7 @@ function operationalSettings(
         architecture: settings.architecture,
         spotCompute: settings.spotCompute,
         offHoursShutdown: settings.offHoursShutdown,
-        mailpit: mailpit(settings, domainName),
+        mailpit: mailpit(settings, hosts),
         otlpEndpointParameter: settings.otlpEndpointParameter,
         otlpHeadersParameter: settings.otlpHeadersParameter
     };
@@ -178,15 +202,16 @@ export function fromEnvironment(name: EnvironmentName, env: NodeJS.ProcessEnv): 
     const settings: EnvironmentSettings = SETTINGS[name];
     const suffix: string = suffixOf(name);
     const domainName: string = domain(env);
+    const hosts: HostNaming = { prefix: hostPrefix(env), domain: domainName };
     return {
         name,
         account: account(env, `AWS_ACCOUNT_ID_${suffix}`),
         region: settings.region,
         domain: domainName,
-        apiHost: hostOf('api', settings, domainName),
-        appHost: hostOf('app', settings, domainName),
+        apiHost: hostOf('api', settings, hosts),
+        appHost: hostOf('app', settings, hosts),
         shared: shared(env, `SHARED_INFRA_${suffix}`),
         imagePullAccounts: imagePullAccounts(env),
-        ...operationalSettings(settings, domainName)
+        ...operationalSettings(settings, hosts)
     };
 }

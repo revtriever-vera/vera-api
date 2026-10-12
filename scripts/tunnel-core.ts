@@ -16,6 +16,7 @@ export interface Route {
 export interface TunnelSettings {
     readonly environment: TunnelEnvironment;
     readonly domain: string;
+    readonly hostPrefix: string;
     readonly accountId: string;
     readonly apiToken: string;
     readonly awsProfile: string | null;
@@ -71,12 +72,21 @@ function environmentOf(argument: string | undefined): TunnelEnvironment {
     throw new Error('uso: npx tsx scripts/tunnel.ts <dev|prod> [--routes-only]');
 }
 
+function hostPrefixOf(env: NodeJS.ProcessEnv): string {
+    const value: string = (env['VERA_HOST_PREFIX'] ?? '').trim().toLowerCase();
+    if (value.length > 0 && !/^[a-z0-9-]{0,19}-$/.test(value)) {
+        throw new Error('VERA_HOST_PREFIX inválida: use até 20 caracteres de a-z, 0-9 e hífen, terminando em hífen');
+    }
+    return value;
+}
+
 export function settingsFrom(args: readonly string[], env: NodeJS.ProcessEnv): TunnelSettings {
     const environment: TunnelEnvironment = environmentOf(args.find((argument: string): boolean => !argument.startsWith('--')));
     const routesOnly: boolean = args.includes('--routes-only');
     return {
         environment,
         domain: required(env, 'VERA_DOMAIN'),
+        hostPrefix: hostPrefixOf(env),
         accountId: required(env, 'CLOUDFLARE_ACCOUNT_ID'),
         apiToken: required(env, 'CLOUDFLARE_API_TOKEN'),
         awsProfile: routesOnly ? null : required(env, 'AWS_PROFILE'),
@@ -89,13 +99,13 @@ export function settingsFrom(args: readonly string[], env: NodeJS.ProcessEnv): T
 
 export function routesOf(settings: TunnelSettings): Route[] {
     const api: Route = {
-        hostname: settings.environment === 'prod' ? `api.${settings.domain}` : `api-dev.${settings.domain}`,
+        hostname: `${settings.hostPrefix}${settings.environment === 'prod' ? 'api' : 'api-dev'}.${settings.domain}`,
         service: `http://localhost:${settings.appPort}`
     };
     if (settings.environment === 'prod') {
         return [api];
     }
-    return [api, { hostname: `mail-dev.${settings.domain}`, service: `http://localhost:${settings.mailpitPort}` }];
+    return [api, { hostname: `${settings.hostPrefix}mail-dev.${settings.domain}`, service: `http://localhost:${settings.mailpitPort}` }];
 }
 
 async function call<T>(settings: TunnelSettings, path: string, options: CallOptions = {}): Promise<T> {
