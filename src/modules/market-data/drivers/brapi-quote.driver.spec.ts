@@ -4,9 +4,28 @@ import { FAKE_KEY, asset, budget, jsonResponse, testConfig } from './driver-test
 
 const SAMPLE: unknown = {
     results: [
-        { symbol: 'ITUB4', regularMarketPrice: 37.8, regularMarketTime: '2026-10-09T20:08:00.000Z' },
-        { symbol: 'WEGE3', regularMarketPrice: 52.1, regularMarketTime: '2026-10-09T20:08:00.000Z' }
-    ]
+        {
+            symbol: 'ITUB4',
+            shortName: 'ITUB4',
+            currency: 'BRL',
+            regularMarketPrice: 37.8,
+            regularMarketDayHigh: 38.1,
+            regularMarketChange: 0.5,
+            regularMarketTime: '2026-10-09T21:31:30.000Z',
+            marketCap: 400000000000,
+            logourl: 'https://icons.example/ITUB4.svg'
+        },
+        {
+            symbol: 'WEGE3',
+            shortName: 'WEGE3',
+            currency: 'BRL',
+            regularMarketPrice: 52.1,
+            regularMarketTime: '2026-10-09T21:31:30.000Z',
+            marketCap: null
+        }
+    ],
+    requestedAt: '2026-10-12T00:05:38.821Z',
+    took: 0
 };
 
 describe('BrapiQuoteDriver', () => {
@@ -44,6 +63,35 @@ describe('BrapiQuoteDriver', () => {
         expect(reserve).toHaveBeenCalledTimes(2);
         expect(result.quotes.map((quote) => quote.assetId)).toEqual(['id-ITUB4', 'id-WEGE3']);
         expect(result.failures).toEqual([]);
+    });
+
+    it('maps the not found body of an unknown ticker to not_found', async () => {
+        const body: unknown = { error: true, message: 'Nenhum resultado encontrado para os simbolos informados', code: 'NOT_FOUND' };
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(body, 404)));
+        const driver: BrapiQuoteDriver = new BrapiQuoteDriver(testConfig(), budget().service);
+
+        const result = await driver.fetchBatch([asset('ZZZZ99')]);
+
+        expect(result.failures).toEqual([{ assetId: 'id-ZZZZ99', stage: 'not_found', reason: 'market-data.symbol_unknown' }]);
+    });
+
+    it('rejects a request above the tickers per request of the plan', async () => {
+        const body: unknown = {
+            error: true,
+            message: 'plan limit',
+            code: 'QUOTES_PER_REQUEST_EXCEEDED',
+            details: { limit: { current: 1, requested: 3 } }
+        };
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(body, 400)));
+        const driver: BrapiQuoteDriver = new BrapiQuoteDriver(testConfig({ BRAPI_MAX_TICKERS_PER_REQUEST: '3' }), budget().service);
+
+        const result = await driver.fetchBatch([asset('ITUB4'), asset('HGLG11'), asset('IVVB11')]);
+
+        expect(result.failures.map((failure) => [failure.stage, failure.reason])).toEqual([
+            ['request', 'market-data.provider_rejected'],
+            ['request', 'market-data.provider_rejected'],
+            ['request', 'market-data.provider_rejected']
+        ]);
     });
 
     it('marks symbols missing from the response as not_found', async () => {

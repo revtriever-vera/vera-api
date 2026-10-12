@@ -12,22 +12,22 @@ function driverWith(read: ReturnType<typeof vi.fn>): TesouroQuoteDriver {
 }
 
 describe('TesouroQuoteDriver', () => {
-    it('prices a bond by its redemption price and falls back to the base price', async () => {
+    it('prices a bond by its base price, the same-day mark to market, and falls back to the sell price', async () => {
         const read: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({
             changed: true,
             baseDate: '2026-10-08',
-            bonds: [bond('Tesouro Selic', '2029-03-01', '15230.10', '15232.00'), bond('Tesouro IPCA+', '2035-05-15', null, '2095.30')]
+            bonds: [bond('Tesouro Prefixado', '2029-03-01', '712.45', '711.90'), bond('Tesouro IPCA+', '2035-05-15', '2095.30', null)]
         });
 
         const result = await driverWith(read).fetchBatch([
-            asset('selic:2029-03-01', 'TESOURO'),
+            asset('prefixado:2029-03-01', 'TESOURO'),
             asset('ipca:2035-05-15', 'TESOURO'),
             asset('selic:2031-03-01', 'TESOURO')
         ]);
 
         expect(read).toHaveBeenCalledWith({ ignoreCache: true });
         expect(result.quotes).toEqual([
-            { assetId: 'id-selic:2029-03-01', price: '15230.10', currency: 'BRL', priceDate: '2026-10-08', source: 'tesouro' },
+            { assetId: 'id-prefixado:2029-03-01', price: '711.90', currency: 'BRL', priceDate: '2026-10-08', source: 'tesouro' },
             { assetId: 'id-ipca:2035-05-15', price: '2095.30', currency: 'BRL', priceDate: '2026-10-08', source: 'tesouro' }
         ]);
         expect(result.failures).toEqual([{ assetId: 'id-selic:2031-03-01', stage: 'not_found', reason: 'market-data.symbol_unknown' }]);

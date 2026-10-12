@@ -10,7 +10,9 @@ describe('FinnhubQuoteDriver', () => {
     });
 
     it('reads the current price and dates it in the New York time zone', async () => {
-        const fetchMock: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(jsonResponse({ c: 228.12, pc: 227.5, t: 1_791_590_400 }));
+        const fetchMock: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValue(jsonResponse({ c: 228.12, d: -1.2, dp: -0.52, h: 230.1, l: 227.4, o: 229, pc: 227.5, t: 1_791_576_000 }));
         vi.stubGlobal('fetch', fetchMock);
         const driver: FinnhubQuoteDriver = new FinnhubQuoteDriver(testConfig(), budget().service);
 
@@ -25,7 +27,7 @@ describe('FinnhubQuoteDriver', () => {
     });
 
     it('treats c = 0 and t = 0 as an unknown symbol', async () => {
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ c: 0, pc: 0, t: 0 })));
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ c: 0, d: null, dp: null, h: 0, l: 0, o: 0, pc: 0, t: 0 })));
         const driver: FinnhubQuoteDriver = new FinnhubQuoteDriver(testConfig(), budget().service);
 
         const result = await driver.fetchBatch([AAPL]);

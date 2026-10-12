@@ -25,11 +25,28 @@ describe('parseMarketDataConfig', () => {
         expect(config.LIMITS.finnhub).toEqual({ minute: 50 });
     });
 
+    it('treats the unset placeholder as no key', () => {
+        const config = parseMarketDataConfig({ TWELVEDATA_API_KEY: 'unset', ALPHAVANTAGE_API_KEY: 'UNSET' });
+
+        expect(config.TWELVEDATA_API_KEY).toBeUndefined();
+        expect(config.ALPHAVANTAGE_API_KEY).toBeUndefined();
+        expect(config.DRIVER).toBe('mock');
+    });
+
+    it('defaults the budgets to the free plan limits', () => {
+        const config = parseMarketDataConfig({});
+
+        expect(config.LIMITS.brapi).toEqual({ month: 15_000 });
+        expect(config.LIMITS.twelvedata).toEqual({ minute: 8, day: 800 });
+        expect(config.LIMITS.alphavantage).toEqual({ day: 25 });
+        expect(config.LIMITS.coingecko).toEqual({ minute: 100, month: 10_000 });
+    });
+
     it('reads the budget limits from the environment over the defaults', () => {
         const config = parseMarketDataConfig({ FINNHUB_LIMIT_MINUTE: '30', COINGECKO_LIMIT_DAY: '100' });
 
         expect(config.LIMITS.finnhub).toEqual({ minute: 30 });
-        expect(config.LIMITS.coingecko).toEqual({ minute: 20, day: 100, month: 9000 });
+        expect(config.LIMITS.coingecko).toEqual({ minute: 100, day: 100, month: 10_000 });
         expect(config.LIMITS.tesouro).toEqual({});
         expect(limitVariable('alphavantage', 'day')).toBe('ALPHAVANTAGE_LIMIT_DAY');
     });
