@@ -7,7 +7,7 @@ import { failureOf, failuresFor } from './provider-batch';
 const MAX_BATCH: number = 500;
 
 function priceOf(bond: TesouroBond): string | null {
-    return bond.sellUnitPrice ?? bond.baseUnitPrice;
+    return bond.baseUnitPrice ?? bond.sellUnitPrice;
 }
 
 @Injectable()

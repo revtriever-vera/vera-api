@@ -7,7 +7,7 @@ const optionalText = z
     .optional()
     .transform((value: string | undefined): string | undefined => {
         const trimmed: string | undefined = value?.trim();
-        return trimmed === undefined || trimmed === '' ? undefined : trimmed;
+        return trimmed === undefined || trimmed === '' || trimmed.toLowerCase() === 'unset' ? undefined : trimmed;
     });
 
 function withDefault(fallback: string): z.ZodType<string, z.ZodTypeDef, string | undefined> {
@@ -48,11 +48,11 @@ const schema = z.object({
 });
 
 const DEFAULT_LIMITS: Readonly<Record<QuoteProviderId, BudgetLimits>> = {
-    brapi: { month: 10_000 },
+    brapi: { month: 15_000 },
     finnhub: { minute: 50 },
-    twelvedata: { day: 700 },
-    alphavantage: { day: 20 },
-    coingecko: { minute: 20, month: 9000 },
+    twelvedata: { minute: 8, day: 800 },
+    alphavantage: { day: 25 },
+    coingecko: { minute: 100, month: 10_000 },
     tesouro: {}
 };
 

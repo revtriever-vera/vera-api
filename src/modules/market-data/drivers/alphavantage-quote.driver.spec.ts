@@ -10,11 +10,22 @@ describe('AlphaVantageQuoteDriver', () => {
     });
 
     it('reads the global quote price and latest trading day', async () => {
-        const fetchMock: ReturnType<typeof vi.fn> = vi
-            .fn()
-            .mockResolvedValue(
-                jsonResponse({ 'Global Quote': { '01. symbol': 'AAPL', '05. price': '228.1200', '07. latest trading day': '2026-10-09' } })
-            );
+        const fetchMock: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(
+            jsonResponse({
+                'Global Quote': {
+                    '01. symbol': 'AAPL',
+                    '02. open': '229.0000',
+                    '03. high': '230.1000',
+                    '04. low': '227.4000',
+                    '05. price': '228.1200',
+                    '06. volume': '37881199',
+                    '07. latest trading day': '2026-10-09',
+                    '08. previous close': '227.5000',
+                    '09. change': '0.6200',
+                    '10. change percent': '0.2725%'
+                }
+            })
+        );
         vi.stubGlobal('fetch', fetchMock);
         const driver: AlphaVantageQuoteDriver = new AlphaVantageQuoteDriver(testConfig(), budget().service);
 
