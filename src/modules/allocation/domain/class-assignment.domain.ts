@@ -19,7 +19,7 @@ export class ClassAssignmentDomain {
         return this.moveIfChanged(current, classId);
     }
 
-    public async find(subjectType: SubjectType, subjectId: string): Promise<ClassAssignment | null> {
+    public async findAssignment(subjectType: SubjectType, subjectId: string): Promise<ClassAssignment | null> {
         return this.assignments.findBySubject(subjectType, subjectId);
     }
 

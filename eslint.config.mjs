@@ -3,12 +3,15 @@ import tseslint from 'typescript-eslint';
 import boundaries from 'eslint-plugin-boundaries';
 import prettier from 'eslint-config-prettier';
 import local from './eslint-rules/index.mjs';
+import { sonarPlugin, SONAR_MAIN_RULES, SONAR_TEST_RULES, SONAR_SOURCE_FILES, SONAR_TEST_FILES } from './eslint-rules/sonar-plugin.mjs';
+import singleSources from './eslint-rules/single-sources.json' with { type: 'json' };
 
 export default tseslint.config(
     {
         ignores: [
             '**/dist/**',
             'node_modules/**',
+            'cdk.out/**',
             'src/core/database/generated/**',
             'commitlint.config.mjs',
             'eslint.config.mjs',
@@ -36,6 +39,7 @@ export default tseslint.config(
             'local/no-search-in-loop': 'error',
             'local/no-nested-loops': 'error',
             'local/max-logic-lines': ['error', { max: 20 }],
+            'local/no-reimplementation': ['error', singleSources],
             'no-lonely-if': 'error',
             complexity: ['error', 10],
             'max-depth': ['error', 2],
@@ -268,9 +272,25 @@ export default tseslint.config(
         }
     },
     {
-        files: [
-            'src/core/database/repositories/global.repository.ts'
-        ],
+        files: ['src/**/*.repository.ts'],
+        ignores: ['src/core/database/repositories/**'],
+        plugins: { local },
+        rules: { 'local/repository-escape': 'warn' }
+    },
+    {
+        files: ['src/**/*.ts'],
+        ignores: ['src/**/*.spec.ts', 'src/**/*.int-spec.ts'],
+        plugins: { local },
+        rules: { 'local/skill-source-import': ['error', { sources: [], allowed: {} }] }
+    },
+    {
+        files: ['src/**/*.ts'],
+        ignores: ['src/**/*.repository.ts', 'src/core/database/**', 'src/**/*.spec.ts', 'src/**/*.int-spec.ts'],
+        plugins: { local },
+        rules: { 'local/client-escape': 'error' }
+    },
+    {
+        files: ['src/core/database/repositories/global.repository.ts'],
         rules: {
             'no-restricted-syntax': [
                 'error',
@@ -408,6 +428,20 @@ export default tseslint.config(
         }
     },
     {
+        files: ['src/**/*.ts'],
+        ignores: ['**/*.spec.ts', '**/*.int-spec.ts'],
+        rules: { 'local/no-static-state': 'error' }
+    },
+    {
+        files: ['**/*.spec.ts'],
+        rules: { 'local/no-shared-state-write': 'error' }
+    },
+    {
+        files: ['**/*.ts'],
+        ignores: ['**/*.spec.ts'],
+        rules: { 'local/module-mock-in-spec': 'error' }
+    },
+    {
         files: ['**/*.spec.ts', '**/*.int-spec.ts', 'test/**/*.ts'],
         rules: {
             '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -419,8 +453,20 @@ export default tseslint.config(
             'max-depth': 'off',
             complexity: 'off',
             'local/no-else': 'off',
-            'local/no-search-in-loop': 'off'
+            'local/no-search-in-loop': 'off',
+            'local/no-reimplementation': 'off'
         }
+    },
+    {
+        files: SONAR_SOURCE_FILES,
+        ignores: ['**/*.spec.ts', '**/*.int-spec.ts'],
+        plugins: { sonar: sonarPlugin },
+        rules: SONAR_MAIN_RULES
+    },
+    {
+        files: SONAR_TEST_FILES,
+        plugins: { sonar: sonarPlugin },
+        rules: SONAR_TEST_RULES
     },
     prettier
 );

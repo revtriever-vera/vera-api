@@ -37,7 +37,7 @@ export function manualStampOf(at: Date): string {
 }
 
 function dayStampOf(at: Date): string {
-    return DateUtil.todayInBrazil(at).replace(/-/g, '');
+    return DateUtil.todayInBrazil(at).replaceAll('-', '');
 }
 
 function stampOf(trigger: SyncTrigger, at: Date): string {

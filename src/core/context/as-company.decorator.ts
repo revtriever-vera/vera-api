@@ -1,6 +1,7 @@
 import { AppContext } from './app-context.port';
 
 export class ContextHolder {
+    // eslint-disable-next-line local/no-static-state -- o decorator precisa do contexto sem injeção; preenchido uma vez na subida do ContextModule
     private static context: AppContext | null = null;
 
     public static set(context: AppContext): void {
@@ -21,7 +22,7 @@ export function AsCompany(): MethodDecorator {
         descriptor.value = async function (this: unknown, ...args: unknown[]): Promise<unknown> {
             const companyId: unknown = args[0];
             if (typeof companyId !== 'string') {
-                throw new Error('@AsCompany requires companyId as the first method parameter');
+                throw new TypeError('@AsCompany requires companyId as the first method parameter');
             }
             const context: AppContext = ContextHolder.get();
             return context.run({ ...context.get(), companyId }, async () => original.apply(this, args));

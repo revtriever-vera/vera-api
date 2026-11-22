@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AssetDomain } from '../domain/asset.domain';
 import { Asset } from '../domain/catalog.types';
 import { CatalogLogService } from '../services/catalog-log.service';
-import { AssetSearchApplication, escapeLike, toAssetItem } from './asset-search.application';
+import { AssetSearchApplication, toAssetItem } from './asset-search.application';
 
 const ASSET: Asset = {
     id: '0199c3a0-7b1e-7c2a-9d4e-2f6a8b1c3d5e',
@@ -74,7 +74,6 @@ describe('AssetSearchApplication', () => {
         await application.search({ q: '100%_a\\b', limit: 20 });
 
         expect(search.mock.calls[0]?.[0]).toMatchObject({ text: '100%_a\\b', likeText: '100\\%\\_a\\\\b' });
-        expect(escapeLike('%_')).toBe('\\%\\_');
     });
 
     it('serializes the public fields only', async () => {

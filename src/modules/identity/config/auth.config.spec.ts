@@ -1,17 +1,15 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { authConfig, AuthConfig } from './auth.config';
-
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
 
 describe('authConfig', () => {
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('usa padrões seguros no ambiente local', () => {
-        delete process.env['JWT_SECRET'];
-        delete process.env['COOKIE_SECURE'];
-        process.env['IS_LOCAL'] = 'true';
+        vi.stubEnv('JWT_SECRET', undefined);
+        vi.stubEnv('COOKIE_SECURE', undefined);
+        vi.stubEnv('IS_LOCAL', 'true');
 
         const config: AuthConfig = authConfig();
 
@@ -21,33 +19,33 @@ describe('authConfig', () => {
     });
 
     it('liga o cookie seguro por padrão fora do ambiente local', () => {
-        process.env['IS_LOCAL'] = 'false';
-        process.env['JWT_SECRET'] = 'x'.repeat(40);
-        delete process.env['COOKIE_SECURE'];
+        vi.stubEnv('IS_LOCAL', 'false');
+        vi.stubEnv('JWT_SECRET', 'x'.repeat(40));
+        vi.stubEnv('COOKIE_SECURE', undefined);
 
         expect(authConfig().COOKIE_SECURE).toBe(true);
     });
 
     it('recusa o segredo de desenvolvimento fora do ambiente local', () => {
-        delete process.env['IS_LOCAL'];
-        process.env['JWT_SECRET'] = 'dev-secret-do-not-use-in-prod';
+        vi.stubEnv('IS_LOCAL', undefined);
+        vi.stubEnv('JWT_SECRET', 'dev-secret-do-not-use-in-prod');
 
         expect(() => authConfig()).toThrow();
     });
 
     it('recusa segredo curto fora do ambiente local', () => {
-        delete process.env['IS_LOCAL'];
-        process.env['JWT_SECRET'] = 'curto';
+        vi.stubEnv('IS_LOCAL', undefined);
+        vi.stubEnv('JWT_SECRET', 'curto');
 
         expect(() => authConfig()).toThrow();
     });
 
     it('deixa os provedores sociais desligados por padrão', () => {
-        process.env['IS_LOCAL'] = 'true';
-        delete process.env['GOOGLE_CLIENT_ID'];
-        delete process.env['FACEBOOK_APP_ID'];
-        delete process.env['FACEBOOK_APP_SECRET'];
-        delete process.env['FACEBOOK_GRAPH_VERSION'];
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('GOOGLE_CLIENT_ID', undefined);
+        vi.stubEnv('FACEBOOK_APP_ID', undefined);
+        vi.stubEnv('FACEBOOK_APP_SECRET', undefined);
+        vi.stubEnv('FACEBOOK_GRAPH_VERSION', undefined);
 
         const config: AuthConfig = authConfig();
 
@@ -57,19 +55,19 @@ describe('authConfig', () => {
     });
 
     it('exige o segredo do app quando o app id do Facebook está preenchido', () => {
-        process.env['IS_LOCAL'] = 'true';
-        process.env['FACEBOOK_APP_ID'] = 'fake-app-id';
-        delete process.env['FACEBOOK_APP_SECRET'];
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('FACEBOOK_APP_ID', 'fake-app-id');
+        vi.stubEnv('FACEBOOK_APP_SECRET', undefined);
 
         expect(() => authConfig()).toThrow('FACEBOOK_APP_SECRET');
 
-        process.env['FACEBOOK_APP_SECRET'] = 'fake-app-secret';
+        vi.stubEnv('FACEBOOK_APP_SECRET', 'fake-app-secret');
         expect(authConfig().FACEBOOK_APP_SECRET).toBe('fake-app-secret');
     });
 
     it('recusa versão da Graph API fora do formato vN.M', () => {
-        process.env['IS_LOCAL'] = 'true';
-        process.env['FACEBOOK_GRAPH_VERSION'] = '23';
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('FACEBOOK_GRAPH_VERSION', '23');
 
         expect(() => authConfig()).toThrow();
     });

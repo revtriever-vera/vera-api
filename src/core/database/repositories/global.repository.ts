@@ -1,5 +1,6 @@
 import { ExpressionBuilder, Insertable, Kysely, Selectable, Updateable } from 'kysely';
 import { OrderBy, Page, PageRequest } from '../../../shared/pagination/pagination.types';
+import { likePattern } from '../../../shared/utils/like.util';
 import { DatabaseClient } from '../database.client';
 import { DB } from '../generated/database.types';
 
@@ -367,7 +368,7 @@ export abstract class GlobalRepository<TB extends keyof DB> {
         if (!text || fields.length === 0) {
             return qb;
         }
-        const pattern: string = `%${text}%`;
+        const pattern: string = likePattern(text);
         const chain: SearchChain<QB> = qb as SearchChain<QB>;
         return chain.where((eb: ExpressionBuilder<DB, never>) =>
             eb.or(fields.map((field: string) => eb(this.ref(field), 'ilike', pattern)))

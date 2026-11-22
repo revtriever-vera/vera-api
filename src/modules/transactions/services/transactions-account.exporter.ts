@@ -95,7 +95,7 @@ export class TransactionsAccountExporter extends AccountDataExporterPort {
         let page: Transaction[] = await this.transactions.listAfter(filter, cursor, EXPORT_PAGE_SIZE);
         while (page.length > 0) {
             exported.push(...page.map((row: Transaction): TransactionExport => this.transactionOf(row, names, keys)));
-            const last: Transaction | undefined = page[page.length - 1];
+            const last: Transaction | undefined = page.at(-1);
             cursor = last === undefined ? null : { date: toDateString(last.date), id: last.id };
             page = page.length < EXPORT_PAGE_SIZE ? [] : await this.transactions.listAfter(filter, cursor, EXPORT_PAGE_SIZE);
         }

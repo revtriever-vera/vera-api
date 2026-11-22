@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { catalogConfig } from './catalog.config';
 
 const KEYS: string[] = [
@@ -14,7 +14,7 @@ const KEYS: string[] = [
 
 afterEach(() => {
     for (const key of KEYS) {
-        Reflect.deleteProperty(process.env, key);
+        vi.stubEnv(key, undefined);
     }
 });
 
@@ -31,7 +31,7 @@ describe('catalogConfig', () => {
 
     it('treats empty values like unset', () => {
         for (const key of KEYS) {
-            process.env[key] = '  ';
+            vi.stubEnv(key, '  ');
         }
 
         const config = catalogConfig();
@@ -44,10 +44,10 @@ describe('catalogConfig', () => {
     });
 
     it('reads the live configuration and accepts a dated URL template', () => {
-        process.env['CATALOG_DRIVER'] = 'live';
-        process.env['B3_INSTRUMENTS_URL'] = 'https://b3.example/{date}/instruments.csv';
-        process.env['FINNHUB_API_KEY'] = 'chave-falsa';
-        process.env['CATALOG_HTTP_TIMEOUT_MS'] = '5000';
+        vi.stubEnv('CATALOG_DRIVER', 'live');
+        vi.stubEnv('B3_INSTRUMENTS_URL', 'https://b3.example/{date}/instruments.csv');
+        vi.stubEnv('FINNHUB_API_KEY', 'chave-falsa');
+        vi.stubEnv('CATALOG_HTTP_TIMEOUT_MS', '5000');
 
         const config = catalogConfig();
 
@@ -60,11 +60,11 @@ describe('catalogConfig', () => {
     });
 
     it('rejects an invalid driver and an invalid URL', () => {
-        process.env['CATALOG_DRIVER'] = 'banana';
+        vi.stubEnv('CATALOG_DRIVER', 'banana');
         expect(() => catalogConfig()).toThrow();
 
-        process.env['CATALOG_DRIVER'] = 'live';
-        process.env['B3_INSTRUMENTS_URL'] = 'nao-e-url';
+        vi.stubEnv('CATALOG_DRIVER', 'live');
+        vi.stubEnv('B3_INSTRUMENTS_URL', 'nao-e-url');
         expect(() => catalogConfig()).toThrow();
     });
 });

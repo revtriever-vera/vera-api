@@ -32,7 +32,7 @@ export class ClassAssignmentService {
     }
 
     public async requireClassId(subjectType: SubjectType, subjectId: string): Promise<string> {
-        const assignment: ClassAssignment | null = await this.assignments.find(subjectType, subjectId);
+        const assignment: ClassAssignment | null = await this.assignments.findAssignment(subjectType, subjectId);
         if (assignment === null) {
             throw new AssignmentNotFoundError(subjectType, subjectId);
         }

@@ -1,3 +1,4 @@
+import { maxCodeUnits, minCodeUnits } from '../../../../shared/utils/compare-code-units';
 import { Decimal, DecimalUtil } from '../../../../shared/utils/decimal.util';
 import { daysBetween, lowerBound, utcMonthStart } from './business-days';
 import { IpcaSeries, SeriesPoint } from './curve.types';
@@ -52,7 +53,7 @@ function monthSlices(from: string, to: string): Array<{ readonly monthKey: strin
     let cursor: string = monthStart(from);
     while (cursor < to) {
         const next: string = nextMonthStart(cursor);
-        const overlap: number = daysBetween(from > cursor ? from : cursor, to < next ? to : next);
+        const overlap: number = daysBetween(maxCodeUnits(from, cursor), minCodeUnits(to, next));
         slices.push({ monthKey: cursor.slice(0, 7), fraction: DecimalUtil.of(overlap).div(daysBetween(cursor, next)) });
         cursor = next;
     }

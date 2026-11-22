@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { buildSpendingDataset, DatasetAccount, DatasetTransaction, SpendingDataset } from '../domain/spending-dataset';
+import { buildSpendingDataset, SpendingDataset } from '../domain/spending-dataset';
 
-export type { DatasetAccount, DatasetTransaction, SpendingDataset };
+export type { DatasetAccount, DatasetTransaction } from '../domain/spending-dataset';
+export type { SpendingDataset };
 
 @Injectable()
 export class SpendingDatasetService {

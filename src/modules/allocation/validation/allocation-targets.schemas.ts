@@ -1,7 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { MAX_BPS, SUBJECT_TYPES } from '../domain/allocation.types';
-import { assetClassListSchema } from './allocation-classes.schemas';
 
 const bpsSchema = z.number().int().min(0).max(MAX_BPS);
 
@@ -55,7 +54,7 @@ export const assetTargetsViewSchema = z.object({
         .describe('Targets of every asset of the class')
 });
 
-export const classTargetsViewSchema = assetClassListSchema;
+export { assetClassListSchema as classTargetsViewSchema } from './allocation-classes.schemas';
 
 export const targetsClassParamsSchema = z.object({
     classId: z.string().uuid().describe('Class id')

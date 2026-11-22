@@ -15,7 +15,7 @@ function isBinaryCode(code: number): boolean {
 export function isBinary(text: string): boolean {
     const limit: number = Math.min(text.length, SNIFF_BYTES);
     for (let index: number = 0; index < limit; index += 1) {
-        if (isBinaryCode(text.charCodeAt(index))) {
+        if (isBinaryCode(text.codePointAt(index) ?? 0)) {
             return true;
         }
     }

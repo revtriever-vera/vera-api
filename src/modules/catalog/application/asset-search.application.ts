@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AssetDomain } from '../domain/asset.domain';
 import { AssetNotFoundError } from '../domain/catalog.errors';
+import { escapeLike } from '../../../shared/utils/like.util';
 import { Asset, AssetSearchCriteria, SEARCH_MAX_LIMIT } from '../domain/catalog.types';
 import { CatalogLogService } from '../services/catalog-log.service';
 import { AssetItem, AssetSearchQuery, AssetSearchResponse } from '../validation/catalog.schemas';
-
-export function escapeLike(text: string): string {
-    return text.replace(/[\\%_]/g, (char: string) => `\\${char}`);
-}
 
 export function toAssetItem(asset: Asset): AssetItem {
     return {

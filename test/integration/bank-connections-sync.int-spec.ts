@@ -240,7 +240,7 @@ describe('bank connections sync', () => {
             Array.from({ length: firstTickSize }, (_unused, index) => index * 2000)
         );
         await process(first);
-        expect((await transactionRows(account)).length).toBe(before);
+        expect(await transactionRows(account)).toHaveLength(before);
         const connections: ConnectionBody[] = await overview(account);
         expect(connections.every((connection) => connection.lastRun?.trigger === 'daily' && connection.lastRun.inserted === 0)).toBe(true);
     });

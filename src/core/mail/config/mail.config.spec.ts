@@ -1,15 +1,13 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mailConfig, MailConfig } from './mail.config';
-
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
 
 describe('mailConfig', () => {
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('parses defaults when nothing is declared', () => {
-        delete process.env['MAIL_ALLOWED_RECIPIENTS'];
+        vi.stubEnv('MAIL_ALLOWED_RECIPIENTS', undefined);
 
         const config: MailConfig = mailConfig();
 
@@ -18,7 +16,7 @@ describe('mailConfig', () => {
     });
 
     it('splits and normalizes MAIL_ALLOWED_RECIPIENTS', () => {
-        process.env['MAIL_ALLOWED_RECIPIENTS'] = ' Ana@Cliente.com , @outraempresa.com,,';
+        vi.stubEnv('MAIL_ALLOWED_RECIPIENTS', ' Ana@Cliente.com , @outraempresa.com,,');
 
         const config: MailConfig = mailConfig();
 

@@ -1,3 +1,4 @@
+import { maxCodeUnits, minCodeUnits } from '../../../shared/utils/compare-code-units';
 import {
     ImportPreview,
     ImportFormat,
@@ -20,8 +21,8 @@ export function periodOf(rows: readonly ParsedRow[]): PeriodBounds {
     }
     const bounds: { start: string; end: string } = { start: first.date, end: first.date };
     for (const row of rows) {
-        bounds.start = row.date < bounds.start ? row.date : bounds.start;
-        bounds.end = row.date > bounds.end ? row.date : bounds.end;
+        bounds.start = minCodeUnits(row.date, bounds.start);
+        bounds.end = maxCodeUnits(row.date, bounds.end);
     }
     return bounds;
 }

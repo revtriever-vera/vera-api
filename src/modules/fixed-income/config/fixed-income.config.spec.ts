@@ -1,16 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fixedIncomeConfig, FixedIncomeConfig } from './fixed-income.config';
-
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
 
 describe('fixedIncomeConfig', () => {
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('usa o driver real e os códigos SGS padrão', () => {
-        delete process.env['FIXED_INCOME_INDEX_DRIVER'];
-        delete process.env['SGS_CDI_SERIES_CODE'];
+        vi.stubEnv('FIXED_INCOME_INDEX_DRIVER', undefined);
+        vi.stubEnv('SGS_CDI_SERIES_CODE', undefined);
 
         const config: FixedIncomeConfig = fixedIncomeConfig();
 
@@ -21,8 +19,8 @@ describe('fixedIncomeConfig', () => {
     });
 
     it('lê o driver e os códigos do ambiente', () => {
-        process.env['FIXED_INCOME_INDEX_DRIVER'] = 'mock';
-        process.env['SGS_CDI_SERIES_CODE'] = '4391';
+        vi.stubEnv('FIXED_INCOME_INDEX_DRIVER', 'mock');
+        vi.stubEnv('SGS_CDI_SERIES_CODE', '4391');
 
         const config: FixedIncomeConfig = fixedIncomeConfig();
 

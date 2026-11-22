@@ -215,9 +215,9 @@ describe('catalog sync', () => {
             trace: {},
             payload: { cadence: 'weekly' }
         });
-        expect(
-            (await queue.getJobs(['waiting', 'active', 'completed', 'delayed'])).filter((job) => job.id?.startsWith('catalog-sync-b3-'))
-                .length
-        ).toBe(1);
+        const jobs = (await queue.getJobs(['waiting', 'active', 'completed', 'delayed'])).filter((job) =>
+            job.id?.startsWith('catalog-sync-b3-')
+        );
+        expect(jobs).toHaveLength(1);
     });
 });

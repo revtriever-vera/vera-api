@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertEnvironmentCoherent, booleanFlag, devOnlySecret, isProductionEnvironment } from './environment.schema';
 
 describe('coerência entre IS_LOCAL e DEPLOY_ENV', () => {
@@ -47,11 +47,11 @@ describe('guarda de produção dos scripts', () => {
 
 describe('devOnlySecret', () => {
     afterEach(() => {
-        delete process.env['IS_LOCAL'];
+        vi.unstubAllEnvs();
     });
 
     it('aceita o default de desenvolvimento quando IS_LOCAL=true', () => {
-        process.env['IS_LOCAL'] = 'true';
+        vi.stubEnv('IS_LOCAL', 'true');
         expect(devOnlySecret('dev-secret', 32).parse(undefined)).toBe('dev-secret');
     });
 
@@ -71,11 +71,11 @@ describe('devOnlySecret', () => {
 
 describe('booleanFlag', () => {
     afterEach(() => {
-        delete process.env['IS_LOCAL'];
+        vi.unstubAllEnvs();
     });
 
     it('usa o default do ambiente local quando IS_LOCAL=true e nada foi declarado', () => {
-        process.env['IS_LOCAL'] = 'true';
+        vi.stubEnv('IS_LOCAL', 'true');
         expect(booleanFlag(true, false).parse(undefined)).toBe(true);
         expect(booleanFlag(false, true).parse(undefined)).toBe(false);
     });
@@ -86,7 +86,7 @@ describe('booleanFlag', () => {
     });
 
     it('valor explícito sempre vence o default', () => {
-        process.env['IS_LOCAL'] = 'true';
+        vi.stubEnv('IS_LOCAL', 'true');
         expect(booleanFlag(true, false).parse('false')).toBe(false);
         expect(booleanFlag(false, true).parse('true')).toBe(true);
     });

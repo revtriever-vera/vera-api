@@ -98,7 +98,7 @@ export class TransactionsRecategorizationDriver extends RecategorizationPort {
         let batch: Transaction[] = await this.transactions.selectBatch(selection, null, RECATEGORIZATION_CHUNK_SIZE, includeUser);
         while (batch.length > 0) {
             affected += await handler(batch);
-            const lastId: string = batch[batch.length - 1]?.id ?? '';
+            const lastId: string = batch.at(-1)?.id ?? '';
             batch =
                 batch.length < RECATEGORIZATION_CHUNK_SIZE
                     ? []

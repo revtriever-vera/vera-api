@@ -47,6 +47,6 @@ export class AssetDomain {
     }
 
     private hasChanged(state: StoredAssetState | undefined, write: AssetWrite): boolean {
-        return state === undefined || state.sourceHash !== write.sourceHash || state.status !== ASSET_STATUSES.active;
+        return state?.sourceHash !== write.sourceHash || state.status !== ASSET_STATUSES.active;
     }
 }

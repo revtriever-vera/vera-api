@@ -43,7 +43,7 @@ const NO_DIRECTIVE: SyncDirective = { retryAfterSeconds: null, failure: null };
 const MILLISECONDS: number = 1000;
 
 function isSyncable(connection: BankConnection): boolean {
-    return SYNCABLE_CONNECTION_STATUSES.some((status: string): boolean => status === connection.status);
+    return (SYNCABLE_CONNECTION_STATUSES as readonly string[]).includes(connection.status);
 }
 
 function failed(code: SyncFailureCode, directive: SyncDirective = NO_DIRECTIVE): SyncOutcome {
