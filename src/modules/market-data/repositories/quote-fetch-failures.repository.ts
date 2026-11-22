@@ -23,8 +23,7 @@ export class QuoteFetchFailuresRepository extends BareGlobalRepository<'QuoteFet
     }
 
     public async countOpen(): Promise<number> {
-        const row: { total: string } | undefined = await this.db
-            .selectFrom('QuoteFetchFailures')
+        const row: { total: string } | undefined = await this.selectScoped()
             .select((eb) => eb.fn.countAll<string>().as('total'))
             .where('resolvedAt', 'is', null)
             .executeTakeFirst();

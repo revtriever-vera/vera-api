@@ -13,8 +13,7 @@ export class ProviderUsageRepository extends BareGlobalRepository<'ProviderUsage
     }
 
     public async tryIncrement(slot: UsageSlot, calls: number, limit: number): Promise<number | null> {
-        const row: { count: number } | undefined = await this.db
-            .insertInto('ProviderUsage')
+        const row: { count: number } | undefined = await this.insertBuilder()
             .values({ id: IdUtil.newId(), ...slot, count: calls })
             .onConflict((conflict) =>
                 conflict

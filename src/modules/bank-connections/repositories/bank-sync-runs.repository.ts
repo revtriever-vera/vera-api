@@ -23,12 +23,9 @@ export class BankSyncRunsRepository extends TenantRepository<'BankSyncRuns'> {
         if (connectionIds.length === 0) {
             return [];
         }
-        return this.db
-            .selectFrom('BankSyncRuns')
+        return this.selectScoped()
             .selectAll()
             .distinctOn('connectionId')
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .where('connectionId', 'in', [...connectionIds])
             .orderBy('connectionId')
             .orderBy('startedAt', 'desc')
@@ -78,12 +75,9 @@ export class BankSyncRunsRepository extends TenantRepository<'BankSyncRuns'> {
     }
 
     public async pruneBeyond(connectionId: string, keep: number): Promise<number> {
-        const surplus: { id: string }[] = await this.db
-            .selectFrom('BankSyncRuns')
+        const surplus: { id: string }[] = await this.selectScoped()
             .select('id')
-            .where('companyId', '=', this.companyId)
             .where('connectionId', '=', connectionId)
-            .where('deletedAt', 'is', null)
             .orderBy('startedAt', 'desc')
             .offset(keep)
             .limit(PRUNE_BATCH)

@@ -49,8 +49,7 @@ export class PluggyCredentialsRepository extends TenantRepository<'PluggyCredent
     }
 
     public async listCompanyIdsAcrossTenants(): Promise<string[]> {
-        const rows: { companyId: string }[] = await this.db
-            .selectFrom('PluggyCredentials')
+        const rows: { companyId: string }[] = await this.selectSkipConstraint()
             .select('companyId')
             .where('deletedAt', 'is', null)
             .execute();

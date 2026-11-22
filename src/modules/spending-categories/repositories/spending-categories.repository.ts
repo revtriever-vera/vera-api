@@ -21,8 +21,7 @@ export class SpendingCategoriesRepository extends TenantRepository<'SpendingCate
 
     public async insertSeedsIfMissing(seeds: readonly SystemCategorySeed[]): Promise<SpendingCategory[]> {
         const companyId: string = this.companyId;
-        return this.db
-            .insertInto(this.table)
+        return this.insertBuilder()
             .values(
                 seeds.map((seed: SystemCategorySeed): NewSpendingCategory => ({
                     id: IdUtil.newId(),

@@ -22,8 +22,7 @@ export class FinancialAccountsRepository extends TenantRepository<'FinancialAcco
     }
 
     public async upsertProvider(data: UpsertProviderData): Promise<FinancialAccount> {
-        return this.db
-            .insertInto('FinancialAccounts')
+        return this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, ...data })
             .onConflict((conflict) =>
                 conflict
@@ -56,24 +55,14 @@ export class FinancialAccountsRepository extends TenantRepository<'FinancialAcco
     }
 
     public async countActive(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.db
-            .selectFrom('FinancialAccounts')
+        const row: { total: string | number | bigint } | undefined = await this.selectScoped()
             .select((builder) => builder.fn.countAll().as('total'))
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .executeTakeFirst();
         return Number(row?.total ?? 0);
     }
 
     public async lockById(id: string): Promise<FinancialAccount | null> {
-        const row: FinancialAccount | undefined = await this.db
-            .selectFrom('FinancialAccounts')
-            .selectAll()
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
-            .where('id', '=', id)
-            .forUpdate()
-            .executeTakeFirst();
+        const row: FinancialAccount | undefined = await this.selectScoped().selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
         return row ?? null;
     }
 

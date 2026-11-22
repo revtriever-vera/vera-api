@@ -18,8 +18,7 @@ export class PortfolioSettingsRepository extends TenantRepository<'PortfolioSett
     }
 
     public async insertDefaultIfMissing(): Promise<void> {
-        await this.db
-            .insertInto(this.table)
+        await this.insertBuilder()
             .values({
                 id: IdUtil.newId(),
                 companyId: this.companyId,

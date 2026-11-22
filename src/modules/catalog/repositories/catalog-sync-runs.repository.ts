@@ -26,8 +26,7 @@ export class CatalogSyncRunsRepository extends BareGlobalRepository<'CatalogSync
     }
 
     public async lastSucceededFetched(source: CatalogSource): Promise<number | null> {
-        const rows: { fetched: number }[] = await this.db
-            .selectFrom('CatalogSyncRuns')
+        const rows: { fetched: number }[] = await this.selectScoped()
             .select('fetched')
             .where('source', '=', source)
             .where('status', '=', SYNC_RUN_STATUSES.succeeded)

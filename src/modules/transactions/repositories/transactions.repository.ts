@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Expression, ExpressionBuilder, RawBuilder, SelectQueryBuilder, SqlBool, sql } from 'kysely';
+import { Expression, ExpressionBuilder, RawBuilder, SelectQueryBuilder, SqlBool } from 'kysely';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { DB } from '../../../core/database/generated/database.types';
@@ -103,8 +103,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
         if (rows.length === 0) {
             return [];
         }
-        const inserted: { externalId: string }[] = await this.db
-            .insertInto('Transactions')
+        const inserted: { externalId: string }[] = await this.insertBuilder()
             .values(rows.map((row: NewTransaction): NewTransaction => ({ ...row, companyId: this.companyId })))
             .onConflict((conflict) => conflict.columns(['companyId', 'accountId', 'externalId']).where('deletedAt', 'is', null).doNothing())
             .returning('externalId')
@@ -202,7 +201,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     public async monthsWithData(range: MonthRange): Promise<string[]> {
-        const month: RawBuilder<string> = sql<string>`to_char("date", 'YYYY-MM')`;
+        const month: RawBuilder<string> = this.rawSql<string>`to_char("date", 'YYYY-MM')`;
         const rows: { month: string }[] = await this.inMonths(this.scopedSelect(), range)
             .select(month.as('month'))
             .where('currency', '=', BASE_CURRENCY)
@@ -277,10 +276,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     private scopedSelect(): TransactionsQuery<object> {
-        return this.db
-            .selectFrom('Transactions')
-            .where('Transactions.companyId', '=', this.companyId)
-            .where('Transactions.deletedAt', 'is', null);
+        return this.selectScoped();
     }
 
     private inDateRange<O>(query: TransactionsQuery<O>, fromDate: string, toDate: string): TransactionsQuery<O> {
@@ -288,7 +284,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     private async monthlyFlowRows(range: MonthRange): Promise<MonthlyCategoryRow[]> {
-        const month: RawBuilder<string> = sql<string>`to_char("date", 'YYYY-MM')`;
+        const month: RawBuilder<string> = this.rawSql<string>`to_char("date", 'YYYY-MM')`;
         return this.inMonths(this.scopedSelect(), range)
             .select((eb) => [
                 month.as('month'),

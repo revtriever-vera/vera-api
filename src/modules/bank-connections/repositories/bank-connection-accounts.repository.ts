@@ -23,8 +23,7 @@ export class BankConnectionAccountsRepository extends TenantRepository<'BankConn
     }
 
     public async upsertLink(connectionId: string, accountId: string, externalAccountId: string): Promise<BankConnectionAccount> {
-        return this.db
-            .insertInto('BankConnectionAccounts')
+        return this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, connectionId, accountId, externalAccountId })
             .onConflict((conflict) =>
                 conflict
