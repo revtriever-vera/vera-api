@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { sql } from 'kysely';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareGlobalRepository } from '../../../core/database/repositories/bare-global.repository';
 import { QuoteRecord, QuoteWrite } from '../domain/market-data.types';
@@ -22,9 +21,8 @@ export class AssetQuotesRepository extends BareGlobalRepository<'AssetQuotes'> {
         if (assetIds.length === 0) {
             return [];
         }
-        return this.db
-            .selectFrom('AssetQuotes')
-            .select(['assetId', 'price', 'currency', 'source', sql<string>`to_char("priceDate", 'YYYY-MM-DD')`.as('priceDate')])
+        return this.selectScoped()
+            .select(['assetId', 'price', 'currency', 'source', this.rawSql<string>`to_char("priceDate", 'YYYY-MM-DD')`.as('priceDate')])
             .where('assetId', 'in', assetIds)
             .execute();
     }
@@ -38,8 +36,7 @@ export class AssetQuotesRepository extends BareGlobalRepository<'AssetQuotes'> {
     }
 
     private async upsertChunk(quotes: readonly QuoteWrite[], fetchedAt: Date): Promise<number> {
-        const rows: { assetId: string }[] = await this.db
-            .insertInto('AssetQuotes')
+        const rows: { assetId: string }[] = await this.insertBuilder()
             .values(quotes.map((quote: QuoteWrite) => ({ ...quote, fetchedAt, updatedAt: fetchedAt })))
             .onConflict((conflict) =>
                 conflict

@@ -18,8 +18,7 @@ export class SpendingSettingsRepository extends TenantRepository<'SpendingSettin
     }
 
     public async insertDefaultIfMissing(): Promise<void> {
-        await this.db
-            .insertInto(this.table)
+        await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId })
             .onConflict((conflict) => conflict.doNothing())
             .execute();

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { sql } from 'kysely';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareGlobalRepository } from '../../../core/database/repositories/bare-global.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
@@ -12,8 +11,7 @@ export class ExchangeRatesRepository extends BareGlobalRepository<'ExchangeRates
     }
 
     public async upsertRate(rate: RateWrite, fetchedAt: Date): Promise<void> {
-        await this.db
-            .insertInto('ExchangeRates')
+        await this.insertBuilder()
             .values({
                 id: IdUtil.newId(),
                 currency: rate.currency,
@@ -29,11 +27,10 @@ export class ExchangeRatesRepository extends BareGlobalRepository<'ExchangeRates
     }
 
     public async findLatestOnOrBefore(currency: string, isoDate: string): Promise<StoredRate | null> {
-        const rows: StoredRate[] = await this.db
-            .selectFrom('ExchangeRates')
-            .select(['currency', 'brlPerUnit', 'source', sql<string>`to_char("date", 'YYYY-MM-DD')`.as('date')])
+        const rows: StoredRate[] = await this.selectScoped()
+            .select(['currency', 'brlPerUnit', 'source', this.rawSql<string>`to_char("date", 'YYYY-MM-DD')`.as('date')])
             .where('currency', '=', currency)
-            .where('date', '<=', sql<Date>`${isoDate}::date`)
+            .where('date', '<=', this.rawSql<Date>`${isoDate}::date`)
             .orderBy('date', 'desc')
             .limit(1)
             .execute();

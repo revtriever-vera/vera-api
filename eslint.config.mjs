@@ -275,7 +275,7 @@ export default tseslint.config(
         files: ['src/**/*.repository.ts'],
         ignores: ['src/core/database/repositories/**'],
         plugins: { local },
-        rules: { 'local/repository-escape': 'warn' }
+        rules: { 'local/repository-escape': 'error' }
     },
     {
         files: ['src/**/*.ts'],

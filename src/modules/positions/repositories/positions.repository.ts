@@ -16,8 +16,7 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
     }
 
     public async insertIfAbsent(data: CreatePositionData): Promise<Position | null> {
-        const inserted: Position | undefined = await this.db
-            .insertInto('Positions')
+        const inserted: Position | undefined = await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, ...data })
             .onConflict((conflict) => conflict.columns(['companyId', 'assetId']).where('deletedAt', 'is', null).doNothing())
             .returningAll()
@@ -46,11 +45,8 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
     }
 
     public async countAll(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.db
-            .selectFrom('Positions')
+        const row: { total: string | number | bigint } | undefined = await this.selectScoped()
             .select((builder) => builder.fn.countAll().as('total'))
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .executeTakeFirst();
         return Number(row?.total ?? 0);
     }
@@ -64,8 +60,7 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
     }
 
     public async listHeldAssetIdsAcrossTenants(): Promise<string[]> {
-        const rows: { assetId: string }[] = await this.db
-            .selectFrom('Positions')
+        const rows: { assetId: string }[] = await this.selectSkipConstraint()
             .select('assetId')
             .distinct()
             .where('deletedAt', 'is', null)

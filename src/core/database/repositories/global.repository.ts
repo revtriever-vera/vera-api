@@ -1,4 +1,14 @@
-import { ExpressionBuilder, Insertable, Kysely, Selectable, Updateable } from 'kysely';
+import {
+    ExpressionBuilder,
+    Insertable,
+    InsertQueryBuilder,
+    Kysely,
+    RawBuilder,
+    Selectable,
+    SelectQueryBuilder,
+    Updateable,
+    sql
+} from 'kysely';
 import { OrderBy, Page, PageRequest } from '../../../shared/pagination/pagination.types';
 import { likePattern } from '../../../shared/utils/like.util';
 import { DatabaseClient } from '../database.client';
@@ -86,6 +96,22 @@ export abstract class GlobalRepository<TB extends keyof DB> {
 
     protected get db(): Kysely<Pick<DB, TB>> {
         return this.database.executor as unknown as Kysely<Pick<DB, TB>>;
+    }
+
+    protected selectScoped(): SelectQueryBuilder<Pick<DB, TB>, TB, object> {
+        return this.applyWhere(this.selectSkipConstraint(), this.scoped({}));
+    }
+
+    protected selectSkipConstraint(): SelectQueryBuilder<Pick<DB, TB>, TB, object> {
+        return this.db.selectFrom(this.table) as unknown as SelectQueryBuilder<Pick<DB, TB>, TB, object>;
+    }
+
+    protected insertBuilder(): InsertQueryBuilder<Pick<DB, TB>, TB, object> {
+        return this.db.insertInto(this.table);
+    }
+
+    protected rawSql<T>(strings: TemplateStringsArray, ...params: readonly unknown[]): RawBuilder<T> {
+        return sql<T>(strings, ...params);
     }
 
     public async findOne(where: WhereFilter<TB>): Promise<Selectable<DB[TB]> | null> {

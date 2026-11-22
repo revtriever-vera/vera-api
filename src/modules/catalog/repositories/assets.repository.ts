@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Expression, ExpressionBuilder, OnConflictDatabase, OnConflictTables, RawBuilder, SelectQueryBuilder, SqlBool, sql } from 'kysely';
+import { Expression, ExpressionBuilder, OnConflictDatabase, OnConflictTables, RawBuilder, SelectQueryBuilder, SqlBool } from 'kysely';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareGlobalRepository } from '../../../core/database/repositories/bare-global.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
@@ -58,10 +58,6 @@ const OVERWRITTEN_COLUMNS: readonly string[] = [
 type AssetColumn = Exclude<keyof Asset, 'maturityDate'>;
 
 type AssetsQuery = SelectQueryBuilder<AssetsDatabase, 'Assets', Asset>;
-
-function maturityColumn(): RawBuilder<string | null> {
-    return sql<string | null>`to_char("Assets"."maturityDate", 'YYYY-MM-DD')`;
-}
 
 type ConflictBuilder = ExpressionBuilder<OnConflictDatabase<AssetsDatabase, 'Assets'>, OnConflictTables<'Assets'>>;
 
@@ -129,8 +125,7 @@ export class AssetsRepository extends BareGlobalRepository<'Assets'> {
     }
 
     public async loadStates(market: CatalogMarket): Promise<StoredAssetState[]> {
-        const rows: { externalId: string; sourceHash: string | null; status: string }[] = await this.db
-            .selectFrom('Assets')
+        const rows: { externalId: string; sourceHash: string | null; status: string }[] = await this.selectScoped()
             .select(['externalId', 'sourceHash', 'status'])
             .where('market', '=', market)
             .execute();
@@ -139,8 +134,7 @@ export class AssetsRepository extends BareGlobalRepository<'Assets'> {
 
     public async upsertAll(rows: readonly AssetWrite[], seenAt: Date): Promise<void> {
         for (const chunk of chunksOf(rows, UPSERT_CHUNK)) {
-            await this.db
-                .insertInto('Assets')
+            await this.insertBuilder()
                 .values(chunk.map((row: AssetWrite) => ({ id: IdUtil.newId(), ...row, seenAt, status: ASSET_STATUSES.active })))
                 .onConflict((conflict) =>
                     conflict.columns(['market', 'externalId']).doUpdateSet((eb: ConflictBuilder) => conflictUpdate(eb, seenAt))
@@ -158,9 +152,8 @@ export class AssetsRepository extends BareGlobalRepository<'Assets'> {
     }
 
     public async countByStatus(market: CatalogMarket): Promise<StatusCount[]> {
-        const rows: { status: string; total: string }[] = await this.db
-            .selectFrom('Assets')
-            .select(['status', sql<string>`count(*)`.as('total')])
+        const rows: { status: string; total: string }[] = await this.selectScoped()
+            .select(['status', this.rawSql<string>`count(*)`.as('total')])
             .where('market', '=', market)
             .groupBy('status')
             .execute();
@@ -168,20 +161,26 @@ export class AssetsRepository extends BareGlobalRepository<'Assets'> {
     }
 
     private textSearch(query: AssetsQuery, criteria: AssetSearchCriteria): AssetsQuery {
-        const symbol: Expression<string> = sql<string>`lower("Assets"."symbol")`;
-        const name: Expression<string> = sql<string>`lower("Assets"."name")`;
+        const symbol: Expression<string> = this.rawSql<string>`lower("Assets"."symbol")`;
+        const name: Expression<string> = this.rawSql<string>`lower("Assets"."name")`;
         const prefix: string = `${criteria.likeText}%`;
         const contains: string = `%${criteria.likeText}%`;
         return query
-            .where((eb) => eb.or([eb(symbol, 'like', prefix), eb(name, 'like', contains), sql<boolean>`${name} % ${criteria.text}`]))
-            .orderBy(sql`case when ${symbol} = ${criteria.text} then 0 when ${symbol} like ${prefix} then 1 else 2 end`)
-            .orderBy(sql`similarity(${name}, ${criteria.text}) desc`)
-            .orderBy(sql`"Assets"."rank" asc nulls last`)
-            .orderBy(sql`"Assets"."popularRank" asc nulls last`)
+            .where((eb) =>
+                eb.or([eb(symbol, 'like', prefix), eb(name, 'like', contains), this.rawSql<boolean>`${name} % ${criteria.text}`])
+            )
+            .orderBy(this.rawSql`case when ${symbol} = ${criteria.text} then 0 when ${symbol} like ${prefix} then 1 else 2 end`)
+            .orderBy(this.rawSql`similarity(${name}, ${criteria.text}) desc`)
+            .orderBy(this.rawSql`"Assets"."rank" asc nulls last`)
+            .orderBy(this.rawSql`"Assets"."popularRank" asc nulls last`)
             .orderBy('symbol', 'asc');
     }
 
+    private maturityColumn(): RawBuilder<string | null> {
+        return this.rawSql<string | null>`to_char("Assets"."maturityDate", 'YYYY-MM-DD')`;
+    }
+
     private selectAssets(): AssetsQuery {
-        return this.db.selectFrom('Assets').select([...ASSET_COLUMNS, maturityColumn().as('maturityDate')]);
+        return this.selectScoped().select([...ASSET_COLUMNS, this.maturityColumn().as('maturityDate')]);
     }
 }

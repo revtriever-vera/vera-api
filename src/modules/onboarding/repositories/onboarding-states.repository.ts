@@ -28,8 +28,7 @@ export class OnboardingStatesRepository extends TenantRepository<'OnboardingStat
     }
 
     private async createIfMissing(): Promise<OnboardingState> {
-        const inserted: OnboardingState | undefined = await this.db
-            .insertInto('OnboardingStates')
+        const inserted: OnboardingState | undefined = await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId })
             .onConflict((conflict) => conflict.column('companyId').where('deletedAt', 'is', null).doNothing())
             .returningAll()

@@ -35,11 +35,8 @@ export class TransactionImportsRepository extends TenantRepository<'TransactionI
     }
 
     public async countCompleted(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.db
-            .selectFrom('TransactionImports')
+        const row: { total: string | number | bigint } | undefined = await this.selectScoped()
             .select((builder) => builder.fn.countAll().as('total'))
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .where('status', '=', IMPORT_STATUSES.completed)
             .where('inserted', '>', 0)
             .where('isSample', '=', false)
@@ -48,11 +45,8 @@ export class TransactionImportsRepository extends TenantRepository<'TransactionI
     }
 
     public async findCompletedByHash(fileSha256: string): Promise<TransactionImport | null> {
-        const row: TransactionImport | undefined = await this.db
-            .selectFrom('TransactionImports')
+        const row: TransactionImport | undefined = await this.selectScoped()
             .selectAll()
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .where('status', '=', IMPORT_STATUSES.completed)
             .where('isSample', '=', false)
             .where('fileSha256', '=', fileSha256)

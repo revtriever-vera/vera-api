@@ -28,8 +28,8 @@ export class CategoryRulesRepository extends TenantRepository<'CategoryRules'> {
     }
 
     public async countActive(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.applyWhere(this.db.selectFrom(this.table), this.scoped({}))
-            .select(this.db.fn.countAll().as('total'))
+        const row: { total: string | number | bigint } | undefined = await this.selectScoped()
+            .select((eb) => eb.fn.countAll().as('total'))
             .executeTakeFirst();
         return Number(row?.total ?? 0);
     }
@@ -39,8 +39,7 @@ export class CategoryRulesRepository extends TenantRepository<'CategoryRules'> {
     }
 
     public async createIfAbsent(data: CreateRuleData): Promise<CategoryRule | null> {
-        const rows: CategoryRule[] = await this.db
-            .insertInto(this.table)
+        const rows: CategoryRule[] = await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, ...data })
             .onConflict((conflict) => conflict.doNothing())
             .returningAll()

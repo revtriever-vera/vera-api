@@ -33,29 +33,22 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
     }
 
     public async countAll(): Promise<number> {
-        const row: CountRow | undefined = await this.db
-            .selectFrom('BankConnections')
+        const row: CountRow | undefined = await this.selectScoped()
             .select((builder) => builder.fn.countAll().as('total'))
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .executeTakeFirst();
         return Number(row?.total ?? 0);
     }
 
     public async countConnected(): Promise<number> {
-        const row: CountRow | undefined = await this.db
-            .selectFrom('BankConnections')
+        const row: CountRow | undefined = await this.selectScoped()
             .select((builder) => builder.fn.countAll().as('total'))
-            .where('companyId', '=', this.companyId)
-            .where('deletedAt', 'is', null)
             .where('status', 'in', [...SYNCABLE_CONNECTION_STATUSES])
             .executeTakeFirst();
         return Number(row?.total ?? 0);
     }
 
     public async insertIfAbsent(draft: ConnectionDraft): Promise<BankConnection | null> {
-        const row: BankConnection | undefined = await this.db
-            .insertInto('BankConnections')
+        const row: BankConnection | undefined = await this.insertBuilder()
             .values({
                 id: IdUtil.newId(),
                 companyId: this.companyId,
@@ -111,8 +104,7 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
     }
 
     public async countByStatusAcrossTenants(): Promise<StatusCount[]> {
-        const rows: (CountRow & { status: string })[] = await this.db
-            .selectFrom('BankConnections')
+        const rows: (CountRow & { status: string })[] = await this.selectSkipConstraint()
             .select(['status', (builder) => builder.fn.countAll().as('total')])
             .where('deletedAt', 'is', null)
             .groupBy('status')
@@ -121,8 +113,7 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
     }
 
     public async listSyncableAcrossTenants(): Promise<ConnectionIdentity[]> {
-        const rows: { id: string; companyId: string }[] = await this.db
-            .selectFrom('BankConnections')
+        const rows: { id: string; companyId: string }[] = await this.selectSkipConstraint()
             .select(['id', 'companyId'])
             .where('deletedAt', 'is', null)
             .where('status', 'in', [...SYNCABLE_CONNECTION_STATUSES])

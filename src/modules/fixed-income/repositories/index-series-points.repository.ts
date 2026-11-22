@@ -32,8 +32,7 @@ export class IndexSeriesPointsRepository extends BareGlobalRepository<'IndexSeri
     }
 
     private async upsertBatch(series: string, source: string, batch: readonly SeriesPoint[]): Promise<void> {
-        await this.db
-            .insertInto(this.table)
+        await this.insertBuilder()
             .values(batch.map((point: SeriesPoint) => ({ series, date: point.date, value: point.value, source })))
             .onConflict((conflict) =>
                 conflict.columns(['series', 'date']).doUpdateSet((eb) => ({

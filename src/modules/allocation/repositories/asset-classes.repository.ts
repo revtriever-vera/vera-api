@@ -28,8 +28,7 @@ export class AssetClassesRepository extends TenantRepository<'AssetClasses'> {
 
     public async insertSeedsIfMissing(seeds: readonly DefaultClassSeed[]): Promise<AssetClass[]> {
         const companyId: string = this.companyId;
-        return this.db
-            .insertInto(this.table)
+        return this.insertBuilder()
             .values(
                 seeds.map((seed: DefaultClassSeed): NewAssetClass => ({
                     id: IdUtil.newId(),
