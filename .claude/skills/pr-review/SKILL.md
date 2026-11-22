@@ -39,6 +39,29 @@ Comment format) and nothing else.
 
 An invented finding costs more than a missed one: it teaches the team to ignore the next review.
 
+## What blocks
+
+Every finding carries one of two labels, and only the first holds the PR. An author that is an agent
+fixes whatever you post, and each fix it should not have made costs a commit and another read.
+
+**Bloqueia** is a defect you show, in three parts:
+
+- **A scenario the project reaches today**, with the code, the data and the way of operating it has
+  now. Rare counts.
+- **A consequence**: a path of a user or of the team broken; data or money wrong, lost or exposed; a
+  check that passes while what it guards is broken; production left with no way back.
+- **A proof the author can run or read**: a failing test written out, a command with the output it
+  prints against the output required, or a fact certain from the code alone, with file and line.
+
+A breach of an invariant below that this PR introduces blocks, and the code is its proof. Code that
+contradicts a recorded decision or leaves an acceptance criterion unmet blocks too, whatever the
+scenario: quote the line of the decision or the criterion.
+
+**Nota** is every other finding: a scenario that needs something the project does not have yet, a
+problem that was there before this PR (say "já existia"), a matter of form (the PR body, the card
+text, the board), a cleanup. Post at most five, one line each, the ones the author would most want.
+The author decides what to do with a note, and a note never asks for another read.
+
 ## How to review
 
 The argument is the **PR number**. Use it in every `gh` command — in a CI checkout `gh` cannot
@@ -83,25 +106,31 @@ If the milestone is missing or empty, open your comment with one line saying you
 the epic context, then review on the diff alone. **Do not reconstruct the epic from commit
 messages** — a guessed context produces confident findings about rules nobody wrote.
 
-### 2. Read the diff
+### 2. Read the earlier reads
+
+A PR can be read more than once. Read the earlier review comments on it first
+(`gh pr view <number> --json comments`). A later read covers what changed since the commit the last
+one named, repeats no finding already posted and reopens none already answered.
+
+### 3. Read the diff
 
 `gh pr diff <number>`. If it is large, read the whole files that matter — a diff without context
 produces false positives.
 
-### 3. Load the skills relevant to what changed
+### 4. Load the skills relevant to what changed
 
 They are the authority, not your memory. Which ones exist depends on the repo — `conventions` is
 everywhere; a backend repo also carries `api-conventions`, `architecture`, `data-access`,
 `observability`, `queues-and-scheduling`, `testing`. List `.claude/skills/` if you are unsure.
 
-### 4. Walk the invariants below
+### 5. Walk the invariants below
 
-### 5. Verify every finding before writing it
+### 6. Verify every finding before writing it
 
 Open the file, confirm the problem exists in the code as it stands now, and build the concrete
-scenario in which it fails. If you cannot describe input and consequence, it is not a finding.
+scenario in which it fails. If you cannot describe input and consequence, it is not a finding. Then label it (**What blocks**): what you showed can block, and what you could not show is a note or nothing.
 
-### 6. Post the comment — exactly once, always
+### 7. Post the comment — exactly once, always
 
 Pass the body on stdin through a quoted heredoc. This is the only form that keeps backticks, quotes
 and `$` intact:
@@ -193,6 +222,12 @@ no surface for — a frontend PR is not deficient for lacking a migration.
   code, workflow, docs, test fixture or PR text — is a finding at the top of the comment, with
   secrets. Such values come from repository/organization variables and secrets or from SSM.
 
+### Propagation
+
+- When the diff changes what a shared rule or type answers, Grep its callers and check that each
+  one passes the new input. A caller that keeps the old answer through an optional parameter or a
+  default is a finding: name the caller and the screen or job it feeds.
+
 ### Tests
 
 - A new domain rule without an integration test is a finding. Generic coverage is not.
@@ -212,25 +247,36 @@ indistinguishable from a clean round.
 Never assert a round happened without a comment to point at, and never soften "nenhuma registrada"
 into something that sounds fine.
 
-Then open the findings with one line stating how many and at what severity. Then one block per finding:
+Then open the findings with one line stating the commit you read
+(`gh pr view <number> --json headRefOid`) and the count by label:
+
+> Li o commit `3f9a2c1`. 3 achados: 1 bloqueia, 2 notas.
+
+Then one block per blocking finding:
 
 **`path/to/file.ts:123` — what is wrong**
 
 One sentence stating the defect. One sentence stating the concrete scenario in which it breaks —
-input and consequence, not theory. If the fix is obvious, one line saying what it is.
+input and consequence, not theory. Then its proof: the repro to run, or the fact and where the code
+shows it. If the fix is obvious, one line saying what it is.
 
-Order by severity: money and personal data first, then a decision the code contradicts or a
+Order them by severity: money and personal data first, then a decision the code contradicts or a
 card it dropped, then integrity, then the rest.
 
+Then the notes under **Notas**, one line each, with the file and line.
+
 **Nenhum achado.** When you found nothing, the comment (after the QA line, on a milestone PR) is a
-single line that names what you reviewed against, so the reader knows the review ran and on what
+single line that names the commit and what you reviewed against, so the reader knows the review ran and on what
 basis:
 
-> **Nenhum achado.** Revisei contra o corpo do PR e a issue #412.
+> **Nenhum achado.** Li o commit `3f9a2c1` contra o corpo do PR e a issue #412.
 
-> **Nenhum achado.** Revisei contra o PRD e os 9 cards da milestone `fundacao`.
+> **Nenhum achado.** Li o commit `3f9a2c1` contra o PRD e os 9 cards da milestone `fundacao`.
 
 No "LGTM", no summary of the change, no list of what you checked.
+
+The last line of the comment is the verdict the review workflow asks for (`VEREDITO: APROVADO` or `VEREDITO: MUDANÇAS NECESSÁRIAS`, defined in `claude-review.yml`): `MUDANÇAS NECESSÁRIAS` only when there is a blocking finding, `APROVADO` otherwise (notes do not block). Keep the whole comment under about
+400 words, repro code aside: the cap trims notes, never a blocking finding.
 
 **Write the comment itself in pt-BR**, in full sentences — the skill is English because it is how we
 build, but a PR comment is read by the team and belongs in the pt-BR column of the conventions

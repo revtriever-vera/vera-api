@@ -67,3 +67,9 @@ Rules that keep it honest:
   untested, not a reason to add a getter test. No new coverage exclusion without the reason in the
   PR body; the only standing ones are `*.module.ts`, `main.ts`, `tracing.ts` and the generated
   database types.
+
+## Gotchas
+
+- **A test with a time budget lives outside the common integration suite.** That suite shares a
+  loaded machine, so a wall-clock assertion goes red on load, not on the diff. Put it in a separate
+  performance suite, or behind an environment variable.

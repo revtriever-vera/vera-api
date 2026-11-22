@@ -351,3 +351,12 @@ Rules:
 `src/modules/identity/` is the fully-wired reference: every layer, sub-modules per layer, config,
 catalog of messages, exported services as the cross-module surface. When in doubt about where
 something goes, copy what identity does.
+
+## Gotchas
+
+- **A new fact that changes a rule's answer enters as a required input.** When a change adds a fact
+  to a shared rule (a state function, a `*Subject` type), declare it required (`gap: Gap | null`,
+  no `?`, no `= null`) and let `npm run typecheck` list every caller. Each caller passes the fact or
+  an explicit `null`, and the PR body says why for each `null`. An optional input compiles
+  everywhere and keeps the old answer in every caller the change forgot, which review then finds
+  one round at a time.
