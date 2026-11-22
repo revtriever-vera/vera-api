@@ -31,7 +31,7 @@ export function JobMutex(config: JobMutexConfig) {
                 await job?.moveToDelayed(Date.now() + (config.delayMs ?? DEFAULT_DELAY_MS));
                 throw new DelayedError(`outro worker já processa ${lockKey}`);
             }
-            return runWithLock(original, this, redis, lockKey, lockValue, envelope, job, rest);
+            return runWithLock(original, this, { redis, lockKey, lockValue }, envelope, job, rest);
         };
         return descriptor;
     };
@@ -55,13 +55,12 @@ function lockContextOf(
 async function runWithLock(
     original: (...args: unknown[]) => Promise<unknown>,
     host: MutexHost,
-    redis: RedisConnection,
-    lockKey: string,
-    lockValue: string,
+    lock: { redis: RedisConnection; lockKey: string; lockValue: string },
     envelope: unknown,
     job: RunningJob | undefined,
     rest: unknown[]
 ): Promise<unknown> {
+    const { redis, lockKey, lockValue } = lock;
     held.set(lockKey, { redis, value: lockValue });
     try {
         return await original.apply(host, [envelope, job, ...rest]);

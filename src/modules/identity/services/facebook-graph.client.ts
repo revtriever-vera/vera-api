@@ -16,7 +16,7 @@ import {
 const GRAPH_ORIGIN: string = 'https://graph.facebook.com';
 const REQUEST_TIMEOUT_MS: number = 5000;
 const SERVER_ERROR_FLOOR: number = 500;
-const TRANSIENT_GRAPH_CODES: readonly number[] = [1, 2, 4, 17, 32, 613];
+const TRANSIENT_GRAPH_CODES: ReadonlySet<number> = new Set([1, 2, 4, 17, 32, 613]);
 
 export interface FacebookTokenInfo {
     readonly isValid: boolean;
@@ -90,6 +90,6 @@ export class FacebookGraphClient {
 
     private isTransient(body: unknown): boolean {
         const parsed: z.SafeParseReturnType<unknown, GraphErrorResponse> = graphErrorSchema.safeParse(body);
-        return parsed.success && parsed.data.error.code !== undefined && TRANSIENT_GRAPH_CODES.includes(parsed.data.error.code);
+        return parsed.success && parsed.data.error.code !== undefined && TRANSIENT_GRAPH_CODES.has(parsed.data.error.code);
     }
 }

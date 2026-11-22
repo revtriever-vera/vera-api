@@ -1,10 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { secretSealerConfig, SecretSealerConfig } from './secret-sealer.config';
 
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
-
 function setEnvironment(values: Record<string, string | undefined>): void {
-    process.env = { ...ORIGINAL_ENV };
+    vi.unstubAllEnvs();
     for (const name of [
         'IS_LOCAL',
         'DEPLOY_ENV',
@@ -14,11 +12,11 @@ function setEnvironment(values: Record<string, string | undefined>): void {
         'SECRET_SEALER_ALLOW_LOCAL_IN_PROD',
         'SECRET_SEALER_ALLOW_LEGACY_LOCAL'
     ]) {
-        Reflect.deleteProperty(process.env, name);
+        vi.stubEnv(name, undefined);
     }
     for (const [name, value] of Object.entries(values)) {
         if (value !== undefined) {
-            process.env[name] = value;
+            vi.stubEnv(name, value);
         }
     }
 }
@@ -29,7 +27,7 @@ describe('secretSealerConfig', () => {
     });
 
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('uses the local driver by default when running locally', () => {

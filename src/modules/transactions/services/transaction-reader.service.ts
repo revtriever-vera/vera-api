@@ -17,7 +17,7 @@ export class TransactionReaderService {
         let rows: Transaction[] = await this.transactions.listAfter(filter, null, EXPORT_PAGE_SIZE);
         while (rows.length > 0) {
             yield await this.toExport(rows);
-            const last: Transaction | undefined = rows[rows.length - 1];
+            const last: Transaction | undefined = rows.at(-1);
             const cursor: ExportCursor | null = last === undefined ? null : { date: toDateString(last.date), id: last.id };
             rows = rows.length < EXPORT_PAGE_SIZE ? [] : await this.transactions.listAfter(filter, cursor, EXPORT_PAGE_SIZE);
         }

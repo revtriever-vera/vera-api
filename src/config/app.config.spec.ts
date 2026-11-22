@@ -1,16 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appConfig, AppConfig } from './app.config';
-
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
 
 describe('appConfig', () => {
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('parses defaults when nothing is declared', () => {
-        process.env['IS_LOCAL'] = 'true';
-        process.env['DEPLOY_ENV'] = 'local';
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('DEPLOY_ENV', 'local');
 
         const config: AppConfig = appConfig();
 
@@ -20,9 +18,9 @@ describe('appConfig', () => {
     });
 
     it('splits and normalizes CORS_ORIGINS', () => {
-        process.env['IS_LOCAL'] = 'true';
-        process.env['DEPLOY_ENV'] = 'local';
-        process.env['CORS_ORIGINS'] = 'HTTPS://App.Example.com, https://other.example.com ,';
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('DEPLOY_ENV', 'local');
+        vi.stubEnv('CORS_ORIGINS', 'HTTPS://App.Example.com, https://other.example.com ,');
 
         const config: AppConfig = appConfig();
 
@@ -30,8 +28,8 @@ describe('appConfig', () => {
     });
 
     it('fails fast when IS_LOCAL and DEPLOY_ENV disagree', () => {
-        process.env['IS_LOCAL'] = 'true';
-        process.env['DEPLOY_ENV'] = 'dev';
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('DEPLOY_ENV', 'dev');
 
         expect(() => appConfig()).toThrow();
     });

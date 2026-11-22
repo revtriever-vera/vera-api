@@ -297,5 +297,11 @@ export function buildSpendingDataset(today: string): SpendingDataset {
         ...materialize(closedMonth, [...FIXED_AND_TRANSFERS, ...CLOSED_VARIABLE]),
         ...materialize(currentMonth, CURRENT_ENTRIES)
     ];
-    return { currentMonth, closedMonth, historyMonths, accounts: DATASET_ACCOUNTS, transactions: transactions.sort(compareTransactions) };
+    return {
+        currentMonth,
+        closedMonth,
+        historyMonths,
+        accounts: DATASET_ACCOUNTS,
+        transactions: transactions.toSorted(compareTransactions)
+    };
 }

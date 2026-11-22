@@ -22,17 +22,17 @@ vi.mock('ioredis', () => {
     return { Redis, Cluster };
 });
 
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
-
 describe('RedisConnection', () => {
     beforeEach(() => {
         state.instances = [];
         state.args = [];
-        process.env = { ...ORIGINAL_ENV, REDIS_CLUSTER: 'false', REDIS_NODES: 'localhost:6379', REDIS_DB: '0' };
+        vi.stubEnv('REDIS_CLUSTER', 'false');
+        vi.stubEnv('REDIS_NODES', 'localhost:6379');
+        vi.stubEnv('REDIS_DB', '0');
     });
 
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('acquires and releases a lock through the underlying client', async () => {
@@ -61,7 +61,8 @@ describe('RedisConnection', () => {
     });
 
     it('falls back to port 7200 when a cluster node has no port', async () => {
-        process.env = { ...ORIGINAL_ENV, REDIS_CLUSTER: 'true', REDIS_NODES: 'localhost' };
+        vi.stubEnv('REDIS_CLUSTER', 'true');
+        vi.stubEnv('REDIS_NODES', 'localhost');
         const { RedisConnection } = await import('./redis.connection');
 
         new RedisConnection();

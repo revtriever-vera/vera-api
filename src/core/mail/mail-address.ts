@@ -13,5 +13,6 @@ function quote(name: string): string {
     if (!NEEDS_QUOTES.test(name)) {
         return name;
     }
-    return `"${name.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+    const escaped: string = name.replaceAll('\\', String.raw`\\`).replaceAll('"', String.raw`\"`);
+    return `"${escaped}"`;
 }

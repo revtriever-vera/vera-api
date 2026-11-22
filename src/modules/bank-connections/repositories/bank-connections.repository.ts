@@ -16,6 +16,8 @@ import {
     SYNCABLE_CONNECTION_STATUSES
 } from '../domain/bank-connections.types';
 
+type CountRow = { total: string | number | bigint };
+
 @Injectable()
 export class BankConnectionsRepository extends TenantRepository<'BankConnections'> {
     public constructor(database: DatabaseClient, context: AppContext) {
@@ -31,7 +33,7 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
     }
 
     public async countAll(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.db
+        const row: CountRow | undefined = await this.db
             .selectFrom('BankConnections')
             .select((builder) => builder.fn.countAll().as('total'))
             .where('companyId', '=', this.companyId)
@@ -41,7 +43,7 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
     }
 
     public async countConnected(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.db
+        const row: CountRow | undefined = await this.db
             .selectFrom('BankConnections')
             .select((builder) => builder.fn.countAll().as('total'))
             .where('companyId', '=', this.companyId)
@@ -109,7 +111,7 @@ export class BankConnectionsRepository extends TenantRepository<'BankConnections
     }
 
     public async countByStatusAcrossTenants(): Promise<StatusCount[]> {
-        const rows: { status: string; total: string | number | bigint }[] = await this.db
+        const rows: (CountRow & { status: string })[] = await this.db
             .selectFrom('BankConnections')
             .select(['status', (builder) => builder.fn.countAll().as('total')])
             .where('deletedAt', 'is', null)

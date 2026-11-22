@@ -1,20 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cryptoConfig, CryptoConfig } from './crypto.config';
-
-const ORIGINAL_ENV: NodeJS.ProcessEnv = { ...process.env };
 
 describe('cryptoConfig', () => {
     beforeEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     afterEach(() => {
-        process.env = { ...ORIGINAL_ENV };
+        vi.unstubAllEnvs();
     });
 
     it('accepts the development default key when running locally', () => {
-        process.env['IS_LOCAL'] = 'true';
-        delete process.env['CRYPTO_KEY_HEX'];
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('CRYPTO_KEY_HEX', undefined);
 
         const config: CryptoConfig = cryptoConfig();
 
@@ -22,15 +20,15 @@ describe('cryptoConfig', () => {
     });
 
     it('rejects the development default key outside of local', () => {
-        process.env['IS_LOCAL'] = 'false';
-        delete process.env['CRYPTO_KEY_HEX'];
+        vi.stubEnv('IS_LOCAL', 'false');
+        vi.stubEnv('CRYPTO_KEY_HEX', undefined);
 
         expect(() => cryptoConfig()).toThrow();
     });
 
     it('accepts a valid 64-char hex key outside of local', () => {
-        process.env['IS_LOCAL'] = 'false';
-        process.env['CRYPTO_KEY_HEX'] = 'b'.repeat(64);
+        vi.stubEnv('IS_LOCAL', 'false');
+        vi.stubEnv('CRYPTO_KEY_HEX', 'b'.repeat(64));
 
         const config: CryptoConfig = cryptoConfig();
 
@@ -38,8 +36,8 @@ describe('cryptoConfig', () => {
     });
 
     it('rejects a key that is not valid hex', () => {
-        process.env['IS_LOCAL'] = 'true';
-        process.env['CRYPTO_KEY_HEX'] = 'not-hex-at-all-not-hex-at-all-not-hex-at-all-not-hex-at-allxx';
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('CRYPTO_KEY_HEX', 'not-hex-at-all-not-hex-at-all-not-hex-at-all-not-hex-at-allxx');
 
         expect(() => cryptoConfig()).toThrow();
     });

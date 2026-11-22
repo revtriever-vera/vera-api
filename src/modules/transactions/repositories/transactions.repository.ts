@@ -5,6 +5,7 @@ import { DatabaseClient } from '../../../core/database/database.client';
 import { DB } from '../../../core/database/generated/database.types';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
+import { likePattern } from '../../../shared/utils/like.util';
 import { firstDayOf, lastDayOf } from '../domain/calendar';
 import {
     AccountStats,
@@ -37,12 +38,6 @@ export interface ExportCursor {
     readonly id: string;
 }
 
-const LIKE_SPECIALS: RegExp = /[\\%_]/g;
-
-function likePattern(text: string): string {
-    return `%${text.replace(LIKE_SPECIALS, '\\$&')}%`;
-}
-
 interface MonthlyCategoryRow {
     readonly month: string;
     readonly categoryId: string | null;
@@ -66,6 +61,8 @@ function toMonthlyNet(row: MonthlyCategoryRow): MonthlyCategoryNet {
         transactionCount: numeric(row.total)
     };
 }
+
+type CountRow = { total: string | number | bigint };
 
 @Injectable()
 export class TransactionsRepository extends TenantRepository<'Transactions'> {
@@ -128,7 +125,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     public async countActive(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.scopedSelect()
+        const row: CountRow | undefined = await this.scopedSelect()
             .select((builder) => builder.fn.countAll().as('total'))
             .executeTakeFirst();
         return numeric(row?.total);
@@ -148,7 +145,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     public async countUncategorizedOutgoing(): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.scopedSelect()
+        const row: CountRow | undefined = await this.scopedSelect()
             .select((builder) => builder.fn.countAll().as('total'))
             .where('categoryId', 'is', null)
             .where('amountMinor', '<', '0')
@@ -272,7 +269,7 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
     }
 
     private async countBySample(isSample: boolean): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.scopedSelect()
+        const row: CountRow | undefined = await this.scopedSelect()
             .select((builder) => builder.fn.countAll().as('total'))
             .where('isSample', '=', isSample)
             .executeTakeFirst();

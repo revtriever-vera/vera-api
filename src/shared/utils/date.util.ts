@@ -1,3 +1,5 @@
+type DateInput = Date | string | null | undefined;
+
 const DAY_MS: number = 86_400_000;
 
 const BRAZIL_UTC_OFFSET: string = '-03:00';
@@ -88,7 +90,7 @@ export class DateUtil {
         return Math.floor((rightDay - leftDay) / DAY_MS);
     }
 
-    public static isSameCalendarDay(a: Date | string | null | undefined, b: Date | string | null | undefined): boolean {
+    public static isSameCalendarDay(a: DateInput, b: DateInput): boolean {
         if (DateUtil.isMissing(a) || DateUtil.isMissing(b)) {
             return DateUtil.isMissing(a) && DateUtil.isMissing(b);
         }
@@ -106,7 +108,7 @@ export class DateUtil {
         return new Date(guess - offset);
     }
 
-    private static isMissing(value: Date | string | null | undefined): value is null | undefined {
+    private static isMissing(value: DateInput): value is null | undefined {
         return value === null || value === undefined;
     }
 

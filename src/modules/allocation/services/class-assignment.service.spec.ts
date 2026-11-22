@@ -73,7 +73,7 @@ describe('ClassAssignmentService', () => {
             .mockResolvedValueOnce(null);
         const service: ClassAssignmentService = new ClassAssignmentService(
             {} as unknown as AssetClassDomain,
-            { find } as unknown as ClassAssignmentDomain,
+            { findAssignment: find } as unknown as ClassAssignmentDomain,
             {} as unknown as AllocationLogService
         );
 

@@ -31,7 +31,10 @@ function matches(hint: AccountHint, candidate: SuggestionCandidate): boolean {
 }
 
 export function suggestAccount(hint: AccountHint | null, candidates: readonly SuggestionCandidate[]): string | null {
-    if (hint === null || hint.numberLast4 === null) {
+    if (hint === null) {
+        return null;
+    }
+    if (hint.numberLast4 === null) {
         return null;
     }
     const found: SuggestionCandidate[] = candidates.filter((candidate: SuggestionCandidate): boolean => matches(hint, candidate));

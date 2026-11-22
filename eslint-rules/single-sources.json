@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "rule": "busca por trecho de texto com LIKE",
+      "owner": "src/shared/utils/like.util.ts",
+      "exports": ["escapeLike", "likePattern"],
+      "patterns": [
+        {
+          "what": "padrão `%texto%` montado à mão, sem escapar os curingas do LIKE",
+          "kind": "text",
+          "match": "^%$",
+          "files": "^src/"
+        }
+      ],
+      "frozen": ["src/modules/catalog/repositories/assets.repository.ts"]
+    }
+  ]
+}

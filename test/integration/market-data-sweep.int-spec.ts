@@ -142,7 +142,7 @@ describe('market-data sweep', () => {
         expect(chunks).toBeGreaterThan(0);
         expect([...published].sort()).toEqual([...sweepable].sort());
         expect(new Set(published).size).toBe(published.length);
-        expect(fetchedAssets.length).toBe(distinctHeld.length);
+        expect(fetchedAssets).toHaveLength(distinctHeld.length);
         expect(new Set(fetchedAssets).size).toBe(distinctHeld.length);
 
         const rows: QuoteRow[] = await quotes();
@@ -170,7 +170,7 @@ describe('market-data sweep', () => {
         expect(publisher.published.map((message) => message.options?.jobId)).toEqual(
             firstIds.filter((id) => (id as string).startsWith('quotes-chunk-'))
         );
-        expect(fetchedAssets.length).toBe(callsBefore);
+        expect(fetchedAssets).toHaveLength(callsBefore);
         expect(await quotes()).toEqual(before);
     });
 

@@ -33,7 +33,7 @@ export function isoDateOf(brazilian: string): string | null {
 }
 
 export function decimalOf(brazilian: string): string | null {
-    const normalized: string = brazilian.replace(/\./g, '').replace(',', '.');
+    const normalized: string = brazilian.replaceAll('.', '').replace(',', '.');
     return /^\d+(\.\d+)?$/.test(normalized) ? normalized : null;
 }
 

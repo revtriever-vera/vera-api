@@ -154,7 +154,7 @@ export class TransactionIngestionService {
         items: readonly PreparedTransaction[]
     ): Promise<Transaction[]> {
         const first: string | undefined = items[0]?.date;
-        const last: string | undefined = items[items.length - 1]?.date;
+        const last: string | undefined = items.at(-1)?.date;
         if (first === undefined || last === undefined) {
             return [];
         }

@@ -1,3 +1,8 @@
+import { noReimplementation } from './no-reimplementation.mjs';
+import { clientEscape, repositoryEscape } from './repository-escape.mjs';
+import { skillSourceImport } from './skill-source-import.mjs';
+import { moduleMockInSpec, noSharedStateWrite, noStaticState } from './process-state.mjs';
+
 const DIRECTIVE =
     /^\s*(eslint-disable|eslint-enable|eslint\s|global\s|globals\s|exported\s|prettier-ignore|@ts-expect-error|@ts-ignore|@ts-nocheck|<reference)/;
 
@@ -72,9 +77,7 @@ function isIteratorCallback(node) {
         return false;
     }
     const call = node.parent;
-    return (
-        call?.type === 'CallExpression' && call.callee?.type === 'MemberExpression' && ITERATORS.has(call.callee.property?.name ?? '')
-    );
+    return call?.type === 'CallExpression' && call.callee?.type === 'MemberExpression' && ITERATORS.has(call.callee.property?.name ?? '');
 }
 
 const noSearchInLoop = {
@@ -114,7 +117,10 @@ const noSearchInLoop = {
 const noNestedLoops = {
     meta: {
         type: 'problem',
-        docs: { description: 'Sem laço dentro de laço. Para cada item do laço de fora, o de dentro varre tudo: O(n²). Reestruture para Map ou Set.' },
+        docs: {
+            description:
+                'Sem laço dentro de laço. Para cada item do laço de fora, o de dentro varre tudo: O(n²). Reestruture para Map ou Set.'
+        },
         schema: [],
         messages: {
             found: 'Laço aninhado dentro de outro: O(n²). Reestruture para uma única passada com Map ou Set construídos antes do laço de fora.'
@@ -242,6 +248,13 @@ export default {
         'no-else': noElse,
         'no-search-in-loop': noSearchInLoop,
         'no-nested-loops': noNestedLoops,
-        'max-logic-lines': maxLogicLines
+        'max-logic-lines': maxLogicLines,
+        'no-reimplementation': noReimplementation,
+        'repository-escape': repositoryEscape,
+        'client-escape': clientEscape,
+        'skill-source-import': skillSourceImport,
+        'no-static-state': noStaticState,
+        'no-shared-state-write': noSharedStateWrite,
+        'module-mock-in-spec': moduleMockInSpec
     }
 };

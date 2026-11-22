@@ -9,11 +9,9 @@ export function sanitizeLogoUrl(raw: string | null | undefined): string | null {
     }
     try {
         const parsed: URL = new URL(candidate);
-        return parsed.protocol === HTTPS_PROTOCOL && parsed.username === '' && parsed.password === '' && parsed.hostname !== ''
-            ? parsed.href.length <= INSTITUTION_LOGO_URL_MAX_LENGTH
-                ? parsed.href
-                : null
-            : null;
+        const acceptable: boolean =
+            parsed.protocol === HTTPS_PROTOCOL && parsed.username === '' && parsed.password === '' && parsed.hostname !== '';
+        return acceptable && parsed.href.length <= INSTITUTION_LOGO_URL_MAX_LENGTH ? parsed.href : null;
     } catch {
         return null;
     }

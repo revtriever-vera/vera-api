@@ -29,7 +29,8 @@ export interface XlsxSheetSpec {
 export function currencyFormatOf(currency: string): string {
     const exponent: number = currencyExponent(currency);
     const symbol: string = CURRENCY_SYMBOLS[currency] ?? currency;
-    return `"${symbol}" #,##0${exponent > 0 ? `.${'0'.repeat(exponent)}` : ''}`;
+    const fraction: string = exponent > 0 ? `.${'0'.repeat(exponent)}` : '';
+    return `"${symbol}" #,##0${fraction}`;
 }
 
 function isFormatted(cell: XlsxCell): cell is XlsxFormattedValue {

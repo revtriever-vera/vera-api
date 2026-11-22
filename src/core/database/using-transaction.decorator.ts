@@ -1,6 +1,7 @@
 import { DatabaseClient } from './database.client';
 
 export class TransactionalContext {
+    // eslint-disable-next-line local/no-static-state -- o decorator precisa do client sem injeção; preenchido uma vez na subida do DatabaseModule
     private static client: DatabaseClient | null = null;
 
     public static set(client: DatabaseClient): void {

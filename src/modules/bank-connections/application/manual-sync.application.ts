@@ -21,7 +21,7 @@ import { BankSyncPublisherService } from '../services/bank-sync-publisher.servic
 import { CredentialsVaultService } from '../services/credentials-vault.service';
 
 function isSyncable(connection: BankConnection): boolean {
-    return SYNCABLE_CONNECTION_STATUSES.some((status: string): boolean => status === connection.status);
+    return (SYNCABLE_CONNECTION_STATUSES as readonly string[]).includes(connection.status);
 }
 
 @Injectable()

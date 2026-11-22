@@ -10,7 +10,7 @@ const HTTP_NOT_FOUND: number = 404;
 const HTTP_BAD_REQUEST: number = 400;
 const HTTP_TOO_MANY_REQUESTS: number = 429;
 const HTTP_SERVER_ERROR: number = 500;
-const AUTH_REJECTING_STATUSES: readonly number[] = [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_FORBIDDEN];
+const AUTH_REJECTING_STATUSES: ReadonlySet<number> = new Set([HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_FORBIDDEN]);
 
 function retryAfterOf(response: Response): number | null {
     const seconds: number = Number.parseInt(response.headers.get('retry-after') ?? '', 10);
@@ -18,7 +18,7 @@ function retryAfterOf(response: Response): number | null {
 }
 
 function authFailureOf(status: number): Error | null {
-    return AUTH_REJECTING_STATUSES.includes(status) ? new PluggyAuthRejectedError() : null;
+    return AUTH_REJECTING_STATUSES.has(status) ? new PluggyAuthRejectedError() : null;
 }
 
 function readFailureOf(status: number): Error | null {

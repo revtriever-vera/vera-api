@@ -114,6 +114,15 @@ describe('GlobalRepository', () => {
         expect(recorder.last.sql).toContain('order by "Throttles"."createdAt" desc');
     });
 
+    it('findAllPaginated escapes the LIKE wildcards of the search text', async () => {
+        const { recorder, repository } = setup();
+        recorder.rows = [{ total: '0' }];
+
+        await repository.findAllPaginated({ page: 1, pageSize: 5, searchText: '50%_x', searchFields: ['key'] });
+
+        expect(recorder.queries.some((query) => query.parameters.includes('%50\\%\\_x%'))).toBe(true);
+    });
+
     it('findAllPaginated clamps page and page size', async () => {
         const { recorder, repository } = setup();
         recorder.rows = [{ total: '0' }];
