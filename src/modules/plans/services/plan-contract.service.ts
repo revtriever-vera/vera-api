@@ -52,6 +52,11 @@ export class PlanContractService {
         this.logs.contractOpened(PRODUCT_KEYS.premium);
     }
 
+    public async everHadPremium(): Promise<boolean> {
+        const product: GlobalProduct = await this.catalog.productOf(PRODUCT_KEYS.premium);
+        return this.plans.hasAnyLineOf(product.id);
+    }
+
     public async trialOf(_product: 'premium'): Promise<TrialContract | null> {
         const product: GlobalProduct = await this.catalog.productOf(PRODUCT_KEYS.premium);
         const line: CompanyProduct | null = await this.plans.openLineOf(product.id);

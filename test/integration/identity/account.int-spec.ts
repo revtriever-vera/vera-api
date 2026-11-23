@@ -339,6 +339,8 @@ describe('identity account deletion and export', () => {
         expect(body.sections).toEqual({
             ai_summaries: [],
             invites: [],
+            notices: { preferences: [] },
+            signup_offer: null,
             usage: [],
             whatsapp: { messages: [] },
             whatsapp_links: { links: [] },

@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { signupLinksConfig } from '../config/signup-links.config';
 import { statusOf } from '../domain/signup-link-status';
-import { DiscountRule, SignupLink, TrialKind } from '../domain/signup-links.types';
-import { discountRuleSchema, PublicOfferView, SignupLinkView } from '../validation/signup-links.schemas';
+import { DiscountRule, SignupLink, SignupRedemption, TrialKind } from '../domain/signup-links.types';
+import { discountRuleSchema, PublicOfferView, RedeemedOfferView, SignupLinkView } from '../validation/signup-links.schemas';
 
 @Injectable()
 export class SignupLinkViewMapper {
@@ -36,7 +36,16 @@ export class SignupLinkViewMapper {
         };
     }
 
-    private rulesOf(link: SignupLink): DiscountRule[] {
-        return discountRuleSchema.array().parse(link.rules);
+    public toRedeemedView(redemption: SignupRedemption): RedeemedOfferView {
+        return {
+            trial: { kind: redemption.trialKind as TrialKind, days: redemption.trialDays },
+            rules: this.rulesOf(redemption),
+            redeemedAt: redemption.redeemedAt.toISOString(),
+            expiresAt: redemption.expiresAt.toISOString()
+        };
+    }
+
+    private rulesOf(source: Pick<SignupLink, 'rules'>): DiscountRule[] {
+        return discountRuleSchema.array().parse(source.rules);
     }
 }

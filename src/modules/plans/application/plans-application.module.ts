@@ -9,6 +9,7 @@ import { UsageModule } from '../../../core/usage/usage.module';
 import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { plansConfig } from '../config/plans.config';
 import { PlansDomainModule } from '../domain/plans-domain.module';
+import { BillingOfferRegistry } from '../services/billing-offer.registry';
 import { FeatureStateService } from '../services/feature-state.service';
 import { PaidFeatureAvailabilityRegistry } from '../services/paid-feature-availability.registry';
 import { PaidUsageStatePort } from '../services/paid-usage-state.port';
@@ -53,6 +54,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         PremiumEndedRetryApplication,
         UsageApplication,
         PaidFeatureAvailabilityRegistry,
+        BillingOfferRegistry,
         PremiumLifecycleRegistry,
         PaidUsageReader,
         PaidUsageStateAdapter,

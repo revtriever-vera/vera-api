@@ -11,6 +11,7 @@ import {
     TRIAL_KINDS,
     TrialSnapshot
 } from '../domain/plans.types';
+import { BillingOfferRegistry } from '../services/billing-offer.registry';
 import { PaidUsageReader } from '../services/paid-usage-reader.service';
 import { PlanContractService, TrialContract } from '../services/plan-contract.service';
 import { PlanGateService } from '../services/plan-gate.service';
@@ -26,6 +27,7 @@ export class BillingMeApplication {
         private readonly contract: PlanContractService,
         private readonly limits: PlanLimitService,
         private readonly usage: PaidUsageReader,
+        private readonly offers: BillingOfferRegistry,
         @Optional() private readonly summary: SubscriptionSummaryPort | undefined
     ) {}
 
@@ -43,6 +45,7 @@ export class BillingMeApplication {
             subscription: snapshot?.subscription ?? null,
             openInvoice: snapshot?.openInvoice ?? null,
             trial: await this.trial(plan),
+            offer: await this.offers.current(),
             features: await this.features(),
             usage: await this.usageBlock(hosted)
         };

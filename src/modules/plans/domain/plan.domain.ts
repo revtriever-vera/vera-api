@@ -40,6 +40,10 @@ export class PlanDomain {
         return this.contracts.findOpen(productId);
     }
 
+    public async hasAnyLineOf(productId: string): Promise<boolean> {
+        return this.contracts.hasAny(productId);
+    }
+
     public async open(
         productId: string,
         priceCents: number,

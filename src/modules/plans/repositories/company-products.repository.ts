@@ -26,6 +26,10 @@ export class CompanyProductsRepository extends BareTenantRepository<'CompanyProd
         return this.findOne({ productId, endsAt: null });
     }
 
+    public async hasAny(productId: string): Promise<boolean> {
+        return (await this.findOne({ productId })) !== null;
+    }
+
     public async openLine(line: NewContractLine): Promise<boolean> {
         const row: { id: string } | undefined = await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, ...line })

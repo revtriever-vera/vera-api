@@ -741,6 +741,13 @@ export interface Sessions {
     userId: string;
 }
 
+export interface SignupEmailMarks {
+    createdAt: Generated<Timestamp>;
+    emailHash: string;
+    id: string;
+    signupLinkId: string | null;
+}
+
 export interface SignupLinks {
     createdAt: Generated<Timestamp>;
     createdByUserId: string | null;
@@ -756,6 +763,21 @@ export interface SignupLinks {
     trialCount: Generated<number>;
     trialDays: number | null;
     trialKind: Generated<string>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface SignupRedemptions {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    expiresAt: Timestamp;
+    id: string;
+    redeemedAt: Timestamp;
+    rules: Generated<Json>;
+    signupLinkId: string;
+    source: string;
+    trialDays: number | null;
+    trialKind: string;
+    trialStartedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
 }
 
@@ -1014,7 +1036,9 @@ export interface DB {
     ReminderOccurrences: ReminderOccurrences;
     Reminders: Reminders;
     Sessions: Sessions;
+    SignupEmailMarks: SignupEmailMarks;
     SignupLinks: SignupLinks;
+    SignupRedemptions: SignupRedemptions;
     SpendingCategories: SpendingCategories;
     SpendingSettings: SpendingSettings;
     Throttles: Throttles;

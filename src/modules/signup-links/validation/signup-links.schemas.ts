@@ -115,4 +115,19 @@ export const publicOfferSchema = z.object({
 
 export type PublicOfferView = z.infer<typeof publicOfferSchema>;
 
+export const redeemOfferSchema = z.object({
+    token: z.string().min(16).max(128).describe('Token of the signup link, as it appears in the URL')
+});
+
+export class RedeemOfferDto extends createZodDto(redeemOfferSchema) {}
+
+export const redeemedOfferSchema = z.object({
+    trial: trialSchema,
+    rules: z.array(discountRuleSchema).describe('Discount scale by paid cycle'),
+    redeemedAt: z.string().datetime().describe('When the account redeemed the link'),
+    expiresAt: z.string().datetime().describe('Until when the offer can still start; after it, full price and no trial')
+});
+
+export type RedeemedOfferView = z.infer<typeof redeemedOfferSchema>;
+
 export const SIGNUP_LINKS_LIST_LIMIT: number = LIST_LIMIT;

@@ -102,7 +102,7 @@ export class AuthController {
         if (body.audience === LOGIN_AUDIENCES.admin) {
             return this.respond(await this.socialLogin.loginAdmin(body.idToken, this.meta(req)), res);
         }
-        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, body.inviteToken, req, res);
+        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }
 
     @Post('facebook')
@@ -162,7 +162,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, body.inviteToken, req, res);
+        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }
 
     @Post('refresh')
@@ -243,11 +243,11 @@ export class AuthController {
     private async signIn(
         provider: LoginProvider,
         credential: string,
-        inviteToken: string | undefined,
+        tokens: { readonly invite: string | undefined; readonly offer: string | undefined },
         req: Request,
         res: Response
     ): Promise<LoginResponse> {
-        return this.respond(await this.socialLogin.login(provider, credential, this.meta(req), inviteToken), res);
+        return this.respond(await this.socialLogin.login(provider, credential, this.meta(req), tokens.invite, tokens.offer), res);
     }
 
     private respond(result: SocialLoginResult, res: Response): LoginResponse {
@@ -257,7 +257,8 @@ export class AuthController {
             accessToken: result.tokens.accessToken,
             user: result.tokens.user,
             isNewAccount: result.isNewAccount,
-            joinedAccount: result.joinedAccount
+            joinedAccount: result.joinedAccount,
+            offer: result.offer
         };
     }
 

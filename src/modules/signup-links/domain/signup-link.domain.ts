@@ -2,9 +2,10 @@ import { randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { SignupLinksRepository } from '../repositories/signup-links.repository';
+import { statusOf } from './signup-link-status';
 import { SignupLinkNotFoundError } from './signup-links.errors';
 import { SignupLinkOfferValidation } from './validations/signup-link-offer.validation';
-import { LinkOfferInput, SignupLink } from './signup-links.types';
+import { LINK_STATUSES, LinkOfferInput, SignupLink } from './signup-links.types';
 
 const TOKEN_BYTES: number = 24;
 
@@ -50,5 +51,13 @@ export class SignupLinkDomain {
             throw new SignupLinkNotFoundError();
         }
         return { link: existing, changed: false };
+    }
+
+    public async consumeUse(id: string, now: Date, startsTrial: boolean): Promise<SignupLink | null> {
+        const locked: SignupLink | null = await this.links.lockById(id);
+        if (locked === null || statusOf(locked, now) !== LINK_STATUSES.active) {
+            return null;
+        }
+        return this.links.addUse(locked, now, startsTrial);
     }
 }
