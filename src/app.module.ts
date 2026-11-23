@@ -26,6 +26,7 @@ import { IdentityModule } from './modules/identity/identity.module';
 import { IssuersModule } from './modules/issuers/issuers.module';
 import { MarketDataModule } from './modules/market-data/market-data.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { PlansModule } from './modules/plans/plans.module';
 import { PortfolioExportModule } from './modules/portfolio-export/portfolio-export.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { PositionsModule } from './modules/positions/positions.module';
@@ -82,7 +83,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         SpendingCutsModule,
         TransactionsExportModule,
         StatementImportModule,
-        BankConnectionsModule
+        BankConnectionsModule,
+        PlansModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },

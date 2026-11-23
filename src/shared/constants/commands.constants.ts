@@ -6,6 +6,7 @@ export const COMMAND_KEYS = {
     marketDataReferenceDaily: 'market-data-reference-daily-command',
     marketDataPtaxAfternoon: 'market-data-ptax-afternoon-command',
     bankConnectionsSyncDaily: 'bank-connections-sync-daily-command',
+    plansPremiumEndedSweep: 'plans-premium-ended-sweep-command',
     identityMembersCleanup: 'identity-members-cleanup-command'
 } as const;
 

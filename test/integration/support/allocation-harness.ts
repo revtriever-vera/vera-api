@@ -1,5 +1,5 @@
 import { AddressInfo, Server } from 'node:net';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Type } from '@nestjs/common';
 import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
 import { Client } from 'pg';
 import { inject } from 'vitest';
@@ -38,14 +38,14 @@ export class AllocationHarness {
         private readonly isolated: IsolatedDatabase
     ) {}
 
-    public static async start(label: string, publisher?: QueuePublisherPort): Promise<AllocationHarness> {
+    public static async start(label: string, publisher?: QueuePublisherPort, extraModules: Type[] = []): Promise<AllocationHarness> {
         const isolated: IsolatedDatabase = await createIsolatedDatabase(label);
         process.env['DATABASE_URL'] = isolated.url;
         await isolateRedisForWorker(inject('redisNode'));
         process.env['NODE_ENV'] = 'test';
         process.env['IS_LOCAL'] = 'true';
         process.env['DEPLOY_ENV'] = 'local';
-        const builder: TestingModuleBuilder = Test.createTestingModule({ imports: [AppModule] });
+        const builder: TestingModuleBuilder = Test.createTestingModule({ imports: [AppModule, ...extraModules] });
         const testing: TestingModule = await (
             publisher === undefined ? builder : builder.overrideProvider(QueuePublisherPort).useValue(publisher)
         ).compile();

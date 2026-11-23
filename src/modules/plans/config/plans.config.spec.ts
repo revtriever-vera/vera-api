@@ -1,0 +1,30 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { plansConfig } from './plans.config';
+
+describe('plansConfig', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    it('falha fora do local sem DEPLOYMENT_MODE', () => {
+        vi.stubEnv('IS_LOCAL', 'false');
+        vi.stubEnv('DEPLOYMENT_MODE', '');
+
+        expect(() => plansConfig()).toThrow();
+    });
+
+    it('assume hosted no local', () => {
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('DEPLOYMENT_MODE', undefined);
+
+        expect(plansConfig().DEPLOYMENT_MODE).toBe('hosted');
+    });
+
+    it('aceita self_hosted com teto', () => {
+        vi.stubEnv('IS_LOCAL', 'false');
+        vi.stubEnv('DEPLOYMENT_MODE', 'self_hosted');
+        vi.stubEnv('PAID_USAGE_CAP_MICROS', '2000000');
+
+        expect(plansConfig()).toEqual({ DEPLOYMENT_MODE: 'self_hosted', PAID_USAGE_CAP_MICROS: 2000000 });
+    });
+});
