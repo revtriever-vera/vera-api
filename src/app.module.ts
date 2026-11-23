@@ -18,6 +18,7 @@ import { BankConnectionsModule } from './modules/bank-connections/bank-connectio
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { ContributionModule } from './modules/contribution/contribution.module';
 import { FixedIncomeModule } from './modules/fixed-income/fixed-income.module';
+import { FixedIncomeScheduleModule } from './modules/fixed-income-schedule/fixed-income-schedule.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { IssuersModule } from './modules/issuers/issuers.module';
@@ -65,6 +66,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         CatalogModule,
         IssuersModule,
         FixedIncomeModule,
+        FixedIncomeScheduleModule,
         PositionsModule,
         MarketDataModule,
         PortfolioModule,
