@@ -14,7 +14,6 @@ import { ScheduleInputs, ScheduleTitle, ScheduleTreasury, TreasuryKind } from '.
 
 const USD: string = 'USD';
 const BRL: string = 'BRL';
-const NO_VALUE_NEEDED: ReadonlySet<TreasuryKind> = new Set<TreasuryKind>(['prefixado']);
 
 export type { ScheduleTreasury };
 export type TitlesInputs = Pick<ScheduleInputs, 'today' | 'series' | 'titles'>;
@@ -95,11 +94,9 @@ export class ScheduleSourceService {
         }
         const assets: Asset[] = await this.catalog.findManyByIds(positions.map((position: Position): string => position.assetId));
         const holdings: TreasuryHolding[] = this.treasuryHoldings(positions, assets);
-        const needQuote: string[] = holdings
-            .filter((holding: TreasuryHolding): boolean => !NO_VALUE_NEEDED.has(holding.kind))
-            .map((holding: TreasuryHolding): string => holding.asset.id);
+        const assetIds: string[] = holdings.map((holding: TreasuryHolding): string => holding.asset.id);
         const latest: ReadonlyMap<string, StoredQuote> =
-            needQuote.length === 0 ? new Map<string, StoredQuote>() : await this.quotes.getLatest(needQuote);
+            assetIds.length === 0 ? new Map<string, StoredQuote>() : await this.quotes.getLatest(assetIds);
         return holdings.map((holding: TreasuryHolding): ScheduleTreasury => this.treasuryOf(holding, latest));
     }
 
