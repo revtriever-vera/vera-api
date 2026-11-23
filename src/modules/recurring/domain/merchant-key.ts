@@ -1,7 +1,39 @@
 import { DetectorTransaction, MERCHANT_KEY_MIN_LENGTH } from './recurring.types';
 
-const TRAILING_LOCATION: RegExp =
-    /\s+(BRA?|BRASIL|USA?|IE|IRL|NL|GB|LU|SAO PAULO|RIO DE JANEIRO|BELO HORIZONTE|PORTO ALEGRE|CURITIBA|BRASILIA|SALVADOR|FORTALEZA|RECIFE|CAMPINAS|BARUERI|OSASCO|DUBLIN|AMSTERDAM|LUXEMBOURG|LONDON)$/i;
+const TRAILING_LOCATIONS: readonly string[] = [
+    'BR',
+    'BRA',
+    'BRASIL',
+    'US',
+    'USA',
+    'IE',
+    'IRL',
+    'NL',
+    'GB',
+    'LU',
+    'SAO PAULO',
+    'RIO DE JANEIRO',
+    'BELO HORIZONTE',
+    'PORTO ALEGRE',
+    'CURITIBA',
+    'BRASILIA',
+    'SALVADOR',
+    'FORTALEZA',
+    'RECIFE',
+    'CAMPINAS',
+    'BARUERI',
+    'OSASCO',
+    'DUBLIN',
+    'AMSTERDAM',
+    'LUXEMBOURG',
+    'LONDON'
+];
+
+function withoutTrailingLocation(text: string): string {
+    const upper: string = text.toUpperCase();
+    const location: string | undefined = TRAILING_LOCATIONS.find((candidate: string): boolean => upper.endsWith(` ${candidate}`));
+    return location === undefined ? text : text.slice(0, text.length - location.length - 1);
+}
 
 export function cleanDescription(normalizedDescription: string): string | null {
     let cleaned: string = normalizedDescription
@@ -11,7 +43,7 @@ export function cleanDescription(normalizedDescription: string): string | null {
     let previous: string = '';
     while (previous !== cleaned) {
         previous = cleaned;
-        cleaned = cleaned.replace(TRAILING_LOCATION, '').trim();
+        cleaned = withoutTrailingLocation(cleaned).trim();
     }
     return cleaned.length >= MERCHANT_KEY_MIN_LENGTH ? cleaned : null;
 }

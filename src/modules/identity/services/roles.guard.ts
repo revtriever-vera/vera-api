@@ -9,7 +9,7 @@ import { IdentityMetricsService } from './identity-metrics.service';
 import { REQUIRED_ROLE_KEY } from './requires-role.decorator';
 import { hasRole } from './role-rank';
 
-const READ_METHODS: readonly string[] = ['GET', 'HEAD'];
+const READ_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -41,7 +41,7 @@ export class RolesGuard implements CanActivate {
         if (declared) {
             return declared;
         }
-        if (READ_METHODS.includes(request.method)) {
+        if (READ_METHODS.has(request.method)) {
             return USER_ROLES.viewer;
         }
         this.logs.routeRoleMissing(route);

@@ -43,6 +43,20 @@ function nextCursorOf(next: string | undefined): string | undefined {
     return new URL(next).searchParams.get('after') ?? undefined;
 }
 
+function templateBodyOf(template: TemplateDefinition): Record<string, unknown> {
+    const buttons: readonly object[] =
+        template.quickReplies.length === 0
+            ? []
+            : [{ type: 'BUTTONS', buttons: template.quickReplies.map((text: string) => ({ type: 'QUICK_REPLY', text })) }];
+    return {
+        name: template.name,
+        language: template.language,
+        category: template.category,
+        allow_category_change: false,
+        components: [{ type: 'BODY', text: template.body, example: { body_text: [template.examples] } }, ...buttons]
+    };
+}
+
 function remoteTemplateOf(entry: TemplateEntry): RemoteTemplate {
     return {
         name: entry.name,
@@ -119,18 +133,7 @@ export class CloudWhatsAppDriver extends WhatsAppCloudPort {
                 method: 'POST',
                 path: `${channel.wabaId ?? ''}/message_templates`,
                 accessToken: channel.accessToken,
-                body: {
-                    name: template.name,
-                    language: template.language,
-                    category: template.category,
-                    allow_category_change: false,
-                    components: [
-                        { type: 'BODY', text: template.body, example: { body_text: [template.examples] } },
-                        ...(template.quickReplies.length === 0
-                            ? []
-                            : [{ type: 'BUTTONS', buttons: template.quickReplies.map((text: string) => ({ type: 'QUICK_REPLY', text })) }])
-                    ]
-                }
+                body: templateBodyOf(template)
             },
             submitResponseSchema
         );

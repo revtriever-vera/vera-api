@@ -56,14 +56,24 @@ function amountsOf(valued: ValuedAmount, currency: string): AmountFields {
     };
 }
 
-export function positionHolding(
-    position: SourcePosition,
-    asset: SourceAsset,
-    quote: SourceQuote | null,
-    context: ValuationContext
-): BareHolding {
-    const native: number = quote === null ? 0 : nativeValueOf(position.quantity, quote.price, asset.currency);
-    const valued: ValuedAmount = valueNative(native, asset.currency, context.baseCurrency, context.usdRate);
+type IdentityFields = Pick<
+    BareHolding,
+    | 'kind'
+    | 'id'
+    | 'assetId'
+    | 'symbol'
+    | 'name'
+    | 'market'
+    | 'typeGroup'
+    | 'quantity'
+    | 'quantityDecimals'
+    | 'dollarExposure'
+    | 'assetKind'
+    | 'sector'
+    | 'issuerGroupId'
+>;
+
+function identityOf(position: SourcePosition, asset: SourceAsset): IdentityFields {
     return {
         kind: HOLDING_KINDS.position,
         id: position.id,
@@ -77,7 +87,20 @@ export function positionHolding(
         dollarExposure: asset.dollarExposure || asset.currency === USD_CURRENCY,
         assetKind: asset.assetKind,
         sector: asset.sector,
-        issuerGroupId: asset.issuerGroupId,
+        issuerGroupId: asset.issuerGroupId
+    };
+}
+
+export function positionHolding(
+    position: SourcePosition,
+    asset: SourceAsset,
+    quote: SourceQuote | null,
+    context: ValuationContext
+): BareHolding {
+    const native: number = quote === null ? 0 : nativeValueOf(position.quantity, quote.price, asset.currency);
+    const valued: ValuedAmount = valueNative(native, asset.currency, context.baseCurrency, context.usdRate);
+    return {
+        ...identityOf(position, asset),
         issuerId: null,
         titleKind: null,
         estimated: false,

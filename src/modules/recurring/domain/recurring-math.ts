@@ -31,5 +31,5 @@ export function mostFrequent(values: readonly string[]): string | null {
 }
 
 export function sortedUnique(values: readonly string[]): readonly string[] {
-    return [...new Set<string>(values)].sort();
+    return [...new Set<string>(values)].sort((left: string, right: string): number => left.localeCompare(right));
 }

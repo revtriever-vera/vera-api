@@ -99,6 +99,20 @@ function webhookSecretOf(parsed: Parsed, driver: BillingEngine): string | null {
     return null;
 }
 
+type FakeSettings = Pick<
+    BillingSettings,
+    'FAKE_BILLING_FORCE_FAILURE' | 'FAKE_BILLING_WEBHOOK_URL' | 'FAKE_BILLING_PUBLIC_URL' | 'FAKE_BILLING_WEBHOOK_SECRET'
+>;
+
+function fakeSettingsOf(parsed: Parsed, driver: BillingEngine): FakeSettings {
+    return {
+        FAKE_BILLING_FORCE_FAILURE: parsed.FAKE_BILLING_FORCE_FAILURE === 'true',
+        FAKE_BILLING_WEBHOOK_URL: parsed.FAKE_BILLING_WEBHOOK_URL ?? null,
+        FAKE_BILLING_PUBLIC_URL: stripTrailing(parsed.FAKE_BILLING_PUBLIC_URL, '/'),
+        FAKE_BILLING_WEBHOOK_SECRET: webhookSecretOf(parsed, driver)
+    };
+}
+
 export function parseBillingConfig(env: NodeJS.ProcessEnv): BillingSettings {
     const parsed: Parsed = schema.parse(env);
     const driver: BillingEngine = driverOf(parsed);
@@ -114,10 +128,7 @@ export function parseBillingConfig(env: NodeJS.ProcessEnv): BillingSettings {
         REVTRIEVER_GATEWAY_CONNECTION_ID: parsed.REVTRIEVER_GATEWAY_CONNECTION_ID ?? null,
         REVTRIEVER_TIMEOUT_MS: parsed.REVTRIEVER_TIMEOUT_MS,
         REVTRIEVER_MAX_RETRIES: parsed.REVTRIEVER_MAX_RETRIES,
-        FAKE_BILLING_FORCE_FAILURE: parsed.FAKE_BILLING_FORCE_FAILURE === 'true',
-        FAKE_BILLING_WEBHOOK_URL: parsed.FAKE_BILLING_WEBHOOK_URL ?? null,
-        FAKE_BILLING_PUBLIC_URL: stripTrailing(parsed.FAKE_BILLING_PUBLIC_URL, '/'),
-        FAKE_BILLING_WEBHOOK_SECRET: webhookSecretOf(parsed, driver),
+        ...fakeSettingsOf(parsed, driver),
         BILLING_PRICE_ENDPOINT_URL: parsed.BILLING_PRICE_ENDPOINT_URL ?? null,
         BILLING_PRICE_CEILING_CENTS: parsed.BILLING_PRICE_CEILING_CENTS ?? null
     };

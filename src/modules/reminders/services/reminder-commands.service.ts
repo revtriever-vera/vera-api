@@ -45,7 +45,7 @@ export class ReminderCommandsService extends ReminderCommandsPort {
     public async apply(action: ButtonAction, reminderId: string, locale: AppLocale): Promise<string> {
         const texts: ReminderTexts = reminderTextsFor(locale);
         const reminder: Reminder | null = await this.domain.byId(reminderId);
-        if (reminder === null || reminder.userId !== this.userId() || reminder.status === REMINDER_STATUSES.canceled) {
+        if (reminder?.userId !== this.userId() || reminder.status === REMINDER_STATUSES.canceled) {
             return texts.tapGone;
         }
         const sent: ReminderOccurrence | null = await this.domain.latestSent(reminder.id);

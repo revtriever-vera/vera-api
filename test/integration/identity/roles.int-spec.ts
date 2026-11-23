@@ -64,8 +64,9 @@ describe('papéis Dono, Editor e Leitura', () => {
     });
 
     it('o Dono passa pelo guard em tudo, e exporta a conta', async () => {
-        for (const [method, path] of [...EDITOR_WRITES, ['PUT', '/spending/connections/credentials']]) {
-            expect((await harness.call(owner.token, method!, path!, {})).status, `${method} ${path}`).not.toBe(403);
+        const writes: readonly [string, string][] = [...EDITOR_WRITES, ['PUT', '/spending/connections/credentials']];
+        for (const [method, path] of writes) {
+            expect((await harness.call(owner.token, method, path, {})).status, `${method} ${path}`).not.toBe(403);
         }
         expect((await harness.call(owner.token, 'GET', '/account/export')).status).toBe(200);
     });

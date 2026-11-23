@@ -20,7 +20,7 @@ import {
 } from './recurring.types';
 import { groupIntoBands } from './value-bands';
 
-const DAILY_CADENCES: readonly string[] = [CADENCES.weekly, CADENCES.biweekly];
+const DAILY_CADENCES: ReadonlySet<string> = new Set([CADENCES.weekly, CADENCES.biweekly]);
 
 function groupByMerchant(transactions: readonly DetectorTransaction[]): ReadonlyMap<string, readonly Charge[]> {
     const groups: Map<string, Charge[]> = new Map<string, Charge[]>();
@@ -80,11 +80,20 @@ function isAllowedProfile(profile: AmountProfile, category: string | null): bool
     return !consumption || profile.mode === VALUE_MODES.fixed;
 }
 
+function dayFieldsOf(fit: CadenceFit): Pick<DetectedSeries, 'expectedDay' | 'dayChange'> {
+    const dated: ExpectedDay | null = DAILY_CADENCES.has(fit.cadence) ? null : expectDay(fit.charges);
+    return { expectedDay: dated?.expectedDay ?? null, dayChange: dated?.dayChange ?? null };
+}
+
+function duplicateIdsOf(duplicates: readonly Charge[], firstDate: string): readonly string[] {
+    return duplicates
+        .filter((charge: Charge): boolean => charge.transaction.date >= firstDate)
+        .map((charge: Charge): string => charge.transaction.id);
+}
+
 function buildSeries(merchantKey: string, fit: CadenceFit, profile: AmountProfile, duplicates: readonly Charge[]): DetectedSeries {
     const sorted: readonly Charge[] = fit.charges;
     const firstDate: string = sorted[0]?.transaction.date ?? '';
-    const accountIds: readonly string[] = sortedUnique(sorted.map((charge: Charge): string => charge.transaction.accountId));
-    const dated: ExpectedDay | null = DAILY_CADENCES.includes(fit.cadence) ? null : expectDay(sorted);
     return {
         merchantKey,
         cadence: fit.cadence,
@@ -92,19 +101,16 @@ function buildSeries(merchantKey: string, fit: CadenceFit, profile: AmountProfil
         typicalAmountMinor: profile.typicalAmountMinor,
         minAmountMinor: profile.minAmountMinor,
         maxAmountMinor: profile.maxAmountMinor,
-        expectedDay: dated?.expectedDay ?? null,
-        dayChange: dated?.dayChange ?? null,
+        ...dayFieldsOf(fit),
         chargeIds: sorted.map((charge: Charge): string => charge.transaction.id),
-        duplicateChargeIds: duplicates
-            .filter((charge: Charge): boolean => charge.transaction.date >= firstDate)
-            .map((charge: Charge): string => charge.transaction.id),
+        duplicateChargeIds: duplicateIdsOf(duplicates, firstDate),
         trialChargeIds: [],
         accountId: mostFrequent(sorted.map((charge: Charge): string => charge.transaction.accountId)) ?? '',
-        accountIds,
+        accountIds: sortedUnique(sorted.map((charge: Charge): string => charge.transaction.accountId)),
         categoryKey: categoryOf(sorted),
         knownSubscription: isKnownSubscription(sorted),
         firstDate,
-        lastDate: sorted[sorted.length - 1]?.transaction.date ?? ''
+        lastDate: sorted.at(-1)?.transaction.date ?? ''
     };
 }
 

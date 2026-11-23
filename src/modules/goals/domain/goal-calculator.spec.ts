@@ -17,6 +17,7 @@ function goalOf(overrides: Partial<Goal> = {}): Goal {
         plan: PLAN,
         monthStart: { month: '2026-11-01', minor: 0 },
         holdings: [],
+        reserve: null,
         createdAt: new Date('2026-11-01T00:00:00Z'),
         updatedAt: new Date('2026-11-01T00:00:00Z'),
         ...overrides

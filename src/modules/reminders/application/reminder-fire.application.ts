@@ -57,8 +57,8 @@ export class ReminderFireApplication {
             return;
         }
         const reminder: Reminder | null = await this.domain.byId(occurrence.reminderId);
-        const contact: LinkContact | null =
-            reminder === null || reminder.linkId === null ? null : await this.links.contactOf(reminder.linkId);
+        const linkId: string | null = reminder?.linkId ?? null;
+        const contact: LinkContact | null = linkId === null ? null : await this.links.contactOf(linkId);
         if (reminder === null || contact === null || occurrence.channel === CHANNELS.template) {
             await this.settle(occurrence, OCCURRENCE_STATUSES.sent, { kind: 'unreached', reason: UNREACHED_REASONS.sendFailed });
             return;

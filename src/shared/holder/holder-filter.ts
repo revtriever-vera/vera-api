@@ -1,21 +1,18 @@
 import { z } from 'zod';
 
-export const HOLDER_FILTER_KINDS = {
+export const HOLDER_FILTER_KINDS: { readonly any: 'any'; readonly all: 'all'; readonly person: 'person' } = {
     any: 'any',
     all: 'all',
     person: 'person'
-} as const;
+};
 
 export type HolderFilterKind = (typeof HOLDER_FILTER_KINDS)[keyof typeof HOLDER_FILTER_KINDS];
 
-export type HolderFilter =
-    | { readonly kind: 'any' }
-    | { readonly kind: 'all' }
-    | { readonly kind: 'person'; readonly userId: string };
+export type HolderFilter = { readonly kind: 'any' } | { readonly kind: 'all' } | { readonly kind: 'person'; readonly userId: string };
 
 export const ANY_HOLDER: HolderFilter = { kind: HOLDER_FILTER_KINDS.any };
 
-export const holderQuerySchema = z
+export const holderQuerySchema: z.ZodDefault<z.ZodUnion<[z.ZodEnum<['any', 'all']>, z.ZodString]>> = z
     .union([z.enum([HOLDER_FILTER_KINDS.any, HOLDER_FILTER_KINDS.all]), z.string().uuid()])
     .default(HOLDER_FILTER_KINDS.any)
     .describe(

@@ -4,9 +4,21 @@ import { CategoryReaderService } from '../../spending-categories/services/catego
 import { TransactionAggregatesService } from '../../transactions/services/transaction-aggregates.service';
 import { ExpenseAverage, expenseAverage } from '../domain/expense-average';
 import { addMonths, monthOfDate } from '../domain/month';
-import { AVERAGE_WINDOW_MONTHS, FIRST_SUPPORTED_MONTH } from '../domain/spending-summary.types';
+import { AVERAGE_WINDOW_MONTHS, CategoryInfo, FIRST_SUPPORTED_MONTH } from '../domain/spending-summary.types';
 
 export type { ExpenseAverage };
+
+function categoryInfoOf(category: CategoryInfo): CategoryInfo {
+    return {
+        id: category.id,
+        systemKey: category.systemKey,
+        name: category.name,
+        icon: category.icon,
+        kind: category.kind,
+        flexibility: category.flexibility,
+        position: category.position
+    };
+}
 
 @Injectable()
 export class SpendingExpenseAverageService {
@@ -26,19 +38,6 @@ export class SpendingExpenseAverageService {
             this.aggregates.monthsWithData({ fromMonth: FIRST_SUPPORTED_MONTH, toMonth: current }),
             this.categories.listForCompany()
         ]);
-        return expenseAverage(
-            current,
-            monthsWithData,
-            nets,
-            categories.map((category) => ({
-                id: category.id,
-                systemKey: category.systemKey,
-                name: category.name,
-                icon: category.icon,
-                kind: category.kind,
-                flexibility: category.flexibility,
-                position: category.position
-            }))
-        );
+        return expenseAverage(current, monthsWithData, nets, categories.map(categoryInfoOf));
     }
 }

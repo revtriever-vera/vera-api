@@ -164,6 +164,7 @@ describe('identity members and invites', () => {
         return `${label}-${crypto.randomUUID()}@${EMAIL_DOMAIN}`;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- o corpo da resposta não tem schema: quem chama declara o formato que espera
     async function call<T>(token: string | null, method: string, path: string, body?: unknown): Promise<{ status: number; body: T }> {
         const headers: Record<string, string> = { 'content-type': 'application/json' };
         if (token) {
@@ -362,7 +363,8 @@ describe('identity members and invites', () => {
         expect(response.body.type).toBe('members.account_not_empty');
         expect((await pg.query('SELECT id FROM "Companies" WHERE id = $1', [visitor.companyId])).rowCount).toBe(1);
         expect(
-            (await pg.query('SELECT "acceptedAt" FROM "AccountInvites" WHERE id = $1', [sent.body.invite.id])).rows[0]?.acceptedAt
+            (await pg.query<{ acceptedAt: Date | null }>('SELECT "acceptedAt" FROM "AccountInvites" WHERE id = $1', [sent.body.invite.id]))
+                .rows[0]?.acceptedAt
         ).toBeNull();
         assets.withData.delete(visitor.companyId);
     });

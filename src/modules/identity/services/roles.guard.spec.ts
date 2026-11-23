@@ -2,7 +2,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { describe, expect, it, vi } from 'vitest';
 import { RoleForbiddenError, RouteRoleMissingError, UnauthorizedError } from '../domain/identity.errors';
-import { User, UserRole } from '../domain/identity.types';
+import { UserRole } from '../domain/identity.types';
 import { CurrentUserService } from './current-user.service';
 import { IdentityLogService } from './identity-log.service';
 import { IdentityMetricsService } from './identity-metrics.service';
@@ -21,7 +21,7 @@ function build(role: string | null, declared: UserRole | undefined) {
     if (role === null) {
         require.mockRejectedValue(new UnauthorizedError());
     } else {
-        require.mockResolvedValue({ id: 'user-1', role } as User);
+        require.mockResolvedValue({ id: 'user-1', role });
     }
     const roleDenied: ReturnType<typeof vi.fn> = vi.fn();
     const routeRoleMissing: ReturnType<typeof vi.fn> = vi.fn();
@@ -56,7 +56,10 @@ describe('RolesGuard', () => {
     it('owner recusa editor, registra o log e a métrica da recusa', async () => {
         const { guard, roleDenied, authzDenied } = build('editor', 'owner');
 
-        await expect(guard.canActivate(executionOf('DELETE'))).rejects.toMatchObject({ code: 'members.forbidden_role', meta: { required: 'owner' } });
+        await expect(guard.canActivate(executionOf('DELETE'))).rejects.toMatchObject({
+            code: 'members.forbidden_role',
+            meta: { required: 'owner' }
+        });
         expect(roleDenied).toHaveBeenCalledWith('DELETE /positions', 'owner', 'editor');
         expect(authzDenied).toHaveBeenCalledWith('owner');
     });
