@@ -215,6 +215,7 @@ describe('identity account deletion and export', () => {
         expect(trail).toHaveLength(1);
         expect(trail[0]?.companyHash).toBe(deletionLog.hashOf(a.company.id));
         expect(trail[0]?.areas).toEqual([
+            { area: 'integration_credentials', erased: expect.any(Number) },
             { area: 'usage', erased: expect.any(Number) },
             { area: 'stable', erased: expect.any(Number) },
             { area: 'flaky', erased: expect.any(Number) }
