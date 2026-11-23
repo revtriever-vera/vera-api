@@ -466,7 +466,7 @@ describe('assinatura na Revtriever (driver fake)', () => {
         const account: Account = await harness.signUp('offer-card-trial');
         await redeem(account, { kind: 'card', days: 14 });
 
-        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'pix' })).status).toBe(201);
+        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'card' })).status).toBe(201);
 
         const row = await harness.pg.query<{ firstChargeDate: string }>(
             'SELECT "firstChargeDate" FROM "BillingSubscriptions" WHERE "companyId" = $1',

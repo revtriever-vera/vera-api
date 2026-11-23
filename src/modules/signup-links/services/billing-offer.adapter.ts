@@ -13,6 +13,10 @@ export class BillingOfferAdapter extends BillingOfferPort {
         super();
     }
 
+    public async trialStarted(at: Date): Promise<void> {
+        await this.redemptions.markTrialStarted(at);
+    }
+
     public async offer(): Promise<BillingOfferSnapshot | null> {
         const redemption: SignupRedemption | null = await this.redemptions.current();
         if (redemption === null) {
@@ -29,6 +33,10 @@ export class BillingOfferAdapter extends BillingOfferPort {
         }
         const isCardTrial: boolean = snapshot.trial.kind === TRIAL_KINDS.card;
         return { rules: snapshot.rules, cardTrialDays: isCardTrial ? snapshot.trial.days : null };
+    }
+
+    public async release(): Promise<void> {
+        await this.redemptions.release(new Date());
     }
 
     public async markApplied(): Promise<boolean> {

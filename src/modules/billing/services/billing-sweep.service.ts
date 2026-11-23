@@ -26,6 +26,7 @@ export class BillingSweepService {
         }
         const totals: Record<StandingStatus, number> = await this.standings.countOpenByStatus();
         this.metrics.standing('active', totals.active);
+        this.metrics.standing('trialing', totals.trialing);
         this.metrics.standing('past_due', totals.past_due);
         this.metrics.standing('expired', totals.expired);
         return companies.size;

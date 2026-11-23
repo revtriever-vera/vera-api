@@ -13,6 +13,7 @@ import {
 import { RevtrieverEventDomain } from '../domain/revtriever-event.domain';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { BillingProvisioningService } from './billing-provisioning.service';
+import { BillingTrialService } from './billing-trial.service';
 import { appliedEventOf } from './revtriever-event-applied';
 
 @Injectable()
@@ -21,7 +22,8 @@ export class BillingCardService {
         private readonly engine: BillingEnginePort,
         private readonly subscriptions: BillingSubscriptionDomain,
         private readonly events: RevtrieverEventDomain,
-        private readonly provisioning: BillingProvisioningService
+        private readonly provisioning: BillingProvisioningService,
+        private readonly trials: BillingTrialService
     ) {}
 
     public async captureSession(): Promise<{ captureUrl: string }> {
@@ -36,6 +38,7 @@ export class BillingCardService {
     public async confirm(): Promise<void> {
         const subscription: BillingSubscription = await this.activeRow();
         await this.provisioning.inheritCard(subscription);
+        await this.trials.start((await this.subscriptions.findById(subscription.id)) ?? subscription);
         await this.retryHeldInvoices(subscription);
     }
 

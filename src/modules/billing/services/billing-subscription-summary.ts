@@ -12,6 +12,7 @@ import {
 } from '../domain/billing.types';
 import { CompanyBillingStandingDomain } from '../domain/company-billing-standing.domain';
 import { graceEndOf, oldestOverdueInvoice, overdueSinceOfInvoice } from '../domain/company-billing-standing.rules';
+import { resumableUntilOf } from '../domain/billing-trial.rules';
 import { withdrawalEndsAt } from '../domain/withdrawal';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import {
@@ -26,7 +27,11 @@ function iso(date: Date | null): string | null {
     return date === null ? null : date.toISOString();
 }
 
-function statusOf(subscription: BillingSubscription, standing: CompanyBillingStanding | null): SubscriptionStatus {
+function trialRunning(subscription: BillingSubscription, standing: CompanyBillingStanding | null, now: Date): boolean {
+    return standing?.status === STANDING_STATUSES.trialing && subscription.trialEndsAt !== null && now < subscription.trialEndsAt;
+}
+
+function statusOf(subscription: BillingSubscription, standing: CompanyBillingStanding | null, now: Date): SubscriptionStatus {
     if (standing?.status === STANDING_STATUSES.expired) {
         return 'expired';
     }
@@ -35,6 +40,9 @@ function statusOf(subscription: BillingSubscription, standing: CompanyBillingSta
     }
     if (subscription.status === SUBSCRIPTION_STATUSES.pending) {
         return 'pending';
+    }
+    if (trialRunning(subscription, standing, now)) {
+        return 'trialing';
     }
     return standing?.status === STANDING_STATUSES.pastDue ? 'past_due' : 'active';
 }
@@ -72,9 +80,10 @@ export class BillingSubscriptionSummary extends SubscriptionSummaryPort {
         now: Date
     ): SubscriptionSummary {
         const canceled: boolean = subscription.status === SUBSCRIPTION_STATUSES.canceled;
+        const resumeLimit: Date | null = resumableUntilOf(subscription);
         const withdrawalEnd: Date | null = withdrawalEndsAt(subscription.firstPaidAt, this.config.BILLING_WITHDRAWAL_DAYS);
         return {
-            status: statusOf(subscription, standing),
+            status: statusOf(subscription, standing, now),
             method: subscription.paymentMethod === 'card' ? 'card' : 'pix',
             since: iso(subscription.firstPaidAt),
             paidThrough: iso(subscription.paidThrough),
@@ -82,7 +91,7 @@ export class BillingSubscriptionSummary extends SubscriptionSummaryPort {
             card: subscription.cardLast4 === null ? null : { brand: subscription.cardBrand ?? '', last4: subscription.cardLast4 },
             graceEndsAt: iso(this.graceEndsAtOf(standing, open)),
             withdrawalEndsAt: iso(withdrawalEnd !== null && withdrawalEnd > now && !canceled ? withdrawalEnd : null),
-            canResume: canceled && subscription.paidThrough !== null && now < subscription.paidThrough
+            canResume: canceled && resumeLimit !== null && now < resumeLimit
         };
     }
 
@@ -90,6 +99,9 @@ export class BillingSubscriptionSummary extends SubscriptionSummaryPort {
         const due: Date | null = open[0]?.dueDate ?? null;
         if (due !== null) {
             return due;
+        }
+        if (subscription.trialEndsAt !== null && subscription.firstPaidAt === null) {
+            return subscription.trialEndsAt;
         }
         if (subscription.paidThrough !== null) {
             return subscription.paidThrough;

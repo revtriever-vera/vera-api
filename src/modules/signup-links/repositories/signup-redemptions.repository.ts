@@ -19,6 +19,11 @@ export class SignupRedemptionsRepository extends BareTenantRepository<'SignupRed
         return this.findOne({});
     }
 
+    public async markTrialStarted(at: Date): Promise<boolean> {
+        const rows: SignupRedemption[] = await this.updateManyRows({ trialStartedAt: null }, { trialStartedAt: at, updatedAt: at });
+        return rows.length > 0;
+    }
+
     public async createOnce(data: CreateData): Promise<SignupRedemption | null> {
         const row: SignupRedemption | undefined = await this.insertBuilder()
             .values({ ...data, companyId: this.companyId })
@@ -26,6 +31,11 @@ export class SignupRedemptionsRepository extends BareTenantRepository<'SignupRed
             .returningAll()
             .executeTakeFirst();
         return row ?? null;
+    }
+
+    public async release(at: Date): Promise<boolean> {
+        const rows: SignupRedemption[] = await this.updateManyRows({ trialStartedAt: null }, { appliedAt: null, updatedAt: at });
+        return rows.length > 0;
     }
 
     public async markApplied(at: Date): Promise<boolean> {
