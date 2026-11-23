@@ -30,7 +30,13 @@ export const saveWhatsAppSchema = z.object({
     accessToken: secret('Access token of the WhatsApp Cloud API. Never returned by any route'),
     phoneNumberId: z.string().trim().regex(PHONE_NUMBER_ID).describe('Phone number ID of the WhatsApp Business number, digits only'),
     verifyToken: secret('Token the webhook verification handshake compares. Never returned by any route'),
-    appSecret: secret('App secret of the Meta app, used to validate the webhook signature. Never returned by any route')
+    appSecret: secret('App secret of the Meta app, used to validate the webhook signature. Never returned by any route'),
+    wabaId: z
+        .string()
+        .trim()
+        .regex(PHONE_NUMBER_ID)
+        .optional()
+        .describe('WhatsApp Business Account ID, digits only. Needed for Vera to submit and follow the message templates')
 });
 
 export const saveGoogleSchema = z.object({

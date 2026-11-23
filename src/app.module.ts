@@ -40,6 +40,7 @@ import { SpendingSummaryModule } from './modules/spending-summary/spending-summa
 import { StatementImportModule } from './modules/statement-import/statement-import.module';
 import { TransactionsExportModule } from './modules/transactions-export/transactions-export.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 
 const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'];
 
@@ -92,7 +93,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         StatementImportModule,
         BankConnectionsModule,
         PlansModule,
-        BillingModule
+        BillingModule,
+        WhatsAppModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },

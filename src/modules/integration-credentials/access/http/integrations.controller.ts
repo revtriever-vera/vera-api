@@ -75,7 +75,7 @@ export class IntegrationsController {
         schema: integrationsViewSchema,
         example: {
             items: [ITEM_EXAMPLE],
-            webhookUrl: 'https://vera.example.com/api/whatsapp',
+            webhookUrl: 'https://vera.example.com/api/whatsapp/webhook',
             googleRedirectUri: 'https://vera.example.com/api/google/callback'
         }
     })
