@@ -7,7 +7,9 @@ export const COMMAND_KEYS = {
     marketDataPtaxAfternoon: 'market-data-ptax-afternoon-command',
     bankConnectionsSyncDaily: 'bank-connections-sync-daily-command',
     plansPremiumEndedSweep: 'plans-premium-ended-sweep-command',
-    identityMembersCleanup: 'identity-members-cleanup-command'
+    identityMembersCleanup: 'identity-members-cleanup-command',
+    usageCleanup: 'usage-cleanup-command',
+    usageGauge: 'usage-gauge-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
@@ -27,7 +29,8 @@ export const CRON = {
     twiceDaily: '0 9,21 * * *',
     everyMondayAtSixAm: '0 6 * * 1',
     everyDayAtTenThirtyPm: '30 22 * * *',
-    weekdaysAtTwoThirtyPm: '30 14 * * 1-5'
+    weekdaysAtTwoThirtyPm: '30 14 * * 1-5',
+    firstOfMonthAtFourAm: '0 4 1 * *'
 } as const;
 
 export const CRON_TIMEZONE: string = 'America/Sao_Paulo';

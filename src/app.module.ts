@@ -13,6 +13,7 @@ import { HttpModule } from './core/http/http.module';
 import { AppErrorFilter } from './core/http/app-error.filter';
 import { ObservabilityModule } from './core/observability/observability.module';
 import { QueueModule } from './core/queue/queue.module';
+import { UsageModule } from './core/usage/usage.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { BankConnectionsModule } from './modules/bank-connections/bank-connections.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
@@ -61,6 +62,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         CryptoModule,
         ObservabilityModule,
         QueueModule,
+        UsageModule,
         HttpModule,
         HealthModule,
         IdentityModule,

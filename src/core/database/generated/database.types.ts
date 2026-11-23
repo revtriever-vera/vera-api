@@ -354,6 +354,31 @@ export interface OnboardingStates {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface PaidUsageEntries {
+    companyId: string;
+    costMicros: Int8;
+    createdAt: Generated<Timestamp>;
+    detail: Json | null;
+    feature: string;
+    id: string;
+    occurredAt: Generated<Timestamp>;
+    outcome: string;
+    period: string;
+    providerCostMicros: Int8 | null;
+    referenceId: string;
+    task: string;
+    usdBrlRate: Numeric | null;
+}
+
+export interface PaidUsageNotices {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    kind: string;
+    period: string;
+    sentAt: Generated<Timestamp>;
+}
+
 export interface PluggyCredentials {
     clientIdHint: string;
     companyId: string;
@@ -567,6 +592,8 @@ export interface DB {
     GlobalProducts: GlobalProducts;
     IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
+    PaidUsageEntries: PaidUsageEntries;
+    PaidUsageNotices: PaidUsageNotices;
     PluggyCredentials: PluggyCredentials;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;
