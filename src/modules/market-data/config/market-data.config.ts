@@ -91,6 +91,13 @@ function hasAnyKey(parsed: z.infer<typeof schema>): boolean {
     ].some((value: string | undefined): boolean => value !== undefined);
 }
 
+function driverOf(parsed: z.infer<typeof schema>, isLocal: boolean): 'live' | 'mock' {
+    if (!isLocal) {
+        return 'live';
+    }
+    return parsed.MARKET_DATA_DRIVER ?? (hasAnyKey(parsed) ? 'live' : 'mock');
+}
+
 export function parseMarketDataConfig(env: NodeJS.ProcessEnv): MarketDataSettings {
     const parsed: z.infer<typeof schema> = schema.parse(env);
     const limits: Record<string, BudgetLimits> = Object.fromEntries(
@@ -99,7 +106,7 @@ export function parseMarketDataConfig(env: NodeJS.ProcessEnv): MarketDataSetting
             limitsOf(env, provider)
         ])
     );
-    const driver: 'live' | 'mock' = parsed.MARKET_DATA_DRIVER ?? (hasAnyKey(parsed) ? 'live' : 'mock');
+    const driver: 'live' | 'mock' = driverOf(parsed, env['IS_LOCAL'] === 'true');
     return { ...parsed, DRIVER: driver, LIMITS: limits as Readonly<Record<QuoteProviderId, BudgetLimits>> };
 }
 

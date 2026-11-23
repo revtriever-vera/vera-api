@@ -4,6 +4,7 @@ import { llmConfig } from './config/llm.config';
 const PRICED: string = JSON.stringify({ 'meta/muse-spark-1.3-contributor': { input: 0.1, output: 0.2, cacheRead: 0.002 } });
 
 const MANAGED: readonly string[] = [
+    'IS_LOCAL',
     'LLM_DRIVER',
     'AI_GATEWAY_API_KEY',
     'LLM_MODEL_ID',
@@ -31,8 +32,14 @@ describe('llm.config', () => {
         vi.unstubAllEnvs();
     });
 
-    it('sobe sem chave: o driver padrão é mock e o modelo é o do card', () => {
-        const config = load({});
+    it('fora do local o mock nunca é aceito, nem por padrão nem pedindo', () => {
+        for (const env of [{} as Record<string, string>, { IS_LOCAL: 'false' }, { LLM_DRIVER: 'mock' }, { IS_LOCAL: 'false', LLM_DRIVER: 'mock' }]) {
+            expect(load(env).LLM_DRIVER).toBe('live');
+        }
+    });
+
+    it('no local, sobe sem chave: o driver padrão é mock e o modelo é o do card', () => {
+        const config = load({ IS_LOCAL: 'true', DEPLOY_ENV: 'local' });
 
         expect(config.LLM_DRIVER).toBe('mock');
         expect(config.LLM_MODEL_ID).toBe('meta/muse-spark-1.3-contributor');

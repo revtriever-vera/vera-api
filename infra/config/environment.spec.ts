@@ -103,9 +103,14 @@ describe('fromEnvironment', () => {
         expect(() => fromEnvironment('dev', fakeEnvironment({ IMAGE_PULL_ACCOUNTS: 'abc' }))).toThrow('IMAGE_PULL_ACCOUNTS inválida');
     });
     describe('agenda do Google', () => {
-        it('usa o mock por padrão, lê google e recusa driver desconhecido', () => {
-            expect(fromEnvironment('prod', fakeEnvironment()).calendar).toEqual({ driver: 'mock' });
+        it('em branco desliga a agenda, lê google e recusa o mock e driver desconhecido', () => {
+            expect(fromEnvironment('prod', fakeEnvironment()).calendar).toEqual({ driver: null });
             expect(fromEnvironment('prod', fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'google' })).calendar).toEqual({ driver: 'google' });
+            for (const environment of ['dev', 'prod'] as const) {
+                expect(() => fromEnvironment(environment, fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'mock' }))).toThrow(
+                    'mock não é aceito'
+                );
+            }
             expect(() => fromEnvironment('prod', fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'outlook' }))).toThrow(
                 'GOOGLE_CALENDAR_DRIVER inválida'
             );

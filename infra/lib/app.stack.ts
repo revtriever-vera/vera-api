@@ -333,7 +333,6 @@ export class AppStack extends Stack {
             LOG_LEVEL: 'info',
             DOCS_ENABLED: 'true',
             QUEUES_DASHBOARD_ENABLED: 'true',
-            PLUGGY_DRIVER: 'mock',
             APP_VERSION: props.imageTag,
             COOKIE_SECURE: 'true',
             DEPLOYMENT_MODE: 'hosted',
@@ -348,10 +347,10 @@ export class AppStack extends Stack {
     }
 
     private calendarEnvironment(props: AppStackProps): Record<string, string> {
-        return {
-            GOOGLE_CALENDAR_DRIVER: props.config.calendar.driver,
+        const redirect: Record<string, string> = {
             GOOGLE_CALENDAR_REDIRECT_URI: `https://${props.config.apiHost}/calendar/google/callback`
         };
+        return props.config.calendar.driver === null ? redirect : { GOOGLE_CALENDAR_DRIVER: props.config.calendar.driver, ...redirect };
     }
 
     private billingEnvironment(billing: BillingEnvironmentConfig): Record<string, string> {

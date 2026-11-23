@@ -2,10 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { parseGoogleCalendarConfig } from './google-calendar.config';
 
 describe('parseGoogleCalendarConfig', () => {
-    it('usa mock e os redirects derivados da URL pública por padrão', () => {
-        const config = parseGoogleCalendarConfig({ PUBLIC_API_URL: 'https://vera.example.com/' });
+    it('no local usa mock por padrão, e os redirects saem da URL pública', () => {
+        const config = parseGoogleCalendarConfig({ IS_LOCAL: 'true', PUBLIC_API_URL: 'https://vera.example.com/' });
 
         expect(config.GOOGLE_CALENDAR_DRIVER).toBe('mock');
+        expect(parseGoogleCalendarConfig({ IS_LOCAL: 'true', GOOGLE_CALENDAR_DRIVER: 'google' }).GOOGLE_CALENDAR_DRIVER).toBe('google');
+    });
+
+    it('fora do local o mock nunca é aceito, nem por padrão nem pedindo', () => {
+        for (const env of [
+            {},
+            { IS_LOCAL: 'false' },
+            { GOOGLE_CALENDAR_DRIVER: 'mock' },
+            { IS_LOCAL: 'false', GOOGLE_CALENDAR_DRIVER: 'mock' }
+        ]) {
+            expect(parseGoogleCalendarConfig(env).GOOGLE_CALENDAR_DRIVER).toBe('google');
+        }
+    });
+
+    it('os redirects saem da URL pública', () => {
+        const config = parseGoogleCalendarConfig({ PUBLIC_API_URL: 'https://vera.example.com/' });
+
         expect(config.hostedRedirectUri).toBe('https://vera.example.com/api/calendar/google/callback');
         expect(config.selfHostedRedirectUri).toBe('https://vera.example.com/api/google/callback');
     });

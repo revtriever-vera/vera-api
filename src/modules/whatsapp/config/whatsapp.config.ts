@@ -39,6 +39,7 @@ const schema = z.object({
 });
 
 export interface WhatsAppSettings {
+    /** Fora do local nunca é `mock`. */
     readonly WHATSAPP_DRIVER: 'cloud' | 'mock';
     readonly WHATSAPP_GRAPH_BASE_URL: string;
     readonly WHATSAPP_GRAPH_VERSION: string;
@@ -67,7 +68,7 @@ function recipientsOf(raw: string): string[] {
 export function parseWhatsAppConfig(env: NodeJS.ProcessEnv): WhatsAppSettings {
     const parsed: z.infer<typeof schema> = schema.parse(env);
     const isLocal: boolean = env['IS_LOCAL'] === 'true';
-    const driver: 'cloud' | 'mock' = parsed.WHATSAPP_DRIVER ?? (isLocal ? 'mock' : 'cloud');
+    const driver: 'cloud' | 'mock' = isLocal ? (parsed.WHATSAPP_DRIVER ?? 'mock') : 'cloud';
     return {
         WHATSAPP_DRIVER: driver,
         WHATSAPP_GRAPH_BASE_URL: stripTrailing(parsed.WHATSAPP_GRAPH_BASE_URL, '/'),

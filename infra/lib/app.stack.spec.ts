@@ -125,10 +125,10 @@ describe('a task do serviço', () => {
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('REVTRIEVER_API_KEY');
     });
 
-    it('agenda no mock por padrão: o segredo do Google não é pedido ao SSM e a task sobe sem ele', () => {
+    it('sem driver da agenda não entra GOOGLE_CALENDAR_DRIVER nem o segredo do Google: a agenda fica desligada e a task sobe', () => {
         const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
 
-        expect(api.Environment).toContainEqual({ Name: 'GOOGLE_CALENDAR_DRIVER', Value: 'mock' });
+        expect((api.Environment ?? []).map((entry): string => entry.Name)).not.toContain('GOOGLE_CALENDAR_DRIVER');
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('GOOGLE_CLIENT_SECRET');
     });
 

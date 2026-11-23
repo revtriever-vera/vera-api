@@ -8,6 +8,7 @@ const MODEL: string = 'vendor/model-a';
 
 function config(mode: 'hosted' | 'self_hosted' = 'hosted'): LlmConfig {
     return {
+        IS_LOCAL: false,
         LLM_DRIVER: 'live',
         AI_GATEWAY_API_KEY: 'k',
         LLM_MODEL_ID: MODEL,

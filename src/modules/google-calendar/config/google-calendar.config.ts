@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
+import { isLocalSchema } from '../../../shared/config/environment.schema';
 import { stripTrailing } from '../../../shared/utils/strip-trailing';
 
 const DEFAULT_PUBLIC_API_URL: string = 'http://localhost:3333';
@@ -15,6 +16,7 @@ function blankAsUndefined(value: unknown): unknown {
 const optionalText = z.preprocess(blankAsUndefined, z.string().trim().optional());
 
 const schema = z.object({
+    IS_LOCAL: isLocalSchema,
     GOOGLE_CLIENT_ID: optionalText,
     GOOGLE_CLIENT_SECRET: optionalText,
     GOOGLE_CALENDAR_REDIRECT_URI: z.preprocess(blankAsUndefined, z.string().trim().url().optional()),
@@ -27,6 +29,7 @@ const schema = z.object({
 export interface GoogleCalendarSettings {
     readonly GOOGLE_CLIENT_ID?: string;
     readonly GOOGLE_CLIENT_SECRET?: string;
+    /** Fora do local nunca é `mock`. */
     readonly GOOGLE_CALENDAR_DRIVER: 'mock' | 'google';
     readonly GOOGLE_CALENDAR_TIMEOUT_MS: number;
     readonly APP_URL: string;
@@ -40,7 +43,7 @@ export function parseGoogleCalendarConfig(env: NodeJS.ProcessEnv): GoogleCalenda
     return {
         GOOGLE_CLIENT_ID: parsed.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: parsed.GOOGLE_CLIENT_SECRET,
-        GOOGLE_CALENDAR_DRIVER: parsed.GOOGLE_CALENDAR_DRIVER,
+        GOOGLE_CALENDAR_DRIVER: parsed.IS_LOCAL ? parsed.GOOGLE_CALENDAR_DRIVER : 'google',
         GOOGLE_CALENDAR_TIMEOUT_MS: parsed.GOOGLE_CALENDAR_TIMEOUT_MS,
         APP_URL: stripTrailing(parsed.APP_URL, '/'),
         hostedRedirectUri: parsed.GOOGLE_CALENDAR_REDIRECT_URI ?? `${apiUrl}${HOSTED_CALLBACK_PATH}`,
