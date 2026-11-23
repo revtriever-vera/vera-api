@@ -78,7 +78,7 @@ export class PlatformAccountsController {
             'and the layers, in the same transaction as the read: no audit entry, no data. Keys, credentials, tokens, card data and WhatsApp ' +
             'conversations never come out. The account owner sees the access in "Support accesses".'
     })
-    @ApiParam({ name: 'id', format: 'uuid', description: 'Account id' })
+    @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'Account id' })
     @ApiZodBody(accessRequestSchema)
     @ApiZodResponse({ status: 200, description: 'The layers asked for', schema: accessResponseSchema })
     @ApiProblemResponse({
