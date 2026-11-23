@@ -3,6 +3,7 @@ import { BillingCatalogPort, CatalogPlan, CatalogPlanDraft, CatalogProduct, Cata
 import {
     revtrieverIntegrationSchema,
     revtrieverPlanPageSchema,
+    revtrieverPlanSummarySchema,
     revtrieverPlanSchema,
     revtrieverPricingTestSchema,
     revtrieverProductPageSchema,
@@ -21,6 +22,16 @@ function productOf(response: ProductResponse, externalRef: string): CatalogProdu
 
 function planOf(response: PlanResponse): CatalogPlan {
     return { id: response.id, externalRef: response.name, productId: response.items[0]?.productId ?? '' };
+}
+
+type PlanSummary = z.infer<typeof revtrieverPlanSummarySchema>;
+
+function firstProductWithRef(items: readonly ProductResponse[], externalRef: string): ProductResponse | undefined {
+    return items.find((item: ProductResponse): boolean => item.externalRef === externalRef);
+}
+
+function firstActivePlanNamed(items: readonly PlanSummary[], name: string): PlanSummary | undefined {
+    return items.find((item: PlanSummary): boolean => item.name === name && item.archivedAt === null);
 }
 
 function planBody(draft: CatalogPlanDraft): unknown {
@@ -54,9 +65,7 @@ export class RevtrieverCatalogClient extends BillingCatalogPort {
                 path: `/v1/products?page=${String(page)}&pageSize=${String(PAGE_SIZE)}`,
                 schema: revtrieverProductPageSchema
             });
-            const found: ProductResponse | undefined = result.data.find(
-                (item: ProductResponse): boolean => item.externalRef === externalRef
-            );
+            const found: ProductResponse | undefined = firstProductWithRef(result.data, externalRef);
             if (found !== undefined) {
                 return productOf(found, externalRef);
             }
@@ -98,9 +107,7 @@ export class RevtrieverCatalogClient extends BillingCatalogPort {
                 path: `/v1/plans?page=${String(page)}&pageSize=${String(PAGE_SIZE)}`,
                 schema: revtrieverPlanPageSchema
             });
-            const found: { readonly id: string } | undefined = result.data.find(
-                (item: { name: string; archivedAt: string | null }): boolean => item.name === externalRef && item.archivedAt === null
-            );
+            const found: PlanSummary | undefined = firstActivePlanNamed(result.data, externalRef);
             if (found !== undefined) {
                 return planOf(await this.planDetail(found.id));
             }
