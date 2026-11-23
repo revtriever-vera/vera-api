@@ -78,7 +78,7 @@ function build(options: { event?: WebhookEvent | null; hosted?: boolean; channel
         signer,
         new WebhookBodyService(),
         { processTenant, processHosted, advance: vi.fn() } as unknown as WhatsAppEventProcessor,
-        { publish },
+        { publish, remove: vi.fn() },
         {
             signatureRejected: vi.fn(),
             channelUnknown: vi.fn(),

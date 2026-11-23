@@ -124,7 +124,7 @@ describe('BankSyncPublisherService', () => {
         const warn: ReturnType<typeof vi.fn> = vi.fn();
         const logs: BankConnectionsLogService = new BankConnectionsLogService({ warn } as unknown as LogService);
         const publisher: BankSyncPublisherService = new BankSyncPublisherService(
-            { publish: vi.fn().mockRejectedValue(new Error('redis fora')) },
+            { publish: vi.fn().mockRejectedValue(new Error('redis fora')), remove: vi.fn() },
             { getOrNull: () => ({ companyId: COMPANY_ID }) } as never,
             logs
         );
@@ -140,7 +140,7 @@ describe('BankSyncPublisherService', () => {
 
     it('falha alto sem contexto de company', async () => {
         const publisher: BankSyncPublisherService = new BankSyncPublisherService(
-            { publish: vi.fn() },
+            { publish: vi.fn(), remove: vi.fn() },
             { getOrNull: () => null } as never,
             {} as never
         );

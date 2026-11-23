@@ -51,6 +51,7 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     SWAGGER_PASSWORD: '/vera/swagger-password',
     QUEUES_DASHBOARD_PASSWORD: '/vera/queues-dashboard-password',
     GOOGLE_CLIENT_ID: '/vera/google-client-id',
+    GOOGLE_CLIENT_SECRET: '/vera/google-client-secret',
     FACEBOOK_APP_ID: '/vera/facebook-app-id',
     FACEBOOK_APP_SECRET: '/vera/facebook-app-secret',
     BRAPI_TOKEN: '/vera/brapi-token',
@@ -341,7 +342,15 @@ export class AppStack extends Stack {
             LLM_MODEL: props.config.llm.model,
             LLM_PRICE_TABLE: props.config.llm.priceTable,
             APP_URL: `https://${props.config.appHost}`,
+            ...this.calendarEnvironment(props),
             CORS_ORIGINS: `https://${props.config.appHost}`
+        };
+    }
+
+    private calendarEnvironment(props: AppStackProps): Record<string, string> {
+        return {
+            GOOGLE_CALENDAR_DRIVER: 'google',
+            GOOGLE_CALENDAR_REDIRECT_URI: `https://${props.config.apiHost}/calendar/google/callback`
         };
     }
 

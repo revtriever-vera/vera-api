@@ -15,7 +15,7 @@ import { InstanceCredentialsService } from './instance-credentials.service';
 import { IntegrationVaultService } from './integration-vault.service';
 import { IntegrationsLogService } from './integrations-log.service';
 
-export type { TenantWhatsAppCredentials, WhatsAppCredentials } from '../domain/integration.types';
+export type { GoogleCredentials, TenantWhatsAppCredentials, WhatsAppCredentials } from '../domain/integration.types';
 
 @Injectable()
 export class IntegrationCredentialsService {

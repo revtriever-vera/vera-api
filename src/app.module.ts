@@ -41,6 +41,7 @@ import { SpendingSummaryModule } from './modules/spending-summary/spending-summa
 import { StatementImportModule } from './modules/statement-import/statement-import.module';
 import { TransactionsExportModule } from './modules/transactions-export/transactions-export.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
+import { GoogleCalendarModule } from './modules/google-calendar/google-calendar.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { WhatsAppChatModule } from './modules/whatsapp-chat/whatsapp-chat.module';
 import { WhatsAppLinkModule } from './modules/whatsapp-link/whatsapp-link.module';
@@ -102,6 +103,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         WhatsAppModule,
         WhatsAppLinkModule,
         WhatsAppChatModule,
+        GoogleCalendarModule,
         RemindersModule
     ],
     providers: [
