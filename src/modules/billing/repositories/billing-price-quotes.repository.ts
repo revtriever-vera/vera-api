@@ -46,4 +46,16 @@ export class BillingPriceQuotesRepository extends BareTenantRepository<'BillingP
         );
         return rows[0]?.cycle ?? 0;
     }
+
+    public async lastCyclesAcrossTenants(subscriptionIds: readonly string[]): Promise<Map<string, number>> {
+        if (subscriptionIds.length === 0) {
+            return new Map();
+        }
+        const rows: { subscriptionId: string; cycle: number | null }[] = await this.selectSkipConstraint()
+            .select(['subscriptionId', (eb) => eb.fn.max('cycle').as('cycle')])
+            .where('subscriptionId', 'in', subscriptionIds)
+            .groupBy('subscriptionId')
+            .execute();
+        return new Map(rows.map((row): [string, number] => [row.subscriptionId, row.cycle ?? 0]));
+    }
 }

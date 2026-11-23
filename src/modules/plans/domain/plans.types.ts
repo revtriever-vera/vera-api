@@ -37,6 +37,10 @@ export type ContractEndReason = 'canceled' | 'expired' | 'refunded' | 'account_d
 export interface OpenLinesOfSource {
     readonly source: string;
     readonly lines: number;
+}
+
+export interface OpenSubscriptionLine {
+    readonly subscriptionId: string | null;
     readonly priceCents: number;
 }
 

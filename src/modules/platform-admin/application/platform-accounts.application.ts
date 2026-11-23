@@ -51,7 +51,7 @@ export class PlatformAccountsApplication {
                 trialsWithoutCard: plans.noCardTrials,
                 pastDue: await this.billing.pastDueCount()
             },
-            revenue: { estimatedMonthlyCents: plans.estimatedMonthlyRevenueCents }
+            revenue: { estimatedMonthlyCents: await this.billing.estimatedMonthlyRevenueCents(plans.subscriptionLines) }
         };
     }
 

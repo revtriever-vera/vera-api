@@ -60,8 +60,9 @@ function build(options: { company?: CustomerAccount | null; auditFails?: boolean
             trials: 3,
             cardTrials: 2,
             noCardTrials: 1,
-            estimatedMonthlyRevenueCents: 2235
+            subscriptionLines: [{ subscriptionId: 's1', priceCents: 1990 }]
         }),
+        estimatedMonthlyRevenueCents: vi.fn().mockResolvedValue(2235),
         pastDueCount: vi.fn().mockResolvedValue(1),
         ofCompanies: vi
             .fn()
@@ -87,7 +88,8 @@ function asOperator<T>(fn: () => Promise<T>): Promise<T> {
 
 describe('PlatformAccountsApplication.overview', () => {
     it('breaks the trials by kind and adds the overdue accounts and the estimated revenue', async () => {
-        const result = await build().app.overview();
+        const harness = build();
+        const result = await harness.app.overview();
 
         expect(result.plans).toEqual({
             free: 6,
@@ -98,6 +100,7 @@ describe('PlatformAccountsApplication.overview', () => {
             pastDue: 1
         });
         expect(result.revenue).toEqual({ estimatedMonthlyCents: 2235 });
+        expect(harness.fns.estimatedMonthlyRevenueCents).toHaveBeenCalledWith([{ subscriptionId: 's1', priceCents: 1990 }]);
     });
 });
 
