@@ -14,6 +14,7 @@ export interface RouteRole {
 
 export const VIEWER_WRITE_ALLOWLIST: readonly string[] = [
     'POST /portfolio/contributions/suggest',
+    'POST /portfolio/fgc/simulate',
     'PATCH /auth/me/preferences',
     'POST /members/me/leave'
 ];

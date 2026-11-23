@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { MaturitiesApplication } from '../../application/maturities.application';
 import { RealRatesApplication } from '../../application/real-rates.application';
 import {
@@ -18,7 +20,8 @@ const UNAUTHORIZED: string = 'Missing or invalid access token (identity.unauthor
 
 @ApiTags('portfolio')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('viewer')
 @Controller('portfolio')
 export class ScheduleController {
     public constructor(

@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { FgcCoverageApplication } from '../../application/fgc-coverage.application';
 import { FgcSimulationApplication } from '../../application/fgc-simulation.application';
 import { FGC_SIMULATIONS_PER_MINUTE, FGC_SIMULATION_WINDOW_SECONDS } from '../../domain/fgc.constants';
@@ -22,7 +24,8 @@ const UNAUTHORIZED: string = 'Missing or invalid access token (identity.unauthor
 
 @ApiTags('portfolio')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('viewer')
 @Controller('portfolio/fgc')
 export class FgcController {
     public constructor(
