@@ -26,6 +26,14 @@ export class PlansLogService {
         this.logService.info({ message: 'premium ended', identifier: LIFECYCLE, meta: { handlers, failed } });
     }
 
+    public trialNoticed(): void {
+        this.logService.info({ message: 'trial ending notice sent', identifier: LIFECYCLE });
+    }
+
+    public trialSettleFailed(error: unknown): void {
+        this.logService.warn({ message: 'trial settle failed', identifier: LIFECYCLE, error });
+    }
+
     public handlerFailed(handler: string, error: unknown): void {
         this.logService.warn({ message: 'premium ended handler failed', identifier: LIFECYCLE, meta: { handler }, error });
     }

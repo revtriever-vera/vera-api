@@ -1,9 +1,18 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { CurrentUserService } from '../../identity/services/current-user.service';
 import { hasRole } from '../../identity/services/role-rank';
-import { EffectivePlan, FeatureState, PaidFeature, PaidUsageSnapshot, SubscriptionSnapshot } from '../domain/plans.types';
+import { DateUtil } from '../../../shared/utils/date.util';
+import {
+    EffectivePlan,
+    FeatureState,
+    PaidFeature,
+    PaidUsageSnapshot,
+    SubscriptionSnapshot,
+    TRIAL_KINDS,
+    TrialSnapshot
+} from '../domain/plans.types';
 import { PaidUsageReader } from '../services/paid-usage-reader.service';
-import { PlanContractService } from '../services/plan-contract.service';
+import { PlanContractService, TrialContract } from '../services/plan-contract.service';
 import { PlanGateService } from '../services/plan-gate.service';
 import { PlanLimitService } from '../services/plan-limit.service';
 import { SubscriptionSummaryPort } from '../services/subscription-summary.port';
@@ -33,9 +42,21 @@ export class BillingMeApplication {
             currency: 'BRL',
             subscription: snapshot?.subscription ?? null,
             openInvoice: snapshot?.openInvoice ?? null,
+            trial: await this.trial(plan),
             features: await this.features(),
             usage: await this.usageBlock(hosted)
         };
+    }
+
+    private async trial(plan: EffectivePlan): Promise<TrialSnapshot | null> {
+        if (plan !== 'premium') {
+            return null;
+        }
+        const contract: TrialContract | null = await this.contract.trialOf('premium');
+        if (contract === null) {
+            return null;
+        }
+        return { kind: TRIAL_KINDS.noCard, endsAt: contract.endsAt.toISOString(), daysLeft: DateUtil.daysLeftUntil(contract.endsAt) };
     }
 
     private async features(): Promise<Record<PaidFeature, FeatureState>> {

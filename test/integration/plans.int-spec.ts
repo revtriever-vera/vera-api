@@ -6,6 +6,8 @@ import { IdentityApplicationModule } from '../../src/modules/identity/applicatio
 import { JwtAuthGuard } from '../../src/modules/identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../src/modules/identity/services/requires-role.decorator';
 import { RolesGuard } from '../../src/modules/identity/services/roles.guard';
+import { PremiumEndedRetryApplication } from '../../src/modules/plans/application/premium-ended-retry.application';
+import { PlanLimitService } from '../../src/modules/plans/services/plan-limit.service';
 import { PlansApplicationModule } from '../../src/modules/plans/application/plans-application.module';
 import { PaidFeature, PaidUsageSnapshot } from '../../src/modules/plans/domain/plans.types';
 import { PaidFeatureAvailabilityPort } from '../../src/modules/plans/services/paid-feature-availability.port';
@@ -85,6 +87,7 @@ interface Me {
     readonly priceCents: number | null;
     readonly features: Record<PaidFeature, string>;
     readonly usage: { capMicros: number | null } | null;
+    readonly trial: { kind: string; endsAt: string; daysLeft: number } | null;
 }
 
 describe('plans (hosted)', () => {
@@ -115,7 +118,7 @@ describe('plans (hosted)', () => {
             canManage: true,
             methods: ['card', 'pix'],
             priceCents: 1490,
-            features: { ai: 'premium_required', whatsapp: 'disabled', calendar: 'disabled' }
+            features: { ai: 'premium_required', whatsapp: 'disabled', calendar: 'premium_required' }
         });
         expect((await harness.call(account.token, 'GET', '/probe-feature')).status).toBe(402);
     });
@@ -150,8 +153,11 @@ describe('plans (hosted)', () => {
             [account.company.id]
         );
         expect(failed.rows).toEqual([
+            { handler: 'calendar', status: 'done', attempts: 0 },
             { handler: 'flaky', status: 'failed', attempts: 1 },
-            { handler: 'stable', status: 'done', attempts: 0 }
+            { handler: 'reminders', status: 'done', attempts: 0 },
+            { handler: 'stable', status: 'done', attempts: 0 },
+            { handler: 'whatsapp-links', status: 'done', attempts: 0 }
         ]);
         expect(publisher.ofType('plans.premium-ended.retry.requested').length).toBeGreaterThan(0);
 
@@ -164,8 +170,11 @@ describe('plans (hosted)', () => {
             [account.company.id]
         );
         expect(healed.rows).toEqual([
+            { handler: 'calendar', status: 'done' },
             { handler: 'flaky', status: 'done' },
-            { handler: 'stable', status: 'done' }
+            { handler: 'reminders', status: 'done' },
+            { handler: 'stable', status: 'done' },
+            { handler: 'whatsapp-links', status: 'done' }
         ]);
     });
 
@@ -204,6 +213,143 @@ describe('plans (hosted)', () => {
         expect(paused.body.type).toBe('usage.cap_reached');
         expect(disabled.status).toBe(503);
         expect(disabled.body.type).toBe('billing.feature_disabled');
+    });
+
+    describe('teste sem cartão', () => {
+        const DAY_MS: number = 24 * 60 * 60 * 1000;
+        const startsAt: Date = new Date('2026-11-01T12:00:00Z');
+
+        function lifecycleApplication(): PremiumEndedRetryApplication {
+            return harness.app.get(PremiumEndedRetryApplication, { strict: false });
+        }
+
+        async function sweepAt(now: Date): Promise<number> {
+            return harness.app
+                .get(AppContext)
+                .run({ requestId: 'trial-sweep', locale: 'pt-BR' }, async () => lifecycleApplication().sweepTrials(now));
+        }
+
+        function mailsOf(template: string, companyId: string): number {
+            return publisher
+                .ofType('email.send.requested')
+                .filter((message) => (message.payload as { template: string; reference: string }).template === template)
+                .filter((message) => (message.payload as { reference: string }).reference.startsWith(companyId)).length;
+        }
+
+        async function sourceOf(companyId: string): Promise<{ source: string; endsAt: Date | null; priceCents: string }> {
+            const row = await harness.pg.query(
+                'SELECT "source", "endsAt", "priceCents" FROM "CompanyProducts" WHERE "companyId" = $1 ORDER BY "createdAt" DESC LIMIT 1',
+                [companyId]
+            );
+            return row.rows[0] as { source: string; endsAt: Date | null; priceCents: string };
+        }
+
+        it('o resgate abre o Premium sem assinatura, mostra a faixa e mantém a cota do mês', async () => {
+            const account = await harness.signUp('trial-open');
+            await harness.inCompany(account.company.id, async () => {
+                await contracts().openTrial('premium', { startsAt: new Date(), days: 14 });
+            });
+
+            const me = await harness.call<Me>(account.token, 'GET', '/billing/me');
+            const cap: number | null = await harness.inCompany(account.company.id, async () =>
+                harness.app.get(PlanLimitService, { strict: false }).capMicros()
+            );
+
+            expect(me.body).toMatchObject({ plan: 'premium', features: { ai: 'available' }, trial: { kind: 'no_card', daysLeft: 14 } });
+            expect(cap).toBe(4000000);
+            const snapshot: PaidUsageSnapshot = {
+                usedBps: 10000,
+                state: 'paused',
+                resetsAt: '2026-12-01T03:00:00.000Z',
+                byFeature: { ai: { usedBps: 10000 }, whatsapp: { usedBps: 0 } }
+            };
+            const spy = vi.spyOn(harness.app.get(PaidUsageReader, { strict: false }), 'state').mockResolvedValue(snapshot);
+            const paused = await harness.call<{ type: string }>(account.token, 'GET', '/probe-feature');
+            spy.mockRestore();
+            expect(paused.status).toBe(429);
+            expect(paused.body.type).toBe('usage.cap_reached');
+        });
+
+        it('avisa uma vez a três dias do fim, fecha no fim chamando o lifecycle e não repete', async () => {
+            const account = await harness.signUp('trial-end');
+            const endsAt: Date = new Date(startsAt.getTime() + 14 * DAY_MS);
+            await harness.inCompany(account.company.id, async () => {
+                await contracts().openTrial('premium', { startsAt, days: 14 });
+            });
+
+            await sweepAt(new Date(startsAt.getTime() + 5 * DAY_MS));
+            expect(mailsOf('trial-ending', account.company.id)).toBe(0);
+            await sweepAt(new Date(endsAt.getTime() - 2 * DAY_MS));
+            await sweepAt(new Date(endsAt.getTime() - 1 * DAY_MS));
+            expect(mailsOf('trial-ending', account.company.id)).toBe(1);
+
+            lifecycle.calls.length = 0;
+            await sweepAt(new Date(endsAt.getTime() + 60 * 60 * 1000));
+            await sweepAt(new Date(endsAt.getTime() + 2 * 60 * 60 * 1000));
+
+            expect(lifecycle.calls.sort()).toEqual(['flaky', 'stable']);
+            expect(mailsOf('trial-ended', account.company.id)).toBe(1);
+            expect((await sourceOf(account.company.id)).endsAt).toEqual(endsAt);
+            const me = await harness.call<Me>(account.token, 'GET', '/billing/me');
+            expect(me.body).toMatchObject({ plan: 'free', trial: null });
+        });
+
+        it('recusa um segundo teste, mesmo depois do fim do primeiro, e quem já é Premium', async () => {
+            const account = await harness.signUp('trial-twice');
+            const other = await harness.signUp('trial-paid');
+            await harness.inCompany(account.company.id, async () => {
+                await contracts().openTrial('premium', { startsAt, days: 14 });
+            });
+            await sweepAt(new Date(startsAt.getTime() + 20 * DAY_MS));
+
+            await harness.inCompany(account.company.id, async () => {
+                await expect(contracts().openTrial('premium', { startsAt: new Date(), days: 14 })).rejects.toMatchObject({
+                    code: 'billing.trial_already_used'
+                });
+            });
+            await harness.inCompany(other.company.id, async () => {
+                await contracts().open('premium', { startsAt, subscriptionId: crypto.randomUUID() });
+                await expect(contracts().openTrial('premium', { startsAt: new Date(), days: 14 })).rejects.toMatchObject({
+                    code: 'billing.trial_unavailable'
+                });
+            });
+            const marked = await harness.pg.query('SELECT "trialStartedAt" FROM "Companies" WHERE "id" = $1', [other.company.id]);
+            expect(marked.rows[0]).toEqual({ trialStartedAt: null });
+        });
+
+        it('assinar no teste: no fim o contrato vira assinatura sem fechar e sem chamar o lifecycle', async () => {
+            const account = await harness.signUp('trial-subscribed');
+            const endsAt: Date = new Date(startsAt.getTime() + 14 * DAY_MS);
+            await harness.inCompany(account.company.id, async () => {
+                await contracts().openTrial('premium', { startsAt, days: 14 });
+                await contracts().attachSubscription('premium', crypto.randomUUID());
+            });
+
+            await sweepAt(new Date(endsAt.getTime() - 1 * DAY_MS));
+            lifecycle.calls.length = 0;
+            await sweepAt(new Date(endsAt.getTime() + 60 * 60 * 1000));
+
+            expect(mailsOf('trial-ending', account.company.id)).toBe(0);
+            expect(mailsOf('trial-ended', account.company.id)).toBe(0);
+            expect(lifecycle.calls).toEqual([]);
+            expect(await sourceOf(account.company.id)).toEqual({ source: 'subscription', endsAt: null, priceCents: '1490' });
+            expect((await harness.call<Me>(account.token, 'GET', '/billing/me')).body).toMatchObject({ plan: 'premium', trial: null });
+        });
+
+        it('cancelar a assinatura antes do fim volta ao fim sem assinar', async () => {
+            const account = await harness.signUp('trial-canceled');
+            const endsAt: Date = new Date(startsAt.getTime() + 14 * DAY_MS);
+            await harness.inCompany(account.company.id, async () => {
+                await contracts().openTrial('premium', { startsAt, days: 14 });
+                await contracts().attachSubscription('premium', crypto.randomUUID());
+                await contracts().detachSubscription('premium');
+            });
+
+            await sweepAt(new Date(endsAt.getTime() + 60 * 60 * 1000));
+
+            expect(mailsOf('trial-ended', account.company.id)).toBe(1);
+            expect((await harness.call<Me>(account.token, 'GET', '/billing/me')).body.plan).toBe('free');
+        });
     });
 });
 

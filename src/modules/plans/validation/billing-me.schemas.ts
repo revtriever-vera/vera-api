@@ -42,6 +42,14 @@ export const billingMeSchema = z.object({
         })
         .nullable()
         .describe('Invoice waiting for payment; null when there is none'),
+    trial: z
+        .object({
+            kind: z.literal('no_card').describe('Trial opened without a card'),
+            endsAt: z.string().describe('When the trial ends (ISO 8601)'),
+            daysLeft: z.number().int().min(0).describe('Whole days left, rounded up')
+        })
+        .nullable()
+        .describe('Free Premium trial in course; null when there is none'),
     features: z
         .object({
             ai: featureStateSchema.describe('Text summaries and the assistant'),

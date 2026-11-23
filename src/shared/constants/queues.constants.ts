@@ -27,6 +27,7 @@ export const MESSAGE_TYPES = {
     bankConnectionsSyncRequested: 'bank-connections.sync.requested',
     plansPremiumEndedSweepRequested: 'plans.premium-ended.sweep.requested',
     plansPremiumEndedRetryRequested: 'plans.premium-ended.retry.requested',
+    plansTrialSweepRequested: 'plans.trial.sweep.requested',
     identityMembersCleanupRequested: 'identity.members.cleanup.requested',
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',

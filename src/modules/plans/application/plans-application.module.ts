@@ -28,6 +28,9 @@ import { LlmCallsAccountEraser } from '../services/llm-calls-account.eraser';
 import { UsageAccountEraser } from '../services/usage-account.eraser';
 import { UsageAccountExporter } from '../services/usage-account.exporter';
 import { UsageNotifier } from '../services/usage-notifier.service';
+import { TrialTemplates } from '../templates/trial.templates';
+import { TrialLifecycleService } from '../services/trial-lifecycle.service';
+import { TrialNotifier } from '../services/trial-notifier.service';
 import { UsageTemplates } from '../templates/usage.templates';
 import { UsageApplication } from './usage.application';
 import { BillingMeApplication } from './billing-me.application';
@@ -57,6 +60,9 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         PlanUsageContextAdapter,
         UsageNotifier,
         UsageTemplates,
+        TrialTemplates,
+        TrialNotifier,
+        TrialLifecycleService,
         UsageAccountExporter,
         UsageAccountEraser,
         LlmCallsAccountEraser,
