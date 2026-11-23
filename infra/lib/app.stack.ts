@@ -57,7 +57,8 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     FINNHUB_API_KEY: '/vera/finnhub-api-key',
     TWELVEDATA_API_KEY: '/vera/twelvedata-api-key',
     ALPHAVANTAGE_API_KEY: '/vera/alphavantage-api-key',
-    COINGECKO_API_KEY: '/vera/coingecko-api-key'
+    COINGECKO_API_KEY: '/vera/coingecko-api-key',
+    AI_GATEWAY_API_KEY: '/vera/ai-gateway-api-key'
 };
 const OTLP_PROTOCOL: string = 'http/protobuf';
 const TUNNEL_TOKEN_PARAMETER: string = '/vera/tunnel-token';
@@ -336,6 +337,8 @@ export class AppStack extends Stack {
             COOKIE_SECURE: 'true',
             DEPLOYMENT_MODE: 'hosted',
             ...this.billingEnvironment(props.config.billing),
+            LLM_DRIVER: 'live',
+            LLM_PRICE_TABLE: props.config.llm.priceTable,
             APP_URL: `https://${props.config.appHost}`,
             CORS_ORIGINS: `https://${props.config.appHost}`
         };

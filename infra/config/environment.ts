@@ -21,6 +21,10 @@ export interface SharedInfrastructureConfig {
     readonly openIdConnectProviderArn: string;
 }
 
+export interface LlmEnvironmentConfig {
+    readonly priceTable: string;
+}
+
 export interface BillingEnvironmentConfig {
     readonly driver: 'fake' | 'revtriever';
     readonly apiUrl: string | null;
@@ -47,6 +51,7 @@ export interface EnvironmentConfig {
     readonly otlpEndpointParameter: string;
     readonly otlpHeadersParameter: string | null;
     readonly billing: BillingEnvironmentConfig;
+    readonly llm: LlmEnvironmentConfig;
 }
 
 export interface MailpitSettings {
@@ -159,6 +164,15 @@ function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
     };
 }
 
+function llm(env: NodeJS.ProcessEnv): LlmEnvironmentConfig {
+    const priceTable: string = requiredVariable(env, 'LLM_PRICE_TABLE');
+    const parsed: unknown = parseJson('LLM_PRICE_TABLE', priceTable);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new Error('LLM_PRICE_TABLE inválida: use um objeto JSON com o preço de cada modelo');
+    }
+    return { priceTable };
+}
+
 function parseJson(variable: string, raw: string): unknown {
     try {
         return JSON.parse(raw);
@@ -214,7 +228,10 @@ function mailpit(settings: EnvironmentSettings, hosts: HostNaming): MailpitEnvir
 function operationalSettings(
     settings: EnvironmentSettings,
     hosts: HostNaming
-): Omit<EnvironmentConfig, 'billing' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'> {
+): Omit<
+    EnvironmentConfig,
+    'billing' | 'llm' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'
+> {
     return {
         githubRepository: settings.githubRepository,
         githubSubjects: settings.githubSubjects,
@@ -243,6 +260,7 @@ export function fromEnvironment(name: EnvironmentName, env: NodeJS.ProcessEnv): 
         shared: shared(env, `SHARED_INFRA_${suffix}`),
         imagePullAccounts: imagePullAccounts(env),
         billing: billing(env),
+        llm: llm(env),
         ...operationalSettings(settings, hosts)
     };
 }
