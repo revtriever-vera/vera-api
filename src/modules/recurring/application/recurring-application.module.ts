@@ -6,6 +6,7 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
 import { TransactionsApplicationModule } from '../../transactions/application/transactions-application.module';
 import { RecurringDomainModule } from '../domain/recurring-domain.module';
+import { RecurringAlertService } from '../services/recurring-alert.service';
 import { RecurringCategoryService } from '../services/recurring-category.service';
 import { RecurringDetectPublisherService } from '../services/recurring-detect-publisher.service';
 import { RecurringDetectionInputService } from '../services/recurring-detection-input.service';
@@ -13,6 +14,7 @@ import { RecurringDetectionService } from '../services/recurring-detection.servi
 import { RecurringLogService } from '../services/recurring-log.service';
 import { RecurringRefreshDriver } from '../services/recurring-refresh.driver';
 import { RecurringDetectionApplication } from './recurring-detection.application';
+import { RecurringOverviewApplication } from './recurring-overview.application';
 import { RecurringReviewApplication } from './recurring-review.application';
 
 @Module({
@@ -27,7 +29,9 @@ import { RecurringReviewApplication } from './recurring-review.application';
     ],
     providers: [
         RecurringReviewApplication,
+        RecurringOverviewApplication,
         RecurringDetectionApplication,
+        RecurringAlertService,
         RecurringDetectionService,
         RecurringDetectionInputService,
         RecurringCategoryService,
@@ -35,6 +39,6 @@ import { RecurringReviewApplication } from './recurring-review.application';
         RecurringRefreshDriver,
         RecurringLogService
     ],
-    exports: [RecurringReviewApplication, RecurringDetectionApplication]
+    exports: [RecurringReviewApplication, RecurringOverviewApplication, RecurringDetectionApplication]
 })
 export class RecurringApplicationModule {}

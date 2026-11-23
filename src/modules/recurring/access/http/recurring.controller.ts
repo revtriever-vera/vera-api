@@ -1,12 +1,20 @@
-import { Body, Controller, Delete, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiParamOptions, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
-import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
+import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../../identity/services/requires-role.decorator';
 import { RolesGuard } from '../../../identity/services/roles.guard';
+import { RecurringOverviewApplication } from '../../application/recurring-overview.application';
 import { RecurringReviewApplication } from '../../application/recurring-review.application';
 import {
+    AlertIdParamsDto,
+    AlertSeenView,
+    alertSeenSchema,
+    CalendarEntryView,
+    calendarQuerySchema,
+    CalendarQueryDto,
+    calendarSchema,
     ChargeParamsDto,
     ConfirmSeriesDto,
     ConfirmedSeriesView,
@@ -14,6 +22,8 @@ import {
     confirmSeriesSchema,
     CreateSeriesDto,
     createSeriesSchema,
+    OverviewView,
+    overviewSchema,
     SeriesIdParamsDto,
     SeriesView,
     seriesViewSchema,
@@ -40,7 +50,60 @@ const WRONG_STATE_EXAMPLE: Record<string, unknown> = { type: 'recurring.invalid_
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/recurring')
 export class RecurringController {
-    public constructor(private readonly review: RecurringReviewApplication) {}
+    public constructor(
+        private readonly review: RecurringReviewApplication,
+        private readonly overview: RecurringOverviewApplication
+    ) {}
+
+    @Get()
+    @ApiOperation({
+        summary: 'Recurring charges: totals, lists and alerts',
+        description:
+            'The total per month and per year counts only the confirmed series. The suggestions come apart, with what they would add per ' +
+            'month. `alerts` lists the ones not marked as seen: price increase, charge twice, same subscription on two cards, trial that ' +
+            'became a charge, a stopped series that charged again, a suggestion nobody reviewed and an annual renewal in the next 30 days.'
+    })
+    @ApiZodResponse({ status: 200, description: 'Totals, series by situation and alerts', schema: overviewSchema })
+    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED, example: UNAUTHORIZED_EXAMPLE })
+    public async getOverview(): Promise<OverviewView> {
+        return this.overview.overview();
+    }
+
+    @Get('calendar')
+    @ApiOperation({
+        summary: 'Expected charges of the next days',
+        description:
+            'One line per expected charge of the confirmed and suggested series, from today in the company time zone. The date is the last ' +
+            'charge plus the cadence, adjusted to the expected day. A charge that did not arrive within 4 days of its date comes as `missed`.'
+    })
+    @ApiZodQuery(calendarQuerySchema)
+    @ApiZodResponse({ status: 200, description: 'Expected charges, oldest first', schema: calendarSchema })
+    @ApiProblemResponse({ status: 400, description: INVALID, example: INVALID_EXAMPLE })
+    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED, example: UNAUTHORIZED_EXAMPLE })
+    public async getCalendar(@Query() query: CalendarQueryDto): Promise<CalendarEntryView[]> {
+        return this.overview.calendar(query.days);
+    }
+
+    @Post('alerts/:id/seen')
+    @RequiresRole('editor')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Mark an alert as seen ("Visto")',
+        description: 'The alert stops showing in the list. Only the stored alerts can be cleared: the ones with `canMarkSeen` true.'
+    })
+    @ApiParam({ name: 'id', format: 'uuid', description: 'Alert id' })
+    @ApiZodResponse({ status: 200, description: 'The alert was marked as seen', schema: alertSeenSchema })
+    @ApiProblemResponse({ status: 400, description: INVALID, example: INVALID_EXAMPLE })
+    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED, example: UNAUTHORIZED_EXAMPLE })
+    @ApiProblemResponse({ status: 403, description: FORBIDDEN, example: FORBIDDEN_EXAMPLE })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'The alert does not exist in this company (recurring.alert_not_found)',
+        example: { type: 'recurring.alert_not_found', title: 'AlertNotFoundError', status: 404 }
+    })
+    public async markAlertSeen(@Param() params: AlertIdParamsDto): Promise<AlertSeenView> {
+        return this.review.markAlertSeen(params.id);
+    }
 
     @Post()
     @RequiresRole('editor')

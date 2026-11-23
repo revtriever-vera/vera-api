@@ -625,6 +625,20 @@ export interface QuoteFetchFailures {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface RecurringAlerts {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    data: Generated<Json>;
+    deletedAt: Timestamp | null;
+    fingerprint: string;
+    id: string;
+    kind: string;
+    occurredOn: Timestamp;
+    seenAt: Timestamp | null;
+    seriesId: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface RecurringCharges {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -973,6 +987,7 @@ export interface DB {
     PremiumEndedNotifications: PremiumEndedNotifications;
     ProviderUsage: ProviderUsage;
     QuoteFetchFailures: QuoteFetchFailures;
+    RecurringAlerts: RecurringAlerts;
     RecurringCharges: RecurringCharges;
     RecurringSeries: RecurringSeries;
     RecurringSuppressions: RecurringSuppressions;

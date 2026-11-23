@@ -499,4 +499,156 @@ describe('recurring', () => {
         expect(payloads).toContainEqual({ companyId: withSeries.owner.company.id });
         expect(payloads).not.toContainEqual({ companyId: without.owner.company.id });
     });
+
+    interface OverviewBody {
+        readonly totals: {
+            readonly monthlyMinor: number;
+            readonly yearlyMinor: number;
+            readonly byKind: { readonly subscription: number; readonly bill: number; readonly other: number };
+            readonly suggestions: { readonly count: number; readonly monthlyMinor: number };
+        };
+        readonly review: {
+            readonly name: string;
+            readonly nextDate: string | null;
+            readonly lastCharges: unknown[];
+            readonly accountName: string;
+        }[];
+        readonly confirmed: { readonly name: string; readonly monthlyEquivalentMinor: number }[];
+        readonly stopped: unknown[];
+        readonly dismissed: unknown[];
+        readonly alerts: {
+            readonly id: string;
+            readonly kind: string;
+            readonly seriesName: string;
+            readonly canMarkSeen: boolean;
+            readonly data: Record<string, number | string>;
+        }[];
+    }
+
+    interface CalendarBody {
+        readonly date: string;
+        readonly state: string;
+        readonly name: string;
+        readonly amountMinor: number;
+        readonly isSuggestion: boolean;
+        readonly accountKind: string;
+    }
+
+    async function raised(label: string): Promise<{ owner: Account; accountId: string }> {
+        const owner: Account = await harness.signUp(label);
+        const accountId: string = await cardOf(owner);
+        await ingest(owner, accountId, [
+            ...monthly('nf', 'NETFLIX.COM', -4490, [125, 95, 65, 35]),
+            ...monthly('nfnew', 'NETFLIX.COM', -5590, [5])
+        ]);
+        return { owner, accountId };
+    }
+
+    it('a visão geral soma só as confirmadas, separa as sugestões e traz as últimas cobranças da revisão', async () => {
+        const { owner } = await seeded('overview');
+        await detect(owner);
+        const netflix: string = find(await seriesOf(owner), 'Netflix').id;
+        await harness.call(owner.token, 'POST', `/spending/recurring/${netflix}/confirm`, confirmBody({ name: 'Netflix' }));
+
+        const response = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+
+        expect(response.status).toBe(200);
+        expect(response.body.totals).toMatchObject({
+            monthlyMinor: 5590,
+            yearlyMinor: 67080,
+            byKind: { subscription: 5590, bill: 0, other: 0 },
+            suggestions: { count: 1, monthlyMinor: 30000 }
+        });
+        expect(response.body.confirmed.map((item) => [item.name, item.monthlyEquivalentMinor])).toEqual([['Netflix', 5590]]);
+        expect(response.body.review.map((item) => item.name)).toEqual(['Studio Aurora Pilates']);
+        expect(response.body.review[0]?.lastCharges).toHaveLength(3);
+        expect(response.body.review[0]?.accountName).toBe('Cartão');
+        expect(response.body.review[0]?.nextDate).not.toBeNull();
+    });
+
+    it('o aumento acima de 20% junta a série antiga com a cobrança nova e alerta; "Visto" some com o alerta', async () => {
+        const { owner } = await raised('increase');
+        await detect(owner);
+
+        const before = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+        const alert = before.body.alerts.find((item) => item.kind === 'price_increase');
+        const seen = await harness.call(owner.token, 'POST', `/spending/recurring/alerts/${alert?.id ?? ''}/seen`);
+        const again = await harness.call(owner.token, 'POST', `/spending/recurring/alerts/${alert?.id ?? ''}/seen`);
+        const after = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+        await detect(owner);
+        const rerun = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+
+        expect(alert).toMatchObject({
+            seriesName: 'Netflix',
+            canMarkSeen: true,
+            data: { fromAmountMinor: 4490, toAmountMinor: 5590, percent: 24 }
+        });
+        expect([seen.status, again.status]).toEqual([200, 200]);
+        expect(after.body.alerts.filter((item) => item.kind === 'price_increase')).toEqual([]);
+        expect(rerun.body.alerts.filter((item) => item.kind === 'price_increase')).toEqual([]);
+    });
+
+    it('a segunda cobrança no valor novo tira o alerta de aumento', async () => {
+        const { owner, accountId } = await raised('increase-gone');
+        await detect(owner);
+        await ingest(owner, accountId, monthly('nfmore', 'NETFLIX.COM', -5590, [1]));
+        await detect(owner);
+
+        const response = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+
+        expect(response.body.alerts.filter((item) => item.kind === 'price_increase')).toEqual([]);
+    });
+
+    it('"Visto" só vale para o alerta da própria company e só para quem edita', async () => {
+        const mine = await raised('seen-mine');
+        const theirs = await seeded('seen-theirs');
+        await detect(mine.owner);
+        const alert = (await harness.call<OverviewBody>(mine.owner.token, 'GET', '/spending/recurring')).body.alerts[0];
+        const viewer: Account = await asRole(harness, mine.owner, 'viewer');
+
+        const foreign = await harness.call(theirs.owner.token, 'POST', `/spending/recurring/alerts/${alert?.id ?? ''}/seen`);
+        const unknown = await harness.call(mine.owner.token, 'POST', `/spending/recurring/alerts/${crypto.randomUUID()}/seen`);
+        const asViewer = await harness.call(viewer.token, 'POST', `/spending/recurring/alerts/${alert?.id ?? ''}/seen`);
+        const anonymous = await harness.call(null, 'POST', `/spending/recurring/alerts/${alert?.id ?? ''}/seen`);
+        const viewerReads = await harness.call(viewer.token, 'GET', '/spending/recurring');
+        const theirOverview = await harness.call<OverviewBody>(theirs.owner.token, 'GET', '/spending/recurring');
+
+        expect([foreign.status, unknown.status, asViewer.status, anonymous.status, viewerReads.status]).toEqual([404, 404, 403, 401, 200]);
+        expect(theirOverview.body.alerts.map((item) => item.kind)).not.toContain('price_increase');
+    });
+
+    it('o calendário traz as próximas cobranças das confirmadas e das sugeridas, com o tipo da conta', async () => {
+        const { owner } = await seeded('calendar');
+        await detect(owner);
+        const netflix: string = find(await seriesOf(owner), 'Netflix').id;
+        await harness.call(owner.token, 'POST', `/spending/recurring/${netflix}/confirm`, confirmBody({ name: 'Netflix' }));
+
+        const response = await harness.call<CalendarBody[]>(owner.token, 'GET', '/spending/recurring/calendar?days=45');
+        const names: string[] = response.body.map((entry: CalendarBody) => entry.name);
+
+        expect(response.status).toBe(200);
+        expect(new Set(names)).toEqual(new Set(['Netflix', 'Studio Aurora Pilates']));
+        expect(response.body.every((entry: CalendarBody) => entry.accountKind === 'credit_card')).toBe(true);
+        expect(response.body.find((entry: CalendarBody) => entry.name === 'Netflix')).toMatchObject({
+            amountMinor: 5590,
+            isSuggestion: false
+        });
+        expect(response.body.find((entry: CalendarBody) => entry.name === 'Studio Aurora Pilates')?.isSuggestion).toBe(true);
+        expect(response.body.map((entry: CalendarBody) => entry.date)).toEqual(
+            response.body.map((entry: CalendarBody) => entry.date).toSorted()
+        );
+    });
+
+    it('o calendário recusa horizonte fora de 1 a 90 dias e não mostra série da outra company', async () => {
+        const mine = await seeded('calendar-bounds');
+        const theirs = await seeded('calendar-other');
+        await detect(mine.owner);
+
+        const zero = await harness.call(mine.owner.token, 'GET', '/spending/recurring/calendar?days=0');
+        const huge = await harness.call(mine.owner.token, 'GET', '/spending/recurring/calendar?days=91');
+        const foreign = await harness.call<CalendarBody[]>(theirs.owner.token, 'GET', '/spending/recurring/calendar');
+
+        expect([zero.status, huge.status]).toEqual([400, 400]);
+        expect(foreign.body).toEqual([]);
+    });
 });

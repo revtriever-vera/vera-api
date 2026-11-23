@@ -14,7 +14,7 @@ function spreadOf(values: readonly number[]): number {
     return Math.max(...values) - Math.min(...values);
 }
 
-function isSteady(values: readonly number[]): boolean {
+export function isSteady(values: readonly number[]): boolean {
     const tolerance: number = Math.max(FIXED_ABSOLUTE_TOLERANCE_MINOR, FIXED_RELATIVE_TOLERANCE * median(values));
     return spreadOf(values) <= tolerance;
 }
@@ -31,7 +31,7 @@ export function profileAmounts(amounts: readonly number[]): AmountProfile | null
     const minAmountMinor: number = Math.min(...amounts);
     const maxAmountMinor: number = Math.max(...amounts);
     if (isFixed(amounts)) {
-        return { mode: VALUE_MODES.fixed, typicalAmountMinor: amounts[amounts.length - 1] ?? 0, minAmountMinor, maxAmountMinor };
+        return { mode: VALUE_MODES.fixed, typicalAmountMinor: amounts.at(-1) ?? 0, minAmountMinor, maxAmountMinor };
     }
     if (spreadOf(amounts) > VARIABLE_TOLERANCE * median(amounts)) {
         return null;
