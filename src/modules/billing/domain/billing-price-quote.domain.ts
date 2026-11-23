@@ -9,4 +9,8 @@ export class BillingPriceQuoteDomain {
     public async quote(draft: PriceQuoteDraft): Promise<BillingPriceQuote> {
         return this.quotes.quote(draft);
     }
+
+    public async lastCycleOf(subscriptionId: string): Promise<number> {
+        return this.quotes.lastCycleOf(subscriptionId);
+    }
 }

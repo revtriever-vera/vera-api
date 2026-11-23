@@ -13,7 +13,7 @@ import {
 import { PaymentLink } from '../domain/billing-engine.types';
 import { BillingInvoiceDomain } from '../domain/billing-invoice.domain';
 import { BillingPriceQuoteDomain } from '../domain/billing-price-quote.domain';
-import { isPremiumProductRef, priceDescriptionOf } from '../domain/billing-price.rules';
+import { isPremiumProductRef, PriceResolution, priceDescriptionOf, resolvePrice } from '../domain/billing-price.rules';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
 import {
     BillingInvoice,
@@ -24,6 +24,7 @@ import {
     SUBSCRIPTION_STATUSES
 } from '../domain/billing.types';
 import { BillingEnginePort } from '../ports/billing-engine.port';
+import { discountRulesSchema } from '../validation/billing-discount.schemas';
 import { PriceRequest, priceRequestSchema } from '../validation/revtriever-events.schemas';
 import { BillingLogService } from '../services/billing-log.service';
 import { BillingMetricsService } from '../services/billing-metrics.service';
@@ -105,15 +106,24 @@ export class InvoicesApplication {
             this.record('awaiting_card');
             throw new FirstChargeAwaitingCardError();
         }
+        const resolution: PriceResolution = await this.resolutionOf(subscription, request.cycle);
         const stored: BillingPriceQuote = await this.quotes.quote({
             subscriptionId: subscription.id,
             productRef: request.product.externalRef,
             cycle: request.cycle,
-            amountCents: await this.contracts.priceCentsOf('premium'),
-            description: priceDescriptionOf(request.period.end)
+            amountCents: resolution.amountCents,
+            description: priceDescriptionOf(request.period.end, resolution.percent)
         });
         this.record('quoted');
         return { amount: Number(stored.amountCents), description: stored.description };
+    }
+
+    private async resolutionOf(subscription: BillingSubscription, cycle: number): Promise<PriceResolution> {
+        return resolvePrice(
+            await this.contracts.priceCentsOf('premium'),
+            discountRulesSchema.parse(subscription.discountRules),
+            cycle + subscription.discountCycleOffset
+        );
     }
 
     private record(outcome: 'quoted' | 'skipped' | 'awaiting_card'): void {

@@ -27,4 +27,9 @@ export class SignupRedemptionsRepository extends BareTenantRepository<'SignupRed
             .executeTakeFirst();
         return row ?? null;
     }
+
+    public async markApplied(at: Date): Promise<boolean> {
+        const rows: SignupRedemption[] = await this.updateManyRows({ appliedAt: null }, { appliedAt: at, updatedAt: at });
+        return rows.length > 0;
+    }
 }
