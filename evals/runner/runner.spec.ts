@@ -147,7 +147,13 @@ describe('rodada no modo mock', () => {
             updatedAt: '2026-11-23',
             model: 'm',
             tasks: {
-                summary_month: { promptVersion: 'v1', reasoning: 'minimal', judgeAverage: 4.5, averageLatencyMs: 1, costBrlPerRun: 0 }
+                summary_month: {
+                    promptVersion: low.promptVersion,
+                    reasoning: 'minimal',
+                    judgeAverage: 4.5,
+                    averageLatencyMs: 1,
+                    costBrlPerRun: 0
+                }
             }
         };
 
