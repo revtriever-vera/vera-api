@@ -50,6 +50,17 @@ export const holdingSchema = z.object({
     valueSource: z.enum(VALUE_SOURCE_VALUES).describe('Where the value comes from: the quote provider or the fixed income curve'),
     priceDate: z.string().nullable().describe('Date of the quote, or the valuation date of the title (YYYY-MM-DD)'),
     dollarExposure: z.boolean().describe('True when the holding is quoted in USD or its asset has exposure to the dollar'),
+    sector: z
+        .string()
+        .nullable()
+        .describe('Sector key from the curated profile of the asset; null for fixed income or an asset without profile'),
+    issuerGroupId: z
+        .string()
+        .nullable()
+        .describe(
+            'Slug of the issuer group: the asset group from the curated profile, or the conglomerate of the title issuer; null when unknown'
+        ),
+    issuerId: z.string().nullable().describe('Slug of the issuer of a fixed income title; null for positions and titles without issuer'),
     missingQuote: z.boolean().describe('No quote yet for an asset with quantity: value is 0 and a fetch was requested'),
     stale: z.boolean().describe('The quote is older than the freshness window of its market'),
     estimated: z.boolean().describe('Fixed income valuation uses projected index days'),

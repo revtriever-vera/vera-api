@@ -137,6 +137,9 @@ describe('portfolio holdings', () => {
             valueSource: 'brapi',
             priceDate: TODAY,
             dollarExposure: false,
+            sector: 'financeiro',
+            issuerGroupId: 'itau-unibanco',
+            issuerId: null,
             missingQuote: false,
             stale: false
         });

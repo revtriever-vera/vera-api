@@ -122,6 +122,7 @@ describe('ports of fixed-income and allocation', () => {
         expect(await rows('FixedIncomeTitles', account.company.id, '"isSample" = true')).toBe(3);
         expect(await rows('FixedIncomeTitles', account.company.id, '"isSample" = false')).toBe(0);
         expect(await rows('AssetClassAssignments', account.company.id, '"isSample" = true AND "subjectType" = \'fixed_income\'')).toBe(3);
+        expect(await rows('FixedIncomeTitles', account.company.id, '"isSample" = true AND "issuerId" IS NOT NULL')).toBe(3);
         expect(await rows('FixedIncomeTitles', other.company.id)).toBe(0);
     });
 

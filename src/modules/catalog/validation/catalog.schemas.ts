@@ -40,7 +40,12 @@ export const assetItemSchema = z.object({
         .describe('Standard class suggested by exposure; null when there is no obvious default and the user must choose'),
     dollarExposure: z.boolean().describe('Whether the asset exposes the portfolio to the US dollar'),
     quantityDecimals: z.number().int().describe('Decimal places accepted in the position quantity'),
-    maturityDate: z.string().nullable().describe('Maturity date (YYYY-MM-DD) for Tesouro Direto bonds, otherwise null')
+    maturityDate: z.string().nullable().describe('Maturity date (YYYY-MM-DD) for Tesouro Direto bonds, otherwise null'),
+    sector: z.string().nullable().describe('Sector key from the curated profile (e.g. financeiro); null when the asset has no profile yet'),
+    issuerGroupId: z
+        .string()
+        .nullable()
+        .describe('Slug of the issuer group from the curated profile, used to add up holdings of the same group; null when none')
 });
 
 export type AssetItem = z.infer<typeof assetItemSchema>;

@@ -3,6 +3,7 @@ import { ContextModule } from '../../../core/context/context.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { AllocationApplicationModule } from '../../allocation/application/allocation-application.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
+import { IssuersServicesModule } from '../../issuers/services/issuers-services.module';
 import { FixedIncomeApplicationModule } from '../../fixed-income/application/fixed-income-application.module';
 import { MarketDataApplicationModule } from '../../market-data/application/market-data-application.module';
 import { PositionsApplicationModule } from '../../positions/application/positions-application.module';
@@ -22,6 +23,7 @@ import { PortfolioViewApplication } from './portfolio-view.application';
         AllocationApplicationModule,
         CatalogApplicationModule,
         FixedIncomeApplicationModule,
+        IssuersServicesModule,
         MarketDataApplicationModule,
         PositionsApplicationModule
     ],

@@ -244,7 +244,9 @@ function assetsOf(): SourceAsset[] {
         typeGroup: seed.typeGroup,
         currency: seed.currency,
         quantityDecimals: 0,
-        dollarExposure: seed.dollarExposure ?? false
+        dollarExposure: seed.dollarExposure ?? false,
+        sector: null,
+        issuerGroupId: null
     }));
 }
 
@@ -272,6 +274,9 @@ function titlesOf(): SourceTitle[] {
     return TITLE_SEEDS.map((seed: TitleSeed): SourceTitle => ({
         id: `title-${seed.name}`,
         name: seed.name,
+        titleKind: 'cdb',
+        issuerId: null,
+        issuerGroupId: null,
         indexDataMissing: false,
         valueMinor: seed.valueMinor,
         currency: seed.currency,

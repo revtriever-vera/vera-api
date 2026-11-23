@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { profileOf } from '../domain/asset-profiles';
 import { AssetDomain } from '../domain/asset.domain';
 import { AssetNotFoundError } from '../domain/catalog.errors';
 import { escapeLike } from '../../../shared/utils/like.util';
@@ -7,6 +8,7 @@ import { CatalogLogService } from '../services/catalog-log.service';
 import { AssetItem, AssetSearchQuery, AssetSearchResponse } from '../validation/catalog.schemas';
 
 export function toAssetItem(asset: Asset): AssetItem {
+    const profile: ReturnType<typeof profileOf> = profileOf(asset.market, asset.symbol);
     return {
         id: asset.id,
         symbol: asset.symbol,
@@ -18,7 +20,9 @@ export function toAssetItem(asset: Asset): AssetItem {
         suggestedClassKey: asset.suggestedClassKey,
         dollarExposure: asset.dollarExposure,
         quantityDecimals: asset.quantityDecimals,
-        maturityDate: asset.maturityDate
+        maturityDate: asset.maturityDate,
+        sector: profile.sector,
+        issuerGroupId: profile.issuerGroupId
     };
 }
 

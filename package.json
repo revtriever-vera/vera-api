@@ -28,6 +28,7 @@
     "migrate:make": "kysely migrate:make",
     "codegen": "kysely-codegen --out-file src/core/database/generated/database.types.ts && prettier --write src/core/database/generated/database.types.ts",
     "check:migrations": "tsx scripts/check-migration-names.ts",
+    "issuers:compare": "tsx scripts/issuers-compare-sources.ts",
     "env:pull": "tsx scripts/env-pull.ts",
     "tick": "tsx scripts/tick.ts",
     "qa:statement-fixture": "tsx scripts/qa-statement-fixture.ts",

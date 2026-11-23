@@ -11,6 +11,9 @@ describe('buildExportRows', () => {
             symbol: 'ITUB4',
             name: 'Itaú Unibanco',
             className: 'Ações Brasil',
+            titleKindLabel: '',
+            issuerName: '',
+            groupName: '',
             quantity: '2000',
             quantityDecimals: 0,
             valueMinor: 7_560_000,
@@ -34,6 +37,19 @@ describe('buildExportRows', () => {
         );
 
         expect(row).toMatchObject({ quantity: null, className: 'Renda fixa', valueSourceLabel: 'Curva do CDI (BC)' });
+    });
+
+    it('fills type, issuer and conglomerate of a fixed income title and leaves unknown issuers empty', () => {
+        const [withIssuer, orphan] = buildExportRows(
+            snapshotOf([
+                holdingOf({ titleKind: 'debenture', issuerId: 'banco-inter' }),
+                holdingOf({ titleKind: 'lci', issuerId: 'banco-que-sumiu' })
+            ]),
+            'en'
+        );
+
+        expect(withIssuer).toMatchObject({ titleKindLabel: 'Debenture', issuerName: 'Banco Inter', groupName: 'Inter&Co' });
+        expect(orphan).toMatchObject({ titleKindLabel: 'LCI', issuerName: '', groupName: '' });
     });
 
     it('keeps the order of the holdings and the class display name given by the snapshot', () => {
@@ -69,6 +85,7 @@ describe('export labels', () => {
     it('has the same keys in pt-BR and en', () => {
         expect(Object.keys(EXPORT_LABELS.en.headers)).toEqual(Object.keys(EXPORT_LABELS['pt-BR'].headers));
         expect(Object.keys(EXPORT_LABELS.en.sources)).toEqual(Object.keys(EXPORT_LABELS['pt-BR'].sources));
+        expect(Object.keys(EXPORT_LABELS.en.titleKinds)).toEqual(Object.keys(EXPORT_LABELS['pt-BR'].titleKinds));
         Object.values(EXPORT_LABELS).forEach((labels) => {
             expect(Object.values(labels.headers).every((text: string) => text.length > 0)).toBe(true);
             expect(Object.values(labels.sources).every((text: string) => text.length > 0)).toBe(true);
@@ -76,7 +93,27 @@ describe('export labels', () => {
     });
 
     it('puts the base currency in the value header', () => {
-        expect(headerLabelsOf('pt-BR', 'BRL')).toEqual(['Ativo', 'Nome', 'Classe', 'Quantidade', 'Valor (BRL)', 'Fonte do valor']);
-        expect(headerLabelsOf('en', 'USD')).toEqual(['Asset', 'Name', 'Class', 'Quantity', 'Value (USD)', 'Value source']);
+        expect(headerLabelsOf('pt-BR', 'BRL')).toEqual([
+            'Ativo',
+            'Nome',
+            'Classe',
+            'Tipo',
+            'Emissor',
+            'Conglomerado',
+            'Quantidade',
+            'Valor (BRL)',
+            'Fonte do valor'
+        ]);
+        expect(headerLabelsOf('en', 'USD')).toEqual([
+            'Asset',
+            'Name',
+            'Class',
+            'Type',
+            'Issuer',
+            'Group',
+            'Quantity',
+            'Value (USD)',
+            'Value source'
+        ]);
     });
 });

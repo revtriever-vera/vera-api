@@ -30,6 +30,21 @@ Lista por `typeGroup` dos ativos mostrados quando a busca vem sem texto, na orde
 
 Catálogo de exemplo servido pelo driver `mock` (`CATALOG_DRIVER=mock`, o padrão). Inclui a carteira de exemplo do protótipo e alguns outros ativos por grupo. `npm run catalog:seed` grava esse conteúdo no banco local.
 
+## `asset-profiles.json` (setor e grupo emissor)
+
+Perfil curado dos ativos de renda variável, aplicado na leitura (sem coluna em `Assets`). O catálogo devolve `sector` e `issuerGroupId` na busca de ativos e na consolidação.
+
+```json
+{ "market": "B3", "symbol": "ITUB4", "sector": "financeiro", "issuerGroupId": "itau-unibanco" }
+```
+
+- `market` e `symbol`: a chave do ativo. A lista fica ordenada por `market` e `symbol` e sem repetição.
+- `sector`: uma chave da lista fechada em `domain/sectors.ts` (`financeiro`, `energia_eletrica`, `petroleo_gas`, `imobiliario_logistica`, `etf_indice`...). Nunca texto livre: o front traduz a chave. Setor novo entra em `sectors.ts` no mesmo PR.
+- `issuerGroupId`: um id de `issuers/data/groups.json`, ou `null` para ETF e FII sem grupo. É o que faz um CDB do Itaú e ITUB4 somarem juntos; a BDR e a ação do mesmo grupo (AAPL34 e AAPL) também.
+- Ativo fora do mapa fica sem setor e sem grupo. Os títulos do Tesouro Direto não precisam de entrada: todos caem no grupo `tesouro-nacional`, sem setor.
+
+O spec exige que todo ativo de `popular-assets.json` e de `seed-assets.json` (fora o Tesouro) tenha perfil e que todo `issuerGroupId` exista em `groups.json`. Fonte do setor: classificação pública da B3 e site de relações com investidores; cite a fonte no PR. Uma fonte automática de setor fica para depois.
+
 ## Como contribuir
 
 1. Confira o regulamento do fundo (ou o índice que ele replica) antes de propor uma classe. Se a exposição for mista ou você não tiver certeza, não inclua o ticker: `classKey: null` só serve para exposição que de fato não tem classe padrão.

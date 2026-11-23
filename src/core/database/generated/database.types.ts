@@ -232,6 +232,7 @@ export interface FixedIncomeTitles {
     id: string;
     indexer: string;
     isSample: Generated<boolean>;
+    issuerId: string | null;
     kind: string;
     maturityDate: Timestamp;
     name: string;

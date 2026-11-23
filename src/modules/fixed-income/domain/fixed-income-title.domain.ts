@@ -3,7 +3,7 @@ import { FixedIncomeTitlesRepository } from '../repositories/fixed-income-titles
 import { toFixedIncomeTitle } from './fixed-income-title.mapper';
 import { FixedIncomeTitle, FixedIncomeTitleRow, TAX_REGIME_BY_KIND, TitleTerms } from './fixed-income.types';
 
-export type TitleDraft = TitleTerms & { readonly name: string };
+export type TitleDraft = TitleTerms & { readonly name: string; readonly issuerId: string | null };
 
 @Injectable()
 export class FixedIncomeTitleDomain {
