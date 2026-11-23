@@ -32,9 +32,9 @@ describe('TesouroCsvReaderService', () => {
         if (!result.changed) {
             return;
         }
-        expect(result.baseDate).toBe('2026-10-08');
-        expect(result.bonds).toHaveLength(10);
-        expect(result.bonds.every((bond: TesouroBond) => bond.baseDate === '2026-10-08')).toBe(true);
+        expect(result.baseDate).toBe('2026-11-19');
+        expect(result.bonds).toHaveLength(9);
+        expect(result.bonds.every((bond: TesouroBond) => bond.baseDate === '2026-11-19')).toBe(true);
     });
 
     it('parses dates and Brazilian decimals', async () => {
@@ -44,11 +44,11 @@ describe('TesouroCsvReaderService', () => {
 
         expect(result.changed && result.bonds[0]).toEqual({
             typeName: 'Tesouro Selic',
-            maturityDate: '2029-03-01',
-            baseDate: '2026-10-08',
-            baseUnitPrice: '15232.00',
-            buyUnitPrice: '15234.56',
-            sellUnitPrice: '15230.10'
+            maturityDate: '2027-03-01',
+            baseDate: '2026-11-19',
+            baseUnitPrice: '20332.84',
+            buyUnitPrice: '20343.78',
+            sellUnitPrice: '20332.84'
         });
     });
 
