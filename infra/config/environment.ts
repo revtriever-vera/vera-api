@@ -33,6 +33,10 @@ export interface BillingEnvironmentConfig {
     readonly gatewayConnectionId: string | null;
 }
 
+export interface CalendarEnvironmentConfig {
+    readonly driver: 'mock' | 'google';
+}
+
 export interface EnvironmentConfig {
     readonly name: EnvironmentName;
     readonly account: string;
@@ -52,6 +56,7 @@ export interface EnvironmentConfig {
     readonly otlpEndpointParameter: string;
     readonly otlpHeadersParameter: string | null;
     readonly billing: BillingEnvironmentConfig;
+    readonly calendar: CalendarEnvironmentConfig;
     readonly llm: LlmEnvironmentConfig;
 }
 
@@ -165,6 +170,14 @@ function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
     };
 }
 
+function calendar(env: NodeJS.ProcessEnv): CalendarEnvironmentConfig {
+    const driver: string = optionalVariable(env, 'GOOGLE_CALENDAR_DRIVER') ?? 'mock';
+    if (driver !== 'mock' && driver !== 'google') {
+        throw new Error('GOOGLE_CALENDAR_DRIVER inválida: use mock ou google');
+    }
+    return { driver };
+}
+
 const DEFAULT_LLM_MODEL: string = 'meta/muse-spark-1.3-contributor';
 
 function llm(env: NodeJS.ProcessEnv): LlmEnvironmentConfig {
@@ -233,7 +246,7 @@ function operationalSettings(
     hosts: HostNaming
 ): Omit<
     EnvironmentConfig,
-    'billing' | 'llm' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'
+    'billing' | 'calendar' | 'llm' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'
 > {
     return {
         githubRepository: settings.githubRepository,
@@ -263,6 +276,7 @@ export function fromEnvironment(name: EnvironmentName, env: NodeJS.ProcessEnv): 
         shared: shared(env, `SHARED_INFRA_${suffix}`),
         imagePullAccounts: imagePullAccounts(env),
         billing: billing(env),
+        calendar: calendar(env),
         llm: llm(env),
         ...operationalSettings(settings, hosts)
     };

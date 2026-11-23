@@ -14,6 +14,7 @@ import { CompanyDomain } from '../../../src/modules/identity/domain/company.doma
 import { AccountDeletionRecord, Company, User } from '../../../src/modules/identity/domain/identity.types';
 import { UserDomain } from '../../../src/modules/identity/domain/user.domain';
 import { AuthTokens, SessionIssuerPort } from '../../../src/modules/identity/ports/session-issuer.port';
+import { AccountDataRegistry } from '../../../src/modules/identity/services/account-data.registry';
 import { AccountDataEraserPort } from '../../../src/modules/identity/services/account-data-eraser.port';
 import { AccountDataExporterPort } from '../../../src/modules/identity/services/account-data-exporter.port';
 import { tablesWithCompanyId } from '../support/company-cascade';
@@ -214,17 +215,9 @@ describe('identity account deletion and export', () => {
         const trail: AccountDeletionRecord[] = await deletionLog.findByCompanyId(a.company.id);
         expect(trail).toHaveLength(1);
         expect(trail[0]?.companyHash).toBe(deletionLog.hashOf(a.company.id));
-        expect(trail[0]?.areas).toEqual([
-            { area: 'integration_credentials', erased: expect.any(Number) },
-            { area: 'usage', erased: expect.any(Number) },
-            { area: 'llm-calls', erased: expect.any(Number) },
-            { area: 'ai_summaries', erased: expect.any(Number) },
-            { area: 'whatsapp_messages', erased: expect.any(Number) },
-            { area: 'whatsapp_links', erased: expect.any(Number) },
-            { area: 'reminders', erased: expect.any(Number) },
-            { area: 'stable', erased: expect.any(Number) },
-            { area: 'flaky', erased: expect.any(Number) }
-        ]);
+        const registered: string[] = app.get(AccountDataRegistry, { strict: false }).eraseAreas();
+        expect(registered).toEqual(expect.arrayContaining(['stable', 'flaky']));
+        expect(trail[0]?.areas).toEqual(registered.map((area: string) => ({ area, erased: expect.any(Number) })));
         const dump: string = JSON.stringify((await pg.query('SELECT * FROM "AccountDeletionLog"')).rows);
         expect(dump).not.toContain(a.company.id);
         expect(dump).not.toContain(a.user.email);

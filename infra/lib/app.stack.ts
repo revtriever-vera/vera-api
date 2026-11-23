@@ -44,6 +44,7 @@ const MAIL_FEEDBACK_VISIBILITY_SECONDS: number = 90;
 const MAIL_FEEDBACK_MAX_RECEIVES: number = 5;
 const MAIL_FEEDBACK_DLQ_RETENTION_DAYS: number = 14;
 const REVTRIEVER_API_KEY_PARAMETER: string = '/vera/revtriever-api-key';
+const GOOGLE_CLIENT_SECRET_PARAMETER: string = '/vera/google-client-secret';
 const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     DATABASE_URL: '/vera/database-url',
     CRYPTO_KEY_HEX: '/vera/crypto-key-hex',
@@ -51,7 +52,6 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     SWAGGER_PASSWORD: '/vera/swagger-password',
     QUEUES_DASHBOARD_PASSWORD: '/vera/queues-dashboard-password',
     GOOGLE_CLIENT_ID: '/vera/google-client-id',
-    GOOGLE_CLIENT_SECRET: '/vera/google-client-secret',
     FACEBOOK_APP_ID: '/vera/facebook-app-id',
     FACEBOOK_APP_SECRET: '/vera/facebook-app-secret',
     BRAPI_TOKEN: '/vera/brapi-token',
@@ -349,7 +349,7 @@ export class AppStack extends Stack {
 
     private calendarEnvironment(props: AppStackProps): Record<string, string> {
         return {
-            GOOGLE_CALENDAR_DRIVER: 'google',
+            GOOGLE_CALENDAR_DRIVER: props.config.calendar.driver,
             GOOGLE_CALENDAR_REDIRECT_URI: `https://${props.config.apiHost}/calendar/google/callback`
         };
     }
@@ -417,6 +417,9 @@ export class AppStack extends Stack {
         const parameters: Record<string, string> = { ...SECRET_PARAMETERS };
         if (config.billing.driver === 'revtriever') {
             parameters['REVTRIEVER_API_KEY'] = REVTRIEVER_API_KEY_PARAMETER;
+        }
+        if (config.calendar.driver === 'google') {
+            parameters['GOOGLE_CLIENT_SECRET'] = GOOGLE_CLIENT_SECRET_PARAMETER;
         }
         if (config.otlpHeadersParameter !== null) {
             parameters['OTEL_EXPORTER_OTLP_HEADERS'] = config.otlpHeadersParameter;
