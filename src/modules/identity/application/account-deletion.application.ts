@@ -6,7 +6,7 @@ import { AppLocale } from '../../../shared/i18n/locale';
 import { AccountDeletionLogDomain } from '../domain/account-deletion-log.domain';
 import { CompanyDomain } from '../domain/company.domain';
 import { firstNameOf } from '../domain/first-name.util';
-import { AccountClosedError, ConfirmationMismatchError, ForbiddenError } from '../domain/identity.errors';
+import { AccountClosedError, ConfirmationMismatchError, RoleForbiddenError } from '../domain/identity.errors';
 import { ACCOUNT_DELETION_OUTCOMES, Company, effectiveLocale, ErasedArea, USER_ROLES, User } from '../domain/identity.types';
 import { AccountDataRegistry } from '../services/account-data.registry';
 import { CurrentUserService } from '../services/current-user.service';
@@ -51,7 +51,7 @@ export class AccountDeletionApplication {
         const user: User = await this.currentUser.require();
         await this.throttle.assertAllowed(`account-delete:${user.id}`, DELETE_LIMIT, DELETE_WINDOW_SECONDS);
         if (user.role !== USER_ROLES.owner) {
-            throw new ForbiddenError();
+            throw new RoleForbiddenError(USER_ROLES.owner);
         }
         if (user.email.toLowerCase() !== confirmEmail.trim().toLowerCase()) {
             this.metrics.accountDeletion(ACCOUNT_DELETION_OUTCOMES.mismatch);

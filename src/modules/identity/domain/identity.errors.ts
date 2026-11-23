@@ -101,12 +101,24 @@ export class EmailInUseError extends AppError {
     }
 }
 
-export class ForbiddenError extends AppError {
-    public constructor() {
+export class RoleForbiddenError extends AppError {
+    public constructor(required: string) {
         super({
-            code: 'identity.forbidden',
+            code: 'members.forbidden_role',
             status: 403,
-            detail: 'Only the owner of the company can perform this action.'
+            detail: `This action requires the ${required} role or higher.`,
+            meta: { required }
+        });
+    }
+}
+
+export class RouteRoleMissingError extends AppError {
+    public constructor(route: string) {
+        super({
+            code: 'core.route_role_missing',
+            status: 500,
+            detail: 'A write route reached the roles guard without a declared required role.',
+            meta: { route }
         });
     }
 }

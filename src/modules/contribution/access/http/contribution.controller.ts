@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ContributionSuggestionApplication } from '../../application/contribution-suggestion.application';
 import { SuggestRequestDto, SuggestResponse, suggestRequestSchema, suggestResponseSchema } from '../../validation/contribution.schemas';
 
@@ -12,12 +14,13 @@ const ONE_MINUTE_SECONDS: number = 60;
 
 @ApiTags('portfolio')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('portfolio/contributions')
 export class ContributionController {
     public constructor(private readonly suggestions: ContributionSuggestionApplication) {}
 
     @Post('suggest')
+    @RequiresRole('viewer')
     @HttpCode(HttpStatus.OK)
     @RateLimit({
         key: 'contribution-suggest',

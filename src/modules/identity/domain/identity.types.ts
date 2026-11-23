@@ -16,10 +16,17 @@ export type NewAccountDeletionRecord = Insertable<AccountDeletionLog>;
 
 export const USER_ROLES = {
     owner: 'owner',
-    member: 'member'
+    editor: 'editor',
+    viewer: 'viewer'
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
+export const ROLE_RANK: Readonly<Record<UserRole, number>> = {
+    viewer: 1,
+    editor: 2,
+    owner: 3
+};
 
 export const LOGIN_PROVIDERS = {
     google: 'google',

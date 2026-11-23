@@ -6,6 +6,8 @@ const AUTH: string = 'identity-auth';
 const PROVISIONING: string = 'identity-provisioning';
 const ACCOUNT: string = 'identity-account';
 const REFRESH_REUSE: string = 'auth-refresh-reuse';
+const MEMBERS_AUTHZ: string = 'members-authz';
+const ROUTE_ROLE_MISSING: string = 'route-role-missing';
 
 @Injectable()
 export class IdentityLogService {
@@ -69,5 +71,13 @@ export class IdentityLogService {
 
     public accountDeleted(areas: readonly string[]): void {
         this.logService.info({ message: 'account deleted', identifier: ACCOUNT, meta: { areas } });
+    }
+
+    public roleDenied(route: string, required: string, role: string): void {
+        this.logService.info({ message: 'role denied', identifier: MEMBERS_AUTHZ, meta: { route, required, role } });
+    }
+
+    public routeRoleMissing(route: string): void {
+        this.logService.error({ message: 'write route without required role', identifier: ROUTE_ROLE_MISSING, meta: { route } });
     }
 }

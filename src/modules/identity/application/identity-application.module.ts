@@ -19,6 +19,7 @@ import { IdentityAccountExporter } from '../services/identity-account.exporter';
 import { IdentityLogService } from '../services/identity-log.service';
 import { IdentityMetricsService } from '../services/identity-metrics.service';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
+import { RolesGuard } from '../services/roles.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import { SessionIssuerService } from '../services/session-issuer.service';
 import { SocialIdentityRegistry } from '../services/social-identity.registry';
@@ -59,6 +60,7 @@ import { SocialLoginApplication } from './social-login.application';
         CurrentUserService,
         CompanyTimezoneService,
         JwtAuthGuard,
+        RolesGuard,
         RefreshCookieAdapter,
         TokenService,
         IdentityLogService,
@@ -73,9 +75,12 @@ import { SocialLoginApplication } from './social-login.application';
         CurrentUserService,
         CompanyTimezoneService,
         JwtAuthGuard,
+        RolesGuard,
         TokenService,
         RefreshCookieAdapter,
-        SessionIssuerPort
+        SessionIssuerPort,
+        IdentityLogService,
+        IdentityMetricsService
     ]
 })
 export class IdentityApplicationModule {}

@@ -11,6 +11,8 @@ import { SocialLoginApplication, SocialLoginResult } from '../application/social
 import { LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
 import { AuthTokens, RequestMeta } from '../ports/session-issuer.port';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
+import { RequiresRole } from '../services/requires-role.decorator';
+import { RolesGuard } from '../services/roles.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import {
     FacebookLoginDto,
@@ -170,7 +172,7 @@ export class AuthController {
     }
 
     @Get('me')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Current session identity',
@@ -187,7 +189,8 @@ export class AuthController {
     }
 
     @Patch('me/preferences')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RequiresRole('viewer')
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Save the preferences of the signed-in person',

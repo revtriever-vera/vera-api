@@ -7,7 +7,7 @@ export const authUserSchema = z.object({
     id: z.string().uuid().describe('User id'),
     name: z.string().describe('User display name'),
     email: z.string().describe('User email'),
-    role: z.nativeEnum(USER_ROLES).describe('`owner` runs the company; `member` is reserved for invited teammates'),
+    role: z.nativeEnum(USER_ROLES).describe('`owner` runs the company, `editor` changes its data, `viewer` only reads'),
     companyId: z.string().uuid().describe('Company the user belongs to')
 });
 
@@ -39,7 +39,7 @@ export const meResponseSchema = z.object({
     companyId: z.string().uuid().describe('Tenant of the current session'),
     name: z.string().describe('User display name'),
     email: z.string().describe('User email'),
-    role: z.nativeEnum(USER_ROLES).describe('Role inside the company'),
+    role: z.nativeEnum(USER_ROLES).describe('Role inside the company: `owner`, `editor` or `viewer`'),
     locale: z.enum(APP_LOCALES).describe('Effective locale: the personal preference when set, otherwise the company locale'),
     preferredLocale: z.enum(APP_LOCALES).nullable().describe('Personal locale preference; null follows the company locale'),
     loginProvider: z.nativeEnum(LOGIN_PROVIDERS).describe('Provider the current session signed in with'),

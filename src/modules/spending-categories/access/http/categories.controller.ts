@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiParamOptions, ApiTags } from 
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { CategoryApplication } from '../../application/category.application';
 import { CategoryView } from '../../domain/categories.types';
 import {
@@ -46,7 +48,7 @@ const CATEGORY_EXAMPLE: Record<string, unknown> = {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/categories')
 export class CategoriesController {
     public constructor(private readonly categories: CategoryApplication) {}
@@ -65,6 +67,7 @@ export class CategoriesController {
     }
 
     @Post()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({
         summary: 'Create a spending category',
@@ -91,6 +94,7 @@ export class CategoriesController {
     }
 
     @Patch(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Rename a category, change its flexibility or its icon',
         description:
@@ -120,6 +124,7 @@ export class CategoriesController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Delete a category created by the user',
         description:

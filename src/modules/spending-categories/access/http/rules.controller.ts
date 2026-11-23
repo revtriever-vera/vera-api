@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { RulePreviewView, RuleApplication, RuleSavedView } from '../../application/rule.application';
 import { RuleView } from '../../domain/categories.types';
 import {
@@ -55,7 +57,7 @@ const RULE_EXAMPLE: Record<string, unknown> = {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/rules')
 export class RulesController {
     public constructor(private readonly rules: RuleApplication) {}
@@ -69,6 +71,7 @@ export class RulesController {
     }
 
     @Post('preview')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @RateLimit({
         key: 'spending-rules-preview',
@@ -106,6 +109,7 @@ export class RulesController {
     }
 
     @Post()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({
         summary: 'Create a categorization rule',
@@ -143,6 +147,7 @@ export class RulesController {
     }
 
     @Patch(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Change the category or the direction of a rule',
         description: 'Recategorizes the matching past transactions in the same database transaction.'
@@ -172,6 +177,7 @@ export class RulesController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Delete a categorization rule',
         description: 'Soft delete. The transactions it categorized are recategorized by the pipeline in the same database transaction.'
