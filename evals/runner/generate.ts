@@ -7,7 +7,8 @@ import { serializeContext } from '../../src/modules/ai-assistant/domain/context/
 import { summarySystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/summary-prompts';
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
 import { SummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
-import { EvalCase, EvalTask } from './case.schemas';
+import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter';
+import { EvalCase, SummaryCase } from './case.schemas';
 import { Engine } from './engine';
 
 export interface Generation {
@@ -17,10 +18,12 @@ export interface Generation {
     readonly costUsd: number;
     readonly latencyMs: number;
     readonly fixed: boolean;
+    readonly toolsUsed: readonly string[];
+    readonly ending: 'answered' | 'direct' | 'truncated' | 'check_failed';
 }
 
 const RESPONSE_SCHEMA: JsonObject = toolInputSchemaOf(summaryOutputSchema);
-const KIND_BY_TASK: Readonly<Record<EvalTask, SummaryKind>> = {
+const KIND_BY_TASK: Readonly<Record<SummaryCase['task'], SummaryKind>> = {
     summary_month: 'month',
     summary_cuts: 'cuts',
     summary_portfolio: 'portfolio'
@@ -35,6 +38,9 @@ export function specOf(task: string, reasoning: LlmReasoning | undefined): LlmTa
 }
 
 export function isFixed(item: EvalCase): boolean {
+    if (item.task === 'ask_vera_step') {
+        return prefilterOf(item.question) !== null;
+    }
     return item.task === 'summary_cuts' && item.context.status === 'meta_batida';
 }
 
@@ -42,7 +48,7 @@ export function costOf(result: LlmDriverResult): number {
     return result.providerCostUsd ?? 0;
 }
 
-async function callModel(engine: Engine, spec: LlmTaskSpec, item: EvalCase): Promise<LlmDriverResult> {
+async function callModel(engine: Engine, spec: LlmTaskSpec, item: SummaryCase): Promise<LlmDriverResult> {
     engine.assertBudget();
     engine.mock()?.enqueue(JSON.stringify({ paragraphs: item.reference }));
     const result: LlmDriverResult = await engine.driver.generate({
@@ -59,9 +65,9 @@ async function callModel(engine: Engine, spec: LlmTaskSpec, item: EvalCase): Pro
     return result;
 }
 
-export async function generate(engine: Engine, spec: LlmTaskSpec, item: EvalCase): Promise<Generation> {
+export async function generate(engine: Engine, spec: LlmTaskSpec, item: SummaryCase): Promise<Generation> {
     if (isFixed(item)) {
-        return { text: '', stopReason: 'end', outputTokens: 0, costUsd: 0, latencyMs: 0, fixed: true };
+        return { text: '', stopReason: 'end', outputTokens: 0, costUsd: 0, latencyMs: 0, fixed: true, toolsUsed: [], ending: 'answered' };
     }
     const result: LlmDriverResult = await callModel(engine, spec, item);
     return {
@@ -70,6 +76,8 @@ export async function generate(engine: Engine, spec: LlmTaskSpec, item: EvalCase
         outputTokens: result.usage.outputTokens,
         costUsd: costOf(result),
         latencyMs: result.latencyMs,
-        fixed: false
+        fixed: false,
+        toolsUsed: [],
+        ending: 'answered'
     };
 }

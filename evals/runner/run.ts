@@ -4,6 +4,7 @@ import { EvalCase, EvalTask } from './case.schemas';
 import { casesOf } from './cases';
 import { CheckFailure, CheckOutcome, checkOutput } from './checks';
 import { BudgetExceededError, Engine } from './engine';
+import { askGenerate } from './ask';
 import { generate, Generation, specOf } from './generate';
 import { judge, JudgeVerdict } from './judge';
 
@@ -35,7 +36,7 @@ const BAD_GATEWAY: CheckFailure = { check: 'provider', detail: 'the provider cal
 
 async function generated(engine: Engine, spec: LlmTaskSpec, item: EvalCase): Promise<Generation | CheckFailure> {
     try {
-        return await generate(engine, spec, item);
+        return item.task === 'ask_vera_step' ? await askGenerate(engine, spec, item) : await generate(engine, spec, item);
     } catch (error: unknown) {
         if (error instanceof BudgetExceededError) {
             throw error;
@@ -62,7 +63,14 @@ async function repOf(engine: Engine, spec: LlmTaskSpec, item: EvalCase, withJudg
     if ('check' in attempt) {
         return { failures: [attempt], verdict: null, generation: null };
     }
-    const outcome: CheckOutcome = checkOutput({ item, text: attempt.text, stopReason: attempt.stopReason, fixed: attempt.fixed });
+    const outcome: CheckOutcome = checkOutput({
+        item,
+        text: attempt.text,
+        stopReason: attempt.stopReason,
+        fixed: attempt.fixed,
+        toolsUsed: attempt.toolsUsed,
+        ending: attempt.ending
+    });
     return { failures: outcome.failures, verdict: await judged(engine, spec, item, outcome, withJudge), generation: attempt };
 }
 

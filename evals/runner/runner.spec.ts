@@ -44,15 +44,21 @@ describe('casos de eval', () => {
         }
     });
 
-    it('a referência de cada caso passa nas checagens duras', () => {
-        const everyCase: EvalCase[] = EVAL_TASKS.flatMap((task: EvalTask): EvalCase[] => casesOf(task));
+    it.each(EVAL_TASKS)('%s: a referência de cada caso passa nas checagens duras (rodada mock)', async (task: EvalTask) => {
+        const run: TaskRun = await runTask(engineOf({ mode: 'mock', baseUrl: undefined, model: undefined, maxUsd: 1 }), task, {
+            reps: 1,
+            judge: false,
+            reasoning: undefined
+        });
 
-        for (const item of everyCase) {
-            const outcome: CheckOutcome = isFixed(item)
-                ? checkOutput({ item, text: '', stopReason: 'end', fixed: true })
-                : answered(item, item.reference);
-            expect(outcome.failures, `${item.task}/${item.id}`).toEqual([]);
-        }
+        expect(run.rows.flatMap((row) => row.reps.flatMap((rep) => rep.failures.map((failure) => `${row.id}: ${failure.check}`)))).toEqual(
+            []
+        );
+    });
+
+    it('pergunta de pagamento para no pré-filtro, sem modelo', () => {
+        expect(isFixed(caseOf('ask_vera_step', 'armadilha-pix-pra-maria'))).toBe(true);
+        expect(isFixed(caseOf('ask_vera_step', 'delivery-do-mes'))).toBe(false);
     });
 
     it('meta batida nos cortes vai ao texto fixo, sem modelo', () => {

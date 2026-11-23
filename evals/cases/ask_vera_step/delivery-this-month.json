@@ -1,0 +1,39 @@
+{
+  "id": "delivery-this-month",
+  "task": "ask_vera_step",
+  "locale": "en",
+  "labels": {},
+  "question": "how much did I spend on delivery?",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "list_categories",
+      "input": {}
+    },
+    {
+      "name": "spending_month_summary",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$1,800"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "reference": ["You spent **R$1,800** on [[cat:eating_out]] this month, 38% above your average."]
+}

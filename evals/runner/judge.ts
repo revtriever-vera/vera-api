@@ -2,6 +2,7 @@ import { LlmTaskSpec } from '../../src/core/llm/catalog/llm-task.types';
 import { LlmDriverResult } from '../../src/core/llm/drivers/llm-driver';
 import { parseJsonObject } from '../../src/core/llm/structured-output';
 import { serializeContext } from '../../src/modules/ai-assistant/domain/context/context-hash';
+import { evidenceOf } from './ask-fixtures';
 import { EvalCase } from './case.schemas';
 import { Engine } from './engine';
 import { costOf } from './generate';
@@ -35,9 +36,17 @@ function verdictOf(text: string, costUsd: number): JudgeVerdict {
     return { score: Math.min(MAX_SCORE, Math.max(MIN_SCORE, score)), reason: typeof reason === 'string' ? reason : '', costUsd };
 }
 
+async function evidenceFor(item: EvalCase): Promise<string> {
+    if (item.task === 'ask_vera_step') {
+        return `Question from the person: ${item.question}\nData the tools can return: ${await evidenceOf(item.locale)}`;
+    }
+    return serializeContext(item.context);
+}
+
 export async function judge(engine: Engine, spec: LlmTaskSpec, item: EvalCase, rendered: readonly string[]): Promise<JudgeVerdict> {
     engine.assertBudget();
     engine.mock()?.enqueue(MOCK_VERDICT);
+    const evidence: string = await evidenceFor(item);
     const result: LlmDriverResult = await engine.driver.generate({
         credentials: engine.credentials,
         spec: { ...spec, temperature: 0, reasoning: 'minimal', maxOutputTokens: JUDGE_MAX_OUTPUT_TOKENS },
@@ -47,7 +56,7 @@ export async function judge(engine: Engine, spec: LlmTaskSpec, item: EvalCase, r
             messages: [
                 {
                     role: 'user',
-                    content: `Expected language: ${item.locale}\nJSON:\n${serializeContext(item.context)}\nReference summary:\n${item.reference.join(' ')}\nSummary to grade:\n${rendered.join(' ')}`
+                    content: `Expected language: ${item.locale}\nData:\n${evidence}\nReference text:\n${item.reference.join(' ')}\nText to grade:\n${rendered.join(' ')}`
                 }
             ]
         }

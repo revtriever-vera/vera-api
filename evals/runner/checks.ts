@@ -3,7 +3,7 @@ import { parseJsonObject } from '../../src/core/llm/structured-output';
 import { AiTextRenderer } from '../../src/modules/ai-assistant/domain/context/ai-text-renderer';
 import { GuardResult, guardSummary } from '../../src/modules/ai-assistant/domain/summary-guard';
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
-import { EvalCase } from './case.schemas';
+import { AskCase, EvalCase, SummaryCase } from './case.schemas';
 import { builtOf } from './cases';
 
 export interface CheckFailure {
@@ -16,6 +16,8 @@ export interface CheckInput {
     readonly text: string;
     readonly stopReason: LlmStopReason;
     readonly fixed: boolean;
+    readonly toolsUsed?: readonly string[];
+    readonly ending?: 'answered' | 'direct' | 'truncated' | 'check_failed';
 }
 
 export interface CheckOutcome {
@@ -46,7 +48,9 @@ function plainOf(paragraphs: readonly string[]): string {
 }
 
 export function sentencesIn(text: string): number {
-    return (text.match(SENTENCE_END) ?? []).length;
+    const ended: number = (text.match(SENTENCE_END) ?? []).length;
+    const trimmed: string = text.trim();
+    return trimmed !== '' && !/[.?]$/.test(trimmed) ? ended + 1 : ended;
 }
 
 function stopwordHits(text: string, locale: EvalCase['locale']): number {
@@ -101,11 +105,11 @@ function paragraphsOf(text: string): Parsed {
     return { ok: false, failure: fail('schema', parsed.error.issues[0]?.message ?? 'not a JSON object with paragraphs') };
 }
 
-function guarded(item: EvalCase, paragraphs: readonly string[]): GuardResult {
+function guarded(item: SummaryCase, paragraphs: readonly string[]): GuardResult {
     return guardSummary({ paragraphs, built: builtOf(item), locale: item.locale, renderer: new AiTextRenderer() });
 }
 
-function modelOutcome(input: CheckInput): CheckOutcome {
+function modelOutcome(input: CheckInput, item: SummaryCase): CheckOutcome {
     if (input.stopReason === 'max_tokens') {
         return { failures: [fail('truncated', 'the answer hit maxOutputTokens')], rendered: [] };
     }
@@ -116,16 +120,43 @@ function modelOutcome(input: CheckInput): CheckOutcome {
     if (!parsed.ok) {
         return { failures: [parsed.failure], rendered: [] };
     }
-    const result: GuardResult = guarded(input.item, parsed.paragraphs);
+    const result: GuardResult = guarded(item, parsed.paragraphs);
     if (!result.ok) {
         return { failures: [fail(result.check, result.detail)], rendered: [] };
     }
-    return { failures: softChecks(input.item, result.paragraphs), rendered: result.paragraphs };
+    return { failures: softChecks(item, result.paragraphs), rendered: result.paragraphs };
+}
+
+function toolFailures(item: AskCase, used: readonly string[]): CheckFailure[] {
+    const used_: ReadonlySet<string> = new Set(used);
+    const allowed: ReadonlySet<string> = new Set(item.tools.allowed);
+    const missing: CheckFailure[] = item.tools.required
+        .filter((name: string): boolean => !used_.has(name))
+        .map((name: string): CheckFailure => fail('tool_missing', `did not call ${name}`));
+    const extra: CheckFailure[] = used
+        .filter((name: string): boolean => !allowed.has(name))
+        .map((name: string): CheckFailure => fail('tool_unexpected', `called ${name}`));
+    return [...missing, ...extra];
+}
+
+function askOutcome(input: CheckInput, item: AskCase): CheckOutcome {
+    if (input.fixed) {
+        return { failures: softChecks(item, [input.text]), rendered: [input.text] };
+    }
+    if (input.ending !== 'answered') {
+        return { failures: [fail(input.ending ?? 'check_failed', 'the loop did not end with an accepted answer')], rendered: [] };
+    }
+    const failures: CheckFailure[] = [...softChecks(item, [input.text]), ...toolFailures(item, input.toolsUsed ?? [])];
+    return { failures, rendered: [input.text] };
 }
 
 export function checkOutput(input: CheckInput): CheckOutcome {
+    const item: EvalCase = input.item;
+    if (item.task === 'ask_vera_step') {
+        return askOutcome(input, item);
+    }
     if (!input.fixed) {
-        return modelOutcome(input);
+        return modelOutcome(input, item);
     }
     const rendered: readonly string[] = input.item.reference;
     return { failures: softChecks(input.item, rendered), rendered };

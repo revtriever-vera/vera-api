@@ -2,9 +2,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AiContext, BuiltContext, LabelSource } from '../../src/modules/ai-assistant/domain/context/ai-context.types';
 import { figuresIn } from '../../src/modules/ai-assistant/domain/summary-guard';
-import { EvalCase, EvalTask, evalCaseSchema } from './case.schemas';
+import { EvalCase, EvalTask, SummaryCase, evalCaseSchema } from './case.schemas';
 
-export const EVAL_TASKS: readonly EvalTask[] = ['summary_month', 'summary_cuts', 'summary_portfolio'];
+export const EVAL_TASKS: readonly EvalTask[] = ['summary_month', 'summary_cuts', 'summary_portfolio', 'ask_vera_step'];
 
 const CASES_DIR: string = join(__dirname, '..', 'cases');
 const SKIPPED_FIELDS: ReadonlySet<string> = new Set(['mes', 'chave', 'status', 'situacao', 'moeda_base', 'tipo', 'rotulo_padrao']);
@@ -38,7 +38,7 @@ function collect(value: unknown, field: string, locale: EvalCase['locale'], foun
     }
 }
 
-export function numbersOf(item: EvalCase): readonly number[] {
+export function numbersOf(item: SummaryCase): readonly number[] {
     const found: Set<number> = new Set<number>();
     collect(item.context, '', item.locale, found);
     return [...found].sort((left: number, right: number): number => left - right);
@@ -53,6 +53,6 @@ export function keysOf(item: EvalCase): ReadonlyMap<string, LabelSource> {
     );
 }
 
-export function builtOf(item: EvalCase): BuiltContext<AiContext> {
+export function builtOf(item: SummaryCase): BuiltContext<AiContext> {
     return { payload: item.context, numbers: numbersOf(item), keys: keysOf(item) };
 }

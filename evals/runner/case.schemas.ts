@@ -74,7 +74,17 @@ const common = {
     fixedFigures: z.object({ goalBps: z.number(), surplusMinor: z.number(), currency: z.string() }).optional()
 };
 
+const askCase = z.object({
+    ...common,
+    task: z.literal('ask_vera_step'),
+    question: z.string().min(1),
+    history: z.array(z.object({ role: z.enum(['person', 'vera']), text: z.string() })),
+    tools: z.object({ required: z.array(z.string()), allowed: z.array(z.string()) }),
+    mockTools: z.array(z.object({ name: z.string(), input: z.record(z.string(), z.unknown()) }))
+});
+
 export const evalCaseSchema = z.discriminatedUnion('task', [
+    askCase,
     z.object({ ...common, task: z.literal('summary_month'), context: monthContext }),
     z.object({ ...common, task: z.literal('summary_cuts'), context: cutsContext }),
     z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext })
@@ -82,3 +92,5 @@ export const evalCaseSchema = z.discriminatedUnion('task', [
 
 export type EvalCase = z.infer<typeof evalCaseSchema>;
 export type EvalTask = EvalCase['task'];
+export type SummaryCase = Exclude<EvalCase, { task: 'ask_vera_step' }>;
+export type AskCase = Extract<EvalCase, { task: 'ask_vera_step' }>;
