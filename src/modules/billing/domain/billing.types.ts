@@ -72,6 +72,8 @@ export const EVENTS_CURSOR_SOURCE: string = 'revtriever-events';
 export const CHARGE_FAILED_LOOKBACK_DAYS: number = 7;
 export const PROVISIONING_STALE_MINUTES: number = 15;
 export const EVENT_STALE_MINUTES: number = 10;
+/** Quanto tempo um evento de assinatura ainda não vinculada espera o vínculo antes de ser descartado. */
+export const EVENT_UNLINKED_HOURS: number = 24;
 export const INVOICES_PAGE_SIZE: number = 12;
 export const CAPTURE_SESSIONS_PER_HOUR: number = 5;
 export const MAX_CHARGE_DAY: number = 28;

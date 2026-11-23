@@ -35,6 +35,10 @@ export class BillingSubscriptionDomain {
         return this.subscriptions.fail(id);
     }
 
+    public async carryPaidPeriod(id: string, paidThrough: Date): Promise<void> {
+        await this.subscriptions.carryPaidPeriod(id, paidThrough);
+    }
+
     public async saveCard(id: string, brand: string | null, last4: string): Promise<void> {
         await this.subscriptions.saveCard(id, brand, last4);
     }

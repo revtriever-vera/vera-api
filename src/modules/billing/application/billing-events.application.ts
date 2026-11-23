@@ -53,6 +53,11 @@ export class BillingEventsApplication {
             return;
         }
         const outcome: ProcessOutcome = await this.processor.process(row);
+        if (outcome.status === EVENT_STATUSES.received) {
+            this.metrics.event(eventTypeLabel(row.type), 'deferred');
+            this.logs.eventDeferred(eventTypeLabel(row.type), row.externalEventId);
+            return;
+        }
         await this.events.finish(row.id, outcome.status, outcome.error);
         this.metrics.event(eventTypeLabel(row.type), outcome.status);
         if (outcome.status === EVENT_STATUSES.ignored) {
