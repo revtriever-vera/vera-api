@@ -44,6 +44,8 @@ const MAIL_FEEDBACK_VISIBILITY_SECONDS: number = 90;
 const MAIL_FEEDBACK_MAX_RECEIVES: number = 5;
 const MAIL_FEEDBACK_DLQ_RETENTION_DAYS: number = 14;
 const REVTRIEVER_API_KEY_PARAMETER: string = '/vera/revtriever-api-key';
+const REVTRIEVER_WEBHOOK_TOKEN_PARAMETER: string = '/vera/revtriever-webhook-token';
+const REVTRIEVER_WEBHOOK_SECRETS_PARAMETER: string = '/vera/revtriever-webhook-secrets';
 const GOOGLE_CLIENT_SECRET_PARAMETER: string = '/vera/google-client-secret';
 const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     DATABASE_URL: '/vera/database-url',
@@ -416,6 +418,8 @@ export class AppStack extends Stack {
         const parameters: Record<string, string> = { ...SECRET_PARAMETERS };
         if (config.billing.driver === 'revtriever') {
             parameters['REVTRIEVER_API_KEY'] = REVTRIEVER_API_KEY_PARAMETER;
+            parameters['REVTRIEVER_WEBHOOK_TOKEN'] = REVTRIEVER_WEBHOOK_TOKEN_PARAMETER;
+            parameters['REVTRIEVER_WEBHOOK_SECRETS'] = REVTRIEVER_WEBHOOK_SECRETS_PARAMETER;
         }
         if (config.calendar.driver === 'google') {
             parameters['GOOGLE_CLIENT_SECRET'] = GOOGLE_CLIENT_SECRET_PARAMETER;

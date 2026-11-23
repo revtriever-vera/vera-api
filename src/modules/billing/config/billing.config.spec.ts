@@ -92,4 +92,27 @@ describe('parseBillingConfig', () => {
             parseBillingConfig({ IS_LOCAL: 'true', FAKE_BILLING_WEBHOOK_SECRET: 'outro-segredo-de-teste' }).FAKE_BILLING_WEBHOOK_SECRET
         ).toBe('outro-segredo-de-teste');
     });
+
+    it('lê o token e os segredos de rotação do webhook, a carência e o prazo de arrependimento', () => {
+        const settings = parseBillingConfig({
+            IS_LOCAL: 'false',
+            REVTRIEVER_WEBHOOK_TOKEN: 'tok',
+            REVTRIEVER_WEBHOOK_SECRETS: ' novo-segredo-123456 , antigo-segredo-123456 ',
+            BILLING_GRACE_DAYS: '5',
+            APP_URL: 'https://app.example.test/'
+        });
+
+        expect(settings.REVTRIEVER_WEBHOOK_TOKEN).toBe('tok');
+        expect(settings.REVTRIEVER_WEBHOOK_SECRETS).toEqual(['novo-segredo-123456', 'antigo-segredo-123456']);
+        expect(settings.BILLING_GRACE_DAYS).toBe(5);
+        expect(settings.BILLING_WITHDRAWAL_DAYS).toBe(7);
+        expect(settings.APP_URL).toBe('https://app.example.test');
+    });
+
+    it('sem token nem segredo configurados, nada é aceito; no local o fake entra com o segredo de desenvolvimento', () => {
+        expect(parseBillingConfig({ IS_LOCAL: 'false' }).REVTRIEVER_WEBHOOK_SECRETS).toEqual([]);
+        expect(parseBillingConfig({ IS_LOCAL: 'false' }).REVTRIEVER_WEBHOOK_TOKEN).toBeNull();
+        expect(parseBillingConfig({ IS_LOCAL: 'true' }).REVTRIEVER_WEBHOOK_SECRETS).toHaveLength(1);
+        expect(parseBillingConfig({ IS_LOCAL: 'true' }).BILLING_GRACE_DAYS).toBe(3);
+    });
 });

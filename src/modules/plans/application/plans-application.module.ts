@@ -14,6 +14,8 @@ import { FeatureStateService } from '../services/feature-state.service';
 import { PaidFeatureAvailabilityRegistry } from '../services/paid-feature-availability.registry';
 import { PaidUsageStatePort } from '../services/paid-usage-state.port';
 import { PaidUsageReader } from '../services/paid-usage-reader.service';
+import { BillingMeService } from '../services/billing-me.service';
+import { SubscriptionSummaryRegistry } from '../services/subscription-summary.registry';
 import { PlanContractService } from '../services/plan-contract.service';
 import { PlanGateService } from '../services/plan-gate.service';
 import { PlanLimitService } from '../services/plan-limit.service';
@@ -55,6 +57,8 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         UsageApplication,
         PaidFeatureAvailabilityRegistry,
         BillingOfferRegistry,
+        SubscriptionSummaryRegistry,
+        BillingMeService,
         PremiumLifecycleRegistry,
         PaidUsageReader,
         PaidUsageStateAdapter,
@@ -80,6 +84,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
     ],
     exports: [
         BillingMeApplication,
+        BillingMeService,
         PremiumEndedRetryApplication,
         UsageApplication,
         PlanGateService,

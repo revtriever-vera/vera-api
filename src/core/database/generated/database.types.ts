@@ -208,6 +208,85 @@ export interface BankSyncRuns {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface BillingInvoices {
+    chargeFailedAt: Timestamp | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    cycleEnd: Timestamp | null;
+    cycleStart: Timestamp | null;
+    dueDate: Timestamp | null;
+    engine: string;
+    engineInvoiceId: string;
+    id: string;
+    issuedAt: Timestamp | null;
+    method: string | null;
+    overdueAt: Timestamp | null;
+    paidAt: Timestamp | null;
+    status: string;
+    subscriptionId: string;
+    totalCents: Int8 | null;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface BillingNotifications {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    kind: string;
+    subjectId: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface BillingPendingCancellations {
+    createdAt: Generated<Timestamp>;
+    engineSubscriptionId: string;
+    id: string;
+}
+
+export interface BillingPriceQuotes {
+    amountCents: Int8;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    cycle: number;
+    description: string;
+    id: string;
+    productRef: string;
+    requestCount: Generated<number>;
+    subscriptionId: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface BillingRefundRequests {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    doneAt: Timestamp | null;
+    id: string;
+    requestedAt: Timestamp;
+    subscriptionId: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface BillingSubscriptions {
+    canceledAt: Timestamp | null;
+    cancelRequestedAt: Timestamp | null;
+    cardBrand: string | null;
+    cardLast4: string | null;
+    chargeDay: number | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    engine: string;
+    engineCustomerId: string | null;
+    engineSubscriptionId: string | null;
+    firstChargeDate: string | null;
+    firstPaidAt: Timestamp | null;
+    id: string;
+    paidThrough: Timestamp | null;
+    paymentMethod: string;
+    planId: string;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface CalendarConnections {
     companyId: string;
     connectedAt: Timestamp;
@@ -281,6 +360,17 @@ export interface Companies {
     name: string;
     timezone: Generated<string>;
     trialStartedAt: Timestamp | null;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface CompanyBillingStandings {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    endsAt: Timestamp | null;
+    id: string;
+    reason: string;
+    startsAt: Timestamp;
+    status: string;
     updatedAt: Generated<Timestamp>;
 }
 
@@ -745,6 +835,24 @@ export interface Reminders {
     userId: string;
 }
 
+export interface RevtrieverEventCursors {
+    cursor: string | null;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface RevtrieverEvents {
+    error: string | null;
+    externalEventId: string;
+    id: string;
+    payload: Json;
+    processedAt: Timestamp | null;
+    receivedAt: Generated<Timestamp>;
+    status: string;
+    type: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Sessions {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1039,12 +1147,19 @@ export interface DB {
     BankConnectionAccounts: BankConnectionAccounts;
     BankConnections: BankConnections;
     BankSyncRuns: BankSyncRuns;
+    BillingInvoices: BillingInvoices;
+    BillingNotifications: BillingNotifications;
+    BillingPendingCancellations: BillingPendingCancellations;
+    BillingPriceQuotes: BillingPriceQuotes;
+    BillingRefundRequests: BillingRefundRequests;
+    BillingSubscriptions: BillingSubscriptions;
     CalendarConnections: CalendarConnections;
     CalendarEventsCreated: CalendarEventsCreated;
     CalendarOAuthStates: CalendarOAuthStates;
     CatalogSyncRuns: CatalogSyncRuns;
     CategoryRules: CategoryRules;
     Companies: Companies;
+    CompanyBillingStandings: CompanyBillingStandings;
     CompanyCapabilities: CompanyCapabilities;
     CompanyProductLimits: CompanyProductLimits;
     CompanyProducts: CompanyProducts;
@@ -1081,6 +1196,8 @@ export interface DB {
     RecurringSuppressions: RecurringSuppressions;
     ReminderOccurrences: ReminderOccurrences;
     Reminders: Reminders;
+    RevtrieverEventCursors: RevtrieverEventCursors;
+    RevtrieverEvents: RevtrieverEvents;
     Sessions: Sessions;
     SignupEmailMarks: SignupEmailMarks;
     SignupLinks: SignupLinks;
