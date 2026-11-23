@@ -3,20 +3,18 @@ import { UsingTransaction } from '../../../core/database/using-transaction.decor
 import { CategoryReaderService, SpendingCategory } from '../../spending-categories/services/category-reader.service';
 import { CategoryRuleService } from '../../spending-categories/services/category-rule.service';
 import { TransactionCategorizerService } from '../../spending-categories/services/transaction-categorizer.service';
-import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { CategoryKindMismatchError, InvalidCorrectionRuleError } from '../domain/transactions.errors';
-import { toTransactionView } from '../domain/transaction.mapper';
 import {
     CATEGORY_ORIGINS,
     CategorizationOutcome,
-    FinancialAccount,
     LABEL_MAX_LENGTH,
     RULE_SCOPES,
     RuleScope,
     Transaction,
     TransactionView
 } from '../domain/transactions.types';
+import { TransactionViewService } from '../services/transaction-view.service';
 import { TransactionsLogService } from '../services/transactions-log.service';
 import { TransactionsMetricsService } from '../services/transactions-metrics.service';
 import { TransactionsRecategorizationDriver } from '../services/transactions-recategorization.driver';
@@ -61,13 +59,13 @@ function toRuleSummary(rule: SavedRule): RuleSummary {
 export class TransactionRecategorizeApplication {
     public constructor(
         private readonly transactions: TransactionDomain,
-        private readonly accounts: FinancialAccountDomain,
         private readonly categories: CategoryReaderService,
         private readonly rules: CategoryRuleService,
         private readonly categorizer: TransactionCategorizerService,
         private readonly driver: TransactionsRecategorizationDriver,
         private readonly logs: TransactionsLogService,
-        private readonly metrics: TransactionsMetricsService
+        private readonly metrics: TransactionsMetricsService,
+        private readonly views: TransactionViewService
     ) {}
 
     @UsingTransaction()
@@ -81,8 +79,8 @@ export class TransactionRecategorizeApplication {
         const recategorized: number = rule === null ? 0 : await this.driver.recategorize({ kind: 'rule_saved', ruleId: rule.id });
         this.logs.recategorized(id, rule !== null && rule.createdAt.getTime() === rule.updatedAt.getTime(), recategorized);
         this.metrics.recategorized('manual', 1);
-        const account: FinancialAccount = await this.accounts.require(updated.accountId);
-        return { transaction: toTransactionView(updated, account.name), rule: rule === null ? null : toRuleSummary(rule), recategorized };
+        const [transaction] = await this.views.of([updated]);
+        return { transaction: transaction as TransactionView, rule: rule === null ? null : toRuleSummary(rule), recategorized };
     }
 
     private async applyCategory(current: Transaction, categoryId: string | null): Promise<Transaction> {

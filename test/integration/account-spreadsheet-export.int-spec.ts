@@ -78,6 +78,15 @@ describe('account spreadsheet export', () => {
         });
     }
 
+    async function markRecurring(owner: Account, externalId: string): Promise<void> {
+        const found = await harness.pg.query<{ id: string }>(
+            `SELECT "id" FROM "Transactions" WHERE "companyId" = $1 AND "externalId" = $2`,
+            [owner.company.id, externalId]
+        );
+        const created = await harness.call(owner.token, 'POST', '/spending/recurring', { fromTransactionId: found.rows[0]?.id });
+        expect(created.status).toBe(201);
+    }
+
     async function zipOf(response: RawResponse): Promise<JSZip> {
         return JSZip.loadAsync(response.bytes);
     }
@@ -105,6 +114,8 @@ describe('account spreadsheet export', () => {
         const b: Account = await harness.signUp('zip-b');
         await seed(a, 'aaa');
         await seed(b, 'bbb');
+        await markRecurring(a, 'pluggy:aaa-1');
+        await markRecurring(b, 'pluggy:bbb-1');
 
         const response: RawResponse = await harness.callRaw(a.token, PATH);
 
@@ -114,6 +125,7 @@ describe('account spreadsheet export', () => {
         const zip: JSZip = await zipOf(response);
         expect(Object.keys(zip.files).sort()).toEqual([
             'agenda.xlsx',
+            'assinaturas-e-contas.xlsx',
             'carteira.xlsx',
             'dados.json',
             'lembretes.xlsx',
@@ -128,13 +140,23 @@ describe('account spreadsheet export', () => {
         const rules: string[] = textsOf((await sheetsOf(zip, 'regras.xlsx'))[0] as Worksheet);
         expect(rules).toContain('petz aaa');
         expect(rules.join('|')).not.toContain('bbb');
+        const recurring: Worksheet[] = await sheetsOf(zip, 'assinaturas-e-contas.xlsx');
+        expect(recurring.map((sheet: Worksheet) => sheet.name)).toEqual(['Assinaturas e contas']);
+        const recurringTexts: string[] = textsOf(recurring[0] as Worksheet);
+        expect(recurringTexts).toContain('Compra Aaa');
+        expect(recurringTexts).toContain('Confirmada');
+        expect(recurringTexts.join('|')).not.toContain('bbb');
         const goals: Worksheet[] = await sheetsOf(zip, 'metas.xlsx');
         expect(goals.map((sheet: Worksheet) => sheet.name)).toEqual(['Classes', 'Metas por ativo', 'Preferências']);
-        const json: { format: string; account: { company: { name: string } } } = JSON.parse(
-            await (zip.file('dados.json') as JSZip.JSZipObject).async('string')
-        );
+        const json: {
+            format: string;
+            account: { company: { name: string } };
+            sections: { recurring: { series: { name: string; account: string; charges: unknown[] }[] } };
+        } = JSON.parse(await (zip.file('dados.json') as JSZip.JSZipObject).async('string'));
         expect(json.format).toBe('vera-export/1');
         expect(json.account.company.name).toBe('Empresa zip-a');
+        expect(json.sections.recurring.series.map((item) => [item.name, item.account])).toEqual([['Compra Aaa', 'Conta aaa']]);
+        expect(json.sections.recurring.series[0]?.charges).toHaveLength(1);
         expect(JSON.stringify(json)).not.toContain('bbb');
 
         for (let call: number = 1; call < EXPORTS_PER_HOUR; call += 1) {
@@ -158,6 +180,7 @@ describe('account spreadsheet export', () => {
         const transactions: Worksheet = (await sheetsOf(zip, 'transacoes.xlsx'))[0] as Worksheet;
         expect(transactions.rowCount).toBe(1);
         expect((await sheetsOf(zip, 'carteira.xlsx'))[0]?.rowCount).toBe(1);
+        expect((await sheetsOf(zip, 'assinaturas-e-contas.xlsx'))[0]?.rowCount).toBe(1);
         expect((await harness.callRaw(viewer.token, PATH)).status).toBe(403);
         expect((await harness.callRaw(null, PATH)).status).toBe(401);
     });

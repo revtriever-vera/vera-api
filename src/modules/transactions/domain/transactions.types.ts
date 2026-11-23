@@ -228,6 +228,7 @@ export interface TransactionView {
     readonly source: TransactionSource;
     readonly installment: { readonly number: number; readonly total: number } | null;
     readonly isSample: boolean;
+    readonly isRecurring: boolean;
 }
 
 export interface AccountView {

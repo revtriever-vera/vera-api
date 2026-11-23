@@ -11,13 +11,19 @@ import { SpendingCategoriesAccountExporter } from '../../../src/modules/spending
 import { BankConnectionsExporter } from '../../../src/modules/bank-connections/services/bank-connections.exporter';
 import { PluggyCredentialsEraser } from '../../../src/modules/bank-connections/services/pluggy-credentials.eraser';
 import { BanksOnboardingSummary } from '../../../src/modules/bank-connections/services/banks-onboarding.summary';
+import { RecurringAccountExporter } from '../../../src/modules/recurring/services/recurring-account.exporter';
+import { RecurringSampleDataService } from '../../../src/modules/recurring/services/recurring-sample-data.service';
 import { SpendingSettingsAccountExporter } from '../../../src/modules/spending-summary/services/spending-settings-account.exporter';
 import { SpendingSampleDataService } from '../../../src/modules/transactions/services/spending-sample-data.service';
 import { TransactionsAccountExporter } from '../../../src/modules/transactions/services/transactions-account.exporter';
 import { PositionsSampleDataService } from '../../../src/modules/positions/services/positions-sample-data.service';
 
 export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
-    return withoutSpendingPorts(withoutPortfolioPorts(builder));
+    return withoutRecurringPorts(withoutSpendingPorts(withoutPortfolioPorts(builder)));
+}
+
+function withoutRecurringPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
+    return builder.overrideProvider(RecurringAccountExporter).useValue({}).overrideProvider(RecurringSampleDataService).useValue({});
 }
 
 function withoutPortfolioPorts(builder: TestingModuleBuilder): TestingModuleBuilder {

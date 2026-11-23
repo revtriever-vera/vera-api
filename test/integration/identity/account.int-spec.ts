@@ -145,6 +145,7 @@ describe('identity account deletion and export', () => {
         flakyEraser.failing = false;
         exporter.failing = false;
         publisher.published.length = 0;
+        publisher.removed.length = 0;
     });
 
     const inCompany = async <T>(companyId: string, fn: () => Promise<T>): Promise<T> =>
@@ -211,6 +212,9 @@ describe('identity account deletion and export', () => {
         expect(await countsOf(b.company.id)).toEqual(beforeB);
         expect(stableEraser.erased).toContain(a.company.id);
         expect(stableEraser.erased).not.toContain(b.company.id);
+        const cancelled: string[] = publisher.removed.map((job) => job.jobId);
+        expect(cancelled.some((jobId: string) => jobId.startsWith(`recurring-detect-${a.company.id}-`))).toBe(true);
+        expect(cancelled.some((jobId: string) => jobId.includes(b.company.id))).toBe(false);
 
         const trail: AccountDeletionRecord[] = await deletionLog.findByCompanyId(a.company.id);
         expect(trail).toHaveLength(1);
@@ -336,16 +340,10 @@ describe('identity account deletion and export', () => {
         expect(body.account.company.name).toBe('Empresa export-a');
         expect(body.account.identities).toEqual([{ provider: 'google', createdAt: expect.any(String), lastLoginAt: expect.any(String) }]);
         expect(body.account.sessions).toHaveLength(2);
-        expect(body.sections).toEqual({
-            ai_summaries: [],
-            invites: [],
-            notices: { preferences: [] },
-            signup_offer: null,
-            usage: [],
-            whatsapp: { messages: [] },
-            whatsapp_links: { links: [] },
-            notes: { owner: a.company.id, items: ['item-of-this-company'] }
-        });
+        const registered: string[] = app.get(AccountDataRegistry, { strict: false }).exportAreas();
+        expect(registered).toContain('notes');
+        expect(Object.keys(body.sections).sort()).toEqual([...registered].sort());
+        expect(body.sections['notes']).toEqual({ owner: a.company.id, items: ['item-of-this-company'] });
         expect(text).not.toContain('tokenHash');
         expect(text).not.toContain('subject');
         expect(text).not.toContain(b.user.email);

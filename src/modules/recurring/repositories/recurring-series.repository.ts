@@ -24,6 +24,20 @@ export class RecurringSeriesRepository extends TenantRepository<'RecurringSeries
         return this.findMany({}, { limit: SERIES_LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
     }
 
+    public async listByIds(ids: readonly string[]): Promise<SeriesRow[]> {
+        return ids.length === 0 ? [] : this.findMany({ id: [...ids] }, { limit: SERIES_LIST_LIMIT });
+    }
+
+    public async listByAccountIds(accountIds: readonly string[]): Promise<SeriesRow[]> {
+        return accountIds.length === 0 ? [] : this.findMany({ accountId: [...accountIds] }, { limit: SERIES_LIST_LIMIT });
+    }
+
+    public async softDeleteMany(ids: readonly string[]): Promise<void> {
+        if (ids.length > 0) {
+            await this.updateManyRows({ id: [...ids] }, { deletedAt: new Date() });
+        }
+    }
+
     public async countAll(): Promise<number> {
         const row: { total: string | number | bigint } | undefined = await this.selectScoped()
             .select((builder) => builder.fn.countAll().as('total'))

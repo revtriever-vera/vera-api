@@ -24,4 +24,10 @@ export class RecurringSuppressionsRepository extends TenantRepository<'Recurring
     public async softDeleteBySeries(seriesId: string): Promise<void> {
         await this.updateManyRows({ seriesId }, { deletedAt: new Date() });
     }
+
+    public async softDeleteBySeriesIds(seriesIds: readonly string[]): Promise<void> {
+        if (seriesIds.length > 0) {
+            await this.updateManyRows({ seriesId: [...seriesIds] }, { deletedAt: new Date() });
+        }
+    }
 }

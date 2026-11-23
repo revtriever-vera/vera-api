@@ -651,4 +651,78 @@ describe('recurring', () => {
         expect([zero.status, huge.status]).toEqual([400, 400]);
         expect(foreign.body).toEqual([]);
     });
+
+    interface ListedTransaction {
+        readonly description: string;
+        readonly isRecurring: boolean;
+    }
+
+    it('a lista de transações marca com o selo só as cobranças de série confirmada, não as da sugestão', async () => {
+        const { owner } = await seeded('badge');
+        await detect(owner);
+        const netflix: string = find(await seriesOf(owner), 'Netflix').id;
+        await harness.call(owner.token, 'POST', `/spending/recurring/${netflix}/confirm`, confirmBody({ name: 'Netflix' }));
+
+        const listed = await harness.call<{ data: ListedTransaction[] }>(
+            owner.token,
+            'GET',
+            `/spending/transactions?from=${daysAgo(100)}&to=${TODAY}&pageSize=200`
+        );
+
+        expect(listed.status).toBe(200);
+        const flags = (description: string): boolean[] =>
+            listed.body.data.filter((item) => item.description === description).map((item) => item.isRecurring);
+        expect(flags('NETFLIX.COM')).toEqual([true, true, true, true]);
+        expect(flags('STUDIO AURORA PILATES')).toEqual([false, false, false, false]);
+    });
+
+    it('a série confirmada de uma company não põe selo nas transações da outra', async () => {
+        const mine = await seeded('badge-undo');
+        const theirs = await seeded('badge-foreign');
+        await detect(mine.owner);
+        await detect(theirs.owner);
+        const netflix: string = find(await seriesOf(theirs.owner), 'Netflix').id;
+        await harness.call(theirs.owner.token, 'POST', `/spending/recurring/${netflix}/confirm`, confirmBody({ name: 'Netflix' }));
+
+        const listed = await harness.call<{ data: ListedTransaction[] }>(
+            mine.owner.token,
+            'GET',
+            `/spending/transactions?from=${daysAgo(100)}&to=${TODAY}&pageSize=200`
+        );
+
+        expect(listed.body.data.length).toBeGreaterThan(0);
+        expect(listed.body.data.every((item) => !item.isRecurring)).toBe(true);
+    });
+
+    it('os dados de exemplo ganham séries sugeridas, e limpar o exemplo apaga séries, cobranças e supressões', async () => {
+        const owner: Account = await harness.signUp('sample-series');
+
+        const loaded = await harness.call(owner.token, 'POST', '/onboarding/sample');
+        const overview = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+        const names: string[] = overview.body.review.map((item) => item.name);
+        const dismissed = await harness.call(
+            owner.token,
+            'POST',
+            `/spending/recurring/${find(await seriesOf(owner), 'Netflix').id}/dismiss`
+        );
+        const cleared = await harness.call(owner.token, 'DELETE', '/onboarding/sample');
+        const after = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
+        const leftovers = await harness.pg.query<{ table: string; total: string }>(
+            `SELECT 'series' AS "table", count(*) AS total FROM "RecurringSeries" WHERE "companyId" = $1 AND "deletedAt" IS NULL
+             UNION ALL SELECT 'charges', count(*) FROM "RecurringCharges" WHERE "companyId" = $1 AND "deletedAt" IS NULL
+             UNION ALL SELECT 'suppressions', count(*) FROM "RecurringSuppressions" WHERE "companyId" = $1 AND "deletedAt" IS NULL`,
+            [owner.company.id]
+        );
+
+        expect(loaded.status).toBe(200);
+        expect(names).toEqual(expect.arrayContaining(['Netflix', 'Spotify']));
+        expect(dismissed.status).toBe(200);
+        expect(cleared.status).toBe(200);
+        expect([after.body.review, after.body.confirmed]).toEqual([[], []]);
+        expect(leftovers.rows.map((row) => [row.table, Number(row.total)])).toEqual([
+            ['series', 0],
+            ['charges', 0],
+            ['suppressions', 0]
+        ]);
+    });
 });

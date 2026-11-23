@@ -40,6 +40,12 @@ export class RecurringAlertsRepository extends TenantRepository<'RecurringAlerts
         return this.updateRow(id, { seenAt: at });
     }
 
+    public async softDeleteBySeriesIds(seriesIds: readonly string[]): Promise<void> {
+        if (seriesIds.length > 0) {
+            await this.updateManyRows({ seriesId: [...seriesIds] }, { deletedAt: new Date() });
+        }
+    }
+
     public async softDeleteMany(ids: readonly string[]): Promise<void> {
         if (ids.length > 0) {
             await this.updateManyRows({ id: [...ids] }, { deletedAt: new Date() });

@@ -82,6 +82,13 @@ function editsPatch(edits: SeriesEdits): SeriesPatch {
     };
 }
 
+export interface ExportedSuppression {
+    readonly seriesId: string | null;
+    readonly merchantKey: string;
+    readonly typicalAmountMinor: number;
+    readonly createdAt: Date;
+}
+
 @Injectable()
 export class RecurringSeriesDomain {
     public constructor(
@@ -155,6 +162,44 @@ export class RecurringSeriesDomain {
             merchantKey: row.merchantKey,
             typicalAmountMinor: Number(row.typicalAmountMinor)
         }));
+    }
+
+    public async exportSuppressions(): Promise<ExportedSuppression[]> {
+        return (await this.suppressions.listAll()).map((row: SuppressionRow): ExportedSuppression => ({
+            seriesId: row.seriesId,
+            merchantKey: row.merchantKey,
+            typicalAmountMinor: Number(row.typicalAmountMinor),
+            createdAt: new Date(row.createdAt)
+        }));
+    }
+
+    public async exportCharges(): Promise<StoredCharge[]> {
+        return (await this.charges.listAll()).map(storedChargeOf);
+    }
+
+    public async confirmedChargeTransactionIds(transactionIds: readonly string[]): Promise<Set<string>> {
+        const links: ChargeRow[] = (await this.charges.listByTransactionIds(transactionIds)).filter(
+            (row: ChargeRow): boolean => row.role === CHARGE_ROLES.charge
+        );
+        const confirmed: Set<string> = new Set<string>(
+            (await this.series.listByIds([...new Set<string>(links.map((row: ChargeRow): string => row.seriesId))]))
+                .filter((row: SeriesRow): boolean => row.status === SERIES_STATUSES.confirmed)
+                .map((row: SeriesRow): string => row.id)
+        );
+        return new Set<string>(
+            links.filter((row: ChargeRow): boolean => confirmed.has(row.seriesId)).map((row: ChargeRow): string => row.transactionId)
+        );
+    }
+
+    public async removeOfAccounts(accountIds: readonly string[]): Promise<string[]> {
+        const ids: string[] = (await this.series.listByAccountIds(accountIds)).map((row: SeriesRow): string => row.id);
+        if (ids.length === 0) {
+            return [];
+        }
+        await this.charges.softDeleteMany((await this.charges.listBySeriesIds(ids)).map((row: ChargeRow): string => row.id));
+        await this.suppressions.softDeleteBySeriesIds(ids);
+        await this.series.softDeleteMany(ids);
+        return ids;
     }
 
     public async excludedTransactionIds(): Promise<string[]> {

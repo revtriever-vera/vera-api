@@ -26,7 +26,8 @@ describe('transaction mapper', () => {
                 installmentTotal: 5,
                 counterpartyName: 'Maria Souza'
             }),
-            'Nubank'
+            'Nubank',
+            true
         );
 
         expect(view).toMatchObject({
@@ -37,9 +38,11 @@ describe('transaction mapper', () => {
             categorySource: 'user',
             source: 'ofx',
             installment: { number: 2, total: 5 },
-            counterpartyName: 'Maria Souza'
+            counterpartyName: 'Maria Souza',
+            isRecurring: true
         });
-        expect(toTransactionView(makeTransaction(), 'X').installment).toBeNull();
+        expect(toTransactionView(makeTransaction(), 'X', false)).toMatchObject({ isRecurring: false });
+        expect(toTransactionView(makeTransaction(), 'X', false).installment).toBeNull();
     });
 
     it('monta a visão da conta pela origem e pelas estatísticas', () => {

@@ -36,4 +36,14 @@ describe('RecurringDetectPublisherService', () => {
             }
         );
     });
+
+    it('cancela o job da janela atual e o da próxima, para não deixar detecção pendente de uma company apagada', async () => {
+        const remove: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
+        const service: RecurringDetectPublisherService = new RecurringDetectPublisherService({ remove } as unknown as QueuePublisherPort);
+
+        await service.cancel('c1', 40 * WINDOW + 100_000);
+
+        expect(remove).toHaveBeenNthCalledWith(1, QUEUES.recurring, 'recurring-detect-c1-40');
+        expect(remove).toHaveBeenNthCalledWith(2, QUEUES.recurring, 'recurring-detect-c1-41');
+    });
 });
