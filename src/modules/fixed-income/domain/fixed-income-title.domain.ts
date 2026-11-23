@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { FixedIncomeTitlesRepository } from '../repositories/fixed-income-titles.repository';
 import { toFixedIncomeTitle } from './fixed-income-title.mapper';
 import { FixedIncomeTitle, FixedIncomeTitleRow, TAX_REGIME_BY_KIND, TitleTerms } from './fixed-income.types';
 
-export type TitleDraft = TitleTerms & { readonly name: string; readonly issuerId: string | null };
+export type TitleDraft = TitleTerms & { readonly name: string; readonly issuerId: string | null; readonly holderUserId: string | null };
 
 @Injectable()
 export class FixedIncomeTitleDomain {
@@ -36,6 +37,14 @@ export class FixedIncomeTitleDomain {
 
     public async listAll(): Promise<FixedIncomeTitle[]> {
         return (await this.titles.listAll()).map(toFixedIncomeTitle);
+    }
+
+    public async listByHolder(filter: HolderFilter): Promise<FixedIncomeTitle[]> {
+        return (await this.titles.listByHolder(filter)).map(toFixedIncomeTitle);
+    }
+
+    public async clearHolder(userId: string): Promise<number> {
+        return (await this.titles.clearHolder(userId)).length;
     }
 
     public async count(): Promise<number> {

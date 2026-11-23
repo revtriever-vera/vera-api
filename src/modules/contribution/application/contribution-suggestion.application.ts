@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { PortfolioSnapshot, PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
 import { ContributionTargetsNotSetError } from '../domain/contribution.errors';
 import { ClassSuggestion, ContributionSuggestion } from '../domain/contribution.types';
@@ -16,7 +17,7 @@ export class ContributionSuggestionApplication {
     ) {}
 
     public async suggest(amountMinor: number): Promise<SuggestResponse> {
-        const snapshot: PortfolioSnapshot = await this.snapshots.build();
+        const snapshot: PortfolioSnapshot = await this.snapshots.build(ANY_HOLDER);
         const suggestion: ContributionSuggestion = this.compute(snapshot, amountMinor);
         this.metrics.suggestion('ok');
         this.logs.suggested({

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { buildSnapshot } from '../domain/portfolio-snapshot';
 import { OrphanHolding, PortfolioSnapshot, PortfolioSourceData } from '../domain/portfolio.types';
 import { PortfolioSourcePort } from '../ports/portfolio-source.port';
@@ -25,9 +26,9 @@ export class PortfolioSnapshotService {
         private readonly metrics: PortfolioMetricsService
     ) {}
 
-    public async build(): Promise<PortfolioSnapshot> {
+    public async build(filter: HolderFilter): Promise<PortfolioSnapshot> {
         const startedAt: number = performance.now();
-        const data: PortfolioSourceData = await this.source.load();
+        const data: PortfolioSourceData = await this.source.load(filter);
         const snapshot: PortfolioSnapshot = buildSnapshot(data);
         this.report(snapshot, Math.round(performance.now() - startedAt));
         return snapshot;

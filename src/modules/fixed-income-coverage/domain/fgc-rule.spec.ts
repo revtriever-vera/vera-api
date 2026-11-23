@@ -16,6 +16,7 @@ function holding(id: string, valueMinor: number, overrides: Partial<FgcHolding> 
         estimated: false,
         matured: false,
         treasury: false,
+        holderUserId: null,
         issuer: BTG,
         ...overrides
     };

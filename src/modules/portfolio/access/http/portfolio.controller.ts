@@ -1,7 +1,8 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
-import { ApiZodResponse } from '../../../../core/http/api-zod.decorators';
+import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
+import { holderFilterOf } from '../../../../shared/holder/holder-filter';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PortfolioViewApplication } from '../../application/portfolio-view.application';
@@ -12,7 +13,9 @@ import {
     HoldingsResponse,
     holdingsResponseSchema,
     OverviewResponse,
-    overviewResponseSchema
+    overviewResponseSchema,
+    PortfolioHolderQueryDto,
+    portfolioHolderQuerySchema
 } from '../../validation/portfolio.schemas';
 
 const UNAUTHORIZED: string = 'Missing or invalid access token (identity.unauthorized)';
@@ -33,14 +36,15 @@ export class PortfolioController {
             'of the data (missing or old quote, estimate, missing exchange rate). Nothing is stored: the value is computed on every read ' +
             'from quantity x latest quote, or from the curve for fixed income, converted by the latest PTAX. Ordered by class and value.'
     })
+    @ApiZodQuery(portfolioHolderQuerySchema)
     @ApiZodResponse({ status: 200, description: 'Holdings of the company', schema: holdingsResponseSchema })
     @ApiProblemResponse({
         status: 401,
         description: UNAUTHORIZED,
         example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
     })
-    public async holdings(): Promise<HoldingsResponse> {
-        return this.portfolio.holdings();
+    public async holdings(@Query() query: PortfolioHolderQueryDto): Promise<HoldingsResponse> {
+        return this.portfolio.holdings(holderFilterOf(query.holder));
     }
 
     @Get('overview')
@@ -51,14 +55,15 @@ export class PortfolioController {
             'and the gap to the target. Also returns the class with the largest deviation and counters of data quality. All values ' +
             'are integers in the minor unit of the base currency and every share is in basis points.'
     })
+    @ApiZodQuery(portfolioHolderQuerySchema)
     @ApiZodResponse({ status: 200, description: 'Overview of the company portfolio', schema: overviewResponseSchema })
     @ApiProblemResponse({
         status: 401,
         description: UNAUTHORIZED,
         example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
     })
-    public async overview(): Promise<OverviewResponse> {
-        return this.portfolio.overview();
+    public async overview(@Query() query: PortfolioHolderQueryDto): Promise<OverviewResponse> {
+        return this.portfolio.overview(holderFilterOf(query.holder));
     }
 
     @Get('classes/:classId')
@@ -69,6 +74,7 @@ export class PortfolioController {
             'when none is set), deviation, status and gap. Positions with quantity zero appear with 0%.'
     })
     @ApiParam({ name: 'classId', format: 'uuid', description: 'Asset class id' })
+    @ApiZodQuery(portfolioHolderQuerySchema)
     @ApiZodResponse({ status: 200, description: 'Class with its holdings', schema: classDetailResponseSchema })
     @ApiProblemResponse({
         status: 401,
@@ -80,7 +86,7 @@ export class PortfolioController {
         description: NOT_FOUND,
         example: { type: 'allocation.class_not_found', title: 'PortfolioClassNotFoundError', status: 404 }
     })
-    public async classDetail(@Param() params: ClassIdParamsDto): Promise<ClassDetailResponse> {
-        return this.portfolio.classDetail(params.classId);
+    public async classDetail(@Param() params: ClassIdParamsDto, @Query() query: PortfolioHolderQueryDto): Promise<ClassDetailResponse> {
+        return this.portfolio.classDetail(params.classId, holderFilterOf(query.holder));
     }
 }

@@ -1,10 +1,15 @@
 import { AppLocale } from '../../../shared/i18n/locale';
 import { spreadsheetSafeText } from '../../../shared/spreadsheet/spreadsheet-safe-text';
-import { sourceLabelOf, titleKindLabelOf } from './export-labels';
+import { sourceLabelOf, titleKindLabelOf, wholeAccountLabelOf } from './export-labels';
 import { ExportClassInput, ExportHoldingInput, ExportIssuerInput, ExportRow, ExportSnapshotInput, ExportTable } from './export.types';
 
 function classNameOf(classId: string | null, names: ReadonlyMap<string, string>): string {
     return classId === null ? '' : (names.get(classId) ?? '');
+}
+
+function holderLabelOf(holderUserId: string | null, holders: ReadonlyMap<string, string>, locale: AppLocale): string {
+    const name: string | undefined = holderUserId === null ? undefined : holders.get(holderUserId);
+    return name === undefined ? wholeAccountLabelOf(locale) : spreadsheetSafeText(name);
 }
 
 function issuerOf(issuerId: string | null, issuers: ReadonlyMap<string, ExportIssuerInput>): ExportIssuerInput {
@@ -25,7 +30,8 @@ export function buildExportRows(snapshot: ExportSnapshotInput, locale: AppLocale
         quantity: holding.quantity,
         quantityDecimals: holding.quantityDecimals,
         valueMinor: holding.valueMinor,
-        valueSourceLabel: sourceLabelOf(holding.valueSource, locale)
+        valueSourceLabel: sourceLabelOf(holding.valueSource, locale),
+        holderLabel: holderLabelOf(holding.holderUserId, snapshot.holders, locale)
     }));
 }
 

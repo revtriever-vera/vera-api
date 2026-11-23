@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { ANY_HOLDER, HolderFilter } from '../../../shared/holder/holder-filter';
 import { FixedIncomeValuationService, ValuedTitle } from '../../fixed-income/services/fixed-income-valuation.service';
 import { ScheduleSourceService, ScheduleTreasury } from '../../fixed-income-schedule/services/schedule-source.service';
 import { IssuerDirectoryService, ResolvedIssuer } from '../../issuers/services/issuer-directory.service';
 import { computeCoverage, FgcResult, simulate } from '../domain/fgc-rule';
-import { FGC_CAP_MINOR, FGC_CURRENCY, FGC_LIMIT_PER_GROUP_MINOR } from '../domain/fgc.constants';
+import { FGC_CURRENCY } from '../domain/fgc.constants';
 import { FgcIssuerKindMismatchError, FgcUnknownIssuerError } from '../domain/fgc.errors';
-import { FgcCoverage, FgcHolding, FgcIssuer, FgcSimulation, FgcSimulationInput } from '../domain/fgc.types';
+import { FgcCoverage, FgcHolderBlock, FgcHolding, FgcIssuer, FgcSimulation, FgcSimulationInput } from '../domain/fgc.types';
 
 const NO_ISSUER: null = null;
 
@@ -18,21 +19,18 @@ export class FgcCoverageService {
         private readonly issuers: IssuerDirectoryService
     ) {}
 
-    public async coverage(): Promise<FgcCoverage> {
+    public async coverage(filter: HolderFilter): Promise<FgcCoverage> {
         const now: Date = new Date();
         const asOf: string = FixedIncomeValuationService.referenceDate(now);
-        const result: FgcResult = computeCoverage(await this.holdings(now, asOf));
+        const byHolder: Map<string | null, FgcHolding[]> = new Map<string | null, FgcHolding[]>();
+        for (const holding of await this.holdings(now, asOf, filter)) {
+            byHolder.set(holding.holderUserId, [...(byHolder.get(holding.holderUserId) ?? []), holding]);
+        }
         return {
-            currency: FGC_CURRENCY as 'BRL',
-            scope: 'account',
-            peopleCount: 1,
-            limitPerGroupMinor: FGC_LIMIT_PER_GROUP_MINOR,
-            capMinor: FGC_CAP_MINOR,
-            coveredMinor: result.coveredMinor,
-            capShareBps: result.capShareBps,
-            groups: result.groups,
-            outside: result.outside,
-            asOf
+            asOf,
+            blocks: [...byHolder].map(([holderUserId, holdings]: [string | null, FgcHolding[]]): FgcHolderBlock =>
+                this.blockOf(holderUserId, holdings)
+            )
         };
     }
 
@@ -45,7 +43,7 @@ export class FgcCoverageService {
             throw new FgcIssuerKindMismatchError(input.kind, issuer.kind);
         }
         const now: Date = new Date();
-        const holdings: FgcHolding[] = await this.holdings(now, FixedIncomeValuationService.referenceDate(now));
+        const holdings: FgcHolding[] = await this.holdings(now, FixedIncomeValuationService.referenceDate(now), ANY_HOLDER);
         return simulate(holdings, {
             issuer: this.issuerOf(issuer),
             kind: input.kind,
@@ -54,10 +52,10 @@ export class FgcCoverageService {
         });
     }
 
-    private async holdings(now: Date, today: string): Promise<FgcHolding[]> {
+    private async holdings(now: Date, today: string, filter: HolderFilter): Promise<FgcHolding[]> {
         const [titles, treasuries]: [readonly ValuedTitle[], readonly ScheduleTreasury[]] = await Promise.all([
-            this.valuation.valueAll(now),
-            this.source.loadTreasuries()
+            this.valuation.valueAll(now, filter),
+            this.source.loadTreasuries(filter)
         ]);
         return [
             ...titles.map((entry: ValuedTitle): FgcHolding => this.titleHolding(entry)),
@@ -77,6 +75,7 @@ export class FgcCoverageService {
             estimated: entry.valuation.estimated || entry.valuation.status === 'index_data_missing',
             matured: entry.valuation.matured,
             treasury: false,
+            holderUserId: entry.title.holderUserId,
             issuer: issuer === null ? NO_ISSUER : this.issuerOf(issuer)
         };
     }
@@ -91,7 +90,19 @@ export class FgcCoverageService {
             estimated: treasury.valueTodayMinor === null,
             matured: treasury.maturityDate < today,
             treasury: true,
+            holderUserId: treasury.holderUserId,
             issuer: NO_ISSUER
+        };
+    }
+
+    private blockOf(holderUserId: string | null, holdings: readonly FgcHolding[]): FgcHolderBlock {
+        const result: FgcResult = computeCoverage(holdings);
+        return {
+            holderUserId,
+            coveredMinor: result.coveredMinor,
+            capShareBps: result.capShareBps,
+            groups: result.groups,
+            outside: result.outside
         };
     }
 

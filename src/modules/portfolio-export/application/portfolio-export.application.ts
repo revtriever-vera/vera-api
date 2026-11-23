@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { AppContext } from '../../../core/context/app-context.port';
+import { DirectoryMember, MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { Issuer, ResolvedIssuer } from '../../issuers/domain/issuer.types';
@@ -22,12 +24,16 @@ export class PortfolioExportApplication {
         private readonly context: AppContext,
         private readonly logs: PortfolioExportLogService,
         private readonly metrics: PortfolioExportMetricsService,
-        private readonly issuers: IssuerDirectoryService
+        private readonly issuers: IssuerDirectoryService,
+        private readonly members: MemberDirectoryService
     ) {}
 
     public async export(format: ExportFormat): Promise<ExportFile> {
         const startedAt: number = performance.now();
-        const table: ExportTable = buildExportTable(this.inputOf(await this.snapshots.build()), this.context.get().locale);
+        const table: ExportTable = buildExportTable(
+            this.inputOf(await this.snapshots.build(ANY_HOLDER), await this.members.list()),
+            this.context.get().locale
+        );
         const content: Buffer = format === EXPORT_FORMATS.csv ? Buffer.from(writeCsv(table), 'utf8') : await this.xlsx.write(table);
         const today: string = await this.timezones.todayInCompany();
         this.logs.exported(format, table.rows.length, Math.round(performance.now() - startedAt));
@@ -40,12 +46,18 @@ export class PortfolioExportApplication {
         };
     }
 
-    private inputOf(snapshot: PortfolioSnapshot): ExportSnapshotInput {
+    private inputOf(snapshot: PortfolioSnapshot, members: readonly DirectoryMember[]): ExportSnapshotInput {
         const issuers: Map<string, ExportIssuerInput> = new Map<string, ExportIssuerInput>();
         for (const holding of snapshot.holdings) {
             this.addIssuer(issuers, holding);
         }
-        return { baseCurrency: snapshot.baseCurrency, holdings: snapshot.holdings, classes: snapshot.classes, issuers };
+        return {
+            baseCurrency: snapshot.baseCurrency,
+            holdings: snapshot.holdings,
+            classes: snapshot.classes,
+            issuers,
+            holders: new Map(members.map((member: DirectoryMember): [string, string] => [member.userId, member.name]))
+        };
     }
 
     private addIssuer(issuers: Map<string, ExportIssuerInput>, holding: Holding): void {

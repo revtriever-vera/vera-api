@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { decimalStringOf } from '../../../shared/utils/decimal.util';
 import { Asset, AssetCatalogService, AssetProfile } from '../../catalog/services/asset-catalog.service';
@@ -40,12 +41,12 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
         super();
     }
 
-    public async load(): Promise<PortfolioSourceData> {
+    public async load(filter: HolderFilter): Promise<PortfolioSourceData> {
         const now: Date = new Date();
         const [positions, titles, classInputs, usdRate]: [readonly Position[], readonly ValuedTitle[], ClassInputs, StoredRate | null] =
             await Promise.all([
-                this.positions.listForCompany(),
-                this.fixedIncome.valueAll(now),
+                this.positions.listForCompany(filter),
+                this.fixedIncome.valueAll(now, filter),
                 this.classInputs.load(),
                 this.rates.latest(USD_CURRENCY, now)
             ]);
@@ -81,7 +82,13 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
     }
 
     private positionOf(position: Position): SourcePosition {
-        return { id: position.id, assetId: position.assetId, quantity: decimalStringOf(position.quantity), isSample: position.isSample };
+        return {
+            id: position.id,
+            assetId: position.assetId,
+            quantity: decimalStringOf(position.quantity),
+            isSample: position.isSample,
+            holderUserId: position.holderUserId
+        };
     }
 
     private assetOf(asset: Asset): SourceAsset {
@@ -117,7 +124,8 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
             matured: entry.valuation.matured,
             source: entry.valuation.source,
             asOf: entry.valuation.asOf,
-            isSample: entry.title.isSample
+            isSample: entry.title.isSample,
+            holderUserId: entry.title.holderUserId
         };
     }
 

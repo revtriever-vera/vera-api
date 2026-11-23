@@ -34,7 +34,8 @@ describe('XlsxWriterService', () => {
             'Conglomerado',
             'Quantidade',
             'Valor (BRL)',
-            'Fonte do valor'
+            'Fonte do valor',
+            'Titular'
         ]);
         expect(sheet.getRow(1).font.bold).toBe(true);
         expect(sheet.views[0]).toMatchObject({ state: 'frozen', ySplit: 1 });

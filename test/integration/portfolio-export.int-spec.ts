@@ -92,20 +92,20 @@ describe('portfolio export', () => {
         const text: string = response.bytes.toString('utf8');
         expect(text.startsWith(BOM)).toBe(true);
         const lines: string[] = linesOf(response);
-        expect(lines[0]).toBe(`${BOM}Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor`);
+        expect(lines[0]).toBe(`${BOM}Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular`);
         expect(lines).toHaveLength(20);
-        expect(lines).toContain('ITUB4;ITUB4;Ações Brasil;;;;2000;75600,00;B3 via brapi');
+        expect(lines).toContain('ITUB4;ITUB4;Ações Brasil;;;;2000;75600,00;B3 via brapi;Conta toda');
         expect(lines.some((line: string) => line.startsWith('CDB Banco;CDB Banco;') && line.includes(';CDB;Banco Pan;BTG Pactual;;'))).toBe(
             true
         );
         expect(lines.some((line: string) => line.startsWith('LCI Banco;') && line.includes(';CDB;;;;'))).toBe(true);
-        expect(lines.some((line: string) => line.startsWith('BTC;') && line.includes(';0,45;') && line.endsWith('CoinGecko'))).toBe(true);
+        expect(lines.some((line: string) => line.startsWith('BTC;') && line.includes(';0,45;') && line.endsWith('CoinGecko;Conta toda'))).toBe(true);
         expect(
-            lines.some((line: string) => line.startsWith('TESOURO-SELIC-2029;') && line.endsWith(';3,2;51840,00;Preço oficial do Tesouro'))
+            lines.some((line: string) => line.startsWith('TESOURO-SELIC-2029;') && line.endsWith(';3,2;51840,00;Preço oficial do Tesouro;Conta toda'))
         ).toBe(true);
         const cdb: string = lines.find((line: string) => line.startsWith('CDB Banco;')) as string;
         expect(cdb.split(';')[6]).toBe('');
-        expect(cdb.endsWith('Curva do CDI (BC)')).toBe(true);
+        expect(cdb.endsWith('Curva do CDI (BC);Conta toda')).toBe(true);
     });
 
     it('bate com a lista de holdings: mesma ordem e mesmos valores, sem id interno', async () => {
@@ -150,7 +150,8 @@ describe('portfolio export', () => {
             'Conglomerado',
             'Quantidade',
             'Valor (BRL)',
-            'Fonte do valor'
+            'Fonte do valor',
+            'Titular'
         ]);
         const rows: Row[] = sheet.getRows(2, 19) ?? [];
         const itub = rows.find((row: Row) => row.getCell(1).value === 'ITUB4');
@@ -176,7 +177,7 @@ describe('portfolio export', () => {
         const xlsx: RawResponse = await download(account, 'xlsx');
 
         expect(csv.status).toBe(200);
-        expect(linesOf(csv)).toEqual([`${BOM}Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor`]);
+        expect(linesOf(csv)).toEqual([`${BOM}Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular`]);
         expect(xlsx.status).toBe(200);
         expect((await sheetOf(xlsx)).rowCount).toBe(1);
     });
@@ -188,8 +189,8 @@ describe('portfolio export', () => {
         const response: RawResponse = await harness.callRaw(token, `${EXPORT_PATH}?format=csv`);
 
         const lines: string[] = linesOf(response);
-        expect(lines[0]).toBe(`${BOM}Asset,Name,Class,Type,Issuer,Group,Quantity,Value (BRL),Value source`);
-        expect(lines).toContain('ITUB4,ITUB4,Brazilian stocks,,,,2000,75600.00,B3 via brapi');
+        expect(lines[0]).toBe(`${BOM}Asset,Name,Class,Type,Issuer,Group,Quantity,Value (BRL),Value source,Holder`);
+        expect(lines).toContain('ITUB4,ITUB4,Brazilian stocks,,,,2000,75600.00,B3 via brapi,Whole account');
         expect(lines.some((line: string) => line.startsWith('BTC,') && line.includes(',0.45,'))).toBe(true);
     });
 

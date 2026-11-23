@@ -62,6 +62,7 @@ export function makeScheduleTreasury(overrides: Partial<ScheduleTreasury> = {}):
         maturityDate: MATURITY_252_BUSINESS_DAYS,
         valueTodayMinor: 1_000_000,
         isSample: false,
+        holderUserId: null,
         ...overrides
     };
 }

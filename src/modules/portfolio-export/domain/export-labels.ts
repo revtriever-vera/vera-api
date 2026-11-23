@@ -10,6 +10,7 @@ export interface ExportHeaders {
     readonly quantity: string;
     readonly value: string;
     readonly valueSource: string;
+    readonly holder: string;
 }
 
 interface LocaleLabels {
@@ -17,6 +18,7 @@ interface LocaleLabels {
     readonly headers: ExportHeaders;
     readonly sources: Readonly<Record<string, string>>;
     readonly titleKinds: Readonly<Record<string, string>>;
+    readonly wholeAccount: string;
 }
 
 export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
@@ -31,7 +33,8 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
             group: 'Conglomerado',
             quantity: 'Quantidade',
             value: 'Valor',
-            valueSource: 'Fonte do valor'
+            valueSource: 'Fonte do valor',
+            holder: 'Titular'
         },
         sources: {
             brapi: 'B3 via brapi',
@@ -44,7 +47,8 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
             curve_pre: 'Taxa contratada',
             curve_ipca: 'IPCA + taxa (BC)'
         },
-        titleKinds: { cdb: 'CDB', lci: 'LCI', lca: 'LCA', lc: 'LC', debenture: 'Debênture', cri: 'CRI', cra: 'CRA' }
+        titleKinds: { cdb: 'CDB', lci: 'LCI', lca: 'LCA', lc: 'LC', debenture: 'Debênture', cri: 'CRI', cra: 'CRA' },
+        wholeAccount: 'Conta toda'
     },
     en: {
         sheetName: 'Portfolio',
@@ -57,7 +61,8 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
             group: 'Group',
             quantity: 'Quantity',
             value: 'Value',
-            valueSource: 'Value source'
+            valueSource: 'Value source',
+            holder: 'Holder'
         },
         sources: {
             brapi: 'B3 via brapi',
@@ -70,7 +75,8 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
             curve_pre: 'Contracted rate',
             curve_ipca: 'IPCA + rate (BC)'
         },
-        titleKinds: { cdb: 'CDB', lci: 'LCI', lca: 'LCA', lc: 'LC', debenture: 'Debenture', cri: 'CRI', cra: 'CRA' }
+        titleKinds: { cdb: 'CDB', lci: 'LCI', lca: 'LCA', lc: 'LC', debenture: 'Debenture', cri: 'CRI', cra: 'CRA' },
+        wholeAccount: 'Whole account'
     }
 };
 
@@ -86,6 +92,10 @@ export function titleKindLabelOf(kind: string, locale: AppLocale): string {
     return EXPORT_LABELS[locale].titleKinds[kind] ?? kind;
 }
 
+export function wholeAccountLabelOf(locale: AppLocale): string {
+    return EXPORT_LABELS[locale].wholeAccount;
+}
+
 export function headerLabelsOf(locale: AppLocale, baseCurrency: string): readonly string[] {
     const headers: ExportHeaders = EXPORT_LABELS[locale].headers;
     return [
@@ -97,6 +107,7 @@ export function headerLabelsOf(locale: AppLocale, baseCurrency: string): readonl
         headers.group,
         headers.quantity,
         `${headers.value} (${baseCurrency})`,
-        headers.valueSource
+        headers.valueSource,
+        headers.holder
     ];
 }

@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { AllocationApplicationModule } from '../../allocation/application/allocation-application.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
+import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { PositionsDomainModule } from '../domain/positions-domain.module';
+import { PositionsHolderDepartureHandler } from '../services/holder-departure.handler';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { PositionReaderService } from '../services/position-reader.service';
 import { PositionsAccountExporter } from '../services/positions-account.exporter';
@@ -12,7 +14,7 @@ import { PositionsMetricsService } from '../services/positions-metrics.service';
 import { PositionApplication } from './position.application';
 
 @Module({
-    imports: [PositionsDomainModule, CatalogApplicationModule, AllocationApplicationModule, ObservabilityModule],
+    imports: [PositionsDomainModule, CatalogApplicationModule, AllocationApplicationModule, IdentityApplicationModule, ObservabilityModule],
     providers: [
         PositionApplication,
         PositionsLogService,
@@ -20,7 +22,8 @@ import { PositionApplication } from './position.application';
         PositionReaderService,
         HeldAssetsService,
         PositionsAccountExporter,
-        PositionsSampleDataService
+        PositionsSampleDataService,
+        PositionsHolderDepartureHandler
     ],
     exports: [PositionApplication, PositionReaderService, HeldAssetsService]
 })

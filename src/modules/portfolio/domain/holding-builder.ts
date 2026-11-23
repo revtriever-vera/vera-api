@@ -83,6 +83,7 @@ export function positionHolding(
         estimated: false,
         matured: false,
         indexDataMissing: false,
+        holderUserId: position.holderUserId,
         ...pricingOf(asset, quote),
         ...flagsOf(position, quote),
         ...amountsOf(valued, asset.currency)
@@ -127,6 +128,7 @@ export function titleHolding(title: SourceTitle, context: ValuationContext): Bar
         issuerGroupId: title.issuerGroupId,
         issuerId: title.issuerId,
         titleKind: title.titleKind,
+        holderUserId: title.holderUserId,
         valueSource: VALUE_SOURCE_BY_PROVIDER[title.source] ?? VALUE_SOURCES.curveCdi,
         priceDate: title.asOf,
         ...NO_QUOTE_FIELDS,

@@ -77,6 +77,7 @@ export interface FixedIncomeTitle extends TitleTerms {
     readonly id: string;
     readonly name: string;
     readonly issuerId: string | null;
+    readonly holderUserId: string | null;
     readonly taxRegime: TaxRegime;
     readonly isSample: boolean;
     readonly createdAt: Date;
@@ -108,6 +109,7 @@ export interface FixedIncomeTitleView {
     readonly appliedAt: string;
     readonly maturityDate: string;
     readonly classId: string;
+    readonly holderUserId: string | null;
     readonly issuer: TitleIssuerView | null;
     readonly needsIssuer: boolean;
     readonly createdAt: string;

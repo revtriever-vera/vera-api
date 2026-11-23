@@ -12,6 +12,7 @@ export interface PositionExport {
     readonly quantity: string;
     readonly averagePrice: string | null;
     readonly classId: string | null;
+    readonly holderUserId: string | null;
     readonly createdAt: string;
 }
 
@@ -42,6 +43,7 @@ export class PositionsAccountExporter extends AccountDataExporterPort {
             quantity: normalizeDecimal(position.quantity),
             averagePrice: position.averagePrice === null ? null : normalizeDecimal(position.averagePrice),
             classId: classByPosition.get(position.id) ?? null,
+            holderUserId: position.holderUserId,
             createdAt: position.createdAt.toISOString()
         }));
     }

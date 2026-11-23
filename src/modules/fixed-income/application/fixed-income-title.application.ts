@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
+import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import type { Issuer, ResolvedIssuer } from '../../issuers/domain/issuer.types';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
@@ -32,11 +33,13 @@ export class FixedIncomeTitleApplication {
         private readonly classResolver: ClassResolverService,
         private readonly assignments: ClassAssignmentService,
         private readonly logs: FixedIncomeLogService,
-        private readonly issuers: IssuerDirectoryService
+        private readonly issuers: IssuerDirectoryService,
+        private readonly members: MemberDirectoryService
     ) {}
 
     public async create(input: CreateFixedIncomeTitleDto): Promise<FixedIncomeTitleView> {
         const draft: TitleDraft = {
+            holderUserId: await this.holderOf(input.holderUserId),
             kind: input.kind,
             name: input.name,
             issuerId: input.issuerId ?? null,
@@ -67,6 +70,7 @@ export class FixedIncomeTitleApplication {
             throw new TitleNotFoundError(id);
         }
         const draft: TitleDraft = { ...current, ...this.definedFields(patch) };
+        await this.holderOf(patch.holderUserId);
         assertValidTerms(draft, DateUtil.todayInBrazil());
         this.assertIssuer(draft);
         const updated: FixedIncomeTitle | null = await this.titles.update(id, draft);
@@ -106,6 +110,13 @@ export class FixedIncomeTitleApplication {
         const classId: string =
             assignments.find((entry) => entry.subjectType === SUBJECT_TYPE && entry.subjectId === title.id)?.classId ?? '';
         return toFixedIncomeTitleView(title, classId, valuation, this.issuerView(title.issuerId));
+    }
+
+    private async holderOf(requested: string | null | undefined): Promise<string | null> {
+        if (requested === undefined || requested === null) {
+            return null;
+        }
+        return (await this.members.requireActive(requested)).userId;
     }
 
     private assertIssuer(draft: TitleDraft): void {

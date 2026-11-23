@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { sql } from 'kysely';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
+import { HolderFilter, holderWhereOf } from '../../../shared/holder/holder-filter';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { NewPosition, Position, PositionPatch } from '../domain/positions.types';
 
-type CreatePositionData = Pick<NewPosition, 'assetId' | 'quantity' | 'averagePrice' | 'isSample'>;
+type CreatePositionData = Pick<NewPosition, 'assetId' | 'quantity' | 'averagePrice' | 'isSample' | 'holderUserId'>;
 
 const POSITION_LIMIT: number = 1000;
+const NO_HOLDER_KEY: string = '00000000-0000-0000-0000-000000000000';
 
 @Injectable()
 export class PositionsRepository extends TenantRepository<'Positions'> {
@@ -18,14 +21,23 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
     public async insertIfAbsent(data: CreatePositionData): Promise<Position | null> {
         const inserted: Position | undefined = await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, ...data })
-            .onConflict((conflict) => conflict.columns(['companyId', 'assetId']).where('deletedAt', 'is', null).doNothing())
+            .onConflict((conflict) =>
+                conflict
+                    .expression(sql`"companyId", "assetId", (COALESCE("holderUserId", ${sql.lit(NO_HOLDER_KEY)}::uuid))`)
+                    .where('deletedAt', 'is', null)
+                    .doNothing()
+            )
             .returningAll()
             .executeTakeFirst();
         return inserted ?? null;
     }
 
-    public async findByAsset(assetId: string): Promise<Position | null> {
-        return this.findOne({ assetId });
+    public async findByAssetAndHolder(assetId: string, holderUserId: string | null): Promise<Position | null> {
+        return this.findOne({ assetId, holderUserId });
+    }
+
+    public async listByHolder(filter: HolderFilter): Promise<Position[]> {
+        return this.findMany(holderWhereOf(filter), { limit: POSITION_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
     }
 
     public async listAll(): Promise<Position[]> {

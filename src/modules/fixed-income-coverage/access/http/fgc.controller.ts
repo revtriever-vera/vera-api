@@ -20,6 +20,7 @@ import {
     fgcSimulateResponseSchema
 } from '../../validation/fgc.schemas';
 
+const INVALID: string = 'Invalid query (zod validation details in meta.errors)';
 const UNAUTHORIZED: string = 'Missing or invalid access token (identity.unauthorized)';
 
 @ApiTags('portfolio')
@@ -38,7 +39,9 @@ export class FgcController {
         summary: 'FGC coverage by conglomerate',
         description:
             'Groups the CDB, LCI, LCA and LC in BRL of banks associated with the FGC by prudential conglomerate and applies the limit ' +
-            'of R$ 250,000 per CPF per conglomerate to the value today (gross of income tax). Matured securities do not count. ' +
+            'of R$ 250,000 per CPF per conglomerate to the value today (gross of income tax), computed per holder ("Conta toda" is a holder ' +
+            'on its own). Filter with `holder=any|all|<userId>`: a single holder answers with its groups; `any` with two or more holders ' +
+            'answers a block per holder in `byHolder` and the total. Matured securities do not count. ' +
             'Holdings the FGC does not cover come back in `outside` with the reason (`not_calculated` is the "Outro emissor" option, not a pending registration). The R$ 1,000,000 cap is a reference only: ' +
             'the real rule is about guarantees paid in 4 years. Amounts are always in BRL.'
     })
@@ -46,8 +49,8 @@ export class FgcController {
     @ApiZodResponse({ status: 200, description: 'Coverage of the account', schema: fgcResponseSchema })
     @ApiProblemResponse({
         status: 400,
-        description: 'holderId informed (fgc.holder_not_supported)',
-        example: { type: 'fgc.holder_not_supported', title: 'FgcHolderNotSupportedError', status: 400 }
+        description: INVALID,
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
     })
     @ApiProblemResponse({
         status: 401,

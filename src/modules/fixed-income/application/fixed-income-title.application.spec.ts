@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
 import { makeTitle } from '../../../../test/support/fixed-income-fixtures';
+import { InvalidHolderError } from '../../identity/domain/members.errors';
+import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { IssuersLogService } from '../../issuers/services/issuers-log.service';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
@@ -51,6 +53,11 @@ function build(options: { count?: number; existing?: boolean; removed?: boolean;
     const assign = vi.fn().mockResolvedValue(undefined);
     const release = vi.fn().mockResolvedValue(undefined);
     const titleChanged = vi.fn();
+    const requireActive = vi
+        .fn()
+        .mockImplementation((userId: string) =>
+            userId === 'outsider' ? Promise.reject(new InvalidHolderError()) : Promise.resolve({ userId, name: 'Ana' })
+        );
     const application = new FixedIncomeTitleApplication(
         titles as unknown as FixedIncomeTitleDomain,
         { valueTitleNow: vi.fn().mockResolvedValue(VALUATION) } as unknown as FixedIncomeValuationService,
@@ -61,9 +68,10 @@ function build(options: { count?: number; existing?: boolean; removed?: boolean;
             listForCompany: vi.fn().mockResolvedValue([{ subjectType: 'fixed_income', subjectId: 'new-1', classId: 'class-suggested' }])
         } as unknown as ClassAssignmentService,
         { titleChanged } as unknown as FixedIncomeLogService,
-        directory()
+        directory(),
+        { requireActive } as unknown as MemberDirectoryService
     );
-    return { application, titles, resolveBySystemKey, assign, release, titleChanged };
+    return { application, titles, requireActive, resolveBySystemKey, assign, release, titleChanged };
 }
 
 describe('FixedIncomeTitleApplication', () => {
@@ -92,6 +100,36 @@ describe('FixedIncomeTitleApplication', () => {
         await doubles.application.create({ ...INPUT, indexer, rateBps });
 
         expect(doubles.resolveBySystemKey).toHaveBeenCalledWith(key);
+    });
+
+    it('grava o titular informado depois de validar que é membro ativo', async () => {
+        const doubles = build();
+
+        await doubles.application.create({ ...INPUT, holderUserId: 'ana' });
+
+        expect(doubles.requireActive).toHaveBeenCalledWith('ana');
+        expect(doubles.titles.create.mock.calls[0]?.[0]).toMatchObject({ holderUserId: 'ana' });
+    });
+
+    it('sem titular o título é da conta toda, e quem não é membro é recusado', async () => {
+        const doubles = build();
+
+        await doubles.application.create(INPUT);
+        await expect(doubles.application.create({ ...INPUT, holderUserId: 'outsider' })).rejects.toBeInstanceOf(InvalidHolderError);
+
+        expect(doubles.titles.create.mock.calls[0]?.[0]).toMatchObject({ holderUserId: null });
+        expect(doubles.titles.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('troca o titular na edição e recusa quem não é membro', async () => {
+        const doubles = build();
+
+        await doubles.application.update('title-1', { holderUserId: 'ana' });
+        await expect(doubles.application.update('title-1', { holderUserId: 'outsider' })).rejects.toBeInstanceOf(InvalidHolderError);
+        await doubles.application.update('title-1', { holderUserId: null });
+
+        expect(doubles.titles.update.mock.calls[0]?.[1]).toMatchObject({ holderUserId: 'ana' });
+        expect(doubles.titles.update.mock.calls[1]?.[1]).toMatchObject({ holderUserId: null });
     });
 
     it('usa a classe enviada sem consultar a sugerida', async () => {

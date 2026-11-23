@@ -90,3 +90,13 @@ export class MemberNotFoundError extends AppError {
         });
     }
 }
+
+export class InvalidHolderError extends AppError {
+    public constructor() {
+        super({
+            code: 'members.invalid_holder',
+            status: 422,
+            detail: 'The holder must be an active person of this account.'
+        });
+    }
+}

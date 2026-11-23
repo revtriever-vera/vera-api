@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AppContext } from '../../../core/context/app-context.port';
+import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
@@ -24,7 +25,8 @@ function build(holdings = [holdingOf({}), holdingOf({ symbol: 'PETR4' })]) {
         {
             find: vi.fn((id: string) => (id === 'banco-inter' ? { id, name: 'Banco Inter' } : null)),
             resolve: vi.fn((id: string) => (id === 'banco-inter' ? { id, groupName: 'Inter&Co' } : null))
-        } as unknown as IssuerDirectoryService
+        } as unknown as IssuerDirectoryService,
+        { list: vi.fn().mockResolvedValue([]) } as unknown as MemberDirectoryService
     );
     return { application, logs, metrics, xlsx };
 }

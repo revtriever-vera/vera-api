@@ -54,19 +54,41 @@ function build(options: { titles?: ValuedTitle[]; positions?: Position[]; assets
         .mockResolvedValue(new Map(Object.entries(options.prices ?? {}).map(([assetId, price]) => [assetId, { assetId, price }])));
     const latest = vi.fn().mockResolvedValue({ brlPerUnit: '5.5' });
     const find = vi.fn().mockReturnValue({ name: 'Banco Exemplo' });
+    const listForCompany = vi.fn().mockResolvedValue(options.positions ?? []);
     const service = new ScheduleSourceService(
         { valueAll: vi.fn().mockResolvedValue(options.titles ?? []) } as unknown as FixedIncomeValuationService,
         { loadCurveSeries: vi.fn().mockResolvedValue(flatSeries()) } as unknown as IndexSeriesReaderService,
-        { listForCompany: vi.fn().mockResolvedValue(options.positions ?? []) } as unknown as PositionReaderService,
+        { listForCompany } as unknown as PositionReaderService,
         { findManyByIds: vi.fn().mockResolvedValue(options.assets ?? []) } as unknown as AssetCatalogService,
         { getLatest } as unknown as QuoteReaderService,
         { latest } as unknown as ExchangeRateReaderService,
         { find } as unknown as IssuerDirectoryService
     );
-    return { service, getLatest, latest, find };
+    return { service, getLatest, latest, find, listForCompany };
 }
 
 describe('ScheduleSourceService', () => {
+    it('passa o filtro de titular às posições e leva o titular do Tesouro', async () => {
+        const doubles = build({
+            positions: [{ ...position('p1', 'a1'), holderUserId: 'ana' } as Position],
+            assets: [asset('a1')],
+            prices: { a1: '1000' }
+        });
+
+        const treasuries = await doubles.service.loadTreasuries({ kind: 'person', userId: 'ana' });
+
+        expect(doubles.listForCompany).toHaveBeenCalledWith({ kind: 'person', userId: 'ana' });
+        expect(treasuries[0]?.holderUserId).toBe('ana');
+    });
+
+    it('a agenda lê a conta toda, sem filtro de titular', async () => {
+        const doubles = build();
+
+        await doubles.service.load(NOW);
+
+        expect(doubles.listForCompany).toHaveBeenCalledWith({ kind: 'any' });
+    });
+
     it('monta os títulos com o valor de hoje, o emissor e a data de referência', async () => {
         const doubles = build({ titles: [valued({ issuerId: 'banco-exemplo' }), valued({ id: 'title-2', issuerId: null })] });
 
