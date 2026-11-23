@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { makeTitle, seriesOf, weekdayPoints } from '../../../../test/support/fixed-income-fixtures';
+import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { CurveSeries } from '../domain/curve/curve.types';
 import { FixedIncomeTitleDomain } from '../domain/fixed-income-title.domain';
 import { TitleNotFoundError } from '../domain/fixed-income.errors';
@@ -16,7 +17,7 @@ function build(series: CurveSeries, titles = [makeTitle()]) {
     const missingLog = vi.fn();
     const service = new FixedIncomeValuationService(
         {
-            listAll: vi.fn().mockResolvedValue(titles),
+            listByHolder: vi.fn().mockResolvedValue(titles),
             findById: vi.fn().mockImplementation((id: string) => Promise.resolve(titles.find((title) => title.id === id) ?? null))
         } as unknown as FixedIncomeTitleDomain,
         { loadCurveSeries } as unknown as IndexSeriesDomain,
@@ -32,7 +33,7 @@ describe('FixedIncomeValuationService', () => {
     it('valueAll carrega as séries uma vez só, para todos os títulos', async () => {
         const doubles = build(covered, [makeTitle({ id: 'a' }), makeTitle({ id: 'b', rateBps: 12000 })]);
 
-        const valued = await doubles.service.valueAll(ASOF);
+        const valued = await doubles.service.valueAll(ASOF, ANY_HOLDER);
 
         expect(valued.map((entry) => entry.title.id)).toEqual(['a', 'b']);
         expect(valued[1]?.valuation.valueMinor).toBeGreaterThan(valued[0]?.valuation.valueMinor ?? 0);
@@ -60,7 +61,7 @@ describe('FixedIncomeValuationService', () => {
     it('sem dado de índice mede, avisa uma vez e devolve o valor aplicado', async () => {
         const doubles = build(seriesOf([]), [makeTitle({ id: 'a' }), makeTitle({ id: 'b' })]);
 
-        const valued = await doubles.service.valueAll(ASOF);
+        const valued = await doubles.service.valueAll(ASOF, ANY_HOLDER);
 
         expect(valued.every((entry) => entry.valuation.status === 'index_data_missing')).toBe(true);
         expect(doubles.valuationMetric).toHaveBeenCalledWith('index_data_missing', 2);

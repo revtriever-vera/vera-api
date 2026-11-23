@@ -1,7 +1,10 @@
+import { DirectoryMember } from '../../identity/services/member-directory.service';
 import { sharesBpsOf, targetValueOf } from '../domain/class-summary';
 import { deviationStatusOf } from '../domain/deviation-status';
 import { ClassSummary, Holding, PortfolioSnapshot } from '../domain/portfolio.types';
 import { ClassDetailResponse, HoldingResponse, HoldingsResponse, OverviewResponse } from '../validation/portfolio.schemas';
+
+export type HolderNames = ReadonlyMap<string, string>;
 
 type BaseCurrency = HoldingsResponse['baseCurrency'];
 type ClassBlock = ClassDetailResponse['class'];
@@ -20,6 +23,15 @@ function classBlockOf(item: ClassSummary): ClassBlock {
         status: item.status,
         gapMinor: item.gapMinor
     };
+}
+
+function holderOf(holding: Holding, holders: HolderNames): HoldingResponse['holder'] {
+    const name: string | undefined = holding.holderUserId === null ? undefined : holders.get(holding.holderUserId);
+    return holding.holderUserId === null || name === undefined ? null : { userId: holding.holderUserId, name };
+}
+
+export function holderNamesOf(members: readonly DirectoryMember[]): HolderNames {
+    return new Map(members.map((member: DirectoryMember): [string, string] => [member.userId, member.name]));
 }
 
 function identityOf(
@@ -66,8 +78,9 @@ function flagsOf(
     };
 }
 
-export function toHoldingResponse(holding: Holding): HoldingResponse {
+export function toHoldingResponse(holding: Holding, holders: HolderNames): HoldingResponse {
     return {
+        holder: holderOf(holding, holders),
         ...identityOf(holding),
         ...pricingOf(holding),
         ...flagsOf(holding),
@@ -78,11 +91,11 @@ export function toHoldingResponse(holding: Holding): HoldingResponse {
     };
 }
 
-export function toHoldingsResponse(snapshot: PortfolioSnapshot): HoldingsResponse {
+export function toHoldingsResponse(snapshot: PortfolioSnapshot, holders: HolderNames): HoldingsResponse {
     return {
         baseCurrency: snapshot.baseCurrency as BaseCurrency,
         asOf: snapshot.asOf,
-        data: snapshot.holdings.map(toHoldingResponse)
+        data: snapshot.holdings.map((holding: Holding): HoldingResponse => toHoldingResponse(holding, holders))
     };
 }
 
@@ -107,7 +120,8 @@ function toClassAsset(
     holding: Holding,
     shareInClassBps: number,
     item: ClassSummary,
-    toleranceBps: number
+    toleranceBps: number,
+    holders: HolderNames
 ): ClassDetailResponse['assets'][number] {
     const deviationBps: number = shareInClassBps - holding.effectiveTargetInClassBps;
     return {
@@ -124,11 +138,12 @@ function toClassAsset(
         gapMinor: targetValueOf(holding.effectiveTargetInClassBps, item.valueMinor) - holding.valueMinor,
         isZeroQuantity: holding.isZeroQuantity,
         missingQuote: holding.missingQuote,
-        stale: holding.stale
+        stale: holding.stale,
+        holder: holderOf(holding, holders)
     };
 }
 
-export function toClassDetailResponse(snapshot: PortfolioSnapshot, item: ClassSummary): ClassDetailResponse {
+export function toClassDetailResponse(snapshot: PortfolioSnapshot, item: ClassSummary, holders: HolderNames): ClassDetailResponse {
     const members: Holding[] = snapshot.holdings.filter((holding: Holding): boolean => holding.classId === item.classId);
     const shares: number[] = sharesBpsOf(
         members.map((holding: Holding): number => holding.valueMinor),
@@ -139,6 +154,8 @@ export function toClassDetailResponse(snapshot: PortfolioSnapshot, item: ClassSu
         baseCurrency: snapshot.baseCurrency as BaseCurrency,
         toleranceBps: snapshot.toleranceBps,
         targetsSumBps: members.reduce((sum: number, holding: Holding) => sum + holding.storedTargetInClassBps, 0),
-        assets: members.map((holding: Holding, index: number) => toClassAsset(holding, shares[index] ?? 0, item, snapshot.toleranceBps))
+        assets: members.map((holding: Holding, index: number) =>
+            toClassAsset(holding, shares[index] ?? 0, item, snapshot.toleranceBps, holders)
+        )
     };
 }

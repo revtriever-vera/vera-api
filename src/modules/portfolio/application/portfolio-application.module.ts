@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ContextModule } from '../../../core/context/context.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { AllocationApplicationModule } from '../../allocation/application/allocation-application.module';
+import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
 import { IssuersServicesModule } from '../../issuers/services/issuers-services.module';
 import { FixedIncomeApplicationModule } from '../../fixed-income/application/fixed-income-application.module';
@@ -23,6 +24,7 @@ import { PortfolioViewApplication } from './portfolio-view.application';
         AllocationApplicationModule,
         CatalogApplicationModule,
         FixedIncomeApplicationModule,
+        IdentityApplicationModule,
         IssuersServicesModule,
         MarketDataApplicationModule,
         PositionsApplicationModule

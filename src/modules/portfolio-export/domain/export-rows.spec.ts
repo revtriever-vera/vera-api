@@ -17,7 +17,8 @@ describe('buildExportRows', () => {
             quantity: '2000',
             quantityDecimals: 0,
             valueMinor: 7_560_000,
-            valueSourceLabel: 'B3 via brapi'
+            valueSourceLabel: 'B3 via brapi',
+            holderLabel: 'Conta toda'
         });
     });
 
@@ -102,7 +103,8 @@ describe('export labels', () => {
             'Conglomerado',
             'Quantidade',
             'Valor (BRL)',
-            'Fonte do valor'
+            'Fonte do valor',
+            'Titular'
         ]);
         expect(headerLabelsOf('en', 'USD')).toEqual([
             'Asset',
@@ -113,7 +115,26 @@ describe('export labels', () => {
             'Group',
             'Quantity',
             'Value (USD)',
-            'Value source'
+            'Value source',
+            'Holder'
         ]);
+    });
+});
+
+describe('holder column', () => {
+    it('names the holder, and reads an unknown holder or none as the whole account', () => {
+        const snapshot = {
+            ...snapshotOf([holdingOf({ holderUserId: 'ana' }), holdingOf({ holderUserId: 'gone' }), holdingOf({})]),
+            holders: new Map([['ana', 'Ana']])
+        };
+
+        expect(buildExportRows(snapshot, 'pt-BR').map((row) => row.holderLabel)).toEqual(['Ana', 'Conta toda', 'Conta toda']);
+        expect(buildExportRows(snapshot, 'en').map((row) => row.holderLabel)).toEqual(['Ana', 'Whole account', 'Whole account']);
+    });
+
+    it('neutralizes a holder name that starts like a formula', () => {
+        const snapshot = { ...snapshotOf([holdingOf({ holderUserId: 'ana' })]), holders: new Map([['ana', '=HYPERLINK("x")']]) };
+
+        expect(buildExportRows(snapshot, 'pt-BR')[0]?.holderLabel).toBe(`'=HYPERLINK("x")`);
     });
 });

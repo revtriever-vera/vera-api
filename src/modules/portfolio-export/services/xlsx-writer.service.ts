@@ -7,7 +7,7 @@ import { ExportRow, ExportTable } from '../domain/export.types';
 
 const QUANTITY_COLUMN: number = 6;
 const VALUE_COLUMN: number = 7;
-const COLUMN_WIDTHS: readonly number[] = [18, 40, 24, 14, 28, 24, 16, 22, 28];
+const COLUMN_WIDTHS: readonly number[] = [18, 40, 24, 14, 28, 24, 16, 22, 28, 24];
 
 export { currencyFormatOf };
 
@@ -25,7 +25,8 @@ function cellsOf(row: ExportRow, currency: string): XlsxCell[] {
         row.groupName,
         { value: row.quantity === null ? null : DecimalUtil.of(row.quantity).toNumber(), numFmt: quantityFormatOf(row.quantityDecimals) },
         { value: DecimalUtil.of(decimalValueOf(row.valueMinor, currency)).toNumber(), numFmt: currencyFormatOf(currency) },
-        row.valueSourceLabel
+        row.valueSourceLabel,
+        row.holderLabel
     ];
 }
 

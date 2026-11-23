@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ANY_HOLDER, HolderFilter } from '../../../shared/holder/holder-filter';
 import { decimalStringOf, mulDecimal, toMinor } from '../../../shared/utils/decimal.util';
 import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { FixedIncomeValuationService, ValuedTitle } from '../../fixed-income/services/fixed-income-valuation.service';
@@ -38,7 +39,7 @@ export class ScheduleSourceService {
 
     public async loadTitles(now: Date): Promise<TitlesInputs> {
         const [valued, series]: [readonly ValuedTitle[], CurveSeries] = await Promise.all([
-            this.valuation.valueAll(now),
+            this.valuation.valueAll(now, ANY_HOLDER),
             this.seriesReader.loadCurveSeries()
         ]);
         return {
@@ -49,7 +50,10 @@ export class ScheduleSourceService {
     }
 
     public async load(now: Date): Promise<ScheduleInputs> {
-        const [base, treasuries]: [TitlesInputs, ScheduleTreasury[]] = await Promise.all([this.loadTitles(now), this.loadTreasuries()]);
+        const [base, treasuries]: [TitlesInputs, ScheduleTreasury[]] = await Promise.all([
+            this.loadTitles(now),
+            this.loadTreasuries(ANY_HOLDER)
+        ]);
         const usdRate: string | null = base.titles.some((title: ScheduleTitle): boolean => title.currency === USD)
             ? await this.usdRate(now)
             : null;
@@ -84,8 +88,8 @@ export class ScheduleSourceService {
         };
     }
 
-    public async loadTreasuries(): Promise<ScheduleTreasury[]> {
-        const positions: readonly Position[] = await this.positions.listForCompany();
+    public async loadTreasuries(filter: HolderFilter): Promise<ScheduleTreasury[]> {
+        const positions: readonly Position[] = await this.positions.listForCompany(filter);
         if (positions.length === 0) {
             return [];
         }
@@ -118,7 +122,8 @@ export class ScheduleSourceService {
             quantity,
             maturityDate: holding.asset.maturityDate as string,
             valueTodayMinor: quote === undefined ? null : toMinor(mulDecimal(quantity, quote.price), BRL),
-            isSample: holding.position.isSample
+            isSample: holding.position.isSample,
+            holderUserId: holding.position.holderUserId
         };
     }
 }

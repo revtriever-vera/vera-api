@@ -15,8 +15,8 @@ describe('writeCsv', () => {
 
         expect(csv.startsWith('﻿')).toBe(true);
         expect(csv.split('\r\n')).toEqual([
-            '﻿Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor',
-            'ITUB4;Itaú Unibanco;Ações Brasil;;;;2000;75600,00;B3 via brapi',
+            '﻿Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular',
+            'ITUB4;Itaú Unibanco;Ações Brasil;;;;2000;75600,00;B3 via brapi;Conta toda',
             ''
         ]);
     });
@@ -32,8 +32,8 @@ describe('writeCsv', () => {
         const csv: string = csvOf([holdingOf({ quantity: '0.45', valueMinor: 123_456 })], 'en', 'USD');
 
         expect(csv.split('\r\n')).toEqual([
-            '﻿Asset,Name,Class,Type,Issuer,Group,Quantity,Value (USD),Value source',
-            'ITUB4,Itaú Unibanco,Ações Brasil,,,,0.45,1234.56,B3 via brapi',
+            '﻿Asset,Name,Class,Type,Issuer,Group,Quantity,Value (USD),Value source,Holder',
+            'ITUB4,Itaú Unibanco,Ações Brasil,,,,0.45,1234.56,B3 via brapi,Whole account',
             ''
         ]);
     });
@@ -90,7 +90,7 @@ describe('writeCsv', () => {
 
     it('writes only the header for an empty portfolio', () => {
         expect(csvOf([], 'pt-BR').split('\r\n')).toEqual([
-            '﻿Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor',
+            '﻿Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular',
             ''
         ]);
     });

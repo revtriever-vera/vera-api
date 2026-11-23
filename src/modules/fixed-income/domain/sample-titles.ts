@@ -60,6 +60,7 @@ export function sampleTitleDrafts(today: string, locale: AppLocale): TitleDraft[
         currency: CURRENCIES.brl,
         appliedMinor: spec.appliedMinor,
         appliedAt: addDays(today, -spec.appliedDaysAgo),
-        maturityDate: addDays(today, spec.maturityDaysAhead)
+        maturityDate: addDays(today, spec.maturityDaysAhead),
+        holderUserId: null
     }));
 }

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { buildConcentration } from '../domain/concentration';
 import { Concentration, ConcentrationRow, IssuerRow, UNMAPPED_DIMENSIONS } from '../domain/concentration.types';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
@@ -17,7 +18,7 @@ export class ConcentrationApplication {
     ) {}
 
     public async get(): Promise<ConcentrationResponse> {
-        const snapshot: PortfolioSnapshot = await this.snapshots.build();
+        const snapshot: PortfolioSnapshot = await this.snapshots.build(ANY_HOLDER);
         const concentration: Concentration = buildConcentration({
             holdings: snapshot.holdings,
             classes: snapshot.classes,

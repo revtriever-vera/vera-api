@@ -11,6 +11,7 @@ describe('fixed income title mapper', () => {
             kind: 'lci',
             name: 'LCI',
             issuerId: 'banco-inter',
+            holderUserId: null,
             indexer: 'prefixed',
             rateBps: 1150,
             currency: 'BRL',

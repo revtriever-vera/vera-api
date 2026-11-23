@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { PositionsRepository } from '../repositories/positions.repository';
 import { Position, PositionPatch } from './positions.types';
 
@@ -6,6 +7,7 @@ export interface NewPositionData {
     readonly assetId: string;
     readonly quantity: string;
     readonly averagePrice: string | null;
+    readonly holderUserId: string | null;
     readonly isSample?: boolean;
 }
 
@@ -21,8 +23,16 @@ export class PositionDomain {
         return this.positions.findById(id);
     }
 
-    public async findByAsset(assetId: string): Promise<Position | null> {
-        return this.positions.findByAsset(assetId);
+    public async findByAssetAndHolder(assetId: string, holderUserId: string | null): Promise<Position | null> {
+        return this.positions.findByAssetAndHolder(assetId, holderUserId);
+    }
+
+    public async listByHolder(filter: HolderFilter): Promise<Position[]> {
+        return this.positions.listByHolder(filter);
+    }
+
+    public async clearHolder(userId: string): Promise<number> {
+        return (await this.positions.clearHolder(userId)).length;
     }
 
     public async listAll(): Promise<Position[]> {

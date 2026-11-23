@@ -11,6 +11,7 @@ export function holdingOf(overrides: Partial<ExportHoldingInput>): ExportHolding
         quantityDecimals: 0,
         valueMinor: 7_560_000,
         valueSource: 'brapi',
+        holderUserId: null,
         ...overrides
     };
 }
@@ -19,6 +20,7 @@ export function snapshotOf(holdings: readonly ExportHoldingInput[], baseCurrency
     return {
         baseCurrency,
         issuers: new Map<string, ExportIssuerInput>([['banco-inter', { name: 'Banco Inter', groupName: 'Inter&Co' }]]),
+        holders: new Map<string, string>(),
         holdings,
         classes: [
             { classId: 'class-br', displayName: 'Ações Brasil' },

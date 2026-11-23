@@ -158,6 +158,7 @@ function hypotheticalOf(candidate: SimulationCandidate): FgcHolding {
         estimated: false,
         matured: false,
         treasury: false,
+        holderUserId: null,
         issuer: candidate.issuer
     };
 }

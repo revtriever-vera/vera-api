@@ -77,7 +77,7 @@ describe('fixed income coverage (FGC)', () => {
 
         const body: CoverageBody = await coverage(account);
 
-        expect(body).toMatchObject({ currency: 'BRL', scope: 'account', peopleCount: 1 });
+        expect(body).toMatchObject({ currency: 'BRL', scope: 'account', peopleCount: 1, byHolder: [] });
         expect(body.groups).toHaveLength(1);
         expect(body.groups[0]?.groupId).toBe('btg-pactual');
         expect(body.groups[0]?.totalMinor).toBeGreaterThanOrEqual(30_000_000);
@@ -120,7 +120,7 @@ describe('fixed income coverage (FGC)', () => {
         expect(await simulate(account, { issuerId: 'outro', kind: 'cdb', valueMinor: 1 })).toMatchObject({ verdict: 'not_calculated' });
     });
 
-    it('rejects an unknown issuer, a kind mismatch, extra fields and a holder', async () => {
+    it('rejects an unknown issuer, a kind mismatch, extra fields and an invalid holder', async () => {
         const account: Account = await harness.signUp('fgc-errors');
 
         const unknown = await harness.call<{ type: string }>(account.token, 'POST', '/portfolio/fgc/simulate', {
@@ -139,13 +139,13 @@ describe('fixed income coverage (FGC)', () => {
             valueMinor: 1,
             x: 1
         });
-        const holder = await harness.call<{ type: string }>(account.token, 'GET', '/portfolio/fgc?holderId=abc');
+        const holder = await harness.call<{ type: string }>(account.token, 'GET', '/portfolio/fgc?holder=abc');
         const anonymous = await harness.call<{ type: string }>(null, 'GET', '/portfolio/fgc');
 
         expect([unknown.status, unknown.body.type]).toEqual([422, 'fixed_income.unknown_issuer']);
         expect([mismatch.status, mismatch.body.type]).toEqual([422, 'fixed_income.issuer_kind_mismatch']);
         expect(extra.status).toBe(400);
-        expect([holder.status, holder.body.type]).toEqual([400, 'fgc.holder_not_supported']);
+        expect([holder.status, holder.body.type]).toEqual([400, 'validation_failed']);
         expect(anonymous.status).toBe(401);
     });
 });

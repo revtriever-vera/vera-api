@@ -17,6 +17,7 @@ describe('FixedIncomeAccountExporter', () => {
                 kind: 'cdb',
                 name: 'CDB Banco Exemplo',
                 issuerId: 'banco-inter',
+                holderUserId: null,
                 indexer: 'cdi_percent',
                 rateBps: 11000,
                 currency: 'BRL',

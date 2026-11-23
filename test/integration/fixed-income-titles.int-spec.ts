@@ -1,3 +1,4 @@
+import { ANY_HOLDER } from '../../src/shared/holder/holder-filter';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { DecimalUtil } from '../../src/shared/utils/decimal.util';
@@ -230,8 +231,8 @@ describe('fixed income titles', () => {
         expect(read.body.type).toBe('fixed_income.title_not_found');
         const ownerStill = await harness.call<TitleBody>(owner.token, 'GET', `/fixed-income/titles/${title.id}`);
         expect(ownerStill.body.rateBps).toBe(11000);
-        const valuedForOwner = await harness.inCompany(owner.company.id, async () => valuation.valueAll(new Date()));
-        const valuedForStranger = await harness.inCompany(stranger.company.id, async () => valuation.valueAll(new Date()));
+        const valuedForOwner = await harness.inCompany(owner.company.id, async () => valuation.valueAll(new Date(), ANY_HOLDER));
+        const valuedForStranger = await harness.inCompany(stranger.company.id, async () => valuation.valueAll(new Date(), ANY_HOLDER));
         expect(valuedForOwner.map((entry) => entry.title.id)).toContain(title.id);
         expect(valuedForStranger).toEqual([]);
         await expect(harness.inCompany(stranger.company.id, async () => valuation.valueOne(title.id, new Date()))).rejects.toMatchObject({
@@ -248,7 +249,7 @@ describe('fixed income titles', () => {
         expect(first.id).not.toBe(second.id);
         expect(await countTitles(account)).toBe(2);
         const valuation: FixedIncomeValuationService = harness.app.get(FixedIncomeValuationService, { strict: false });
-        const valued = await harness.inCompany(account.company.id, async () => valuation.valueAll(new Date()));
+        const valued = await harness.inCompany(account.company.id, async () => valuation.valueAll(new Date(), ANY_HOLDER));
         expect(valued).toHaveLength(2);
     });
 

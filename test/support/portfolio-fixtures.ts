@@ -272,7 +272,8 @@ function positionsOf(): SourcePosition[] {
         id: `position-${seed.symbol}`,
         assetId: `asset-${seed.symbol}`,
         quantity: seed.quantity,
-        isSample: false
+        isSample: false,
+        holderUserId: null
     }));
 }
 
@@ -301,7 +302,8 @@ function titlesOf(): SourceTitle[] {
         matured: false,
         source: seed.source,
         asOf: '2026-10-11',
-        isSample: false
+        isSample: false,
+        holderUserId: null
     }));
 }
 

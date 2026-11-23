@@ -7,7 +7,9 @@ describe('PositionDomain', () => {
         const repository: Record<string, ReturnType<typeof vi.fn>> = {
             insertIfAbsent: vi.fn().mockResolvedValue(null),
             findById: vi.fn().mockResolvedValue({ id: 'p1' }),
-            findByAsset: vi.fn().mockResolvedValue({ id: 'p1' }),
+            findByAssetAndHolder: vi.fn().mockResolvedValue({ id: 'p1' }),
+            listByHolder: vi.fn().mockResolvedValue([{ id: 'h' }]),
+            clearHolder: vi.fn().mockResolvedValue([{ id: 'a' }, { id: 'b' }]),
             listAll: vi.fn().mockResolvedValue([{ isSample: true }]),
             countAll: vi.fn().mockResolvedValue(3),
             patch: vi.fn().mockResolvedValue({ id: 'p1' }),
@@ -19,9 +21,11 @@ describe('PositionDomain', () => {
         };
         const domain: PositionDomain = new PositionDomain(repository as unknown as PositionsRepository);
 
-        await expect(domain.createIfAbsent({ assetId: 'a1', quantity: '1', averagePrice: null })).resolves.toBeNull();
+        await expect(domain.createIfAbsent({ assetId: 'a1', quantity: '1', averagePrice: null, holderUserId: null })).resolves.toBeNull();
         await expect(domain.findById('p1')).resolves.toEqual({ id: 'p1' });
-        await expect(domain.findByAsset('a1')).resolves.toEqual({ id: 'p1' });
+        await expect(domain.findByAssetAndHolder('a1', null)).resolves.toEqual({ id: 'p1' });
+        await expect(domain.listByHolder({ kind: 'all' })).resolves.toEqual([{ id: 'h' }]);
+        await expect(domain.clearHolder('ana')).resolves.toBe(2);
         await expect(domain.listAll()).resolves.toEqual([{ isSample: true }]);
         await expect(domain.hasSamples()).resolves.toBe(true);
         await expect(domain.countAll()).resolves.toBe(3);

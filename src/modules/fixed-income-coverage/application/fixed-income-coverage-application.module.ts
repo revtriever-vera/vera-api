@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
+import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { FixedIncomeScheduleApplicationModule } from '../../fixed-income-schedule/application/fixed-income-schedule-application.module';
 import { FixedIncomeServicesModule } from '../../fixed-income/services/fixed-income-services.module';
 import { IssuersServicesModule } from '../../issuers/services/issuers-services.module';
@@ -10,7 +11,13 @@ import { FgcCoverageApplication } from './fgc-coverage.application';
 import { FgcSimulationApplication } from './fgc-simulation.application';
 
 @Module({
-    imports: [ObservabilityModule, FixedIncomeServicesModule, FixedIncomeScheduleApplicationModule, IssuersServicesModule],
+    imports: [
+        ObservabilityModule,
+        IdentityApplicationModule,
+        FixedIncomeServicesModule,
+        FixedIncomeScheduleApplicationModule,
+        IssuersServicesModule
+    ],
     providers: [FgcCoverageApplication, FgcSimulationApplication, FgcCoverageService, FgcLogService, FgcMetricsService],
     exports: [FgcCoverageApplication, FgcSimulationApplication, FgcCoverageService]
 })

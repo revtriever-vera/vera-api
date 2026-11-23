@@ -10,6 +10,7 @@ export interface FixedIncomeTitleExport {
     readonly kind: string;
     readonly name: string;
     readonly issuerId: string | null;
+    readonly holderUserId: string | null;
     readonly indexer: string;
     readonly rateBps: number;
     readonly currency: string;
@@ -40,6 +41,7 @@ export class FixedIncomeAccountExporter extends AccountDataExporterPort {
                 kind: title.kind,
                 name: title.name,
                 issuerId: title.issuerId,
+                holderUserId: title.holderUserId,
                 indexer: title.indexer,
                 rateBps: title.rateBps,
                 currency: title.currency,

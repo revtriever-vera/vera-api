@@ -66,6 +66,7 @@ export interface ScheduleTreasury {
     readonly maturityDate: string;
     readonly valueTodayMinor: number | null;
     readonly isSample: boolean;
+    readonly holderUserId: string | null;
 }
 
 export interface ScheduleInputs {

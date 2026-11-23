@@ -6,6 +6,8 @@ import { FixedIncomeTitleDomain } from './fixed-income-title.domain';
 const DRAFT = {
     kind: 'lca' as const,
     name: 'LCA',
+    issuerId: null,
+    holderUserId: null,
     indexer: 'prefixed' as const,
     rateBps: 1100,
     currency: 'BRL' as const,
@@ -36,6 +38,8 @@ function build() {
         insert: vi.fn().mockResolvedValue(row()),
         findById: vi.fn().mockResolvedValue(row()),
         listAll: vi.fn().mockResolvedValue([row(), row({ id: 'b' })]),
+        listByHolder: vi.fn().mockResolvedValue([row({ holderUserId: 'ana' })]),
+        clearHolder: vi.fn().mockResolvedValue([row(), row({ id: 'b' })]),
         countActive: vi.fn().mockResolvedValue(2),
         patch: vi.fn().mockResolvedValue(row({ rateBps: 1200 })),
         softDelete: vi.fn().mockResolvedValue(row()),
@@ -65,6 +69,14 @@ describe('FixedIncomeTitleDomain', () => {
         expect((await domain.findById('a'))?.id).toBe('a');
         expect(await domain.listAll()).toHaveLength(2);
         expect(await domain.count()).toBe(2);
+    });
+
+    it('lista por titular e limpa o titular que saiu', async () => {
+        const { domain, repository } = build();
+
+        expect(await domain.listByHolder({ kind: 'person', userId: 'ana' })).toMatchObject([{ holderUserId: 'ana' }]);
+        expect(repository.listByHolder).toHaveBeenCalledWith({ kind: 'person', userId: 'ana' });
+        expect(await domain.clearHolder('ana')).toBe(2);
     });
 
     it('devolve null/false quando não há linha', async () => {

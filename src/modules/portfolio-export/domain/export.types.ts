@@ -14,6 +14,7 @@ export interface ExportRow {
     readonly quantityDecimals: number | null;
     readonly valueMinor: number;
     readonly valueSourceLabel: string;
+    readonly holderLabel: string;
 }
 
 export interface ExportHoldingInput {
@@ -26,6 +27,7 @@ export interface ExportHoldingInput {
     readonly quantityDecimals: number | null;
     readonly valueMinor: number;
     readonly valueSource: string;
+    readonly holderUserId: string | null;
 }
 
 export interface ExportClassInput {
@@ -41,6 +43,7 @@ export interface ExportIssuerInput {
 export interface ExportSnapshotInput {
     readonly baseCurrency: string;
     readonly issuers: ReadonlyMap<string, ExportIssuerInput>;
+    readonly holders: ReadonlyMap<string, string>;
     readonly holdings: readonly ExportHoldingInput[];
     readonly classes: readonly ExportClassInput[];
 }

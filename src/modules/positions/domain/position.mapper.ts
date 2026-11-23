@@ -8,6 +8,7 @@ export function toPositionView(position: Position, classId: string): PositionVie
         quantity: normalizeDecimal(position.quantity),
         averagePrice: position.averagePrice === null ? null : normalizeDecimal(position.averagePrice),
         classId,
+        holderUserId: position.holderUserId,
         createdAt: position.createdAt.toISOString(),
         updatedAt: position.updatedAt.toISOString()
     };

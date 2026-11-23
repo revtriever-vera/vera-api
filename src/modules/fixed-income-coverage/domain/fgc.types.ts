@@ -45,6 +45,7 @@ export interface FgcHolding {
     readonly estimated: boolean;
     readonly matured: boolean;
     readonly treasury: boolean;
+    readonly holderUserId: string | null;
     readonly issuer: FgcIssuer | null;
 }
 
@@ -73,17 +74,17 @@ export interface FgcOutside {
     readonly valueMinor: number;
 }
 
-export interface FgcCoverage {
-    readonly currency: 'BRL';
-    readonly scope: 'account';
-    readonly peopleCount: number;
-    readonly limitPerGroupMinor: number;
-    readonly capMinor: number;
+export interface FgcHolderBlock {
+    readonly holderUserId: string | null;
     readonly coveredMinor: number;
     readonly capShareBps: number;
     readonly groups: readonly FgcGroup[];
     readonly outside: readonly FgcOutside[];
+}
+
+export interface FgcCoverage {
     readonly asOf: string;
+    readonly blocks: readonly FgcHolderBlock[];
 }
 
 export interface FgcSimulationInput {

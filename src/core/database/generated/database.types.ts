@@ -247,6 +247,7 @@ export interface FixedIncomeTitles {
     createdAt: Generated<Timestamp>;
     currency: Generated<string>;
     deletedAt: Timestamp | null;
+    holderUserId: string | null;
     id: string;
     indexer: string;
     isSample: Generated<boolean>;
@@ -314,6 +315,7 @@ export interface Positions {
     companyId: string;
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
+    holderUserId: string | null;
     id: string;
     isSample: Generated<boolean>;
     quantity: Numeric;

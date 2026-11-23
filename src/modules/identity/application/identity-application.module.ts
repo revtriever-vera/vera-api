@@ -11,6 +11,7 @@ import { IdentityDomainModule } from '../domain/identity-domain.module';
 import { SessionIssuerPort } from '../ports/session-issuer.port';
 import { AccountClosureMailer } from '../services/account-closure-mailer.service';
 import { InviteAcceptanceService } from '../services/invite-acceptance.service';
+import { MemberDirectoryService } from '../services/member-directory.service';
 import { MemberExitService } from '../services/member-exit.service';
 import { AccountEmptinessService } from '../services/account-emptiness.service';
 import { AccountInvitesExporter } from '../services/account-invites.exporter';
@@ -72,6 +73,7 @@ import { SocialLoginApplication } from './social-login.application';
         MemberExitService,
         AccountInvitesExporter,
         MemberDepartureRegistry,
+        MemberDirectoryService,
         MembersLogService,
         MembersMailerService,
         MembersMetricsService,
@@ -105,6 +107,7 @@ import { SocialLoginApplication } from './social-login.application';
         MembersCleanupApplication,
         CurrentUserService,
         CompanyTimezoneService,
+        MemberDirectoryService,
         JwtAuthGuard,
         RolesGuard,
         TokenService,

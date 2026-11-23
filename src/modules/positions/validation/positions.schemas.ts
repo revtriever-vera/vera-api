@@ -16,6 +16,12 @@ export const averagePriceSchema = z
     .nullable()
     .describe('Average price paid, decimal string zero or more, in the currency of the asset; null when unknown. Informational only');
 
+export const holderUserIdSchema = z
+    .string()
+    .uuid()
+    .nullable()
+    .describe('Holder of the position: id of an active person of the account; null is the whole account ("Conta toda")');
+
 export const createPositionSchema = z
     .object({
         assetId: z.string().uuid().describe('Id of an active asset of the catalog'),
@@ -25,14 +31,16 @@ export const createPositionSchema = z
             .string()
             .uuid()
             .optional()
-            .describe('Class of the position; omitted uses the class suggested by the catalog for the asset')
+            .describe('Class of the position; omitted uses the class suggested by the catalog for the asset'),
+        holderUserId: holderUserIdSchema.optional()
     })
     .strict();
 
 export const updatePositionSchema = z
     .object({
         quantity: quantitySchema.optional(),
-        averagePrice: averagePriceSchema.optional()
+        averagePrice: averagePriceSchema.optional(),
+        holderUserId: holderUserIdSchema.optional()
     })
     .strict();
 
@@ -46,6 +54,7 @@ export const positionViewSchema = z.object({
     quantity: z.string().describe('Quantity held, decimal string without trailing zeros'),
     averagePrice: z.string().nullable().describe('Average price paid in the asset currency, or null'),
     classId: z.string().uuid().describe('Class the position belongs to'),
+    holderUserId: z.string().uuid().nullable().describe('Holder of the position; null is the whole account'),
     createdAt: z.string().datetime().describe('Creation instant, ISO 8601'),
     updatedAt: z.string().datetime().describe('Last change instant, ISO 8601')
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { FixedIncomeValuationService } from '../../fixed-income/services/fixed-income-valuation.service';
@@ -33,10 +34,15 @@ function driverWith(
     valued: readonly unknown[] = []
 ): {
     driver: ModulesPortfolioSourceDriver;
+    listForCompany: ReturnType<typeof vi.fn>;
+    valueAll: ReturnType<typeof vi.fn>;
     catalog: { findManyByIds: ReturnType<typeof vi.fn> };
     quotes: { getLatest: ReturnType<typeof vi.fn> };
 } {
-    const catalog = { findManyByIds: vi.fn().mockResolvedValue([{ ...ASSET, externalId: 'ITUB4' }]), profileOf: vi.fn().mockReturnValue(PROFILE) };
+    const catalog = {
+        findManyByIds: vi.fn().mockResolvedValue([{ ...ASSET, externalId: 'ITUB4' }]),
+        profileOf: vi.fn().mockReturnValue(PROFILE)
+    };
     const quotes = {
         getLatest: vi
             .fn()
@@ -44,9 +50,11 @@ function driverWith(
                 new Map([['a1', { assetId: 'a1', price: '37.8', currency: 'BRL', priceDate: '2026-10-09', source: 'brapi', stale: false }]])
             )
     };
+    const listForCompany = vi.fn().mockResolvedValue(positions);
+    const valueAll = vi.fn().mockResolvedValue(valued);
     const driver: ModulesPortfolioSourceDriver = new ModulesPortfolioSourceDriver(
-        { listForCompany: vi.fn().mockResolvedValue(positions) } as unknown as PositionReaderService,
-        { valueAll: vi.fn().mockResolvedValue(valued) } as unknown as FixedIncomeValuationService,
+        { listForCompany } as unknown as PositionReaderService,
+        { valueAll } as unknown as FixedIncomeValuationService,
         catalog as unknown as AssetCatalogService,
         quotes as unknown as QuoteReaderService,
         {
@@ -57,7 +65,7 @@ function driverWith(
             resolve: vi.fn((id: string) => (id === 'banco-pan' ? { id: 'btg-pactual', groupId: 'btg-pactual' } : null))
         } as unknown as IssuerDirectoryService
     );
-    return { driver, catalog, quotes };
+    return { driver, catalog, quotes, listForCompany, valueAll };
 }
 
 describe('ModulesPortfolioSourceDriver', () => {
@@ -80,7 +88,7 @@ describe('ModulesPortfolioSourceDriver', () => {
             ]
         );
 
-        const data = await driver.load();
+        const data = await driver.load(ANY_HOLDER);
 
         expect(data.positions).toEqual([{ id: 'p1', assetId: 'a1', quantity: '2000' }]);
         expect(data.assets).toEqual([{ ...ASSET, ...PROFILE }]);
@@ -117,7 +125,7 @@ describe('ModulesPortfolioSourceDriver', () => {
     it('does not touch the catalog or the quotes when there are no positions', async () => {
         const { driver, catalog, quotes } = driverWith([]);
 
-        const data = await driver.load();
+        const data = await driver.load(ANY_HOLDER);
 
         expect(data.assets).toEqual([]);
         expect(data.quotes).toEqual([]);
@@ -143,11 +151,45 @@ describe('ModulesPortfolioSourceDriver', () => {
             ]
         );
 
-        const data = await driver.load();
+        const data = await driver.load(ANY_HOLDER);
 
         expect(data.titles.map((title) => [title.issuerId, title.issuerGroupId])).toEqual([
             [null, null],
             ['banco-que-sumiu', null]
         ]);
+    });
+
+    it('passes the holder filter to the positions and to the fixed income valuation', async () => {
+        const { driver, listForCompany, valueAll } = driverWith([]);
+
+        await driver.load({ kind: 'all' });
+
+        expect(listForCompany).toHaveBeenCalledWith({ kind: 'all' });
+        expect(valueAll).toHaveBeenCalledWith(expect.any(Date), { kind: 'all' });
+    });
+
+    it('carries the holder of a position and of a title into the source', async () => {
+        const { driver } = driverWith(
+            [{ id: 'p1', assetId: 'a1', quantity: '1', isSample: false, holderUserId: 'ana' }],
+            [
+                {
+                    title: { id: 't1', name: 'CDB', kind: 'cdb', issuerId: null, holderUserId: 'ana', isSample: false },
+                    valuation: {
+                        status: 'ok',
+                        valueMinor: 1,
+                        currency: 'BRL',
+                        estimated: false,
+                        matured: false,
+                        source: 'curve_cdi',
+                        asOf: '2026-10-11'
+                    }
+                }
+            ]
+        );
+
+        const data = await driver.load(ANY_HOLDER);
+
+        expect(data.positions[0]?.holderUserId).toBe('ana');
+        expect(data.titles[0]?.holderUserId).toBe('ana');
     });
 });
