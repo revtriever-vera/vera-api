@@ -29,6 +29,12 @@ describe('billingEngineFactory', () => {
         expect(billingEngineFactory(config, FAKE, REVTRIEVER, LOGS, METRICS).engine).toBe('revtriever');
     });
 
+    it('fora do local nunca escolhe o fake, nem pedindo', () => {
+        for (const env of [{ IS_LOCAL: 'false' }, { IS_LOCAL: 'false', BILLING_ENGINE_DRIVER: 'fake' }]) {
+            expect(billingEngineFactory(parseBillingConfig(env), FAKE, REVTRIEVER, LOGS, METRICS).engine).toBe('revtriever');
+        }
+    });
+
     it('usa o fake de verdade quando o fake é o escolhido', () => {
         expect(FakeBillingEngineDriver).toBeDefined();
         expect(RevtrieverBillingEngineDriver).toBeDefined();

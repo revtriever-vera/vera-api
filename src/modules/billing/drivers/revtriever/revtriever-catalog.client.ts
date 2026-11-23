@@ -2,24 +2,52 @@ import { z } from 'zod';
 import { BillingCatalogPort, CatalogPlan, CatalogPlanDraft, CatalogProduct, CatalogProductDraft } from '../../ports/billing-catalog.port';
 import {
     revtrieverIntegrationSchema,
-    revtrieverPlanListSchema,
+    revtrieverPlanPageSchema,
+    revtrieverPlanSummarySchema,
     revtrieverPlanSchema,
     revtrieverPricingTestSchema,
-    revtrieverProductListSchema,
+    revtrieverProductPageSchema,
     revtrieverProductSchema
 } from '../../validation/revtriever-responses.schemas';
 import { RevtrieverHttp } from './revtriever-http';
 
+const PAGE_SIZE: number = 100;
+
 type PlanResponse = z.infer<typeof revtrieverPlanSchema>;
+type ProductResponse = z.infer<typeof revtrieverProductSchema>;
+
+function productOf(response: ProductResponse, externalRef: string): CatalogProduct {
+    return { id: response.id, externalRef: response.externalRef ?? externalRef };
+}
 
 function planOf(response: PlanResponse): CatalogPlan {
-    return { id: response.id, externalRef: response.externalRef, productId: response.productId };
+    return { id: response.id, externalRef: response.name, productId: response.items[0]?.productId ?? '' };
 }
 
-function refQuery(externalRef: string): string {
-    return new URLSearchParams({ externalRef }).toString();
+type PlanSummary = z.infer<typeof revtrieverPlanSummarySchema>;
+
+function firstProductWithRef(items: readonly ProductResponse[], externalRef: string): ProductResponse | undefined {
+    return items.find((item: ProductResponse): boolean => item.externalRef === externalRef);
 }
 
+function firstActivePlanNamed(items: readonly PlanSummary[], name: string): PlanSummary | undefined {
+    return items.find((item: PlanSummary): boolean => item.name === name && item.archivedAt === null);
+}
+
+function planBody(draft: CatalogPlanDraft): unknown {
+    return {
+        name: draft.externalRef,
+        periodMonths: 1,
+        defaultPaymentMethod: 'card',
+        maxInstallments: 1,
+        items: [{ productId: draft.productId, discounts: [] }]
+    };
+}
+
+/**
+ * A API da Revtriever não filtra produtos nem planos por referência e o plano não guarda `externalRef`: o produto é achado
+ * varrendo o catálogo pelo `externalRef`; o plano, pelo nome, que a Vera grava igual à referência.
+ */
 export class RevtrieverCatalogClient extends BillingCatalogPort {
     public constructor(private readonly http: RevtrieverHttp) {
         super();
@@ -31,26 +59,35 @@ export class RevtrieverCatalogClient extends BillingCatalogPort {
     }
 
     public async productByRef(externalRef: string): Promise<CatalogProduct | null> {
-        const list: z.infer<typeof revtrieverProductListSchema> = await this.http.request({
-            method: 'GET',
-            path: `/v1/products?${refQuery(externalRef)}`,
-            schema: revtrieverProductListSchema
-        });
-        return list.items.find((item: CatalogProduct): boolean => item.externalRef === externalRef) ?? null;
+        for (let page: number = 1; ; page += 1) {
+            const result: z.infer<typeof revtrieverProductPageSchema> = await this.http.request({
+                method: 'GET',
+                path: `/v1/products?page=${String(page)}&pageSize=${String(PAGE_SIZE)}`,
+                schema: revtrieverProductPageSchema
+            });
+            const found: ProductResponse | undefined = firstProductWithRef(result.data, externalRef);
+            if (found !== undefined) {
+                return productOf(found, externalRef);
+            }
+            if (page >= result.pagination.totalPages) {
+                return null;
+            }
+        }
     }
 
     public async createProduct(draft: CatalogProductDraft): Promise<CatalogProduct> {
-        return this.http.request({
+        const created: ProductResponse = await this.http.request({
             method: 'POST',
             path: '/v1/products',
             idempotencyKey: `vera-product-${draft.externalRef}`,
             schema: revtrieverProductSchema,
             body: {
-                externalRef: draft.externalRef,
                 name: draft.name,
-                pricing: { mode: 'external', url: draft.pricingUrl, maxAmountCents: draft.priceCeilingCents }
+                externalRef: draft.externalRef,
+                pricing: { mode: 'endpoint', url: draft.pricingUrl, capCents: draft.priceCeilingCents }
             }
         });
+        return productOf(created, draft.externalRef);
     }
 
     public async testPricing(productId: string): Promise<boolean> {
@@ -60,17 +97,24 @@ export class RevtrieverCatalogClient extends BillingCatalogPort {
             body: {},
             schema: revtrieverPricingTestSchema
         });
-        return result.ok;
+        return result.outcome === 'ok';
     }
 
     public async planByRef(externalRef: string): Promise<CatalogPlan | null> {
-        const list: z.infer<typeof revtrieverPlanListSchema> = await this.http.request({
-            method: 'GET',
-            path: `/v1/plans?${refQuery(externalRef)}`,
-            schema: revtrieverPlanListSchema
-        });
-        const found: PlanResponse | undefined = list.items.find((item: PlanResponse): boolean => item.externalRef === externalRef);
-        return found === undefined ? null : planOf(found);
+        for (let page: number = 1; ; page += 1) {
+            const result: z.infer<typeof revtrieverPlanPageSchema> = await this.http.request({
+                method: 'GET',
+                path: `/v1/plans?page=${String(page)}&pageSize=${String(PAGE_SIZE)}`,
+                schema: revtrieverPlanPageSchema
+            });
+            const found: PlanSummary | undefined = firstActivePlanNamed(result.data, externalRef);
+            if (found !== undefined) {
+                return planOf(await this.planDetail(found.id));
+            }
+            if (page >= result.pagination.totalPages) {
+                return null;
+            }
+        }
     }
 
     public async createPlan(draft: CatalogPlanDraft): Promise<CatalogPlan> {
@@ -79,7 +123,7 @@ export class RevtrieverCatalogClient extends BillingCatalogPort {
             path: '/v1/plans',
             idempotencyKey: `vera-plan-${draft.externalRef}`,
             schema: revtrieverPlanSchema,
-            body: draft
+            body: planBody(draft)
         });
         return planOf(created);
     }
@@ -89,8 +133,12 @@ export class RevtrieverCatalogClient extends BillingCatalogPort {
             method: 'PUT',
             path: `/v1/plans/${encodeURIComponent(id)}`,
             schema: revtrieverPlanSchema,
-            body: draft
+            body: planBody(draft)
         });
         return planOf(updated);
+    }
+
+    private async planDetail(id: string): Promise<PlanResponse> {
+        return this.http.request({ method: 'GET', path: `/v1/plans/${encodeURIComponent(id)}`, schema: revtrieverPlanSchema });
     }
 }

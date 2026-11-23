@@ -117,10 +117,10 @@ describe('fromEnvironment', () => {
         });
     });
     describe('motor de cobrança', () => {
-        it('usa o fake por padrão e não exige nada da Revtriever', () => {
+        it('sem driver a cobrança fica desligada e nada da Revtriever é exigido', () => {
             const config = fromEnvironment('prod', fakeEnvironment());
 
-            expect(config.billing).toEqual({ driver: 'fake', apiUrl: null, planId: null, gatewayConnectionId: null });
+            expect(config.billing).toEqual({ driver: null, apiUrl: null, planId: null, gatewayConnectionId: null });
         });
 
         it('lê o driver revtriever e as variáveis, ignorando as em branco', () => {
@@ -140,6 +140,12 @@ describe('fromEnvironment', () => {
                 planId: 'plan-x',
                 gatewayConnectionId: null
             });
+        });
+
+        it('recusa o fake em ambiente hospedado', () => {
+            for (const environment of ['dev', 'prod'] as const) {
+                expect(() => fromEnvironment(environment, fakeEnvironment({ BILLING_ENGINE_DRIVER: 'fake' }))).toThrow('fake não é aceito');
+            }
         });
 
         it('recusa driver desconhecido e revtriever sem plano', () => {

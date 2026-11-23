@@ -46,7 +46,7 @@ describe('motor de cobrança: driver fake', () => {
             customer: { externalRef: 'company-int', name: 'Empresa', email: 'dono@example.test' },
             paymentMethod: 'card'
         });
-        const session = await engine.createCardCaptureSession(subscription.id, 'https://app.example.test/settings/plan');
+        const session = await engine.createCardCaptureSession(subscription.id, 'https://app.example.test/settings/plan', 'key-1');
 
         const response: Response = await get(originOf(harness.app), new URL(session.captureUrl).pathname);
 

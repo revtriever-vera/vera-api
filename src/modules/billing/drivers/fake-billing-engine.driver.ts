@@ -54,6 +54,7 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
     private readonly cards: Map<string, SavedCard> = new Map<string, SavedCard>();
     private readonly captures: Map<string, CaptureToken> = new Map<string, CaptureToken>();
     private readonly events: EngineEvent[] = [];
+    private readonly captureSessions: Map<string, CardCaptureSession> = new Map<string, CardCaptureSession>();
     private sequence: number = 0;
 
     public constructor(
@@ -98,16 +99,22 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         return next;
     }
 
-    public async createCardCaptureSession(subscriptionId: string, returnUrl: string): Promise<CardCaptureSession> {
+    public async createCardCaptureSession(subscriptionId: string, returnUrl: string, idempotencyKey: string): Promise<CardCaptureSession> {
         this.assertAvailable();
         this.subscriptionById(subscriptionId);
+        const repeated: CardCaptureSession | undefined = this.captureSessions.get(idempotencyKey);
+        if (repeated !== undefined) {
+            return repeated;
+        }
         const token: string = randomUUID();
         const expiresAt: number = Date.now() + CAPTURE_TTL_MS;
         this.captures.set(token, { subscriptionId, returnUrl, expiresAt });
-        return {
+        const session: CardCaptureSession = {
             captureUrl: `${this.config.FAKE_BILLING_PUBLIC_URL}/billing/_dev/capture/${token}`,
             expiresAt: new Date(expiresAt).toISOString()
         };
+        this.captureSessions.set(idempotencyKey, session);
+        return session;
     }
 
     public async savedCardOf(subscriptionId: string): Promise<SavedCard | null> {

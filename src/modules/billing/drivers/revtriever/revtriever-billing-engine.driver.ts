@@ -7,22 +7,24 @@ import {
     BillingEngine,
     CardCaptureSession,
     CreateSubscriptionInput,
+    EngineEvent,
     EngineEventPage,
     EngineInvoice,
     EnginePage,
     EngineSubscription,
     OpenInvoiceStatus,
     PaymentLink,
+    PaymentMethod,
     SavedCard
 } from '../../domain/billing-engine.types';
 import { BillingEnginePort } from '../../ports/billing-engine.port';
 import {
     revtrieverCaptureSessionSchema,
     revtrieverEventPageSchema,
+    revtrieverEventSchema,
     revtrieverInvoicePageSchema,
     revtrieverInvoiceSchema,
     revtrieverPaymentLinkSchema,
-    revtrieverSavedCardSchema,
     revtrieverSubscriptionSchema
 } from '../../validation/revtriever-responses.schemas';
 import { RevtrieverHttp } from './revtriever-http';
@@ -31,17 +33,23 @@ const INVOICES_PAGE_SIZE: number = 50;
 
 type SubscriptionResponse = z.infer<typeof revtrieverSubscriptionSchema>;
 type InvoiceResponse = z.infer<typeof revtrieverInvoiceSchema>;
+type CaptureSessionResponse = z.infer<typeof revtrieverCaptureSessionSchema>;
+type EventResponse = z.infer<typeof revtrieverEventSchema>;
 
 function subscriptionOf(response: SubscriptionResponse): EngineSubscription {
     return {
         id: response.id,
         status: response.status,
         planId: response.planId,
-        customerId: response.customerId ?? null,
+        customerId: response.customer.id,
         paymentMethod: response.paymentMethod,
-        firstChargeDate: response.firstChargeDate ?? null,
-        canceledAt: response.canceledAt ?? null
+        firstChargeDate: null,
+        canceledAt: response.canceledAt
     };
+}
+
+function methodOf(value: string): PaymentMethod | null {
+    return value === 'card' || value === 'pix' ? value : null;
 }
 
 function invoiceOf(response: InvoiceResponse): EngineInvoice {
@@ -50,13 +58,13 @@ function invoiceOf(response: InvoiceResponse): EngineInvoice {
         subscriptionId: response.subscriptionId,
         status: response.status,
         totalCents: response.totalCents,
-        method: response.method ?? null,
-        dueDate: response.dueDate ?? null,
-        cycleStart: response.cycleStart ?? null,
-        cycleEnd: response.cycleEnd ?? null,
-        issuedAt: response.issuedAt ?? null,
-        paidAt: response.paidAt ?? null,
-        overdueAt: response.overdueAt ?? null
+        method: methodOf(response.paymentMethod),
+        dueDate: response.paymentDueDate ?? response.dueDate,
+        cycleStart: null,
+        cycleEnd: null,
+        issuedAt: response.issuedAt,
+        paidAt: response.paidAt,
+        overdueAt: null
     };
 }
 
@@ -74,7 +82,7 @@ export class RevtrieverBillingEngineDriver extends BillingEnginePort {
         super();
         this.gatewayConnectionId = config.REVTRIEVER_GATEWAY_CONNECTION_ID;
         this.http =
-            config.REVTRIEVER_API_KEY === null
+            !config.BILLING_ENGINE_ENABLED || config.REVTRIEVER_API_KEY === null
                 ? null
                 : new RevtrieverHttp({
                       baseUrl: config.REVTRIEVER_API_URL,
@@ -122,22 +130,24 @@ export class RevtrieverBillingEngineDriver extends BillingEnginePort {
         return subscriptionOf(response);
     }
 
-    public async createCardCaptureSession(subscriptionId: string, returnUrl: string): Promise<CardCaptureSession> {
-        return this.client().request({
+    public async createCardCaptureSession(subscriptionId: string, returnUrl: string, idempotencyKey: string): Promise<CardCaptureSession> {
+        const session: CaptureSessionResponse = await this.client().request({
             method: 'POST',
             path: `/v1/subscriptions/${segment(subscriptionId)}/card-capture-sessions`,
+            idempotencyKey,
             body: { returnUrl },
             schema: revtrieverCaptureSessionSchema
         });
+        return { captureUrl: session.captureUrl, expiresAt: session.expiresAt };
     }
 
     public async savedCardOf(subscriptionId: string): Promise<SavedCard | null> {
-        const response: z.infer<typeof revtrieverSavedCardSchema> = await this.client().request({
+        const response: SubscriptionResponse = await this.client().request({
             method: 'GET',
-            path: `/v1/subscriptions/${segment(subscriptionId)}/card`,
-            schema: revtrieverSavedCardSchema
+            path: `/v1/subscriptions/${segment(subscriptionId)}`,
+            schema: revtrieverSubscriptionSchema
         });
-        return response.card;
+        return response.card === null ? null : { brand: response.card.brand, last4: response.card.lastFourDigits };
     }
 
     public async invoiceOf(id: string): Promise<EngineInvoice> {
@@ -156,7 +166,12 @@ export class RevtrieverBillingEngineDriver extends BillingEnginePort {
             path: `/v1/invoices?${query}`,
             schema: revtrieverInvoicePageSchema
         });
-        return { ...response, items: response.items.map(invoiceOf) };
+        return {
+            items: response.data.map(invoiceOf),
+            page: response.pagination.page,
+            pageSize: response.pagination.pageSize,
+            total: response.pagination.totalRecords
+        };
     }
 
     public async invoicePaymentLinkOf(id: string): Promise<PaymentLink> {
@@ -181,7 +196,20 @@ export class RevtrieverBillingEngineDriver extends BillingEnginePort {
         if (cursor !== null) {
             params.set('cursor', cursor);
         }
-        return this.client().request({ method: 'GET', path: `/v1/events?${params.toString()}`, schema: revtrieverEventPageSchema });
+        const page: z.infer<typeof revtrieverEventPageSchema> = await this.client().request({
+            method: 'GET',
+            path: `/v1/events?${params.toString()}`,
+            schema: revtrieverEventPageSchema
+        });
+        return {
+            items: page.data.map((event: EventResponse): EngineEvent => ({
+                id: event.id,
+                type: event.type,
+                createdAt: event.occurredAt,
+                data: event.data
+            })),
+            next: page.nextCursor
+        };
     }
 
     private client(): RevtrieverHttp {

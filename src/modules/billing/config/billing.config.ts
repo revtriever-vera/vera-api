@@ -22,7 +22,6 @@ function optionalText(): z.ZodType<string | undefined, z.ZodTypeDef, unknown> {
 
 const schema = z.object({
     IS_LOCAL: isLocalSchema,
-    DEPLOYMENT_MODE: z.preprocess(blankAsUndefined, z.enum(['hosted', 'self_hosted']).optional()),
     BILLING_ENGINE_DRIVER: z.preprocess(blankAsUndefined, z.enum(BILLING_ENGINES).optional()),
     REVTRIEVER_API_URL: z.preprocess(blankAsUndefined, z.string().trim().url().default(DEFAULT_API_URL)),
     REVTRIEVER_API_KEY: optionalText(),
@@ -43,7 +42,12 @@ const schema = z.object({
 
 export interface BillingSettings {
     readonly IS_LOCAL: boolean;
+    /** Fora do local nunca é `fake`. */
     readonly BILLING_ENGINE_DRIVER: BillingEngine;
+    /** Falso: as chamadas ao motor respondem 503 `billing.provider_disabled`. */
+    readonly BILLING_ENGINE_ENABLED: boolean;
+    /** Pediram `fake` fora do local; o pedido foi recusado. */
+    readonly BILLING_FAKE_REFUSED: boolean;
     readonly REVTRIEVER_API_URL: string;
     readonly REVTRIEVER_API_KEY: string | null;
     readonly REVTRIEVER_PLAN_ID: string | null;
@@ -61,42 +65,26 @@ export interface BillingSettings {
 type Parsed = z.infer<typeof schema>;
 
 function driverOf(parsed: Parsed): BillingEngine {
-    if (parsed.BILLING_ENGINE_DRIVER !== undefined) {
-        return parsed.BILLING_ENGINE_DRIVER;
+    if (parsed.IS_LOCAL) {
+        return parsed.BILLING_ENGINE_DRIVER ?? 'fake';
     }
-    const hostedOutsideLocal: boolean = !parsed.IS_LOCAL && (parsed.DEPLOYMENT_MODE ?? 'hosted') === 'hosted';
-    if (hostedOutsideLocal) {
-        throw new Error('BILLING_ENGINE_DRIVER é obrigatório fora do ambiente local em hosted');
-    }
-    return 'fake';
+    return 'revtriever';
 }
 
-function assertRevtrieverConfigured(parsed: Parsed): void {
-    const missing: string[] = [];
-    if (parsed.REVTRIEVER_API_KEY === undefined) {
-        missing.push('REVTRIEVER_API_KEY');
+function engineEnabledOf(parsed: Parsed): boolean {
+    if (parsed.IS_LOCAL) {
+        return parsed.BILLING_ENGINE_DRIVER !== 'revtriever' || parsed.REVTRIEVER_API_KEY !== undefined;
     }
-    if (parsed.REVTRIEVER_PLAN_ID === undefined) {
-        missing.push('REVTRIEVER_PLAN_ID');
-    }
-    if (missing.length > 0 && !parsed.IS_LOCAL) {
-        throw new Error(`${missing.join(' e ')} é obrigatório com BILLING_ENGINE_DRIVER=revtriever`);
-    }
+    return (
+        parsed.BILLING_ENGINE_DRIVER === 'revtriever' && parsed.REVTRIEVER_API_KEY !== undefined && parsed.REVTRIEVER_PLAN_ID !== undefined
+    );
 }
 
-function webhookSecretOf(parsed: Parsed, driver: BillingEngine): string | null {
+function webhookSecretOf(parsed: Parsed): string | null {
     if (parsed.FAKE_BILLING_WEBHOOK_SECRET !== undefined) {
         return parsed.FAKE_BILLING_WEBHOOK_SECRET;
     }
-    if (parsed.IS_LOCAL) {
-        return DEV_WEBHOOK_SECRET;
-    }
-    if (driver === 'fake' && parsed.FAKE_BILLING_WEBHOOK_URL !== undefined) {
-        throw new Error(
-            `FAKE_BILLING_WEBHOOK_SECRET é obrigatório (mínimo ${String(MIN_SECRET_LENGTH)} caracteres) fora do local com FAKE_BILLING_WEBHOOK_URL`
-        );
-    }
-    return null;
+    return parsed.IS_LOCAL ? DEV_WEBHOOK_SECRET : null;
 }
 
 type FakeSettings = Pick<
@@ -104,31 +92,30 @@ type FakeSettings = Pick<
     'FAKE_BILLING_FORCE_FAILURE' | 'FAKE_BILLING_WEBHOOK_URL' | 'FAKE_BILLING_PUBLIC_URL' | 'FAKE_BILLING_WEBHOOK_SECRET'
 >;
 
-function fakeSettingsOf(parsed: Parsed, driver: BillingEngine): FakeSettings {
+function fakeSettingsOf(parsed: Parsed): FakeSettings {
     return {
         FAKE_BILLING_FORCE_FAILURE: parsed.FAKE_BILLING_FORCE_FAILURE === 'true',
         FAKE_BILLING_WEBHOOK_URL: parsed.FAKE_BILLING_WEBHOOK_URL ?? null,
         FAKE_BILLING_PUBLIC_URL: stripTrailing(parsed.FAKE_BILLING_PUBLIC_URL, '/'),
-        FAKE_BILLING_WEBHOOK_SECRET: webhookSecretOf(parsed, driver)
+        FAKE_BILLING_WEBHOOK_SECRET: webhookSecretOf(parsed)
     };
 }
 
 export function parseBillingConfig(env: NodeJS.ProcessEnv): BillingSettings {
     const parsed: Parsed = schema.parse(env);
     const driver: BillingEngine = driverOf(parsed);
-    if (driver === 'revtriever') {
-        assertRevtrieverConfigured(parsed);
-    }
     return {
         IS_LOCAL: parsed.IS_LOCAL,
         BILLING_ENGINE_DRIVER: driver,
+        BILLING_ENGINE_ENABLED: engineEnabledOf(parsed),
+        BILLING_FAKE_REFUSED: !parsed.IS_LOCAL && parsed.BILLING_ENGINE_DRIVER === 'fake',
         REVTRIEVER_API_URL: stripTrailing(parsed.REVTRIEVER_API_URL, '/'),
         REVTRIEVER_API_KEY: parsed.REVTRIEVER_API_KEY ?? null,
         REVTRIEVER_PLAN_ID: parsed.REVTRIEVER_PLAN_ID ?? null,
         REVTRIEVER_GATEWAY_CONNECTION_ID: parsed.REVTRIEVER_GATEWAY_CONNECTION_ID ?? null,
         REVTRIEVER_TIMEOUT_MS: parsed.REVTRIEVER_TIMEOUT_MS,
         REVTRIEVER_MAX_RETRIES: parsed.REVTRIEVER_MAX_RETRIES,
-        ...fakeSettingsOf(parsed, driver),
+        ...fakeSettingsOf(parsed),
         BILLING_PRICE_ENDPOINT_URL: parsed.BILLING_PRICE_ENDPOINT_URL ?? null,
         BILLING_PRICE_CEILING_CENTS: parsed.BILLING_PRICE_CEILING_CENTS ?? null
     };
