@@ -152,7 +152,7 @@ describe('avisos por e-mail', () => {
         expect(nextKey).toEqual({ sent: 1, skipped: 0 });
         expect(sent.map((request) => request.to.email)).toEqual([owner.user.email, owner.user.email]);
         expect(sent[0]).toMatchObject({ template: 'probe-notice', locale: 'pt-BR', props: { goal: 'Reserva' } });
-        expect(sent[0]?.unsubscribeUrl).toContain('/api/notifications/unsubscribe/');
+        expect(sent[0]?.unsubscribeUrl).toContain('/notifications/unsubscribe/');
     });
 
     it('envia a todos da conta, de qualquer papel, e só à pessoa pedida quando há userId', async () => {

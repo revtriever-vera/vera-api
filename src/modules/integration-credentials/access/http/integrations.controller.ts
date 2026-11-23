@@ -75,8 +75,8 @@ export class IntegrationsController {
         schema: integrationsViewSchema,
         example: {
             items: [ITEM_EXAMPLE],
-            webhookUrl: 'https://vera.example.com/api/whatsapp/webhook',
-            googleRedirectUri: 'https://vera.example.com/api/google/callback'
+            webhookUrl: 'https://vera.example.com/whatsapp/webhook',
+            googleRedirectUri: 'https://vera.example.com/google/callback'
         }
     })
     @ApiProblemResponse({ status: 403, description: 'Only the owner (identity.forbidden)', example: FORBIDDEN_EXAMPLE })

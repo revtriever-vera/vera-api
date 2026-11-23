@@ -438,6 +438,6 @@ describe('Google Agenda (auto-hospedada)', () => {
         expect(start.status).toBe(200);
         const url: URL = new URL(start.body.url);
         expect(url.searchParams.get('client_id')).toBe('123456-abc.apps.googleusercontent.com');
-        expect(url.searchParams.get('redirect_uri')).toBe('http://localhost:3333/api/google/callback');
+        expect(url.searchParams.get('redirect_uri')).toBe('http://localhost:3333/google/callback');
     });
 });

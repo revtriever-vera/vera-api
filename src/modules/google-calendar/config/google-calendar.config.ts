@@ -1,13 +1,14 @@
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
 import { isLocalSchema } from '../../../shared/config/environment.schema';
+import { publicApiUrl } from '../../../shared/utils/public-api-url';
 import { stripTrailing } from '../../../shared/utils/strip-trailing';
 
 const DEFAULT_PUBLIC_API_URL: string = 'http://localhost:3333';
 const DEFAULT_APP_URL: string = 'http://localhost:5173';
 const DEFAULT_TIMEOUT_MS: number = 5000;
-const HOSTED_CALLBACK_PATH: string = '/api/calendar/google/callback';
-const SELF_HOSTED_CALLBACK_PATH: string = '/api/google/callback';
+const HOSTED_CALLBACK_PATH: string = '/calendar/google/callback';
+const SELF_HOSTED_CALLBACK_PATH: string = '/google/callback';
 
 function blankAsUndefined(value: unknown): unknown {
     return typeof value === 'string' && value.trim().length === 0 ? undefined : value;
@@ -39,15 +40,14 @@ export interface GoogleCalendarSettings {
 
 export function parseGoogleCalendarConfig(env: NodeJS.ProcessEnv): GoogleCalendarSettings {
     const parsed: z.infer<typeof schema> = schema.parse(env);
-    const apiUrl: string = stripTrailing(parsed.PUBLIC_API_URL, '/');
     return {
         GOOGLE_CLIENT_ID: parsed.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: parsed.GOOGLE_CLIENT_SECRET,
         GOOGLE_CALENDAR_DRIVER: parsed.IS_LOCAL ? parsed.GOOGLE_CALENDAR_DRIVER : 'google',
         GOOGLE_CALENDAR_TIMEOUT_MS: parsed.GOOGLE_CALENDAR_TIMEOUT_MS,
         APP_URL: stripTrailing(parsed.APP_URL, '/'),
-        hostedRedirectUri: parsed.GOOGLE_CALENDAR_REDIRECT_URI ?? `${apiUrl}${HOSTED_CALLBACK_PATH}`,
-        selfHostedRedirectUri: `${apiUrl}${SELF_HOSTED_CALLBACK_PATH}`
+        hostedRedirectUri: parsed.GOOGLE_CALENDAR_REDIRECT_URI ?? publicApiUrl(parsed.PUBLIC_API_URL, HOSTED_CALLBACK_PATH),
+        selfHostedRedirectUri: publicApiUrl(parsed.PUBLIC_API_URL, SELF_HOSTED_CALLBACK_PATH)
     };
 }
 

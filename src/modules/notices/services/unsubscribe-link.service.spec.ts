@@ -35,7 +35,7 @@ describe('UnsubscribeLinkService', () => {
     it('builds the one-click URL on the public API and the confirmation page URL on the app', () => {
         const token: string = service().tokenFor(SUBJECT);
 
-        expect(service().urlFor(SUBJECT)).toBe(`https://api.vera.example/api/notifications/unsubscribe/${token}`);
+        expect(service().urlFor(SUBJECT)).toBe(`https://api.vera.example/notifications/unsubscribe/${token}`);
         expect(service().pageUrlOf(token)).toBe(`https://app.vera.example/avisos/sair/${encodeURIComponent(token)}`);
     });
 
