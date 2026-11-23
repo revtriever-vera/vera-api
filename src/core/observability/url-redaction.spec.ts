@@ -10,6 +10,22 @@ describe('redação de segredo na URL', () => {
         expect(redactUrl('/webhooks/hubspot/segredo?tentativa=2')).toBe('/webhooks/hubspot/<oculto>?tentativa=2');
     });
 
+    it('esconde o token do convite, que é a credencial do link', () => {
+        expect(redactUrl('/invites/abc123SEGREDO')).toBe('/invites/<oculto>');
+        expect(redactUrl('/invites/abc123SEGREDO?x=1')).toBe('/invites/<oculto>?x=1');
+    });
+
+    it('esconde o token da captura de cartão de dev e qualquer rota com /token/ no path', () => {
+        expect(redactUrl('/billing/_dev/capture/segredo')).toBe('/billing/_dev/capture/<oculto>');
+        expect(redactUrl('/qualquer/token/segredo/mais')).toBe('/qualquer/token/<oculto>/mais');
+    });
+
+    it('tira o token do convite também da linha serializada do log', () => {
+        const logged: string = JSON.stringify(redactRequest({ url: '/invites/SEGREDO', params: { token: 'SEGREDO' } }));
+
+        expect(logged).not.toContain('SEGREDO');
+    });
+
     it('não mexe em rota sem segredo', () => {
         expect(redactUrl('/team/members/019fda2b-a34e-7798')).toBe('/team/members/019fda2b-a34e-7798');
     });
