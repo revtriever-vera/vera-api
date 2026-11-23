@@ -1,12 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { LogService } from '../../../core/observability/log.service';
 import { AiConsentSource, AiPayloadKind } from '../domain/ai-assistant.types';
+import { AnswerCheck } from '../domain/ask-answer-guard';
 import { GuardCheck } from '../domain/summary-guard';
 import { SummaryKind, SummarySourceKind } from '../domain/summary.types';
 
 const CONSENT_IDENTIFIER: string = 'ai-consent';
 const PAYLOAD_IDENTIFIER: string = 'ai-payload';
 const SUMMARY_IDENTIFIER: string = 'ai-summary';
+const ASK_IDENTIFIER: string = 'ask-vera';
+
+export interface AskAnsweredMeta {
+    readonly source: string;
+    readonly steps: number;
+    readonly toolsUsed: readonly string[];
+    readonly truncated: boolean;
+    readonly proposals: number;
+    readonly costMicros: number;
+}
 
 @Injectable()
 export class AiAssistantLogService {
@@ -42,5 +53,17 @@ export class AiAssistantLogService {
 
     public summaryGuardFailed(kind: SummaryKind, check: GuardCheck, attempt: number): void {
         this.logService.warn({ message: 'ai summary check failed', identifier: SUMMARY_IDENTIFIER, meta: { kind, check, attempt } });
+    }
+
+    public askAnswered(meta: AskAnsweredMeta): void {
+        this.logService.info({ message: 'ask vera answered', identifier: ASK_IDENTIFIER, meta: { ...meta } });
+    }
+
+    public askToolFailed(tool: string): void {
+        this.logService.warn({ message: 'ask vera tool failed', identifier: ASK_IDENTIFIER, meta: { tool } });
+    }
+
+    public askCheckFailed(check: AnswerCheck): void {
+        this.logService.warn({ message: 'ask vera check failed', identifier: ASK_IDENTIFIER, meta: { check } });
     }
 }
