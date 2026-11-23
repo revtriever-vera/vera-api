@@ -6,7 +6,8 @@ export const QUEUES = {
     bankConnections: 'vera-bank-connections',
     plans: 'vera-plans',
     identity: 'vera-identity',
-    usage: 'vera-usage'
+    usage: 'vera-usage',
+    aiAssistant: 'vera-ai-assistant'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -27,7 +28,8 @@ export const MESSAGE_TYPES = {
     identityMembersCleanupRequested: 'identity.members.cleanup.requested',
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',
-    usageGaugeRequested: 'usage.gauge.requested'
+    usageGaugeRequested: 'usage.gauge.requested',
+    aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

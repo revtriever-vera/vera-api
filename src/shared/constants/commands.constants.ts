@@ -9,7 +9,8 @@ export const COMMAND_KEYS = {
     plansPremiumEndedSweep: 'plans-premium-ended-sweep-command',
     identityMembersCleanup: 'identity-members-cleanup-command',
     usageCleanup: 'usage-cleanup-command',
-    usageGauge: 'usage-gauge-command'
+    usageGauge: 'usage-gauge-command',
+    aiSummariesRetention: 'ai-summaries-retention-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];

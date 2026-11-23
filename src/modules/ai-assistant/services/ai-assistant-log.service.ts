@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { LogService } from '../../../core/observability/log.service';
 import { AiConsentSource, AiPayloadKind } from '../domain/ai-assistant.types';
+import { GuardCheck } from '../domain/summary-guard';
+import { SummaryKind, SummarySourceKind } from '../domain/summary.types';
 
 const CONSENT_IDENTIFIER: string = 'ai-consent';
 const PAYLOAD_IDENTIFIER: string = 'ai-payload';
+const SUMMARY_IDENTIFIER: string = 'ai-summary';
 
 @Injectable()
 export class AiAssistantLogService {
@@ -19,5 +22,25 @@ export class AiAssistantLogService {
 
     public payloadBuilt(kind: AiPayloadKind, bytes: number): void {
         this.logService.debug({ message: 'ai payload built', identifier: PAYLOAD_IDENTIFIER, meta: { kind, bytes } });
+    }
+
+    public summaryServed(kind: SummaryKind, cached: boolean, source: SummarySourceKind): void {
+        this.logService.info({
+            message: 'ai summary served',
+            identifier: SUMMARY_IDENTIFIER,
+            meta: { kind, cached, source, attempts: 0, costMicros: 0 }
+        });
+    }
+
+    public summaryGenerated(kind: SummaryKind, source: SummarySourceKind, attempts: number, costMicros: number): void {
+        this.logService.info({
+            message: 'ai summary generated',
+            identifier: SUMMARY_IDENTIFIER,
+            meta: { kind, cached: false, source, attempts, costMicros }
+        });
+    }
+
+    public summaryGuardFailed(kind: SummaryKind, check: GuardCheck, attempt: number): void {
+        this.logService.warn({ message: 'ai summary check failed', identifier: SUMMARY_IDENTIFIER, meta: { kind, check, attempt } });
     }
 }
