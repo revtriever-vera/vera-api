@@ -218,8 +218,10 @@ describe('identity account deletion and export', () => {
             { area: 'integration_credentials', erased: expect.any(Number) },
             { area: 'usage', erased: expect.any(Number) },
             { area: 'llm-calls', erased: expect.any(Number) },
+            { area: 'ai_summaries', erased: expect.any(Number) },
             { area: 'whatsapp_messages', erased: expect.any(Number) },
             { area: 'whatsapp_links', erased: expect.any(Number) },
+            { area: 'reminders', erased: expect.any(Number) },
             { area: 'stable', erased: expect.any(Number) },
             { area: 'flaky', erased: expect.any(Number) }
         ]);
@@ -342,6 +344,7 @@ describe('identity account deletion and export', () => {
         expect(body.account.identities).toEqual([{ provider: 'google', createdAt: expect.any(String), lastLoginAt: expect.any(String) }]);
         expect(body.account.sessions).toHaveLength(2);
         expect(body.sections).toEqual({
+            ai_summaries: [],
             invites: [],
             usage: [],
             whatsapp: { messages: [] },

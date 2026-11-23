@@ -69,8 +69,7 @@ export class PendingActionService {
             return texts.unavailable;
         }
         try {
-            await executor.execute(action.payload as JsonObject);
-            return texts.done;
+            return (await executor.execute(action.payload as JsonObject)) ?? texts.done;
         } catch {
             this.logs.actionFailed(action.kind, linkId);
             return texts.unavailable;

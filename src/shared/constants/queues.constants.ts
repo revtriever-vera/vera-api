@@ -8,7 +8,8 @@ export const QUEUES = {
     identity: 'vera-identity',
     usage: 'vera-usage',
     aiAssistant: 'vera-ai-assistant',
-    whatsapp: 'vera-whatsapp'
+    whatsapp: 'vera-whatsapp',
+    reminders: 'vera-reminders'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -40,7 +41,10 @@ export const MESSAGE_TYPES = {
     whatsappRetentionRequested: 'whatsapp.retention.requested',
     whatsappLinksStaleRequested: 'whatsapp.links.stale.requested',
     whatsappTurnRequested: 'whatsapp.turn.requested',
-    whatsappTurnAnswered: 'whatsapp.turn.answered'
+    whatsappTurnAnswered: 'whatsapp.turn.answered',
+    remindersFireRequested: 'reminders.fire.requested',
+    remindersSweepRequested: 'reminders.sweep.requested',
+    remindersGaugeRequested: 'reminders.gauge.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

@@ -23,7 +23,7 @@ function channelOf(overrides: Partial<WhatsAppChannel> = {}): WhatsAppChannel {
 }
 
 function remote(language: string, status: RemoteTemplate['status'], reason: string | null = null): RemoteTemplate {
-    return { name: 'vera_lembrete', language, status, remoteId: `r-${language}`, rejectedReason: reason };
+    return { name: 'vera_lembrete_v2', language, status, remoteId: `r-${language}`, rejectedReason: reason };
 }
 
 function build(channels: WhatsAppChannel[], port: Partial<WhatsAppCloudPort>, autoSubmit: boolean = true) {

@@ -14,6 +14,7 @@ import { ObservedWhatsApp } from '../drivers/observed-whatsapp';
 import { WhatsAppCloudPort } from '../ports/whatsapp-cloud.port';
 import { InboundDispatchRegistry } from '../services/inbound-dispatch.registry';
 import { MockOutbox } from '../services/mock-outbox.service';
+import { OutboundFailureRegistry } from '../services/outbound-failure.registry';
 import { SignatureVerifier } from '../services/signature.verifier';
 import { WebhookBodyService } from '../services/webhook-body.service';
 import { WhatsAppAccountEraser } from '../services/whatsapp-account.eraser';
@@ -63,6 +64,7 @@ import { WebhookApplication } from './webhook.application';
         WhatsAppDirectReply,
         WhatsAppDisplayNumber,
         InboundDispatchRegistry,
+        OutboundFailureRegistry,
         WhatsAppHousekeepingService,
         SignatureVerifier,
         WebhookBodyService,

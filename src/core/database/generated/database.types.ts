@@ -520,6 +520,37 @@ export interface QuoteFetchFailures {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface ReminderOccurrences {
+    channel: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    kind: string;
+    messageId: string | null;
+    occurrenceAt: Timestamp;
+    reminderId: string;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface Reminders {
+    canceledReason: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    dayOfMonth: number | null;
+    deletedAt: Timestamp | null;
+    id: string;
+    kind: string;
+    linkId: string | null;
+    onceAt: Timestamp | null;
+    status: string;
+    text: string;
+    timeOfDay: string;
+    timezone: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface Sessions {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -777,6 +808,8 @@ export interface DB {
     PremiumEndedNotifications: PremiumEndedNotifications;
     ProviderUsage: ProviderUsage;
     QuoteFetchFailures: QuoteFetchFailures;
+    ReminderOccurrences: ReminderOccurrences;
+    Reminders: Reminders;
     Sessions: Sessions;
     SpendingCategories: SpendingCategories;
     SpendingSettings: SpendingSettings;

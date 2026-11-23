@@ -18,6 +18,8 @@ import { WhatsAppProviderDisabledError, WhatsAppTemplateUnavailableError, WhatsA
 import { WhatsAppChannelService } from './whatsapp-channel.service';
 import { WhatsAppWindowService } from './whatsapp-window.service';
 
+export { REMINDER_TEMPLATE_KEY } from '../domain/template-catalog';
+
 @Injectable()
 export class WhatsAppOutboundService {
     public constructor(
@@ -62,7 +64,8 @@ export class WhatsAppOutboundService {
         peer: string,
         templateKey: string,
         language: TemplateLanguage,
-        variables: readonly string[]
+        variables: readonly string[],
+        buttonPayloads?: readonly string[]
     ): Promise<string> {
         const channel: WhatsAppChannel = await this.requireChannel();
         const name: string | null = currentTemplateName(templateKey);
@@ -74,7 +77,7 @@ export class WhatsAppOutboundService {
             kind: MESSAGE_KINDS.template,
             body: null,
             templateName: name,
-            payload: { template: { language, variables } }
+            payload: { template: { language, variables, ...(buttonPayloads === undefined ? {} : { buttonPayloads }) } }
         });
         await this.publish(message.id);
         return message.id;
