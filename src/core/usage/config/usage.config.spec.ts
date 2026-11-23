@@ -15,7 +15,8 @@ describe('usageConfig', () => {
 
         expect(usageConfig()).toEqual({
             PAID_USAGE_CAP_MICROS: 4_000_000,
-            PAID_USAGE_WARNING_BPS: 8000,
+            PAID_USAGE_MIN_ROOM_MICROS: 20_000,
+    PAID_USAGE_WARNING_BPS: 8000,
             USAGE_USD_BRL_FALLBACK: '5.0000',
             WHATSAPP_PRICE_TABLE: expect.objectContaining({
                 utility: expect.objectContaining({ currency: 'USD', amount: '0.0068' })

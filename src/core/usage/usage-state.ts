@@ -6,17 +6,20 @@ export interface UsageStateInput {
     readonly capMicros: number | null;
     readonly byFeatureMicros: FeatureMicros;
     readonly warningBps: number;
+    readonly minRoomMicros: number;
 }
 
 function bpsOf(used: number, cap: number): number {
     return Math.floor((used * BPS_FULL) / cap);
 }
 
-function keyOf(used: number, cap: number, warningBps: number): UsageStateKey {
-    if (used >= cap) {
+function keyOf(used: number, cap: number, warningBps: number, minRoomMicros: number): UsageStateKey {
+    const warningLine: number = (cap * warningBps) / BPS_FULL;
+    const pausedFrom: number = Math.max(cap - minRoomMicros, warningLine);
+    if (used >= cap || used >= pausedFrom) {
         return USAGE_STATES.paused;
     }
-    return used * BPS_FULL >= cap * warningBps ? USAGE_STATES.warning : USAGE_STATES.ok;
+    return used >= warningLine ? USAGE_STATES.warning : USAGE_STATES.ok;
 }
 
 function featureBps(byFeatureMicros: FeatureMicros, cap: number | null): Record<UsageFeature, number> {
@@ -36,7 +39,7 @@ export function usageStateOf(input: UsageStateInput): UsageState {
         usedMicros: used,
         usedBps: cap === null ? 0 : bpsOf(used, cap),
         byFeature: featureBps(input.byFeatureMicros, cap),
-        state: cap === null ? USAGE_STATES.ok : keyOf(used, cap, input.warningBps),
+        state: cap === null ? USAGE_STATES.ok : keyOf(used, cap, input.warningBps, input.minRoomMicros),
         resetsAt: input.resetsAt.toISOString()
     };
 }
