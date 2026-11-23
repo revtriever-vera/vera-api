@@ -39,7 +39,11 @@ describe('identity errors', () => {
     });
 
     it('expõe os códigos de papel insuficiente e de rota sem papel', () => {
-        expect(new RoleForbiddenError('editor')).toMatchObject({ code: 'members.forbidden_role', status: 403, meta: { required: 'editor' } });
+        expect(new RoleForbiddenError('editor')).toMatchObject({
+            code: 'members.forbidden_role',
+            status: 403,
+            meta: { required: 'editor' }
+        });
         expect(new RouteRoleMissingError('POST /x')).toMatchObject({ code: 'core.route_role_missing', status: 500 });
     });
 });
