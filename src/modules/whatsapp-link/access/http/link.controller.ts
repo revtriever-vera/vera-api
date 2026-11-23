@@ -7,7 +7,7 @@ import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../../identity/services/requires-role.decorator';
 import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PremiumGuard } from '../../../plans/services/premium.guard';
-import { RequiresFeature } from '../../../plans/services/requires-feature.decorator';
+import { AllowsPausedUsage, RequiresFeature } from '../../../plans/services/requires-feature.decorator';
 import { LinkCodeApplication } from '../../application/link-code.application';
 import { UnlinkApplication } from '../../application/unlink.application';
 import { CODE_REQUESTS_PER_COMPANY_PER_DAY, ONE_DAY_SECONDS } from '../../domain/whatsapp-link.types';
@@ -78,6 +78,7 @@ export class LinkController {
     @Post('code')
     @HttpCode(HttpStatus.OK)
     @RequiresFeature('whatsapp')
+    @AllowsPausedUsage()
     @UseGuards(PremiumGuard)
     @RateLimit({
         key: 'whatsapp-link-code-company',

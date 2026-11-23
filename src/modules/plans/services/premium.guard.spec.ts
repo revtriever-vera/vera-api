@@ -27,4 +27,17 @@ describe('PremiumGuard', () => {
         expect(assert).toHaveBeenCalledWith('ai');
         await expect(guard.canActivate(context())).rejects.toThrow('402');
     });
+
+    it('rota que não gasta cota passa com a cota esgotada, mas não com plano ou chave faltando', async () => {
+        const reflector: Reflector = {
+            getAllAndOverride: vi.fn().mockImplementation((key: string) => (key === 'plans:allow-paused' ? true : 'whatsapp'))
+        } as unknown as Reflector;
+        const assert = vi.fn().mockRejectedValue(new Error('402'));
+        const stateOf = vi.fn().mockResolvedValueOnce('paused').mockResolvedValueOnce('premium_required');
+        const guard: PremiumGuard = new PremiumGuard(reflector, { assert, stateOf } as unknown as PlanGateService);
+
+        expect(await guard.canActivate(context())).toBe(true);
+        expect(assert).not.toHaveBeenCalled();
+        await expect(guard.canActivate(context())).rejects.toThrow('402');
+    });
 });
