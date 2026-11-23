@@ -42,7 +42,9 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
                 status: SUBSCRIPTION_STATUSES.pending,
                 planId: draft.planId,
                 paymentMethod: draft.paymentMethod,
-                firstChargeDate: draft.firstChargeDate
+                firstChargeDate: draft.firstChargeDate,
+                discountRules: JSON.stringify(draft.discountRules),
+                discountCycleOffset: draft.discountCycleOffset
             })
             .onConflict((conflict) => conflict.doNothing())
             .returningAll()

@@ -134,6 +134,45 @@ describe('assinatura na Revtriever (driver fake)', () => {
         await sync();
     }
 
+    const RULER = [
+        { percent: 50, fromCycle: 1, toCycle: 3 },
+        { percent: 25, fromCycle: 4, toCycle: 6 }
+    ];
+
+    async function redeem(account: Account, options: { kind?: string; days?: number | null; expiresInDays?: number } = {}): Promise<void> {
+        const linkId: string = crypto.randomUUID();
+        await harness.pg.query(
+            `INSERT INTO "SignupLinks" (id, token, label, "trialKind", "trialDays", rules)
+             VALUES ($1, $2, 'Parceria', 'none', NULL, '[]'::jsonb)`,
+            [linkId, `offer-${crypto.randomUUID()}`]
+        );
+        await harness.pg.query(
+            `INSERT INTO "SignupRedemptions" (id, "companyId", "signupLinkId", source, "trialKind", "trialDays", rules, "redeemedAt", "expiresAt")
+             VALUES ($1, $2, $3, 'existing_account', $4, $5, $6::jsonb, now(), now() + make_interval(days => $7))`,
+            [
+                crypto.randomUUID(),
+                account.company.id,
+                linkId,
+                options.kind ?? 'none',
+                options.days ?? null,
+                JSON.stringify(RULER),
+                options.expiresInDays ?? 30
+            ]
+        );
+    }
+
+    async function amountOf(account: Account, cycle: number): Promise<number> {
+        return (JSON.parse((await priceOf(account, cycle)).text) as { amount: number }).amount;
+    }
+
+    async function appliedAt(account: Account): Promise<Date | null> {
+        const rows = await harness.pg.query<{ appliedAt: Date | null }>(
+            'SELECT "appliedAt" FROM "SignupRedemptions" WHERE "companyId" = $1',
+            [account.company.id]
+        );
+        return rows.rows[0]?.appliedAt ?? null;
+    }
+
     function mails(template: string): number {
         return publisher.published.filter((message: PublishedMessage) => (message.payload as { template?: string }).template === template)
             .length;
@@ -391,5 +430,72 @@ describe('assinatura na Revtriever (driver fake)', () => {
         const left = await harness.pg.query('SELECT count(*)::int AS total FROM "BillingPendingCancellations"');
         expect(left.rows[0]).toEqual({ total: 0 });
         expect((await fake().subscriptionOf((await engineIdsOf(outage)).subscription)).status).toBe('canceled');
+    });
+    it('assinar com oferta válida grava a régua na assinatura, marca o resgate e o preço sai com o desconto do ciclo', async () => {
+        const account: Account = await harness.signUp('offer-ruler');
+        await redeem(account);
+
+        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'pix' })).status).toBe(201);
+
+        const stored = await harness.pg.query<{ discountRules: unknown; discountCycleOffset: number }>(
+            'SELECT "discountRules", "discountCycleOffset" FROM "BillingSubscriptions" WHERE "companyId" = $1',
+            [account.company.id]
+        );
+        expect(stored.rows[0]).toEqual({ discountRules: RULER, discountCycleOffset: 0 });
+        expect(await appliedAt(account)).not.toBeNull();
+        expect(JSON.parse((await priceOf(account, 1)).text)).toEqual({
+            amount: 745,
+            description: 'Vera Premium — dezembro de 2026 (50% de desconto)'
+        });
+        expect(await amountOf(account, 1)).toBe(745);
+        expect(await amountOf(account, 4)).toBe(1118);
+        expect(JSON.parse((await priceOf(account, 7)).text)).toEqual({ amount: 1490, description: 'Vera Premium — dezembro de 2026' });
+    });
+
+    it('oferta vencida não vale: preço cheio e o resgate fica sem aplicar', async () => {
+        const account: Account = await harness.signUp('offer-expired');
+        await redeem(account, { expiresInDays: -1 });
+
+        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'pix' })).status).toBe(201);
+
+        expect(await amountOf(account, 1)).toBe(1490);
+        expect(await appliedAt(account)).toBeNull();
+    });
+
+    it('oferta com teste com cartão adia a primeira cobrança pelos dias do teste', async () => {
+        const account: Account = await harness.signUp('offer-card-trial');
+        await redeem(account, { kind: 'card', days: 14 });
+
+        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'pix' })).status).toBe(201);
+
+        const row = await harness.pg.query<{ firstChargeDate: string }>(
+            'SELECT "firstChargeDate" FROM "BillingSubscriptions" WHERE "companyId" = $1',
+            [account.company.id]
+        );
+        const expected: string = new Date(Date.now() + 14 * 86_400_000).toISOString().slice(0, 10);
+        expect([expected, new Date(Date.now() + 13 * 86_400_000).toISOString().slice(0, 10)]).toContain(row.rows[0]?.firstChargeDate);
+    });
+
+    it('reativar mantém a régua e continua do ciclo em que parou', async () => {
+        const account: Account = await harness.signUp('offer-resume');
+        await redeem(account);
+        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'pix' })).status).toBe(201);
+        await payPix(account);
+        expect((await priceOf(account, 1)).status).toBe(200);
+        expect((await priceOf(account, 2)).status).toBe(200);
+        await harness.pg.query(`UPDATE "BillingSubscriptions" SET "firstPaidAt" = now() - interval '30 days' WHERE "companyId" = $1`, [
+            account.company.id
+        ]);
+        expect((await harness.call(account.token, 'POST', '/billing/subscription/cancel')).status).toBe(200);
+
+        expect((await harness.call(account.token, 'POST', '/billing/subscription/resume')).status).toBe(200);
+
+        const rows = await harness.pg.query<{ discountRules: unknown; discountCycleOffset: number }>(
+            'SELECT "discountRules", "discountCycleOffset" FROM "BillingSubscriptions" WHERE "companyId" = $1 ORDER BY "createdAt"',
+            [account.company.id]
+        );
+        expect(rows.rows[1]).toEqual({ discountRules: RULER, discountCycleOffset: 2 });
+        expect(await amountOf(account, 1)).toBe(745);
+        expect(await amountOf(account, 2)).toBe(1118);
     });
 });

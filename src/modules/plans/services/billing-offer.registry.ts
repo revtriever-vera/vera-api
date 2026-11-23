@@ -1,17 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { BillingOfferPort, BillingOfferSnapshot } from './billing-offer.port';
+import { BillingOfferPort, BillingOfferSnapshot, UsableOffer } from './billing-offer.port';
 
 @Injectable()
 export class BillingOfferRegistry {
     public constructor(private readonly discovery: DiscoveryService) {}
 
     public async current(): Promise<BillingOfferSnapshot | null> {
-        const port: BillingOfferPort | undefined = this.discovery
+        return this.port()?.offer() ?? null;
+    }
+
+    public async usable(): Promise<UsableOffer | null> {
+        return this.port()?.usable() ?? null;
+    }
+
+    public async markApplied(): Promise<boolean> {
+        return (await this.port()?.markApplied()) ?? false;
+    }
+
+    private port(): BillingOfferPort | undefined {
+        return this.discovery
             .getProviders()
             .map((wrapper: InstanceWrapper): unknown => wrapper.instance)
             .find((instance: unknown): instance is BillingOfferPort => instance instanceof BillingOfferPort);
-        return port === undefined ? null : port.offer();
     }
 }

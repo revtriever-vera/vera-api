@@ -46,6 +46,8 @@ function subscription(overrides: Partial<BillingSubscription>): BillingSubscript
         canceledAt: null,
         cardBrand: null,
         cardLast4: null,
+        discountRules: [],
+        discountCycleOffset: 0,
         createdAt: NOW,
         updatedAt: NOW,
         ...overrides
