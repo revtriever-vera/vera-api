@@ -36,6 +36,8 @@ import { IdentityAccountExporter } from '../services/identity-account.exporter';
 import { IdentityLogService } from '../services/identity-log.service';
 import { IdentityMetricsService } from '../services/identity-metrics.service';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
+import { PlatformAccountReaderService } from '../services/platform-account-reader.service';
+import { SupportAccessService } from '../services/support-access.service';
 import { PlatformAuditReaderService } from '../services/platform-audit-reader.service';
 import { PlatformAuditRecorderService } from '../services/platform-audit-recorder.service';
 import { PlatformAvailabilityService } from '../services/platform-availability.service';
@@ -141,6 +143,8 @@ import { SocialLoginApplication } from './social-login.application';
         PlatformSeedService,
         PlatformAuditReaderService,
         PlatformAuditRecorderService,
+        PlatformAccountReaderService,
+        SupportAccessService,
         RefreshCookieAdapter,
         TokenService,
         IdentityLogService,
@@ -172,6 +176,8 @@ import { SocialLoginApplication } from './social-login.application';
         PlatformSeedService,
         PlatformAuditReaderService,
         PlatformAuditRecorderService,
+        PlatformAccountReaderService,
+        SupportAccessService,
         TokenService,
         RefreshCookieAdapter,
         SessionIssuerPort,

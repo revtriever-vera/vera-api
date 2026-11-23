@@ -19,4 +19,8 @@ export class PlatformAuditLogRepository extends BareGlobalRepository<'PlatformAu
     public async listRecent(limit: number): Promise<PlatformAuditEntry[]> {
         return this.findMany({}, { orderBy: [{ property: 'createdAt', direction: 'desc' }], limit });
     }
+
+    public async listOfTarget(targetCompanyId: string, action: string, limit: number): Promise<PlatformAuditEntry[]> {
+        return this.findMany({ targetCompanyId, action }, { orderBy: [{ property: 'createdAt', direction: 'desc' }], limit });
+    }
 }

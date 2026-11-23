@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { CompaniesRepository } from '../repositories/companies.repository';
+import { Page } from '../../../shared/pagination/pagination.types';
 import { Company } from './identity.types';
 
 export interface CreateCompanyInput {
@@ -26,6 +27,19 @@ export class CompanyDomain {
 
     public async findById(id: string): Promise<Company | null> {
         return this.companies.findById(id);
+    }
+
+    public async pageCustomers(page: number, pageSize: number, searchText: string | undefined): Promise<Page<Company>> {
+        return this.companies.pageCustomers(page, pageSize, searchText);
+    }
+
+    public async countCustomers(createdSince: Date | null): Promise<number> {
+        return this.companies.countCustomers(createdSince);
+    }
+
+    public async findCustomer(id: string): Promise<Company | null> {
+        const company: Company | null = await this.companies.findById(id);
+        return company === null || company.isPlatform ? null : company;
     }
 
     public async lock(companyId: string): Promise<Company | null> {

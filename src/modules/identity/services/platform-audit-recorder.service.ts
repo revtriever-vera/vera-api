@@ -20,6 +20,10 @@ export class PlatformAuditRecorderService {
         await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.signupLinkRevoked, meta);
     }
 
+    public async accountViewed(operatorUserId: string | null, targetCompanyId: string, meta: AuditMeta): Promise<void> {
+        await this.audit.record({ operatorUserId, action: PLATFORM_AUDIT_ACTIONS.accountViewed, targetCompanyId, meta });
+    }
+
     public async totpEnrolled(user: User, ip: string | undefined): Promise<void> {
         await this.recordFor(user, PLATFORM_AUDIT_ACTIONS.totpEnrolled, { ip: ip ?? null });
     }

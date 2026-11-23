@@ -29,6 +29,13 @@ export class UsersRepository extends TenantRepository<'Users'> {
         return this.findOneSkipConstraint({ id });
     }
 
+    public async findManyByIdsAcrossTenants(ids: readonly string[]): Promise<User[]> {
+        if (ids.length === 0) {
+            return [];
+        }
+        return this.selectSkipConstraint().selectAll().where('id', 'in', ids).execute();
+    }
+
     public async findByEmail(email: string): Promise<User | null> {
         return this.findOne({ email });
     }

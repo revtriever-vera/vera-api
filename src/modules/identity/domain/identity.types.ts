@@ -87,7 +87,8 @@ export const PLATFORM_AUDIT_ACTIONS = {
     totpReset: 'admin.totp_reset',
     signupLinkCreated: 'signup_link.created',
     signupLinkUpdated: 'signup_link.updated',
-    signupLinkRevoked: 'signup_link.revoked'
+    signupLinkRevoked: 'signup_link.revoked',
+    accountViewed: 'account.viewed'
 } as const;
 
 export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[keyof typeof PLATFORM_AUDIT_ACTIONS];

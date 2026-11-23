@@ -49,6 +49,10 @@ export class UserDomain {
         return this.users.findByIdAcrossTenants(id);
     }
 
+    public async findManyByIdsAcrossTenants(ids: readonly string[]): Promise<User[]> {
+        return this.users.findManyByIdsAcrossTenants(ids);
+    }
+
     public async findByEmail(email: string): Promise<User | null> {
         return this.users.findByEmail(email.toLowerCase());
     }
