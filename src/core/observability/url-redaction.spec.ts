@@ -39,6 +39,10 @@ describe('redação de segredo na URL', () => {
         expect(logged).toContain('calendar');
     });
 
+    it('esconde também no callback da instalação auto-hospedada', () => {
+        expect(redactUrl('/google/callback?code=abc&state=xyz')).toBe('/google/callback?code=<oculto>&state=<oculto>');
+    });
+
     it('não esconde code e state de outras rotas', () => {
         expect(redactUrl('/transactions?code=abc&state=open')).toBe('/transactions?code=abc&state=open');
     });

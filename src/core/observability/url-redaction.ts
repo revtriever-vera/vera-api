@@ -8,7 +8,7 @@ const SECRET_PATH_SEGMENTS: readonly RegExp[] = [
 
 const SECRET_QUERY_PARAMS: ReadonlySet<string> = new Set(['hub.verify_token']);
 
-const OAUTH_CALLBACK_PATH: RegExp = /^\/calendar\/google\/callback(?=[?#]|$)/;
+const OAUTH_CALLBACK_PATH: RegExp = /^\/(?:calendar\/)?google\/callback(?=[?#]|$)/;
 
 const OAUTH_CALLBACK_PARAMS: ReadonlySet<string> = new Set(['code', 'state']);
 
