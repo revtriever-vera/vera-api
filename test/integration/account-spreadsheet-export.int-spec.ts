@@ -130,6 +130,7 @@ describe('account spreadsheet export', () => {
             'dados.json',
             'lembretes.xlsx',
             'metas.xlsx',
+            'objetivos.xlsx',
             'regras.xlsx',
             'transacoes.xlsx'
         ]);

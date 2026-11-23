@@ -11,6 +11,7 @@ import { SpendingCategoriesAccountExporter } from '../../../src/modules/spending
 import { BankConnectionsExporter } from '../../../src/modules/bank-connections/services/bank-connections.exporter';
 import { PluggyCredentialsEraser } from '../../../src/modules/bank-connections/services/pluggy-credentials.eraser';
 import { BanksOnboardingSummary } from '../../../src/modules/bank-connections/services/banks-onboarding.summary';
+import { GoalsSampleDataService } from '../../../src/modules/goals/services/goals-sample-data.service';
 import { RecurringAccountExporter } from '../../../src/modules/recurring/services/recurring-account.exporter';
 import { RecurringSampleDataService } from '../../../src/modules/recurring/services/recurring-sample-data.service';
 import { SpendingSettingsAccountExporter } from '../../../src/modules/spending-summary/services/spending-settings-account.exporter';
@@ -19,7 +20,11 @@ import { TransactionsAccountExporter } from '../../../src/modules/transactions/s
 import { PositionsSampleDataService } from '../../../src/modules/positions/services/positions-sample-data.service';
 
 export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
-    return withoutRecurringPorts(withoutSpendingPorts(withoutPortfolioPorts(builder)));
+    return withoutGoalsPorts(withoutRecurringPorts(withoutSpendingPorts(withoutPortfolioPorts(builder))));
+}
+
+function withoutGoalsPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
+    return builder.overrideProvider(GoalsSampleDataService).useValue({});
 }
 
 function withoutRecurringPorts(builder: TestingModuleBuilder): TestingModuleBuilder {

@@ -14,7 +14,7 @@ const PRICE_TABLE: string = JSON.stringify({
     'vendor/model-a': { input: 1, output: 2, cacheRead: 0.1 },
     'vendor/model-b': { input: 1, output: 2, cacheRead: 0.1 }
 });
-const CAP_MICROS: number = 20_000;
+const CAP_MICROS: number = 1_000_000;
 
 function request(overrides: Partial<LlmGenerationRequest> = {}): LlmGenerationRequest {
     return {
