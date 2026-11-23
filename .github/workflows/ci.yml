@@ -116,6 +116,8 @@ jobs:
       REVTRIEVER_API_URL: ${{ vars.REVTRIEVER_API_URL }}
       REVTRIEVER_PLAN_ID: ${{ vars.REVTRIEVER_PLAN_ID }}
       REVTRIEVER_GATEWAY_CONNECTION_ID: ${{ vars.REVTRIEVER_GATEWAY_CONNECTION_ID }}
+      LLM_PRICE_TABLE: ${{ vars.LLM_PRICE_TABLE }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
       VERA_ENVIRONMENTS: dev
     steps:
       - uses: actions/checkout@v4

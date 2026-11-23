@@ -34,9 +34,17 @@ describe('fromEnvironment', () => {
         ]);
     });
 
-    it.each(['AWS_ACCOUNT_ID_DEV', 'SHARED_INFRA_DEV', 'VERA_DOMAIN'])('falha nomeando %s quando ela falta', (variable: string) => {
-        expect(() => fromEnvironment('dev', fakeEnvironment({ [variable]: undefined }))).toThrow(`${variable} não definida`);
+    it('recusa LLM_PRICE_TABLE que não é um objeto JSON', () => {
+        expect(() => fromEnvironment('dev', fakeEnvironment({ LLM_PRICE_TABLE: '[1]' }))).toThrow('LLM_PRICE_TABLE inválida');
+        expect(() => fromEnvironment('dev', fakeEnvironment({ LLM_PRICE_TABLE: 'x' }))).toThrow('LLM_PRICE_TABLE inválida');
     });
+
+    it.each(['AWS_ACCOUNT_ID_DEV', 'SHARED_INFRA_DEV', 'VERA_DOMAIN', 'LLM_PRICE_TABLE'])(
+        'falha nomeando %s quando ela falta',
+        (variable: string) => {
+            expect(() => fromEnvironment('dev', fakeEnvironment({ [variable]: undefined }))).toThrow(`${variable} não definida`);
+        }
+    );
 
     it('trata variável vazia como ausente', () => {
         expect(() => fromEnvironment('prod', fakeEnvironment({ AWS_ACCOUNT_ID_PROD: '  ' }))).toThrow('AWS_ACCOUNT_ID_PROD não definida');

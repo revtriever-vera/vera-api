@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DiscoveryModule } from '@nestjs/core';
 import { ContextModule } from '../../../core/context/context.module';
 import { CryptoModule } from '../../../core/crypto/crypto.module';
+import { LlmModule } from '../../../core/llm/llm.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { PlansApplicationModule } from '../../plans/application/plans-application.module';
 import { integrationCredentialsConfig } from '../config/integration-credentials.config';
@@ -11,6 +12,7 @@ import { InstanceCredentialsService } from '../services/instance-credentials.ser
 import { IntegrationAccountEraser } from '../services/integration-account.eraser';
 import { IntegrationCredentialsResealer } from '../services/integration-credentials.resealer';
 import { IntegrationCredentialsService } from '../services/integration-credentials.service';
+import { IntegrationLlmCredentialsAdapter } from '../services/integration-llm-credentials.adapter';
 import { IntegrationRemovedRegistry } from '../services/integration-removed.registry';
 import { IntegrationVaultService } from '../services/integration-vault.service';
 import { IntegrationsLogService } from '../services/integrations-log.service';
@@ -28,11 +30,13 @@ import { IntegrationsApplication } from './integrations.application';
         PlansApplicationModule,
         CryptoModule,
         ContextModule,
+        LlmModule,
         ObservabilityModule
     ],
     providers: [
         IntegrationsApplication,
         IntegrationCredentialsService,
+        IntegrationLlmCredentialsAdapter,
         IntegrationVaultService,
         InstanceCredentialsService,
         IntegrationRemovedRegistry,

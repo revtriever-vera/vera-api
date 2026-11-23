@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AsCompany } from '../../../core/context/as-company.decorator';
+import { LlmCallsHistoryService } from '../../../core/llm/services/llm-calls-history.service';
 import { PaidUsageHistoryService } from '../../../core/usage/services/paid-usage-history.service';
 import { PaidUsageMeter } from '../../../core/usage/services/paid-usage-meter.service';
 import { UsageCompaniesGaugeService } from '../../../core/usage/services/usage-companies-gauge.service';
@@ -15,7 +16,8 @@ export class UsageApplication {
         private readonly history: PaidUsageHistoryService,
         private readonly gauge: UsageCompaniesGaugeService,
         private readonly gate: PlanGateService,
-        private readonly notifier: UsageNotifier
+        private readonly notifier: UsageNotifier,
+        private readonly llmCalls: LlmCallsHistoryService
     ) {}
 
     public async read(): Promise<Usage> {
@@ -36,7 +38,7 @@ export class UsageApplication {
     }
 
     public async purgeExpired(): Promise<number> {
-        return this.history.purgeExpired();
+        return (await this.history.purgeExpired()) + (await this.llmCalls.purgeExpired());
     }
 
     public async publishGauge(): Promise<void> {

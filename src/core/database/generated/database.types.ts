@@ -355,6 +355,29 @@ export interface IntegrationCredentials {
     verifiedAt: Timestamp;
 }
 
+export interface LlmCalls {
+    attempts: number;
+    cacheReadTokens: Generated<number>;
+    companyId: string;
+    costMicros: Generated<Int8>;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    driver: string;
+    feature: string;
+    gatewayCostMicros: Int8 | null;
+    id: string;
+    inputTokens: Generated<number>;
+    latencyMs: number;
+    modelId: string;
+    outcome: string;
+    outputTokens: Generated<number>;
+    referenceId: string | null;
+    requestHash: string;
+    servedModelId: string | null;
+    task: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface OnboardingStates {
     assetsDoneAt: Timestamp | null;
     assetsSkippedAt: Timestamp | null;
@@ -609,6 +632,7 @@ export interface DB {
     GlobalProducts: GlobalProducts;
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
+    LlmCalls: LlmCalls;
     OnboardingStates: OnboardingStates;
     PaidUsageEntries: PaidUsageEntries;
     PaidUsageNotices: PaidUsageNotices;

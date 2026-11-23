@@ -3,7 +3,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { synthesize } from '../bin/vera';
 import { EnvironmentName } from '../config/environment';
-import { FAKE_DOMAIN, fakeConfig } from '../test/fixtures';
+import { FAKE_DOMAIN, FAKE_LLM_PRICE_TABLE, fakeConfig } from '../test/fixtures';
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -85,6 +85,18 @@ describe('a task do serviço', () => {
         }
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/database-url');
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/crypto-key-hex');
+    });
+
+    it('liga o modelo ao vivo com a tabela de preço e entrega a chave do gateway pelo SSM', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+        const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
+
+        expect(api.Environment).toContainEqual({ Name: 'LLM_DRIVER', Value: 'live' });
+        expect(api.Environment).toContainEqual({ Name: 'LLM_MODEL', Value: 'meta/muse-spark-1.3-contributor' });
+        expect(api.Environment).toContainEqual({ Name: 'LLM_PRICE_TABLE', Value: FAKE_LLM_PRICE_TABLE });
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('AI_GATEWAY_API_KEY');
+        expect(plainNames).not.toContain('AI_GATEWAY_API_KEY');
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/ai-gateway-api-key');
     });
 
     it('entrega JWT_SECRET pelo SSM e marca o cookie de sessão como seguro', () => {

@@ -12,6 +12,7 @@ import { RequestContextMiddleware } from './core/context/request-context.middlew
 import { HttpModule } from './core/http/http.module';
 import { AppErrorFilter } from './core/http/app-error.filter';
 import { ObservabilityModule } from './core/observability/observability.module';
+import { LlmModule } from './core/llm/llm.module';
 import { QueueModule } from './core/queue/queue.module';
 import { UsageModule } from './core/usage/usage.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
@@ -65,6 +66,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         ObservabilityModule,
         QueueModule,
         UsageModule,
+        LlmModule,
         HttpModule,
         HealthModule,
         IdentityModule,

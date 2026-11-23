@@ -252,6 +252,7 @@ describe('integration credentials (hosted)', () => {
     beforeAll(async () => {
         process.env['AI_GATEWAY_API_KEY'] = 'gateway-key-123456';
         process.env['LLM_MODEL'] = 'catalog-model';
+        process.env['LLM_PRICE_TABLE'] = JSON.stringify({ 'catalog-model': { input: 1, output: 2, cacheRead: 0 } });
         harness = await AllocationHarness.start('integrations_hosted');
         alice = await harness.signUp('alice');
     });
@@ -259,6 +260,7 @@ describe('integration credentials (hosted)', () => {
     afterAll(async () => {
         delete process.env['AI_GATEWAY_API_KEY'];
         delete process.env['LLM_MODEL'];
+        delete process.env['LLM_PRICE_TABLE'];
         await harness.stop();
     });
 

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DiscoveryModule } from '@nestjs/core';
+import { LlmModule } from '../../../core/llm/llm.module';
 import { MailModule } from '../../../core/mail/mail.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { QueueModule } from '../../../core/queue/queue.module';
@@ -23,6 +24,7 @@ import { PremiumGuard } from '../services/premium.guard';
 import { PremiumLifecycleRegistry } from '../services/premium-lifecycle.registry';
 import { PaidUsageStateAdapter } from '../services/paid-usage-state.adapter';
 import { PlanUsageContextAdapter } from '../services/plan-usage-context.adapter';
+import { LlmCallsAccountEraser } from '../services/llm-calls-account.eraser';
 import { UsageAccountEraser } from '../services/usage-account.eraser';
 import { UsageAccountExporter } from '../services/usage-account.exporter';
 import { UsageNotifier } from '../services/usage-notifier.service';
@@ -40,6 +42,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         ObservabilityModule,
         QueueModule,
         UsageModule,
+        LlmModule,
         MailModule
     ],
     providers: [
@@ -56,6 +59,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         UsageTemplates,
         UsageAccountExporter,
         UsageAccountEraser,
+        LlmCallsAccountEraser,
         PlanResolverService,
         PlanLimitService,
         FeatureStateService,

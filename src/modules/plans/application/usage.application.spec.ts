@@ -4,6 +4,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { PaidUsageHistoryService } from '../../../core/usage/services/paid-usage-history.service';
 import { PaidUsageMeter } from '../../../core/usage/services/paid-usage-meter.service';
 import { UsageCompaniesGaugeService } from '../../../core/usage/services/usage-companies-gauge.service';
+import { LlmCallsHistoryService } from '../../../core/llm/services/llm-calls-history.service';
 import { PlanGateService } from '../services/plan-gate.service';
 import { UsageNotifier } from '../services/usage-notifier.service';
 import { UsageApplication } from './usage.application';
@@ -22,14 +23,16 @@ function build(mode: 'hosted' | 'self_hosted') {
     const notify = vi.fn().mockResolvedValue(1);
     const purgeExpired = vi.fn().mockResolvedValue(4);
     const publish = vi.fn().mockResolvedValue(undefined);
+    const llmPurge = vi.fn().mockResolvedValue(3);
     const application: UsageApplication = new UsageApplication(
         { state: vi.fn().mockResolvedValue(STATE) } as unknown as PaidUsageMeter,
         { purgeExpired } as unknown as PaidUsageHistoryService,
         { publish } as unknown as UsageCompaniesGaugeService,
         { mode: vi.fn().mockReturnValue(mode) } as unknown as PlanGateService,
-        { notify } as unknown as UsageNotifier
+        { notify } as unknown as UsageNotifier,
+        { purgeExpired: llmPurge } as unknown as LlmCallsHistoryService
     );
-    return { application, notify, purgeExpired, publish };
+    return { application, notify, purgeExpired, publish, llmPurge };
 }
 
 describe('UsageApplication', () => {
@@ -63,12 +66,13 @@ describe('UsageApplication', () => {
     });
 
     it('delega a limpeza e o gauge', async () => {
-        const { application, purgeExpired, publish } = build('hosted');
+        const { application, purgeExpired, publish, llmPurge } = build('hosted');
 
-        expect(await application.purgeExpired()).toBe(4);
+        expect(await application.purgeExpired()).toBe(7);
         await application.publishGauge();
 
         expect(purgeExpired).toHaveBeenCalled();
+        expect(llmPurge).toHaveBeenCalled();
         expect(publish).toHaveBeenCalled();
     });
 });
