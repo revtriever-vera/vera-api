@@ -5,8 +5,7 @@ import { PaidUsageMeter } from '../../../core/usage/services/paid-usage-meter.se
 import { CapReachedError } from '../../../core/usage/usage.errors';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { AppError } from '../../../shared/errors/app.error';
-import type { TemplateLanguage } from '../../whatsapp/domain/whatsapp.types';
-import { REMINDER_TEMPLATE_KEY, WhatsAppOutboundService } from '../../whatsapp/services/whatsapp-outbound.service';
+import { REMINDER_TEMPLATE_KEY, TemplateLanguage, WhatsAppOutboundService } from '../../whatsapp/services/whatsapp-outbound.service';
 import { WhatsAppWindowService } from '../../whatsapp/services/whatsapp-window.service';
 import { LinkContact } from '../../whatsapp-link/services/link-contact.service';
 import { remindersConfig } from '../config/reminders.config';

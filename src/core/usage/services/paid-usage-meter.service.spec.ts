@@ -26,7 +26,7 @@ function build(state: UsageState, inserted: boolean = true, claimed: boolean = t
     const entries = { insertIfAbsent: vi.fn().mockResolvedValue(inserted) };
     const notices = { claim: vi.fn().mockResolvedValue(claimed) };
     const snapshots = { state: vi.fn().mockResolvedValue(state), invalidate: vi.fn() };
-    const publisher = { publish: vi.fn().mockResolvedValue(undefined) };
+    const publisher = { publish: vi.fn().mockResolvedValue(undefined), remove: vi.fn().mockResolvedValue(undefined) };
     const logs = { capReached: vi.fn(), recordedAboveEstimate: vi.fn(), thresholdCrossed: vi.fn() };
     const metrics = { cost: vi.fn(), capReached: vi.fn(), overshoot: vi.fn() };
     const meter: PaidUsageMeter = new PaidUsageMeter(

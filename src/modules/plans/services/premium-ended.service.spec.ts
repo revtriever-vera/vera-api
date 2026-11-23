@@ -41,7 +41,7 @@ function build(handlers: PremiumLifecyclePort[], existing: PremiumEndedNotificat
     const service: PremiumEndedService = new PremiumEndedService(
         registry as unknown as PremiumLifecycleRegistry,
         domain as unknown as PremiumEndedNotificationDomain,
-        { publish },
+        { publish, remove: vi.fn() },
         logs as unknown as PlansLogService
     );
     return { service, domain, publish, logs };

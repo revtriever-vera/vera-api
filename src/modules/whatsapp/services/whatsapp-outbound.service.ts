@@ -18,6 +18,8 @@ import { WhatsAppProviderDisabledError, WhatsAppTemplateUnavailableError, WhatsA
 import { WhatsAppChannelService } from './whatsapp-channel.service';
 import { WhatsAppWindowService } from './whatsapp-window.service';
 
+export type { TemplateLanguage };
+
 export { REMINDER_TEMPLATE_KEY } from '../domain/template-catalog';
 
 @Injectable()
