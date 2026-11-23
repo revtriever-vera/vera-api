@@ -24,7 +24,7 @@ import { IntegrationsMetricsService } from '../services/integrations-metrics.ser
 import { SaveGoogleBody, SaveLlmBody, SaveWhatsAppBody } from '../validation/integrations.schemas';
 
 const GOOGLE_CALLBACK_PATH: string = '/api/google/callback';
-const WHATSAPP_WEBHOOK_PATH: string = '/api/whatsapp';
+const WHATSAPP_WEBHOOK_PATH: string = '/api/whatsapp/webhook';
 
 @Injectable()
 export class IntegrationsApplication {

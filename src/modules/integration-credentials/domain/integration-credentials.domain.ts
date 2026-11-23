@@ -50,6 +50,10 @@ export class IntegrationCredentialsDomain {
         return this.credentials.listCompanyIdsAcrossTenants();
     }
 
+    public async listCompanyIdsByKind(kind: IntegrationKind): Promise<string[]> {
+        return this.credentials.listCompanyIdsByKindAcrossTenants(kind);
+    }
+
     public async countByKind(): Promise<KindCount[]> {
         return this.credentials.countByKindAcrossTenants();
     }

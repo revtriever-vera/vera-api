@@ -126,7 +126,7 @@ describe('integration credentials (self_hosted)', () => {
 
         const listed = await harness.call<ListBody>(alice.token, 'GET', '/integrations');
         expect(JSON.stringify(listed.body)).not.toContain(GOOD_KEY);
-        expect(listed.body.webhookUrl).toBe('https://vera.example.com/api/whatsapp');
+        expect(listed.body.webhookUrl).toBe('https://vera.example.com/api/whatsapp/webhook');
         expect(listed.body.googleRedirectUri).toBe('https://vera.example.com/api/google/callback');
         expect(listed.body.items.find((item: Item) => item.kind === 'llm')?.public['model']).toBe('model-a');
 

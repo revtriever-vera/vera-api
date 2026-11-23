@@ -39,6 +39,11 @@ export type WhatsAppCredentials = {
     wabaId: string | null;
 };
 
+export type TenantWhatsAppCredentials = {
+    companyId: string;
+    credentials: WhatsAppCredentials;
+};
+
 export type GoogleCredentials = {
     kind: 'google';
     clientId: string;
