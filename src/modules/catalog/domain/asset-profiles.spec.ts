@@ -5,7 +5,7 @@ import seedAssetsJson from '../data/seed-assets.json';
 import groupsJson from '../../issuers/data/groups.json';
 import { AssetProfileEntry, assetProfilesSchema, popularAssetsSchema, seedAssetsSchema } from '../validation/curated-maps.schemas';
 import { ASSET_PROFILES, assetProfileKey, profileOf } from './asset-profiles';
-import { SECTORS } from './sectors';
+import { SECTORS } from './sectors.types';
 
 const ENTRIES: AssetProfileEntry[] = assetProfilesSchema.parse(assetProfilesJson);
 
@@ -44,13 +44,14 @@ describe('asset-profiles.json', () => {
     it('covers every popular asset', () => {
         const seed = seedAssetsSchema.parse(seedAssetsJson);
         const symbolOf: Map<string, string> = new Map(seed.map((asset) => [`${asset.market}|${asset.externalId}`, asset.symbol]));
-        const missing: string[] = [];
-        for (const items of Object.values(popularAssetsSchema.parse(popularAssetsJson))) {
-            for (const item of items) {
-                const symbol: string = symbolOf.get(`${item.market}|${item.externalId}`) ?? item.externalId;
-                missing.push(...(profileOf(item.market, symbol).sector === null && item.market !== 'TESOURO' ? [symbol] : []));
-            }
-        }
+        const missing: string[] = Object.values(popularAssetsSchema.parse(popularAssetsJson))
+            .flat()
+            .map((item): { market: string; symbol: string } => ({
+                market: item.market,
+                symbol: symbolOf.get(`${item.market}|${item.externalId}`) ?? item.externalId
+            }))
+            .filter(({ market, symbol }): boolean => profileOf(market, symbol).sector === null && market !== 'TESOURO')
+            .map(({ symbol }): string => symbol);
 
         expect(missing).toEqual([]);
     });

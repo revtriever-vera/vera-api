@@ -32,9 +32,11 @@ const COMPANY: Company = {
     name: 'Ana',
     locale: 'pt-BR',
     timezone: 'America/Sao_Paulo',
+    isPlatform: false,
     createdAt: new Date(),
     updatedAt: new Date(),
-    deletedAt: null
+    deletedAt: null,
+    trialStartedAt: null
 };
 
 const SESSION: Session = {

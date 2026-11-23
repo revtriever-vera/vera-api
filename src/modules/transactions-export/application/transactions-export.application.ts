@@ -5,21 +5,16 @@ import { csvLine } from '../../../shared/spreadsheet/csv';
 import { EXPORT_CONTENT_TYPES, EXPORT_FORMATS, ExportFile, ExportFormat } from '../../../shared/spreadsheet/spreadsheet.types';
 import { XlsxSheetBuilder } from '../../../shared/spreadsheet/xlsx';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
-import { CategoryReaderService, SpendingCategory } from '../../spending-categories/services/category-reader.service';
+import { CategoryReaderService } from '../../spending-categories/services/category-reader.service';
 import { DescriptionNormalizerService } from '../../spending-categories/services/description-normalizer.service';
 import { FinancialAccountService } from '../../transactions/services/financial-account.service';
 import { TransactionReaderService } from '../../transactions/services/transaction-reader.service';
-import { columnsOf, csvCellsOf, exportRowOf, headerOf, xlsxCellsOf } from '../domain/export-columns';
-import { categoryLabelOf, sheetNameOf } from '../domain/export-labels';
+import { columnsOf, csvCellsOf, headerOf, xlsxCellsOf } from '../domain/export-columns';
+import { sheetNameOf } from '../domain/export-labels';
+import { categoryLabelsOf, exportRowsOf } from '../domain/export-rows';
 import { firstDayOf, lastDayOf, monthOf } from '../domain/export-period';
 import { ExportTooLargeError } from '../domain/transactions-export.errors';
-import {
-    ExportQueryPayload,
-    ExportTransaction,
-    MAX_EXPORT_ROWS,
-    TransactionExportRow,
-    TransactionFilter
-} from '../domain/transactions-export.types';
+import { ExportQueryPayload, MAX_EXPORT_ROWS, TransactionExportRow, TransactionFilter } from '../domain/transactions-export.types';
 import { TransactionsExportLogService } from '../services/transactions-export-log.service';
 import { TransactionsExportMetricsService } from '../services/transactions-export-metrics.service';
 
@@ -51,7 +46,11 @@ export class TransactionsExportApplication {
         }
         const filter: TransactionFilter = await this.filterOf(payload);
         await this.assertWithinLimit(format, filter);
-        const rows: AsyncIterable<TransactionExportRow> = this.rowsOf(filter, await this.categoryLabels(locale), locale);
+        const rows: AsyncIterable<TransactionExportRow> = exportRowsOf(
+            this.reader.pagesForExport(filter),
+            await this.categoryLabels(locale),
+            locale
+        );
         const file: RenderedFile = format === EXPORT_FORMATS.csv ? await this.csvOf(rows, locale) : await this.xlsxOf(rows, locale);
         const today: string = await this.timezones.todayInCompany();
         this.logs.exported(format, file.rows, Math.round(performance.now() - startedAt), file.content.length);
@@ -88,27 +87,7 @@ export class TransactionsExportApplication {
     }
 
     private async categoryLabels(locale: AppLocale): Promise<Map<string, string>> {
-        const categories: readonly SpendingCategory[] = await this.categories.listForCompany();
-        return new Map<string, string>(
-            categories.map((category: SpendingCategory): [string, string] => [category.id, categoryLabelOf(category, locale)])
-        );
-    }
-
-    private async *rowsOf(
-        filter: TransactionFilter,
-        labels: ReadonlyMap<string, string>,
-        locale: AppLocale
-    ): AsyncIterable<TransactionExportRow> {
-        const uncategorized: string = categoryLabelOf(undefined, locale);
-        for await (const page of this.reader.pagesForExport(filter)) {
-            yield* page.map((transaction: ExportTransaction): TransactionExportRow =>
-                exportRowOf(transaction, this.labelOf(transaction, labels, uncategorized), locale)
-            );
-        }
-    }
-
-    private labelOf(transaction: ExportTransaction, labels: ReadonlyMap<string, string>, uncategorized: string): string {
-        return transaction.categoryId === null ? uncategorized : (labels.get(transaction.categoryId) ?? uncategorized);
+        return categoryLabelsOf(await this.categories.listForCompany(), locale);
     }
 
     private async csvOf(rows: AsyncIterable<TransactionExportRow>, locale: AppLocale): Promise<RenderedFile> {

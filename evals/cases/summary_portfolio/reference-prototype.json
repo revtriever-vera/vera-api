@@ -1,0 +1,71 @@
+{
+  "id": "reference-prototype",
+  "task": "summary_portfolio",
+  "locale": "en",
+  "labels": {
+    "cls:rf_pos": "Floating-rate fixed income",
+    "cls:acoes_br": "Brazilian stocks",
+    "cls:acoes_eua": "US stocks",
+    "cls:fii": "Brazilian REITs (FIIs)"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$412,000",
+    "exposicao_dolar_pct": "18%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Floating-rate fixed income",
+        "atual": "22%",
+        "meta": "30%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Brazilian stocks",
+        "atual": "38%",
+        "meta": "30%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "acoes_eua",
+        "rotulo_padrao": "US stocks",
+        "atual": "18%",
+        "meta": "20%",
+        "situacao": "dentro"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "Brazilian REITs (FIIs)",
+        "atual": "22%",
+        "meta": "20%",
+        "situacao": "dentro"
+      }
+    ],
+    "aporte_planejado": {
+      "total": "R$5,000",
+      "por_classe": [
+        {
+          "chave": "rf_pos",
+          "valor": "R$5,000"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "mustCite": ["R$412,000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Your portfolio adds up to **R$412,000**, with 18% in dollars.",
+    "[[cls:rf_pos]] is below target (22% against 30%) and [[cls:acoes_br]] is above (38% against 30%).",
+    "You don't need to sell; just hold off on contributing to them for a while.",
+    "With **R$5,000** to contribute, the suggestion is R$5,000 in [[cls:rf_pos]]."
+  ]
+}

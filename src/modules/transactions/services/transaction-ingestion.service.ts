@@ -24,6 +24,7 @@ import {
 } from '../domain/transactions.types';
 import { DescriptionNormalizerService } from '../../spending-categories/services/description-normalizer.service';
 import { TransactionCategorizerService } from '../../spending-categories/services/transaction-categorizer.service';
+import { TransactionsChangedService } from './transactions-changed.service';
 import { TransactionsLogService } from './transactions-log.service';
 import { TransactionsMetricsService } from './transactions-metrics.service';
 
@@ -83,7 +84,8 @@ export class TransactionIngestionService {
         normalizer: DescriptionNormalizerService,
         hmac: HmacPort,
         private readonly logs: TransactionsLogService,
-        private readonly metrics: TransactionsMetricsService
+        private readonly metrics: TransactionsMetricsService,
+        private readonly changed: TransactionsChangedService
     ) {
         this.tools = {
             normalize: (text: string): string => normalizer.normalize(text),
@@ -101,6 +103,9 @@ export class TransactionIngestionService {
         }
         this.metrics.ingested(batch.source, total);
         this.logs.ingested(batch.source, account.id, total, Date.now() - startedAt);
+        if (total.inserted + total.updated + total.superseded > 0) {
+            await this.changed.notify();
+        }
         return total;
     }
 

@@ -1,0 +1,37 @@
+{
+  "id": "uma-categoria",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:shopping": "Compras"
+  },
+  "context": {
+    "meta_economia_pct": "20%",
+    "falta_por_mes": "R$ 600",
+    "status": "possivel",
+    "categorias_flexiveis": [
+      {
+        "chave": "shopping",
+        "rotulo_padrao": "Compras",
+        "atual": "R$ 1.900",
+        "media_3m": "R$ 1.200",
+        "cortar": "R$ 700",
+        "limite_sugerido": "R$ 1.200"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 600"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Para guardar 20% da renda, faltam **R$ 600** por mês.",
+    "O caminho mais leve é voltar à sua própria média onde o gasto subiu: [[cat:shopping]] (de R$ 1.900 para R$ 1.200).",
+    "Se for escolher uma só, comece por [[cat:shopping]]: cortar **R$ 700** é a maior parte dos R$ 600 que faltam."
+  ]
+}

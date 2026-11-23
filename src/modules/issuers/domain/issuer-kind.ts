@@ -1,14 +1,14 @@
 import { ISSUER_KINDS, Issuer, IssuerKind, SOVEREIGN_ISSUER_IDS } from './issuer.types';
 
-const BANK_TITLE_KINDS: readonly string[] = ['cdb', 'lci', 'lca', 'lc'];
-const COMPANY_TITLE_KINDS: readonly string[] = ['debenture', 'cri', 'cra'];
+const BANK_TITLE_KINDS: ReadonlySet<string> = new Set(['cdb', 'lci', 'lca', 'lc']);
+const COMPANY_TITLE_KINDS: ReadonlySet<string> = new Set(['debenture', 'cri', 'cra']);
 const USD_CURRENCY: string = 'USD';
 
 export function issuerKindOfTitle(titleKind: string): IssuerKind | null {
-    if (BANK_TITLE_KINDS.includes(titleKind)) {
+    if (BANK_TITLE_KINDS.has(titleKind)) {
         return ISSUER_KINDS.bank;
     }
-    return COMPANY_TITLE_KINDS.includes(titleKind) ? ISSUER_KINDS.company : null;
+    return COMPANY_TITLE_KINDS.has(titleKind) ? ISSUER_KINDS.company : null;
 }
 
 function acceptedInUsd(issuer: Issuer): boolean {

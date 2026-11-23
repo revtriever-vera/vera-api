@@ -3,7 +3,7 @@ import { DatabaseClient } from '../../../core/database/database.client';
 import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
-import { InvalidHolderError } from '../../identity/domain/members.errors';
+import { InvalidHolderError } from '../../identity/services/member-directory.service';
 import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { PositionDomain } from '../domain/position.domain';

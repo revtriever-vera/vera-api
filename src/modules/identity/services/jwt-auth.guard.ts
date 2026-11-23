@@ -25,7 +25,8 @@ export class JwtAuthGuard implements CanActivate {
             userId: claims.sub,
             companyId: claims.companyId,
             sessionId: claims.sessionId,
-            locale: claims.locale
+            locale: claims.locale,
+            platform: claims.platform
         });
         return true;
     }

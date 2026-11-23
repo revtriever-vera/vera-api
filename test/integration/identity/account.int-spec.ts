@@ -14,6 +14,7 @@ import { CompanyDomain } from '../../../src/modules/identity/domain/company.doma
 import { AccountDeletionRecord, Company, User } from '../../../src/modules/identity/domain/identity.types';
 import { UserDomain } from '../../../src/modules/identity/domain/user.domain';
 import { AuthTokens, SessionIssuerPort } from '../../../src/modules/identity/ports/session-issuer.port';
+import { AccountDataRegistry } from '../../../src/modules/identity/services/account-data.registry';
 import { AccountDataEraserPort } from '../../../src/modules/identity/services/account-data-eraser.port';
 import { AccountDataExporterPort } from '../../../src/modules/identity/services/account-data-exporter.port';
 import { tablesWithCompanyId } from '../support/company-cascade';
@@ -144,6 +145,7 @@ describe('identity account deletion and export', () => {
         flakyEraser.failing = false;
         exporter.failing = false;
         publisher.published.length = 0;
+        publisher.removed.length = 0;
     });
 
     const inCompany = async <T>(companyId: string, fn: () => Promise<T>): Promise<T> =>
@@ -165,8 +167,8 @@ describe('identity account deletion and export', () => {
             })
         );
         const meta = { ip: '203.0.113.7', userAgent: 'int-test' };
-        const tokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google'));
-        const otherTokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google'));
+        const tokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google', 'app'));
+        const otherTokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google', 'app'));
         return { company, user, tokens, otherTokens };
     }
 
@@ -210,14 +212,16 @@ describe('identity account deletion and export', () => {
         expect(await countsOf(b.company.id)).toEqual(beforeB);
         expect(stableEraser.erased).toContain(a.company.id);
         expect(stableEraser.erased).not.toContain(b.company.id);
+        const cancelled: string[] = publisher.removed.map((job) => job.jobId);
+        expect(cancelled.some((jobId: string) => jobId.startsWith(`recurring-detect-${a.company.id}-`))).toBe(true);
+        expect(cancelled.some((jobId: string) => jobId.includes(b.company.id))).toBe(false);
 
         const trail: AccountDeletionRecord[] = await deletionLog.findByCompanyId(a.company.id);
         expect(trail).toHaveLength(1);
         expect(trail[0]?.companyHash).toBe(deletionLog.hashOf(a.company.id));
-        expect(trail[0]?.areas).toEqual([
-            { area: 'stable', erased: expect.any(Number) },
-            { area: 'flaky', erased: expect.any(Number) }
-        ]);
+        const registered: string[] = app.get(AccountDataRegistry, { strict: false }).eraseAreas();
+        expect(registered).toEqual(expect.arrayContaining(['stable', 'flaky']));
+        expect(trail[0]?.areas).toEqual(registered.map((area: string) => ({ area, erased: expect.any(Number) })));
         const dump: string = JSON.stringify((await pg.query('SELECT * FROM "AccountDeletionLog"')).rows);
         expect(dump).not.toContain(a.company.id);
         expect(dump).not.toContain(a.user.email);
@@ -336,7 +340,10 @@ describe('identity account deletion and export', () => {
         expect(body.account.company.name).toBe('Empresa export-a');
         expect(body.account.identities).toEqual([{ provider: 'google', createdAt: expect.any(String), lastLoginAt: expect.any(String) }]);
         expect(body.account.sessions).toHaveLength(2);
-        expect(body.sections).toEqual({ invites: [], notes: { owner: a.company.id, items: ['item-of-this-company'] } });
+        const registered: string[] = app.get(AccountDataRegistry, { strict: false }).exportAreas();
+        expect(registered).toContain('notes');
+        expect(Object.keys(body.sections).sort()).toEqual([...registered].sort());
+        expect(body.sections['notes']).toEqual({ owner: a.company.id, items: ['item-of-this-company'] });
         expect(text).not.toContain('tokenHash');
         expect(text).not.toContain('subject');
         expect(text).not.toContain(b.user.email);

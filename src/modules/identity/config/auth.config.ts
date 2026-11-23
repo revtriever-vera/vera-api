@@ -7,6 +7,7 @@ const schema = z
         JWT_SECRET: devOnlySecret('dev-secret-do-not-use-in-prod', 32),
         ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().default(10),
         REFRESH_TOKEN_TTL_DAYS: z.coerce.number().default(30),
+        DEPLOYMENT_MODE: z.enum(['hosted', 'self_hosted']).default('hosted'),
         COOKIE_SECURE: booleanFlag(false, true),
         GOOGLE_CLIENT_ID: z.string().default(''),
         FACEBOOK_APP_ID: z.string().default(''),

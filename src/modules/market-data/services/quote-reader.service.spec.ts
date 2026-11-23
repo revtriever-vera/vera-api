@@ -20,7 +20,7 @@ function rig(
                 .mockResolvedValue(records.map((record) => ({ price: '10', currency: 'BRL', source: 'brapi', ...record })))
         } as unknown as AssetQuoteDomain,
         { findManyByIds: vi.fn().mockResolvedValue(assets) } as unknown as AssetCatalogService,
-        { publish }
+        { publish, remove: vi.fn() }
     );
     return { service, publish };
 }

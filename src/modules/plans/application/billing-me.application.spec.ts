@@ -5,7 +5,7 @@ import { BillingMeApplication } from './billing-me.application';
 
 const SELF_DECLARED: string = 'self:paramtypes';
 const OPTIONAL: string = 'optional:paramtypes';
-const SUMMARY_INDEX: number = 5;
+const SUMMARY_INDEX: number = 6;
 
 describe('BillingMeApplication', () => {
     it('injeta a porta opcional de resumo da assinatura por token explícito (tipo união chega como Object no swc)', () => {

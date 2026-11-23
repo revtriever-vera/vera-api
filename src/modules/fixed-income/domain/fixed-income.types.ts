@@ -1,6 +1,6 @@
 import { Insertable, Selectable } from 'kysely';
 import { FixedIncomeTitles, IndexSeriesPoints } from '../../../core/database/generated/database.types';
-import type { IssuerKind } from '../../issuers/domain/issuer.types';
+import type { IssuerKind } from '../../issuers/services/issuer-directory.service';
 import { Currency, FixedIncomeValuation, Indexer, TAX_REGIMES, TaxRegime } from './curve/curve.types';
 
 export type FixedIncomeTitleRow = Selectable<FixedIncomeTitles>;

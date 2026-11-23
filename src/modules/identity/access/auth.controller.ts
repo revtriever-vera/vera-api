@@ -8,7 +8,7 @@ import { RateLimit } from '../../../core/throttle/rate-limit.decorator';
 import { ProfileApplication, SessionProfile } from '../application/profile.application';
 import { SessionApplication } from '../application/session.application';
 import { SocialLoginApplication, SocialLoginResult } from '../application/social-login.application';
-import { LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
+import { LOGIN_AUDIENCES, LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
 import { AuthTokens, RequestMeta } from '../ports/session-issuer.port';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
 import { RequiresRole } from '../services/requires-role.decorator';
@@ -27,6 +27,7 @@ import {
     UpdatePreferencesDto,
     updatePreferencesSchema
 } from '../validation/auth.schemas';
+import { GoogleLoginResponse, googleLoginResponseSchema } from '../validation/totp.schemas';
 
 const SOCIAL_LOGIN_LIMIT: number = 30;
 const SOCIAL_LOGIN_WINDOW_SECONDS: number = 15 * 60;
@@ -53,10 +54,16 @@ export class AuthController {
         summary: 'Sign in (or sign up) with a Google ID token',
         description:
             'Verifies the ID token against Google, then signs the person in. A person never seen before gets a company and an ' +
-            'owner user in the same call. Sets the rt_refresh cookie.'
+            'owner user in the same call. Sets the rt_refresh cookie. With audience `admin` no session is issued: the answer is ' +
+            'a `totp_required` challenge (authenticator already active) or a `totp_enrollment_required` setup token, and the session ' +
+            'only comes from the /auth/totp endpoints.'
     })
     @ApiZodBody(googleLoginSchema)
-    @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
+    @ApiZodResponse({
+        status: 200,
+        description: 'Session issued (refresh cookie set), or the second-factor step for audience `admin`',
+        schema: googleLoginResponseSchema
+    })
     @ApiProblemResponse({
         status: 401,
         description: 'Invalid Google token (identity.invalid_google_token)',
@@ -74,6 +81,17 @@ export class AuthController {
         example: { type: 'invites.invalid', title: 'InviteInvalidError', status: 410 }
     })
     @ApiProblemResponse({
+        status: 403,
+        description:
+            'Audience `admin` with a person outside the platform company (identity.platform_only), or the app audience with a person of the platform company (identity.admin_audience_required)',
+        example: { type: 'identity.platform_only', title: 'PlatformOnlyError', status: 403 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'Audience `admin` in a self-hosted deployment (identity.platform_disabled)',
+        example: { type: 'identity.platform_disabled', title: 'PlatformDisabledError', status: 404 }
+    })
+    @ApiProblemResponse({
         status: 429,
         description: 'Too many attempts from this IP (core.too_many_attempts)',
         example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
@@ -87,8 +105,11 @@ export class AuthController {
         @Body() body: GoogleLoginDto,
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
-    ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, body.inviteToken, req, res);
+    ): Promise<GoogleLoginResponse> {
+        if (body.audience === LOGIN_AUDIENCES.admin) {
+            return this.socialLogin.loginAdmin(body.idToken, this.meta(req));
+        }
+        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }
 
     @Post('facebook')
@@ -148,7 +169,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, body.inviteToken, req, res);
+        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }
 
     @Post('refresh')
@@ -229,18 +250,22 @@ export class AuthController {
     private async signIn(
         provider: LoginProvider,
         credential: string,
-        inviteToken: string | undefined,
+        tokens: { readonly invite: string | undefined; readonly offer: string | undefined },
         req: Request,
         res: Response
     ): Promise<LoginResponse> {
-        const result: SocialLoginResult = await this.socialLogin.login(provider, credential, this.meta(req), inviteToken);
+        return this.respond(await this.socialLogin.login(provider, credential, this.meta(req), tokens.invite, tokens.offer), res);
+    }
+
+    private respond(result: SocialLoginResult, res: Response): LoginResponse {
         this.refreshCookie.write(res, result.tokens.refreshToken);
         return {
             outcome: 'authenticated',
             accessToken: result.tokens.accessToken,
             user: result.tokens.user,
             isNewAccount: result.isNewAccount,
-            joinedAccount: result.joinedAccount
+            joinedAccount: result.joinedAccount,
+            offer: result.offer
         };
     }
 

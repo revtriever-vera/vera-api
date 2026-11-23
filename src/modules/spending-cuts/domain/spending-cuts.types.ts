@@ -62,3 +62,13 @@ export interface CutsResult {
     readonly averageMonths: number;
     readonly suggestions: readonly CutSuggestion[];
 }
+
+export interface CutsObjectives {
+    readonly monthlyNeededMinor: number;
+    readonly behindCount: number;
+    readonly asGoalBps: number | null;
+}
+
+export interface CutsResponse extends CutsResult {
+    readonly objectives: CutsObjectives;
+}

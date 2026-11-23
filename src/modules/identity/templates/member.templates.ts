@@ -33,7 +33,7 @@ function invitedPtBr(props: TemplateProps): MailContent {
     const role: string = ROLE_LABELS['pt-BR'][prop(props, 'role')] ?? prop(props, 'role');
     const lines: string[] = [
         `${prop(props, 'inviterName')} te convidou para a conta dele na Vera, com o papel ${role}.`,
-        `Abra o link, entre com o Google ou o Facebook e pronto: não precisa criar senha. O link vale ${prop(props, 'days')} dias.`
+        `Abra o link e entre com a conta do Google neste e-mail. Não precisa criar senha. O link vale ${prop(props, 'days')} dias.`
     ];
     return {
         subject: `${prop(props, 'inviterName')} te convidou para a conta dele na Vera`,
@@ -51,7 +51,7 @@ function invitedEn(props: TemplateProps): MailContent {
     const role: string = ROLE_LABELS.en[prop(props, 'role')] ?? prop(props, 'role');
     const lines: string[] = [
         `${prop(props, 'inviterName')} invited you to their account on Vera, with the ${role} role.`,
-        `Open the link, sign in with Google or Facebook and you are in: no password to create. The link is valid for ${prop(props, 'days')} days.`
+        `Open the link and sign in with the Google account for this e-mail. No password to create. The link is valid for ${prop(props, 'days')} days.`
     ];
     return {
         subject: `${prop(props, 'inviterName')} invited you to their account on Vera`,

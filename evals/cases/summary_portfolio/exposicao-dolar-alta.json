@@ -1,0 +1,63 @@
+{
+  "id": "exposicao-dolar-alta",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_eua": "Ações EUA",
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:reits": "REITs"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$ 260.000",
+    "exposicao_dolar_pct": "62%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "acoes_eua",
+        "rotulo_padrao": "Ações EUA",
+        "atual": "52%",
+        "meta": "40%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "atual": "28%",
+        "meta": "40%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "reits",
+        "rotulo_padrao": "REITs",
+        "atual": "10%",
+        "meta": "10%",
+        "situacao": "dentro"
+      }
+    ],
+    "aporte_planejado": {
+      "total": "R$ 8.000",
+      "por_classe": [
+        {
+          "chave": "rf_pos",
+          "valor": "R$ 8.000"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "mustCite": ["R$ 260.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **R$ 260.000**, com 62% em dólar.",
+    "[[cls:rf_pos]] está abaixo da meta (28% contra 40%) e [[cls:acoes_eua]] está acima (52% contra 40%).",
+    "Não precisa vender; basta não aportar nelas por um tempo.",
+    "Com **R$ 8.000** de aporte, a sugestão é R$ 8.000 em [[cls:rf_pos]]."
+  ]
+}

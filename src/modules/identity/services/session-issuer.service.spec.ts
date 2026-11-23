@@ -4,8 +4,16 @@ import { AlsAppContext } from '../../../core/context/als-app-context';
 import { ContextHolder } from '../../../core/context/as-company.decorator';
 import { authConfig } from '../config/auth.config';
 import { CompanyDomain } from '../domain/company.domain';
-import { AccountClosedError, InvalidRefreshTokenError, ReusedRefreshTokenError } from '../domain/identity.errors';
+import {
+    AccountClosedError,
+    AdminAudienceRequiredError,
+    SecondFactorRequiredError,
+    InvalidRefreshTokenError,
+    PlatformOnlyError,
+    ReusedRefreshTokenError
+} from '../domain/identity.errors';
 import { Company, Session, User } from '../domain/identity.types';
+import { proveSecondFactor } from '../domain/second-factor.proof';
 import { SessionDomain } from '../domain/session.domain';
 import { UserDomain } from '../domain/user.domain';
 import { AuthTokens } from '../ports/session-issuer.port';
@@ -42,9 +50,11 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
         name: 'Ana',
         locale: 'pt-BR',
         timezone: 'America/Sao_Paulo',
+        isPlatform: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        trialStartedAt: null,
         ...overrides
     };
 }
@@ -132,7 +142,7 @@ describe('SessionIssuerService.issueForNewLogin', () => {
         const doubles: Doubles = build();
 
         const tokens: AuthTokens = await inRequest(async () =>
-            doubles.service.issueForNewLogin(makeUser(), { ip: '10.0.0.1', userAgent: 'agent' }, 'facebook')
+            doubles.service.issueForNewLogin(makeUser(), { ip: '10.0.0.1', userAgent: 'agent' }, 'facebook', 'app')
         );
 
         expect(tokens.accessToken).toBe('jwt');
@@ -153,7 +163,7 @@ describe('SessionIssuerService.issueForNewLogin', () => {
             return Promise.resolve(makeCompany());
         });
 
-        await inRequest(async () => doubles.service.issueForNewLogin(makeUser({ companyId: 'company-9' }), {}, 'google'));
+        await inRequest(async () => doubles.service.issueForNewLogin(makeUser({ companyId: 'company-9' }), {}, 'google', 'app'));
 
         expect(seen).toBe('company-9');
     });
@@ -161,15 +171,59 @@ describe('SessionIssuerService.issueForNewLogin', () => {
     it('leva no claim o idioma efetivo: o pessoal vence o da company', async () => {
         const doubles: Doubles = build({ company: makeCompany({ locale: 'pt-BR' }) });
 
-        await inRequest(async () => doubles.service.issueForNewLogin(makeUser({ locale: 'en' }), {}, 'google'));
+        await inRequest(async () => doubles.service.issueForNewLogin(makeUser({ locale: 'en' }), {}, 'google', 'app'));
 
-        expect(doubles.signAccessToken).toHaveBeenCalledWith('user-1', 'company-1', 'session-2', 'en');
+        expect(doubles.signAccessToken).toHaveBeenCalledWith('user-1', 'company-1', 'session-2', 'en', false);
+    });
+
+    it('assina o claim platform só para a company de sistema na audiência admin', async () => {
+        const doubles: Doubles = build({ company: makeCompany({ isPlatform: true }) });
+
+        await inRequest(async () => doubles.service.issueForPlatform(makeUser(), {}, 'google', proveSecondFactor('user-1', 'totp')));
+
+        expect(doubles.signAccessToken).toHaveBeenCalledWith('user-1', 'company-1', 'session-2', 'pt-BR', true);
+    });
+
+    it('nenhuma sessão da audiência admin sai sem a prova do segundo fator', async () => {
+        const doubles: Doubles = build({ company: makeCompany({ isPlatform: true }) });
+
+        await expect(inRequest(async () => doubles.service.issueForNewLogin(makeUser(), {}, 'google', 'admin'))).rejects.toBeInstanceOf(
+            SecondFactorRequiredError
+        );
+        expect(doubles.sessionDomain['issue']).not.toHaveBeenCalled();
+    });
+
+    it('a prova de outra pessoa não vale para a sessão da plataforma', async () => {
+        const doubles: Doubles = build({ company: makeCompany({ isPlatform: true }) });
+
+        await expect(
+            inRequest(async () => doubles.service.issueForPlatform(makeUser(), {}, 'google', proveSecondFactor('user-2', 'recovery_code')))
+        ).rejects.toBeInstanceOf(SecondFactorRequiredError);
+        expect(doubles.sessionDomain['issue']).not.toHaveBeenCalled();
+    });
+
+    it('a pessoa da company de sistema não entra pela audiência do app', async () => {
+        const doubles: Doubles = build({ company: makeCompany({ isPlatform: true }) });
+
+        await expect(inRequest(async () => doubles.service.issueForNewLogin(makeUser(), {}, 'google', 'app'))).rejects.toBeInstanceOf(
+            AdminAudienceRequiredError
+        );
+        expect(doubles.sessionDomain['issue']).not.toHaveBeenCalled();
+    });
+
+    it('a audiência admin recusa quem não é da company de sistema', async () => {
+        const doubles: Doubles = build();
+
+        await expect(
+            inRequest(async () => doubles.service.issueForPlatform(makeUser(), {}, 'google', proveSecondFactor('user-1', 'totp')))
+        ).rejects.toBeInstanceOf(PlatformOnlyError);
+        expect(doubles.sessionDomain['issue']).not.toHaveBeenCalled();
     });
 
     it('lança account_closed quando a company foi apagada', async () => {
         const doubles: Doubles = build({ company: null });
 
-        await expect(inRequest(async () => doubles.service.issueForNewLogin(makeUser(), {}, 'google'))).rejects.toBeInstanceOf(
+        await expect(inRequest(async () => doubles.service.issueForNewLogin(makeUser(), {}, 'google', 'app'))).rejects.toBeInstanceOf(
             AccountClosedError
         );
     });

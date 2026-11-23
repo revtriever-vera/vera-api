@@ -1,0 +1,61 @@
+{
+  "id": "sem-aporte-planejado",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:acoes_br": "Ações Brasil",
+    "cls:acoes_eua": "Ações EUA",
+    "cls:fii": "FIIs"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$ 98.000",
+    "exposicao_dolar_pct": "12%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "atual": "22%",
+        "meta": "30%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "atual": "38%",
+        "meta": "30%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "acoes_eua",
+        "rotulo_padrao": "Ações EUA",
+        "atual": "18%",
+        "meta": "20%",
+        "situacao": "dentro"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "FIIs",
+        "atual": "22%",
+        "meta": "20%",
+        "situacao": "dentro"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 98.000"],
+    "mustMention": [],
+    "mustNotMention": ["de aporte, a sugestão"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **R$ 98.000**, com 12% em dólar.",
+    "[[cls:rf_pos]] está abaixo da meta (22% contra 30%) e [[cls:acoes_br]] está acima (38% contra 30%).",
+    "Não precisa vender; basta não aportar nelas por um tempo."
+  ]
+}

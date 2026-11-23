@@ -4,8 +4,11 @@ import {
     AccountInvites,
     AuthIdentities,
     Companies,
+    PlatformAuditLog,
     Sessions,
-    Users
+    UserRecoveryCodes,
+    Users,
+    UserTotps
 } from '../../../core/database/generated/database.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 
@@ -20,8 +23,14 @@ export type NewUser = Insertable<Users>;
 export type NewSession = Insertable<Sessions>;
 export type NewAuthIdentity = Insertable<AuthIdentities>;
 export type NewAccountDeletionRecord = Insertable<AccountDeletionLog>;
+export type PlatformAuditEntry = Selectable<PlatformAuditLog>;
+export type NewPlatformAuditEntry = Insertable<PlatformAuditLog>;
 export type AccountInvite = Selectable<AccountInvites>;
 export type NewAccountInvite = Insertable<AccountInvites>;
+export type UserTotp = Selectable<UserTotps>;
+export type NewUserTotp = Insertable<UserTotps>;
+export type UserRecoveryCode = Selectable<UserRecoveryCodes>;
+export type NewUserRecoveryCode = Insertable<UserRecoveryCodes>;
 
 export const USER_ROLES = {
     owner: 'owner',
@@ -62,8 +71,46 @@ export const LOGIN_OUTCOMES = {
 
 export type LoginOutcome = (typeof LOGIN_OUTCOMES)[keyof typeof LOGIN_OUTCOMES];
 
+export const LOGIN_AUDIENCES = {
+    app: 'app',
+    admin: 'admin'
+} as const;
+
+export type LoginAudience = (typeof LOGIN_AUDIENCES)[keyof typeof LOGIN_AUDIENCES];
+
+export const PLATFORM_AUDIT_ACTIONS = {
+    login: 'admin.login',
+    denied: 'admin.denied',
+    totpEnrolled: 'admin.totp_enrolled',
+    recoveryCodeUsed: 'admin.recovery_code_used',
+    totpLocked: 'admin.totp_locked',
+    totpReset: 'admin.totp_reset',
+    signupLinkCreated: 'signup_link.created',
+    signupLinkRevoked: 'signup_link.revoked'
+} as const;
+
+export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[keyof typeof PLATFORM_AUDIT_ACTIONS];
+
+export const PLATFORM_SEED_OUTCOMES = {
+    created: 'created',
+    unchanged: 'unchanged'
+} as const;
+
+export type PlatformSeedOutcome = (typeof PLATFORM_SEED_OUTCOMES)[keyof typeof PLATFORM_SEED_OUTCOMES];
+
+export const PLATFORM_TOTP_RESET_OUTCOMES = {
+    reset: 'reset',
+    notFound: 'not_found'
+} as const;
+
+export type PlatformTotpResetOutcome = (typeof PLATFORM_TOTP_RESET_OUTCOMES)[keyof typeof PLATFORM_TOTP_RESET_OUTCOMES];
+
+export const PLATFORM_COMPANY_NAME: string = 'Vera (sistema)';
+
 export const TOKEN_PURPOSES = {
-    access: 'access'
+    access: 'access',
+    totpChallenge: 'totp_challenge',
+    totpEnrollment: 'totp_enrollment'
 } as const;
 
 export type TokenPurpose = (typeof TOKEN_PURPOSES)[keyof typeof TOKEN_PURPOSES];

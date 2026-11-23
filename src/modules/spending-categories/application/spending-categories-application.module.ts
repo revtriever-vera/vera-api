@@ -5,8 +5,10 @@ import { ObservabilityModule } from '../../../core/observability/observability.m
 import { SpendingCategoriesDomainModule } from '../domain/spending-categories-domain.module';
 import { CategoryReaderService } from '../services/category-reader.service';
 import { CategoryRuleService } from '../services/category-rule.service';
+import { MerchantDictionaryService } from '../services/merchant-dictionary.service';
 import { DescriptionNormalizerService } from '../services/description-normalizer.service';
 import { RecategorizationRegistry } from '../services/recategorization.registry';
+import { RulesAccountSpreadsheet } from '../services/rules-account.spreadsheet';
 import { SpendingCategoriesAccountExporter } from '../services/spending-categories-account.exporter';
 import { SpendingCategoriesLogService } from '../services/spending-categories-log.service';
 import { SpendingCategoriesMetricsService } from '../services/spending-categories-metrics.service';
@@ -22,13 +24,17 @@ import { RuleApplication } from './rule.application';
         SpendingCategoriesLogService,
         SpendingCategoriesMetricsService,
         SpendingCategoriesAccountExporter,
+        RulesAccountSpreadsheet,
         RecategorizationRegistry,
         CategoryReaderService,
         CategoryRuleService,
         DescriptionNormalizerService,
+        MerchantDictionaryService,
         TransactionCategorizerService
     ],
     exports: [
+        MerchantDictionaryService,
+        RecategorizationRegistry,
         CategoryApplication,
         RuleApplication,
         CategoryReaderService,

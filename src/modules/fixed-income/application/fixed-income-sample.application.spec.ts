@@ -38,7 +38,7 @@ describe('FixedIncomeSampleApplication', () => {
         expect(titles.createSample).toHaveBeenCalledTimes(3);
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'CDB Exemplo 110% CDI', 'class-rf_pos', true);
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'LCI Exemplo Pré 11,5%', 'class-rf_pre', true);
-        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Debênture Exemplo IPCA+6%', 'class-rf_ipca', true);
+        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'CDB Exemplo IPCA+6%', 'class-rf_ipca', true);
     });
 
     it('semeia os títulos com nomes em inglês numa sessão em inglês', async () => {
@@ -48,7 +48,7 @@ describe('FixedIncomeSampleApplication', () => {
 
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample CDB 110% CDI', 'class-rf_pos', true);
         expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample LCI Fixed 11.5%', 'class-rf_pre', true);
-        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample Debenture IPCA+6%', 'class-rf_ipca', true);
+        expect(assignments.assign).toHaveBeenCalledWith('fixed_income', 'Sample CDB IPCA+6%', 'class-rf_ipca', true);
     });
 
     it('não semeia quando já há título real', async () => {

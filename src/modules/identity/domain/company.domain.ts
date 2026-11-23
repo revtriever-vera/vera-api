@@ -16,12 +16,24 @@ export class CompanyDomain {
         return this.companies.create({ name: input.name, locale: input.locale });
     }
 
+    public async createPlatform(name: string): Promise<Company> {
+        return this.companies.create({ name, isPlatform: true });
+    }
+
+    public async findPlatform(): Promise<Company | null> {
+        return this.companies.findPlatform();
+    }
+
     public async findById(id: string): Promise<Company | null> {
         return this.companies.findById(id);
     }
 
     public async lock(companyId: string): Promise<Company | null> {
         return this.companies.lockById(companyId);
+    }
+
+    public async markTrialStarted(companyId: string, at: Date): Promise<boolean> {
+        return this.companies.markTrialStarted(companyId, at);
     }
 
     public async eraseCompany(companyId: string): Promise<boolean> {

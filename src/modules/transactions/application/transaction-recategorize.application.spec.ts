@@ -9,6 +9,8 @@ import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { TransactionNotFoundError } from '../domain/transactions.errors';
 import { Transaction } from '../domain/transactions.types';
+import { TransactionViewService } from '../services/transaction-view.service';
+import { TransactionsRecurringService } from '../services/transactions-recurring.service';
 import { TransactionsLogService } from '../services/transactions-log.service';
 import { TransactionsMetricsService } from '../services/transactions-metrics.service';
 import { TransactionsRecategorizationDriver } from '../services/transactions-recategorization.driver';
@@ -42,7 +44,6 @@ function build(current: Transaction, kind: string = 'expense'): Built {
                 ),
             patch
         } as unknown as TransactionDomain,
-        { require: vi.fn().mockResolvedValue(makeFinancialAccount({ name: 'Itaú' })) } as unknown as FinancialAccountDomain,
         {
             requireById: vi.fn().mockImplementation((id: string) => Promise.resolve(makeCategory({ id, kind })))
         } as unknown as CategoryReaderService,
@@ -50,7 +51,13 @@ function build(current: Transaction, kind: string = 'expense'): Built {
         { categorize } as unknown as TransactionCategorizerService,
         { recategorize } as unknown as TransactionsRecategorizationDriver,
         { recategorized: recategorizedLog } as unknown as TransactionsLogService,
-        { recategorized: vi.fn() } as unknown as TransactionsMetricsService
+        { recategorized: vi.fn() } as unknown as TransactionsMetricsService,
+        new TransactionViewService(
+            {
+                findByIds: vi.fn().mockResolvedValue([makeFinancialAccount({ name: 'Itaú', id: current.accountId })])
+            } as unknown as FinancialAccountDomain,
+            { markedIn: vi.fn().mockResolvedValue(new Set<string>([current.id])) } as unknown as TransactionsRecurringService
+        )
     );
     return { application, patch, upsert, recategorize, categorize, recategorizedLog };
 }
@@ -75,7 +82,11 @@ describe('TransactionRecategorizeApplication', () => {
 
         expect(built.patch).toHaveBeenCalledWith('t1', { categoryId: 'cat-1', categorySource: 'user', ruleId: null });
         expect(built.upsert).not.toHaveBeenCalled();
-        expect(saved).toMatchObject({ rule: null, recategorized: 0, transaction: { accountName: 'Itaú', categorySource: 'user' } });
+        expect(saved).toMatchObject({
+            rule: null,
+            recategorized: 0,
+            transaction: { accountName: 'Itaú', categorySource: 'user', isRecurring: true }
+        });
     });
 
     it('com regra de favorecido cria a regra, aplica ao passado pela porta e devolve a contagem', async () => {

@@ -40,14 +40,39 @@ export class PlanDomain {
         return this.contracts.findOpen(productId);
     }
 
+    public async hasAnyLineOf(productId: string): Promise<boolean> {
+        return this.contracts.hasAny(productId);
+    }
+
     public async open(
         productId: string,
         priceCents: number,
         startsAt: Date,
         source: ContractSource,
-        subscriptionId: string | null
+        subscriptionId: string | null,
+        trialEndsAt: Date | null
     ): Promise<boolean> {
-        return this.contracts.openLine({ productId, priceCents, startsAt, source, subscriptionId });
+        return this.contracts.openLine({ productId, priceCents, startsAt, source, subscriptionId, trialEndsAt });
+    }
+
+    public async attachSubscription(productId: string, subscriptionId: string): Promise<boolean> {
+        return this.contracts.attachSubscription(productId, subscriptionId);
+    }
+
+    public async detachSubscription(productId: string): Promise<boolean> {
+        return this.contracts.detachSubscription(productId);
+    }
+
+    public async convertTrial(productId: string, subscriptionId: string, priceCents: number): Promise<boolean> {
+        return this.contracts.convertTrial(productId, subscriptionId, priceCents);
+    }
+
+    public async markTrialNoticeSent(productId: string, at: Date): Promise<boolean> {
+        return this.contracts.markNoticeSent(productId, at);
+    }
+
+    public async trialsToProcess(now: Date, noticeUntil: Date, limit: number): Promise<CompanyProduct[]> {
+        return this.contracts.listTrialsToProcessAcrossTenants(now, noticeUntil, limit);
     }
 
     public async close(productId: string, endsAt: Date, reason: ContractEndReason): Promise<boolean> {

@@ -13,6 +13,7 @@ import {
     RecordImportInput,
     TransactionImport
 } from '../domain/transactions.types';
+import { TransactionsChangedService } from './transactions-changed.service';
 
 export type { FinishImportInput, ImportView, RecordImportInput };
 
@@ -21,7 +22,8 @@ export class TransactionImportService {
     public constructor(
         private readonly imports: TransactionImportDomain,
         private readonly accounts: FinancialAccountDomain,
-        private readonly transactions: TransactionDomain
+        private readonly transactions: TransactionDomain,
+        private readonly changed: TransactionsChangedService
     ) {}
 
     public async record(input: RecordImportInput): Promise<ImportView> {
@@ -42,6 +44,9 @@ export class TransactionImportService {
         const removed: number = await this.transactions.removeByImport(id);
         await this.transactions.releaseAbsorbedByImport(id);
         await this.imports.markUndone(id);
+        if (removed > 0) {
+            await this.changed.notify();
+        }
         return { removed };
     }
 

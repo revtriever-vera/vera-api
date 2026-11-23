@@ -42,6 +42,11 @@ export class DateUtil {
         return DateUtil.midnightIn(timeZone, Date.UTC(today.year, today.month - 1, today.day + 1));
     }
 
+    public static startOfNextMonthIn(timeZone: string, at: Date): Date {
+        const today: DateParts = DateUtil.partsIn(timeZone, at);
+        return DateUtil.midnightIn(timeZone, Date.UTC(today.year, today.month, 1));
+    }
+
     public static startOfTodayInBrazil(now: Date = new Date()): Date {
         return new Date(`${DateUtil.todayInBrazil(now)}T00:00:00${BRAZIL_UTC_OFFSET}`);
     }
@@ -88,6 +93,10 @@ export class DateUtil {
         const leftDay: number = Date.UTC(left.getFullYear(), left.getMonth(), left.getDate());
         const rightDay: number = Date.UTC(right.getFullYear(), right.getMonth(), right.getDate());
         return Math.floor((rightDay - leftDay) / DAY_MS);
+    }
+
+    public static daysLeftUntil(endsAt: Date, now: Date = new Date()): number {
+        return Math.max(0, Math.ceil((endsAt.getTime() - now.getTime()) / DAY_MS));
     }
 
     public static isSameCalendarDay(a: DateInput, b: DateInput): boolean {

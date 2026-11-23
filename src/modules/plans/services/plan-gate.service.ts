@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CapReachedError, FeatureDisabledError, PremiumRequiredError } from '../domain/plans.errors';
+import { CapReachedError } from '../../../core/usage/usage.errors';
+import { FeatureDisabledError, PremiumRequiredError } from '../domain/plans.errors';
 import { DeploymentMode, EffectivePlan, FEATURE_STATES, FeatureState, PaidFeature, PaidUsageSnapshot } from '../domain/plans.types';
 import { FeatureStateService } from './feature-state.service';
 import { PaidUsageReader } from './paid-usage-reader.service';

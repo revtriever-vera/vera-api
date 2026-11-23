@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await -- o fake implementa o porte assíncrono do motor; os erros de assertAvailable precisam virar rejeição, não throw síncrono */
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
@@ -69,15 +70,7 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         if (known !== undefined) {
             return this.subscriptionById(known);
         }
-        const subscription: EngineSubscription = {
-            id: this.nextId('sub'),
-            status: 'pending',
-            planId: input.planId,
-            customerId: this.customerOf(input.customer.externalRef),
-            paymentMethod: input.paymentMethod,
-            firstChargeDate: input.firstChargeDate ?? null,
-            canceledAt: null
-        };
+        const subscription: EngineSubscription = this.newSubscription(input);
         this.subscriptions.set(subscription.id, subscription);
         this.created.set(input.idempotencyKey, subscription.id);
         await this.emit('subscription.created', subscription.id, {});
@@ -161,6 +154,18 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         const items: EngineEvent[] = this.events.slice(start, start + limit);
         const end: number = start + items.length;
         return { items, next: end < this.events.length ? String(end) : null };
+    }
+
+    private newSubscription(input: CreateSubscriptionInput): EngineSubscription {
+        return {
+            id: this.nextId('sub'),
+            status: 'pending',
+            planId: input.planId,
+            customerId: this.customerOf(input.customer.externalRef),
+            paymentMethod: input.paymentMethod,
+            firstChargeDate: input.firstChargeDate ?? null,
+            canceledAt: null
+        };
     }
 
     public captureOf(token: string): CaptureToken | null {

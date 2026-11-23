@@ -4,10 +4,19 @@ import { AsCompany } from '../../../core/context/as-company.decorator';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { authConfig } from '../config/auth.config';
 import { CompanyDomain } from '../domain/company.domain';
-import { AccountClosedError, InvalidRefreshTokenError, ReusedRefreshTokenError } from '../domain/identity.errors';
+import {
+    AccountClosedError,
+    AdminAudienceRequiredError,
+    InvalidRefreshTokenError,
+    PlatformOnlyError,
+    ReusedRefreshTokenError,
+    SecondFactorRequiredError
+} from '../domain/identity.errors';
 import {
     Company,
     effectiveLocale,
+    LOGIN_AUDIENCES,
+    LoginAudience,
     LoginProvider,
     REFRESH_OUTCOMES,
     RefreshOutcome,
@@ -15,6 +24,7 @@ import {
     User,
     UserRole
 } from '../domain/identity.types';
+import { SecondFactorProof } from '../domain/second-factor.proof';
 import { SessionDomain } from '../domain/session.domain';
 import { UserDomain } from '../domain/user.domain';
 import { SessionValidation } from '../domain/validations/session.validation';
@@ -51,8 +61,18 @@ export class SessionIssuerService implements SessionIssuerPort {
         @Inject(authConfig.KEY) private readonly config: ConfigType<typeof authConfig>
     ) {}
 
-    public async issueForNewLogin(user: User, meta: RequestMeta, provider: LoginProvider): Promise<AuthTokens> {
-        return this.issueInCompany(user.companyId, user, meta, provider);
+    public async issueForNewLogin(user: User, meta: RequestMeta, provider: LoginProvider, audience: LoginAudience): Promise<AuthTokens> {
+        if (audience === LOGIN_AUDIENCES.admin) {
+            throw new SecondFactorRequiredError();
+        }
+        return this.issueInCompany(user.companyId, user, meta, provider, audience);
+    }
+
+    public async issueForPlatform(user: User, meta: RequestMeta, provider: LoginProvider, proof: SecondFactorProof): Promise<AuthTokens> {
+        if (proof.userId !== user.id) {
+            throw new SecondFactorRequiredError();
+        }
+        return this.issueInCompany(user.companyId, user, meta, provider, LOGIN_AUDIENCES.admin);
     }
 
     public async refresh(rawRefreshToken: string, meta: RequestMeta): Promise<AuthTokens> {
@@ -75,8 +95,15 @@ export class SessionIssuerService implements SessionIssuerPort {
     }
 
     @AsCompany()
-    private async issueInCompany(_companyId: string, user: User, meta: RequestMeta, provider: LoginProvider): Promise<AuthTokens> {
+    private async issueInCompany(
+        _companyId: string,
+        user: User,
+        meta: RequestMeta,
+        provider: LoginProvider,
+        audience: LoginAudience
+    ): Promise<AuthTokens> {
         const company: Company = await this.requireOpenCompany(user.companyId);
+        this.assertAudience(company, audience);
         const issued: Issued = await this.issue({
             user,
             company,
@@ -130,6 +157,15 @@ export class SessionIssuerService implements SessionIssuerPort {
         throw new ReusedRefreshTokenError();
     }
 
+    private assertAudience(company: Company, audience: LoginAudience): void {
+        if (company.isPlatform && audience !== LOGIN_AUDIENCES.admin) {
+            throw new AdminAudienceRequiredError();
+        }
+        if (!company.isPlatform && audience === LOGIN_AUDIENCES.admin) {
+            throw new PlatformOnlyError();
+        }
+    }
+
     private async requireOpenCompany(companyId: string): Promise<Company> {
         const company: Company | null = await this.companyDomain.findById(companyId);
         if (!company) {
@@ -157,7 +193,7 @@ export class SessionIssuerService implements SessionIssuerPort {
         return {
             sessionId: session.id,
             tokens: {
-                accessToken: this.tokens.signAccessToken(input.user.id, input.user.companyId, session.id, locale),
+                accessToken: this.tokens.signAccessToken(input.user.id, input.user.companyId, session.id, locale, input.company.isPlatform),
                 refreshToken: opaque.raw,
                 user: this.sessionUserOf(input.user)
             }

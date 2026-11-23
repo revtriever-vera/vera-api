@@ -10,7 +10,7 @@ import { IssuersLogService } from './issuers-log.service';
 
 const EMPTY_INDEX: IssuerIndex = { records: new Map<string, IssuerRecord>(), groups: new Map<string, IssuerGroup>() };
 
-export type { ResolvedIssuer };
+export type { Issuer, IssuerKind, ResolvedIssuer };
 
 @Injectable()
 export class IssuerDirectoryService implements OnModuleInit {

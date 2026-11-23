@@ -36,7 +36,7 @@ function rig(
             chunkSizeOf: (group: string) => sizes[group] ?? 2,
             chunkSpacingMs: () => 1000
         } as unknown as QuoteProviderRegistryService,
-        { publish },
+        { publish, remove: vi.fn() },
         { pruneOldUsage: prune } as unknown as ProviderBudgetService,
         { findByAssetIds: vi.fn().mockResolvedValue(stored) } as unknown as AssetQuoteDomain,
         { staleAssets } as unknown as MarketDataMetricsService,

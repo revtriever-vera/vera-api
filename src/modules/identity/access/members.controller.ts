@@ -86,7 +86,8 @@ export class MembersController {
         summary: 'Invite a person by email',
         description:
             'Sends a link that is valid for the configured days. Inviting an email that already has a pending invite resends it with the ' +
-            'new role. The person enters with Google or Facebook and the verified email has to be the invited one.'
+            'new role. The person enters with Google and the verified email has to be the invited one. The platform company does not ' +
+            'accept invites (invites.platform_company, 403).'
     })
     @ApiZodBody(inviteMemberSchema)
     @ApiZodResponse({ status: 201, description: 'Invite created or resent', schema: inviteResultSchema })

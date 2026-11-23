@@ -12,6 +12,8 @@ const line: CompanyProduct = {
     source: 'subscription',
     subscriptionId: null,
     endReason: null,
+    trialEndsAt: null,
+    trialNoticeSentAt: null,
     createdAt: new Date(),
     updatedAt: new Date()
 };

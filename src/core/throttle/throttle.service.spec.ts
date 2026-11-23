@@ -41,4 +41,13 @@ describe('ThrottleService', () => {
         await expect(throttle.assertAllowed('login:ana', 1, 60)).rejects.toBeInstanceOf(TooManyAttemptsError);
         await expect(throttle.assertAllowed('login:beto', 1, 60)).resolves.toBeUndefined();
     });
+
+    it('isAllowed answers without throwing and counts the attempt', async () => {
+        const throttle: ThrottleService = serviceWith();
+
+        expect(await throttle.isAllowed('reply:a', 2, 60)).toBe(true);
+        expect(await throttle.isAllowed('reply:a', 2, 60)).toBe(true);
+        expect(await throttle.isAllowed('reply:a', 2, 60)).toBe(false);
+        expect(await throttle.isAllowed('reply:b', 2, 60)).toBe(true);
+    });
 });

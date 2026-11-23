@@ -2,8 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { limitVariable, parseMarketDataConfig } from './market-data.config';
 
 describe('parseMarketDataConfig', () => {
+    it('outside local the mock driver is never accepted, even when asked for', () => {
+        for (const env of [{}, { IS_LOCAL: 'false' }, { MARKET_DATA_DRIVER: 'mock' }, { BRAPI_TOKEN: 'k', MARKET_DATA_DRIVER: 'mock' }]) {
+            expect(parseMarketDataConfig(env).DRIVER).toBe('live');
+        }
+    });
+
     it('defaults to the mock driver when no key is configured', () => {
-        const config = parseMarketDataConfig({});
+        const config = parseMarketDataConfig({ IS_LOCAL: 'true' });
 
         expect(config.DRIVER).toBe('mock');
         expect(config.US_QUOTE_PROVIDERS).toEqual(['finnhub', 'twelvedata', 'alphavantage']);
@@ -12,13 +18,13 @@ describe('parseMarketDataConfig', () => {
     });
 
     it('goes live when any key is configured and respects an explicit driver', () => {
-        expect(parseMarketDataConfig({ BRAPI_TOKEN: 'k' }).DRIVER).toBe('live');
-        expect(parseMarketDataConfig({ BRAPI_TOKEN: 'k', MARKET_DATA_DRIVER: 'mock' }).DRIVER).toBe('mock');
-        expect(parseMarketDataConfig({ MARKET_DATA_DRIVER: 'live' }).DRIVER).toBe('live');
+        expect(parseMarketDataConfig({ IS_LOCAL: 'true', BRAPI_TOKEN: 'k' }).DRIVER).toBe('live');
+        expect(parseMarketDataConfig({ IS_LOCAL: 'true', BRAPI_TOKEN: 'k', MARKET_DATA_DRIVER: 'mock' }).DRIVER).toBe('mock');
+        expect(parseMarketDataConfig({ IS_LOCAL: 'true', MARKET_DATA_DRIVER: 'live' }).DRIVER).toBe('live');
     });
 
     it('treats blank values as unset', () => {
-        const config = parseMarketDataConfig({ BRAPI_TOKEN: '  ', FINNHUB_API_KEY: '', FINNHUB_LIMIT_MINUTE: ' ' });
+        const config = parseMarketDataConfig({ IS_LOCAL: 'true', BRAPI_TOKEN: '  ', FINNHUB_API_KEY: '', FINNHUB_LIMIT_MINUTE: ' ' });
 
         expect(config.BRAPI_TOKEN).toBeUndefined();
         expect(config.DRIVER).toBe('mock');
@@ -26,7 +32,7 @@ describe('parseMarketDataConfig', () => {
     });
 
     it('treats the unset placeholder as no key', () => {
-        const config = parseMarketDataConfig({ TWELVEDATA_API_KEY: 'unset', ALPHAVANTAGE_API_KEY: 'UNSET' });
+        const config = parseMarketDataConfig({ IS_LOCAL: 'true', TWELVEDATA_API_KEY: 'unset', ALPHAVANTAGE_API_KEY: 'UNSET' });
 
         expect(config.TWELVEDATA_API_KEY).toBeUndefined();
         expect(config.ALPHAVANTAGE_API_KEY).toBeUndefined();

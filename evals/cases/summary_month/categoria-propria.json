@@ -1,0 +1,63 @@
+{
+  "id": "categoria-propria",
+  "task": "summary_month",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:housing": "Moradia",
+    "cat:custom_1": "Cuidados com o pet"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": false,
+    "renda": "R$ 10.000",
+    "gastos": "R$ 8.300",
+    "guardado": "R$ 1.700",
+    "taxa_poupanca": "17%",
+    "meta_economia_pct": "20%",
+    "falta_para_meta": "R$ 300",
+    "fixos": {
+      "total": "R$ 3.600",
+      "pct_renda": "36%"
+    },
+    "flexiveis": {
+      "total": "R$ 4.700"
+    },
+    "sem_categoria": {
+      "total": "R$ 600",
+      "transacoes": 6
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Moradia",
+        "tipo": "fixo",
+        "total": "R$ 3.600",
+        "media_3m": "R$ 3.600",
+        "variacao_pct": "0%",
+        "nova": false
+      },
+      {
+        "chave": "custom_1",
+        "tipo": "flexivel",
+        "total": "R$ 1.700",
+        "media_3m": "R$ 900",
+        "variacao_pct": "+89%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 10.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Entraram **R$ 10.000** e saíram R$ 8.300, então você guardou R$ 1.700, 17% da renda contra a meta de 20%.",
+    "O que mais subiu foi [[cat:custom_1]] (+89% sobre a sua média).",
+    "Os fixos ([[cat:housing]]) somam **R$ 3.600**, 36% da renda."
+  ]
+}

@@ -18,6 +18,10 @@ export class AccountDataRegistry {
         return this.exporters().map((exporter: AccountDataExporterPort): string => exporter.area);
     }
 
+    public eraseAreas(): string[] {
+        return this.erasers().map((eraser: AccountDataEraserPort): string => eraser.area);
+    }
+
     public async exportSections(companyId: string): Promise<Record<string, unknown>> {
         const sections: Record<string, unknown> = {};
         for (const exporter of this.exporters()) {

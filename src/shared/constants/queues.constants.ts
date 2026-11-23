@@ -5,7 +5,14 @@ export const QUEUES = {
     marketData: 'vera-market-data',
     bankConnections: 'vera-bank-connections',
     plans: 'vera-plans',
-    identity: 'vera-identity'
+    identity: 'vera-identity',
+    usage: 'vera-usage',
+    aiAssistant: 'vera-ai-assistant',
+    whatsapp: 'vera-whatsapp',
+    reminders: 'vera-reminders',
+    recurring: 'vera-recurring',
+    goalNotices: 'vera-goal-notices',
+    recurringNotices: 'vera-recurring-notices'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -23,7 +30,33 @@ export const MESSAGE_TYPES = {
     bankConnectionsSyncRequested: 'bank-connections.sync.requested',
     plansPremiumEndedSweepRequested: 'plans.premium-ended.sweep.requested',
     plansPremiumEndedRetryRequested: 'plans.premium-ended.retry.requested',
-    identityMembersCleanupRequested: 'identity.members.cleanup.requested'
+    plansTrialSweepRequested: 'plans.trial.sweep.requested',
+    identityMembersCleanupRequested: 'identity.members.cleanup.requested',
+    usageThresholdCrossed: 'usage.threshold.crossed',
+    usageCleanupRequested: 'usage.cleanup.requested',
+    usageGaugeRequested: 'usage.gauge.requested',
+    aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
+    whatsappWebhookReceived: 'whatsapp.webhook.received',
+    whatsappInboundReceived: 'whatsapp.inbound.received',
+    whatsappStatusReceived: 'whatsapp.status.received',
+    whatsappSendRequested: 'whatsapp.send.requested',
+    whatsappTemplatesSyncRequested: 'whatsapp.templates.sync.requested',
+    whatsappHealthRequested: 'whatsapp.health.requested',
+    whatsappRetentionRequested: 'whatsapp.retention.requested',
+    whatsappLinksStaleRequested: 'whatsapp.links.stale.requested',
+    whatsappTurnRequested: 'whatsapp.turn.requested',
+    whatsappTurnAnswered: 'whatsapp.turn.answered',
+    remindersFireRequested: 'reminders.fire.requested',
+    remindersSweepRequested: 'reminders.sweep.requested',
+    remindersGaugeRequested: 'reminders.gauge.requested',
+    recurringDetectRequested: 'recurring.detect.requested',
+    recurringDailyRequested: 'recurring.daily.requested',
+    goalNoticesDailyRequested: 'goal-notices.daily.requested',
+    goalNoticesEvaluateRequested: 'goal-notices.evaluate.requested',
+    recurringNoticesDailyRequested: 'recurring-notices.daily.requested',
+    recurringNoticesScheduleRequested: 'recurring-notices.schedule.requested',
+    recurringWeekDue: 'recurring-notices.week.due',
+    recurringDueDue: 'recurring-notices.due.due'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DiscoveryModule } from '@nestjs/core';
 import { ContextModule } from '../../../core/context/context.module';
 import { CryptoModule } from '../../../core/crypto/crypto.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
@@ -15,9 +16,12 @@ import { TransactionFingerprintService } from '../services/transaction-fingerpri
 import { TransactionImportService } from '../services/transaction-import.service';
 import { TransactionIngestionService } from '../services/transaction-ingestion.service';
 import { TransactionReaderService } from '../services/transaction-reader.service';
+import { TransactionsChangedService } from '../services/transactions-changed.service';
 import { TransactionsLogService } from '../services/transactions-log.service';
 import { TransactionsMetricsService } from '../services/transactions-metrics.service';
 import { TransactionsRecategorizationDriver } from '../services/transactions-recategorization.driver';
+import { TransactionViewService } from '../services/transaction-view.service';
+import { TransactionsRecurringService } from '../services/transactions-recurring.service';
 import { AccountApplication } from './account.application';
 import { TransactionListApplication } from './transaction-list.application';
 import { TransactionRecategorizeApplication } from './transaction-recategorize.application';
@@ -29,7 +33,8 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         IdentityApplicationModule,
         CryptoModule,
         ContextModule,
-        ObservabilityModule
+        ObservabilityModule,
+        DiscoveryModule
     ],
     providers: [
         TransactionListApplication,
@@ -37,7 +42,10 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         AccountApplication,
         TransactionsLogService,
         TransactionsMetricsService,
+        TransactionsChangedService,
         TransactionsRecategorizationDriver,
+        TransactionsRecurringService,
+        TransactionViewService,
         TransactionIngestionService,
         FinancialAccountService,
         TransactionImportService,

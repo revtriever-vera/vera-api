@@ -32,15 +32,19 @@ function cellsOf(row: ExportRow, currency: string): XlsxCell[] {
 
 @Injectable()
 export class XlsxWriterService {
-    public async write(table: ExportTable): Promise<Buffer> {
-        const columns: XlsxColumn[] = headerLabelsOf(table.locale, table.baseCurrency).map((header: string, index: number): XlsxColumn => ({
+    public columnsOf(table: ExportTable): XlsxColumn[] {
+        return headerLabelsOf(table.locale, table.baseCurrency).map((header: string, index: number): XlsxColumn => ({
             header,
             type: index === QUANTITY_COLUMN || index === VALUE_COLUMN ? 'number' : 'text',
             width: COLUMN_WIDTHS[index] as number
         }));
-        return buildXlsx(
-            { name: sheetNameOf(table.locale), columns },
-            table.rows.map((row: ExportRow): XlsxCell[] => cellsOf(row, table.baseCurrency))
-        );
+    }
+
+    public cellsOf(table: ExportTable): XlsxCell[][] {
+        return table.rows.map((row: ExportRow): XlsxCell[] => cellsOf(row, table.baseCurrency));
+    }
+
+    public async write(table: ExportTable): Promise<Buffer> {
+        return buildXlsx({ name: sheetNameOf(table.locale), columns: this.columnsOf(table) }, this.cellsOf(table));
     }
 }

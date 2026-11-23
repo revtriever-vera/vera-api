@@ -64,6 +64,43 @@ export class AccountProvisioningService {
         return { user, outcome: LOGIN_OUTCOMES.newAccount };
     }
 
+    public async resolvePlatformUser(identity: SocialIdentity): Promise<User | null> {
+        try {
+            return await this.resolvePlatformOnce(identity);
+        } catch (error: unknown) {
+            if (!this.lostRace(error)) {
+                throw error;
+            }
+            return this.resolvePlatformOnce(identity);
+        }
+    }
+
+    private async resolvePlatformOnce(identity: SocialIdentity): Promise<User | null> {
+        const known: AuthIdentity | null = await this.identityDomain.findByProviderSubjectAcrossTenants(
+            identity.provider,
+            identity.subject
+        );
+        if (known) {
+            return (await this.isPlatformCompany(known.companyId)) ? this.signIn(known.companyId, known) : null;
+        }
+        const existing: User | null = identity.email === null ? null : await this.userDomain.findByEmailAcrossTenants(identity.email);
+        if (existing === null || !(await this.isVerifiedPlatformUser(existing))) {
+            return null;
+        }
+        await this.linkInCompany(existing.companyId, existing.id, identity);
+        this.logs.identityLinked(existing.id, identity.provider);
+        return existing;
+    }
+
+    private async isVerifiedPlatformUser(user: User): Promise<boolean> {
+        return user.emailVerifiedAt !== null && (await this.isPlatformCompany(user.companyId));
+    }
+
+    private async isPlatformCompany(companyId: string): Promise<boolean> {
+        const company: Company | null = await this.companyDomain.findById(companyId);
+        return company?.isPlatform === true;
+    }
+
     private async linkToExisting(existing: User, identity: SocialIdentity): Promise<ProvisionResult> {
         if (!identity.emailVerified || existing.emailVerifiedAt === null) {
             throw new EmailInUseError();

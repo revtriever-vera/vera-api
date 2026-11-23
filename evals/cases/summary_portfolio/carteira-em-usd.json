@@ -1,0 +1,55 @@
+{
+  "id": "carteira-em-usd",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_eua": "Ações EUA",
+    "cls:reits": "REITs"
+  },
+  "context": {
+    "moeda_base": "USD",
+    "total": "US$ 85.000",
+    "exposicao_dolar_pct": "100%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "acoes_eua",
+        "rotulo_padrao": "Ações EUA",
+        "atual": "55%",
+        "meta": "60%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "reits",
+        "rotulo_padrao": "REITs",
+        "atual": "45%",
+        "meta": "40%",
+        "situacao": "acima"
+      }
+    ],
+    "aporte_planejado": {
+      "total": "US$ 1.500",
+      "por_classe": [
+        {
+          "chave": "acoes_eua",
+          "valor": "US$ 1.500"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "mustCite": ["US$ 85.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **US$ 85.000**, com 100% em dólar.",
+    "[[cls:acoes_eua]] está abaixo da meta (55% contra 60%) e [[cls:reits]] está acima (45% contra 40%).",
+    "Não precisa vender; basta não aportar nelas por um tempo.",
+    "Com **US$ 1.500** de aporte, a sugestão é US$ 1.500 em [[cls:acoes_eua]]."
+  ]
+}

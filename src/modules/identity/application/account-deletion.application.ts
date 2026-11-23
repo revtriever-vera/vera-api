@@ -5,7 +5,12 @@ import { AppLocale } from '../../../shared/i18n/locale';
 import { AccountDeletionLogDomain } from '../domain/account-deletion-log.domain';
 import { CompanyDomain } from '../domain/company.domain';
 import { firstNameOf } from '../domain/first-name.util';
-import { AccountClosedError, ConfirmationMismatchError, RoleForbiddenError } from '../domain/identity.errors';
+import {
+    AccountClosedError,
+    ConfirmationMismatchError,
+    PlatformCompanyProtectedError,
+    RoleForbiddenError
+} from '../domain/identity.errors';
 import { ACCOUNT_DELETION_OUTCOMES, Company, effectiveLocale, ErasedArea, USER_ROLES, User } from '../domain/identity.types';
 import { AccountClosureMailer } from '../services/account-closure-mailer.service';
 import { AccountDataRegistry } from '../services/account-data.registry';
@@ -65,6 +70,9 @@ export class AccountDeletionApplication {
         const company: Company | null = await this.companies.findById(user.companyId);
         if (!company) {
             throw new AccountClosedError(user.companyId);
+        }
+        if (company.isPlatform) {
+            throw new PlatformCompanyProtectedError();
         }
         return {
             company,

@@ -22,17 +22,6 @@ export class FeatureDisabledError extends AppError {
     }
 }
 
-export class CapReachedError extends AppError {
-    public constructor(feature: string, resetsAt: string | null) {
-        super({
-            code: 'usage.cap_reached',
-            status: 429,
-            detail: 'The monthly paid usage cap was reached; paid features resume when the month turns.',
-            meta: { feature, resetsAt }
-        });
-    }
-}
-
 export class BillingNotAvailableError extends AppError {
     public constructor() {
         super({
@@ -50,6 +39,26 @@ export class PlanUnavailableError extends AppError {
             status: 503,
             detail: 'The plan of this account could not be read.',
             cause
+        });
+    }
+}
+
+export class TrialAlreadyUsedError extends AppError {
+    public constructor() {
+        super({
+            code: 'billing.trial_already_used',
+            status: 409,
+            detail: 'This account already had its free trial.'
+        });
+    }
+}
+
+export class TrialUnavailableError extends AppError {
+    public constructor() {
+        super({
+            code: 'billing.trial_unavailable',
+            status: 409,
+            detail: 'The account already has a Premium contract.'
         });
     }
 }

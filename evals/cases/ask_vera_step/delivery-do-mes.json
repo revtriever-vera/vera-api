@@ -1,0 +1,39 @@
+{
+  "id": "delivery-do-mes",
+  "task": "ask_vera_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "quanto gastei de delivery?",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "list_categories",
+      "input": {}
+    },
+    {
+      "name": "spending_month_summary",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$ 1.800"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "reference": ["Você gastou **R$ 1.800** com [[cat:eating_out]] no mês, 38% acima da sua média."]
+}

@@ -30,6 +30,12 @@ export interface RawResponse {
     readonly bytes: Buffer;
 }
 
+export interface TextResponse {
+    readonly status: number;
+    readonly contentType: string | null;
+    readonly text: string;
+}
+
 export class AllocationHarness {
     public constructor(
         public readonly app: INestApplication,
@@ -49,7 +55,7 @@ export class AllocationHarness {
         const testing: TestingModule = await (
             publisher === undefined ? builder : builder.overrideProvider(QueuePublisherPort).useValue(publisher)
         ).compile();
-        const app: INestApplication = testing.createNestApplication();
+        const app: INestApplication = testing.createNestApplication({ rawBody: true });
         await app.init();
         await app.listen(0);
         const address: AddressInfo = (app.getHttpServer() as Server).address() as AddressInfo;
@@ -82,7 +88,7 @@ export class AllocationHarness {
             })
         );
         const tokens: AuthTokens = await this.inCompany(company.id, async () =>
-            issuer.issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google', 'app')
         );
         return { company, user, token: tokens.accessToken };
     }
@@ -99,6 +105,16 @@ export class AllocationHarness {
         });
         const text: string = await response.text();
         return { status: response.status, body: (text.length > 0 ? JSON.parse(text) : null) as T };
+    }
+
+    public async callText(method: string, path: string, headers: Record<string, string> = {}, body?: string): Promise<TextResponse> {
+        const response: Response = await fetch(`${this.origin}${path}`, { method, headers, body });
+        return { status: response.status, contentType: response.headers.get('content-type'), text: await response.text() };
+    }
+
+    public async callRedirect(path: string): Promise<{ readonly status: number; readonly location: string | null }> {
+        const response: Response = await fetch(`${this.origin}${path}`, { redirect: 'manual' });
+        return { status: response.status, location: response.headers.get('location') };
     }
 
     public async callRaw(token: string | null, path: string): Promise<RawResponse> {

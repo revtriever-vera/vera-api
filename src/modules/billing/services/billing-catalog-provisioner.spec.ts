@@ -37,7 +37,7 @@ describe('provisionCatalog', () => {
 
     it('falha quando o teste de preço do produto falha', async () => {
         const catalog = new FakeBillingCatalog();
-        catalog.testPricing = async (): Promise<boolean> => false;
+        catalog.testPricing = (): Promise<boolean> => Promise.resolve(false);
 
         await expect(provisionCatalog(catalog, SETTINGS)).rejects.toThrow('teste de preço');
     });

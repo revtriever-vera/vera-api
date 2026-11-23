@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CLASS_KEYS } from '../domain/catalog.types';
-import { SECTORS } from '../domain/sectors';
+import { SECTORS } from '../domain/sectors.types';
 
 export const curatedEntrySchema = z
     .object({

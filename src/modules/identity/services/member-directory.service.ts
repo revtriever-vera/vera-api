@@ -3,6 +3,8 @@ import { InvalidHolderError } from '../domain/members.errors';
 import { User } from '../domain/identity.types';
 import { UserDomain } from '../domain/user.domain';
 
+export { InvalidHolderError };
+
 export interface DirectoryMember {
     readonly userId: string;
     readonly name: string;

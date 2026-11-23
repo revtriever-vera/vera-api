@@ -21,11 +21,20 @@ export interface SharedInfrastructureConfig {
     readonly openIdConnectProviderArn: string;
 }
 
+export interface LlmEnvironmentConfig {
+    readonly model: string;
+    readonly priceTable: string;
+}
+
 export interface BillingEnvironmentConfig {
     readonly driver: 'revtriever' | null;
     readonly apiUrl: string | null;
     readonly planId: string | null;
     readonly gatewayConnectionId: string | null;
+}
+
+export interface CalendarEnvironmentConfig {
+    readonly driver: 'google' | null;
 }
 
 export interface EnvironmentConfig {
@@ -47,6 +56,8 @@ export interface EnvironmentConfig {
     readonly otlpEndpointParameter: string;
     readonly otlpHeadersParameter: string | null;
     readonly billing: BillingEnvironmentConfig;
+    readonly calendar: CalendarEnvironmentConfig;
+    readonly llm: LlmEnvironmentConfig;
 }
 
 export interface MailpitSettings {
@@ -164,6 +175,28 @@ function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
     };
 }
 
+function calendar(env: NodeJS.ProcessEnv): CalendarEnvironmentConfig {
+    const driver: string | null = optionalVariable(env, 'GOOGLE_CALENDAR_DRIVER');
+    if (driver === 'mock') {
+        throw new Error('GOOGLE_CALENDAR_DRIVER=mock não é aceito em ambiente hospedado: use google ou deixe em branco (agenda desligada)');
+    }
+    if (driver !== null && driver !== 'google') {
+        throw new Error('GOOGLE_CALENDAR_DRIVER inválida: use google ou deixe em branco');
+    }
+    return { driver };
+}
+
+const DEFAULT_LLM_MODEL: string = 'meta/muse-spark-1.3-contributor';
+
+function llm(env: NodeJS.ProcessEnv): LlmEnvironmentConfig {
+    const priceTable: string = requiredVariable(env, 'LLM_PRICE_TABLE');
+    const parsed: unknown = parseJson('LLM_PRICE_TABLE', priceTable);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new Error('LLM_PRICE_TABLE inválida: use um objeto JSON com o preço de cada modelo');
+    }
+    return { model: optionalVariable(env, 'LLM_MODEL') ?? DEFAULT_LLM_MODEL, priceTable };
+}
+
 function parseJson(variable: string, raw: string): unknown {
     try {
         return JSON.parse(raw);
@@ -219,7 +252,10 @@ function mailpit(settings: EnvironmentSettings, hosts: HostNaming): MailpitEnvir
 function operationalSettings(
     settings: EnvironmentSettings,
     hosts: HostNaming
-): Omit<EnvironmentConfig, 'billing' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'> {
+): Omit<
+    EnvironmentConfig,
+    'billing' | 'calendar' | 'llm' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'
+> {
     return {
         githubRepository: settings.githubRepository,
         githubSubjects: settings.githubSubjects,
@@ -248,6 +284,8 @@ export function fromEnvironment(name: EnvironmentName, env: NodeJS.ProcessEnv): 
         shared: shared(env, `SHARED_INFRA_${suffix}`),
         imagePullAccounts: imagePullAccounts(env),
         billing: billing(env),
+        calendar: calendar(env),
+        llm: llm(env),
         ...operationalSettings(settings, hosts)
     };
 }

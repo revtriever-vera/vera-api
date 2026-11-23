@@ -100,3 +100,13 @@ export class InvalidHolderError extends AppError {
         });
     }
 }
+
+export class PlatformInviteRefusedError extends AppError {
+    public constructor() {
+        super({
+            code: 'invites.platform_company',
+            status: 403,
+            detail: 'The platform company does not accept invites: new admins come from the seed script.'
+        });
+    }
+}
