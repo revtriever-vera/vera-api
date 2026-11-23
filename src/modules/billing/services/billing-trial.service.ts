@@ -5,7 +5,7 @@ import { DateUtil } from '../../../shared/utils/date.util';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { BillingOfferRegistry } from '../../plans/services/billing-offer.registry';
 import { BillingOfferRule, UsableOffer } from '../../plans/services/billing-offer.port';
-import { PlanContractService } from '../../plans/services/plan-contract.service';
+import { PlanContractService, TrialContract } from '../../plans/services/plan-contract.service';
 import { SavedCard } from '../domain/billing-engine.types';
 import { resolvePrice } from '../domain/billing-price.rules';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
@@ -123,7 +123,34 @@ export class BillingTrialService {
         for (const row of ending) {
             await this.noticeEnding(row.companyId, row);
         }
-        return unconfirmed.length + ending.length;
+        return unconfirmed.length + ending.length + (await this.noticeSubscribedTrials(now));
+    }
+
+    private async noticeSubscribedTrials(now: Date): Promise<number> {
+        const subscribed: BillingSubscription[] = await this.subscriptions.listUnpaidWithFirstChargeAcrossTenants(
+            DateUtil.onlyDateString(DateUtil.addDays(now, -1)),
+            DateUtil.onlyDateString(DateUtil.addDays(now, TRIAL_ENDING_NOTICE_DAYS + 1)),
+            SWEEP_BATCH
+        );
+        for (const row of subscribed) {
+            await this.noticeSubscribedTrialEnding(row.companyId, row, now);
+        }
+        return subscribed.length;
+    }
+
+    @AsCompany()
+    private async noticeSubscribedTrialEnding(_companyId: string, row: BillingSubscription, now: Date): Promise<void> {
+        const trial: TrialContract | null = await this.contracts.trialOf('premium');
+        if (trial?.subscriptionId !== row.id || trial.endsAt <= now || trial.endsAt > DateUtil.addDays(now, TRIAL_ENDING_NOTICE_DAYS)) {
+            return;
+        }
+        await this.mailer.notify({
+            kind: NOTIFICATION_KINDS.trialEnding,
+            subjectId: row.id,
+            trialEndsAt: trial.endsAt,
+            amountCents: await this.firstAmountOf(row),
+            cardLast4: row.cardLast4
+        });
     }
 
     @AsCompany()

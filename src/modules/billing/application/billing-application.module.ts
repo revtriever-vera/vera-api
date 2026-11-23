@@ -32,6 +32,7 @@ import { BillingViewMapper } from '../services/billing-view.mapper';
 import { RevtrieverEventIngestService } from '../services/revtriever-event-ingest.service';
 import { RevtrieverEventProcessor } from '../services/revtriever-event-processor.service';
 import { RevtrieverWebhookVerifier } from '../services/revtriever-webhook-verifier.service';
+import { PlatformBillingReaderService } from '../services/platform-billing-reader.service';
 import { BillingTemplates } from '../templates/billing.templates';
 import { BillingDevApplication } from './billing-dev.application';
 import { BillingEventsApplication } from './billing-events.application';
@@ -77,6 +78,7 @@ import { SubscriptionApplication } from './subscription.application';
         BillingAccountEraser,
         BillingAccountExporter,
         BillingTemplates,
+        PlatformBillingReaderService,
         {
             provide: BillingEnginePort,
             inject: [billingConfig.KEY, FakeBillingEngineDriver, RevtrieverBillingEngineDriver, BillingLogService, BillingMetricsService],
@@ -95,7 +97,8 @@ import { SubscriptionApplication } from './subscription.application';
         SubscriptionApplication,
         InvoicesApplication,
         BillingEventsApplication,
-        BillingViewMapper
+        BillingViewMapper,
+        PlatformBillingReaderService
     ]
 })
 export class BillingApplicationModule {}

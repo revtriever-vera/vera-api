@@ -126,12 +126,22 @@ function trialStartedEn(props: TemplateProps): MailContent {
     );
 }
 
+function chargeTargetPtBr(props: TemplateProps): string {
+    const last4: string = valueOf(props, 'cardLast4');
+    return last4 === '' ? 'por Pix' : `no cartão final ${last4}`;
+}
+
+function chargeTargetEn(props: TemplateProps): string {
+    const last4: string = valueOf(props, 'cardLast4');
+    return last4 === '' ? 'by Pix' : `on the card ending in ${last4}`;
+}
+
 function trialEndingPtBr(props: TemplateProps): MailContent {
     return noticeContent(
         {
             subject: 'Seu teste do Premium termina em breve',
             title: 'O teste está acabando',
-            body: `Em ${valueOf(props, 'trialEndsAt')} cobraremos ${valueOf(props, 'amount')} no cartão final ${valueOf(props, 'cardLast4')}. Se não quiser continuar, cancele antes dessa data em ${valueOf(props, 'url')} e nada será cobrado.`
+            body: `Em ${valueOf(props, 'trialEndsAt')} cobraremos ${valueOf(props, 'amount')} ${chargeTargetPtBr(props)}. Se não quiser continuar, cancele antes dessa data em ${valueOf(props, 'url')} e nada será cobrado.`
         },
         'pt-BR',
         props
@@ -143,7 +153,7 @@ function trialEndingEn(props: TemplateProps): MailContent {
         {
             subject: 'Your Premium trial ends soon',
             title: 'Your trial is ending',
-            body: `On ${valueOf(props, 'trialEndsAt')} we will charge ${valueOf(props, 'amount')} on the card ending in ${valueOf(props, 'cardLast4')}. If you do not want to continue, cancel before that date at ${valueOf(props, 'url')} and nothing is charged.`
+            body: `On ${valueOf(props, 'trialEndsAt')} we will charge ${valueOf(props, 'amount')} ${chargeTargetEn(props)}. If you do not want to continue, cancel before that date at ${valueOf(props, 'url')} and nothing is charged.`
         },
         'en',
         props

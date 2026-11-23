@@ -8,6 +8,7 @@ import {
     ContractSource,
     DeploymentMode,
     EffectivePlan,
+    OpenLinesOfSource,
     PAID_FEATURES,
     PaidFeature
 } from './plans.types';
@@ -44,8 +45,8 @@ export class PlanDomain {
         return this.contracts.listOpenOfCompaniesAcrossTenants(productId, companyIds);
     }
 
-    public async countOpenLines(productId: string, trialsOnly: boolean): Promise<number> {
-        return this.contracts.countOpenAcrossTenants(productId, trialsOnly);
+    public async openLinesBySource(productId: string): Promise<OpenLinesOfSource[]> {
+        return this.contracts.openBySourceAcrossTenants(productId);
     }
 
     public async hasAnyLineOf(productId: string): Promise<boolean> {

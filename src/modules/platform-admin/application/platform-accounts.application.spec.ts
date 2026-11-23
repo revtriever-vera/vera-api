@@ -5,6 +5,7 @@ import { DatabaseClient } from '../../../core/database/database.client';
 import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
 import { CustomerAccount, PlatformAccountReaderService } from '../../identity/services/platform-account-reader.service';
 import { PlatformAuditRecorderService } from '../../identity/services/platform-audit-recorder.service';
+import { PlatformBillingReaderService } from '../../billing/services/platform-billing-reader.service';
 import { PlatformPlanReaderService } from '../../plans/services/platform-plan-reader.service';
 import { PlatformAccountNotFoundError } from '../domain/platform-admin.errors';
 import { AccessRequestDto } from '../validation/platform-accounts.schemas';
@@ -52,6 +53,16 @@ function build(options: { company?: CustomerAccount | null; auditFails?: boolean
             calls.push('data');
             return Promise.resolve({ goals: [] });
         }),
+        overview: vi.fn().mockResolvedValue({
+            total: 10,
+            createdSince: 3,
+            premium: 4,
+            trials: 3,
+            cardTrials: 2,
+            noCardTrials: 1,
+            estimatedMonthlyRevenueCents: 2235
+        }),
+        pastDueCount: vi.fn().mockResolvedValue(1),
         ofCompanies: vi
             .fn()
             .mockResolvedValue(
@@ -63,6 +74,7 @@ function build(options: { company?: CustomerAccount | null; auditFails?: boolean
     const app: PlatformAccountsApplication = new PlatformAccountsApplication(
         fns as unknown as PlatformAccountReaderService,
         fns as unknown as PlatformPlanReaderService,
+        fns as unknown as PlatformBillingReaderService,
         { accountViewed: viewed } as unknown as PlatformAuditRecorderService,
         context
     );
@@ -72,6 +84,22 @@ function build(options: { company?: CustomerAccount | null; auditFails?: boolean
 function asOperator<T>(fn: () => Promise<T>): Promise<T> {
     return context.run({ requestId: 'r1', userId: OPERATOR, companyId: 'platform-company', platform: true, locale: 'pt-BR' }, fn);
 }
+
+describe('PlatformAccountsApplication.overview', () => {
+    it('breaks the trials by kind and adds the overdue accounts and the estimated revenue', async () => {
+        const result = await build().app.overview();
+
+        expect(result.plans).toEqual({
+            free: 6,
+            premium: 4,
+            trials: 3,
+            trialsWithCard: 2,
+            trialsWithoutCard: 1,
+            pastDue: 1
+        });
+        expect(result.revenue).toEqual({ estimatedMonthlyCents: 2235 });
+    });
+});
 
 describe('PlatformAccountsApplication.access', () => {
     let harness: Harness;
