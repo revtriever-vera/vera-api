@@ -15,6 +15,7 @@ export type {
     ValueSource
 } from '../domain/portfolio.types';
 export { effectiveAssetTargets } from '../domain/effective-targets';
+export { sharesBpsOf } from '../domain/class-summary';
 
 @Injectable()
 export class PortfolioSnapshotService {
