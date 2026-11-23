@@ -1,13 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { AsCompany } from '../../../core/context/as-company.decorator';
 import { PlanGateService } from '../../plans/services/plan-gate.service';
 import { integrationCredentialsConfig } from '../config/integration-credentials.config';
 import { IntegrationCredentialsDomain } from '../domain/integration-credentials.domain';
 import { IntegrationUnreadableError } from '../domain/integration-credentials.errors';
-import { IntegrationCredential, IntegrationCredentialsByKind, IntegrationKind } from '../domain/integration.types';
+import {
+    IntegrationCredential,
+    IntegrationCredentialsByKind,
+    IntegrationKind,
+    TenantWhatsAppCredentials
+} from '../domain/integration.types';
 import { InstanceCredentialsService } from './instance-credentials.service';
 import { IntegrationVaultService } from './integration-vault.service';
 import { IntegrationsLogService } from './integrations-log.service';
+
+export type { TenantWhatsAppCredentials, WhatsAppCredentials } from '../domain/integration.types';
 
 @Injectable()
 export class IntegrationCredentialsService {
@@ -39,6 +47,27 @@ export class IntegrationCredentialsService {
             return true;
         }
         return this.config.INTEGRATIONS_INSTANCE_FALLBACK && this.instance.of(kind, 'openai_compatible') !== null;
+    }
+
+    public async findWhatsAppByPhoneNumberIdAcrossTenants(phoneNumberId: string): Promise<TenantWhatsAppCredentials | null> {
+        const companyId: string | null = await this.credentials.findCompanyByPhoneNumberIdAcrossTenants(phoneNumberId);
+        return companyId === null ? null : this.whatsAppOf(companyId);
+    }
+
+    public async listWhatsAppAcrossTenants(): Promise<TenantWhatsAppCredentials[]> {
+        const companyIds: string[] = await this.credentials.listCompanyIdsByKind('whatsapp');
+        const found: (TenantWhatsAppCredentials | null)[] = [];
+        for (const companyId of companyIds) {
+            found.push(await this.whatsAppOf(companyId));
+        }
+        return found.filter((entry: TenantWhatsAppCredentials | null): entry is TenantWhatsAppCredentials => entry !== null);
+    }
+
+    @AsCompany()
+    private async whatsAppOf(companyId: string): Promise<TenantWhatsAppCredentials | null> {
+        const row: IntegrationCredential | null = await this.credentials.find('whatsapp');
+        const credentials: IntegrationCredentialsByKind['whatsapp'] | null = row === null ? null : await this.openOrNull('whatsapp', row);
+        return credentials === null ? null : { companyId, credentials };
     }
 
     private async openOrNull<K extends IntegrationKind>(

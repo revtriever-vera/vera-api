@@ -7,7 +7,8 @@ export const QUEUES = {
     plans: 'vera-plans',
     identity: 'vera-identity',
     usage: 'vera-usage',
-    aiAssistant: 'vera-ai-assistant'
+    aiAssistant: 'vera-ai-assistant',
+    whatsapp: 'vera-whatsapp'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -29,7 +30,14 @@ export const MESSAGE_TYPES = {
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',
     usageGaugeRequested: 'usage.gauge.requested',
-    aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested'
+    aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
+    whatsappWebhookReceived: 'whatsapp.webhook.received',
+    whatsappInboundReceived: 'whatsapp.inbound.received',
+    whatsappStatusReceived: 'whatsapp.status.received',
+    whatsappSendRequested: 'whatsapp.send.requested',
+    whatsappTemplatesSyncRequested: 'whatsapp.templates.sync.requested',
+    whatsappHealthRequested: 'whatsapp.health.requested',
+    whatsappRetentionRequested: 'whatsapp.retention.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

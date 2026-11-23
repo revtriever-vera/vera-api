@@ -637,6 +637,62 @@ export interface Users {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface WhatsAppHealth {
+    channelKey: string;
+    checkedAt: Generated<Timestamp>;
+    messagingLimitTier: string | null;
+    qualityRating: Generated<string>;
+    status: Generated<string>;
+    tokenInvalidAt: Timestamp | null;
+}
+
+export interface WhatsAppMessages {
+    billable: boolean | null;
+    body: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deliveredAt: Timestamp | null;
+    direction: string;
+    errorCode: string | null;
+    externalId: string | null;
+    failedAt: Timestamp | null;
+    id: string;
+    kind: string;
+    payload: Json | null;
+    peer: string;
+    pricingCategory: string | null;
+    readAt: Timestamp | null;
+    sentAt: Timestamp | null;
+    status: string;
+    templateName: string | null;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface WhatsAppTemplateRegistrations {
+    channelKey: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    language: string;
+    name: string;
+    rejectedReason: string | null;
+    remoteId: string | null;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+    version: number;
+}
+
+export interface WhatsAppWebhookEvents {
+    bodySha256: string;
+    channelKey: string | null;
+    id: string;
+    processedAt: Timestamp | null;
+    rawBody: string;
+    receivedAt: Generated<Timestamp>;
+    signatureHeader: string | null;
+    status: Generated<string>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface DB {
     AccountDeletionLog: AccountDeletionLog;
     AccountInvites: AccountInvites;
@@ -683,4 +739,8 @@ export interface DB {
     TransactionImports: TransactionImports;
     Transactions: Transactions;
     Users: Users;
+    WhatsAppHealth: WhatsAppHealth;
+    WhatsAppMessages: WhatsAppMessages;
+    WhatsAppTemplateRegistrations: WhatsAppTemplateRegistrations;
+    WhatsAppWebhookEvents: WhatsAppWebhookEvents;
 }
