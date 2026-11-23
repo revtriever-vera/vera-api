@@ -40,10 +40,6 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
         return this.findMany(holderWhereOf(filter), { limit: POSITION_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
     }
 
-    public async clearHolder(userId: string): Promise<Position[]> {
-        return this.updateManyRows({ holderUserId: userId }, { holderUserId: null });
-    }
-
     public async listAll(): Promise<Position[]> {
         return this.findMany({}, { limit: POSITION_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
     }

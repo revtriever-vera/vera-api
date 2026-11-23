@@ -230,6 +230,34 @@ describe('holder of the asset', () => {
         expect((await holdings(owner, 'all')).map((item) => item.id)).toEqual(expect.arrayContaining([position.body.id, title.id]));
     });
 
+    it('removing a person whose asset the whole account already has folds the positions into one, keeping the total', async () => {
+        const { owner, ana } = await team('departure-twin');
+        const whole = await addPosition(owner, 'PETR4');
+        const hers = await addPosition(owner, 'PETR4', ana.user.id);
+        const mine = await addPosition(owner, 'WEGE3', ana.user.id);
+        const before: number = await totalOf(owner, 'any');
+
+        const removal = await harness.call(owner.token, 'DELETE', `/members/${ana.user.id}`);
+
+        expect(removal.status).toBe(204);
+        const rows = await harness.pg.query<{ id: string; quantity: string; holderUserId: string | null; deletedAt: Date | null }>(
+            `SELECT "id","quantity","holderUserId","deletedAt" FROM "Positions" WHERE "companyId" = $1 ORDER BY "createdAt"`,
+            [owner.company.id]
+        );
+        const byId = new Map(rows.rows.map((row) => [row.id, row]));
+        expect(Number(byId.get(whole.body.id)?.quantity)).toBe(20);
+        expect(byId.get(whole.body.id)?.holderUserId).toBeNull();
+        expect(byId.get(hers.body.id)?.deletedAt).not.toBeNull();
+        expect(byId.get(mine.body.id)).toMatchObject({ holderUserId: null, deletedAt: null });
+        expect((await holdings(owner, 'any')).map((item) => item.id).toSorted()).toEqual([whole.body.id, mine.body.id].toSorted());
+        expect(await totalOf(owner, 'any')).toBe(before);
+        const assignments = await harness.pg.query<{ total: string }>(
+            `SELECT count(*) AS total FROM "AssetClassAssignments" WHERE "subjectId" = $1 AND "deletedAt" IS NULL`,
+            [hers.body.id]
+        );
+        expect(Number(assignments.rows[0]?.total)).toBe(0);
+    });
+
     it('computes the FGC per holder: the limit is per person, with "Conta toda" apart', async () => {
         const { owner, ana } = await team('fgc');
         await addTitle(owner, 20_000_000, ana.user.id);

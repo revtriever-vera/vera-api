@@ -1,15 +1,30 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { DatabaseClient } from '../../../core/database/database.client';
+import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
+import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { PositionDomain } from '../domain/position.domain';
 import { PositionsHolderDepartureHandler } from './holder-departure.handler';
 
+beforeAll(() => {
+    TransactionalContext.set({ withTransaction: async <T>(fn: () => Promise<T>): Promise<T> => fn() } as unknown as DatabaseClient);
+});
+
 describe('PositionsHolderDepartureHandler', () => {
-    it('clears the holder of the positions of the person who left', async () => {
-        const clearHolder = vi.fn().mockResolvedValue(2);
-        const handler: PositionsHolderDepartureHandler = new PositionsHolderDepartureHandler({ clearHolder } as unknown as PositionDomain);
+    it('moves the positions of the person who left to the whole account and releases the class of the ones folded into another', async () => {
+        const releaseHolder = vi.fn().mockResolvedValue([{ id: 'p1' }, { id: 'p2' }]);
+        const release = vi.fn().mockResolvedValue(undefined);
+        const handler: PositionsHolderDepartureHandler = new PositionsHolderDepartureHandler(
+            { releaseHolder } as unknown as PositionDomain,
+            { release } as unknown as ClassAssignmentService
+        );
 
         await handler.onMemberRemoved('ana');
 
-        expect(clearHolder).toHaveBeenCalledWith('ana');
+        expect(releaseHolder).toHaveBeenCalledWith('ana');
+        expect(release.mock.calls).toEqual([
+            ['position', 'p1'],
+            ['position', 'p2']
+        ]);
         expect(handler.area).toBe('positions-holder');
     });
 });

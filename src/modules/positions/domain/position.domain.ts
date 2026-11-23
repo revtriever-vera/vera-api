@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HolderFilter } from '../../../shared/holder/holder-filter';
+import { mergedPositionPatch } from './position-merge';
 import { PositionsRepository } from '../repositories/positions.repository';
 import { Position, PositionPatch } from './positions.types';
 
@@ -31,8 +32,25 @@ export class PositionDomain {
         return this.positions.listByHolder(filter);
     }
 
-    public async clearHolder(userId: string): Promise<number> {
-        return (await this.positions.clearHolder(userId)).length;
+    public async releaseHolder(userId: string): Promise<Position[]> {
+        const folded: Position[] = [];
+        for (const position of await this.positions.listByHolder({ kind: 'person', userId })) {
+            if (await this.moveToWholeAccount(position)) {
+                folded.push(position);
+            }
+        }
+        return folded;
+    }
+
+    private async moveToWholeAccount(position: Position): Promise<boolean> {
+        const whole: Position | null = await this.positions.findByAssetAndHolder(position.assetId, null);
+        if (whole === null) {
+            await this.positions.patch(position.id, { holderUserId: null });
+            return false;
+        }
+        await this.positions.patch(whole.id, mergedPositionPatch(whole, position));
+        await this.positions.softDelete(position.id);
+        return true;
     }
 
     public async listAll(): Promise<Position[]> {
