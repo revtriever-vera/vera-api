@@ -307,7 +307,11 @@ describe('whatsapp (auto-hospedada, driver mock)', () => {
     it('o Swagger descreve o webhook e esconde as rotas de dev', () => {
         const document: OpenAPIObject = SwaggerModule.createDocument(harness.app, new DocumentBuilder().build());
 
-        expect(Object.keys(document.paths).filter((path: string): boolean => path.startsWith('/whatsapp'))).toEqual(['/whatsapp/webhook']);
+        expect(Object.keys(document.paths).filter((path: string): boolean => path.startsWith('/whatsapp'))).toEqual([
+            '/whatsapp/webhook',
+            '/whatsapp/link',
+            '/whatsapp/link/code'
+        ]);
         expect(Object.keys(document.paths['/whatsapp/webhook'] ?? {}).sort()).toEqual(['get', 'post']);
     });
 

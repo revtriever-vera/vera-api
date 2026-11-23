@@ -44,6 +44,10 @@ export class ObservedWhatsApp extends WhatsAppCloudPort {
         return this.inner.phoneHealth(channel);
     }
 
+    public async displayNumber(channel: WhatsAppChannel): Promise<string | null> {
+        return this.inner.displayNumber(channel);
+    }
+
     public async markRead(channel: WhatsAppChannel, wamid: string): Promise<void> {
         await this.inner.markRead(channel, wamid);
     }

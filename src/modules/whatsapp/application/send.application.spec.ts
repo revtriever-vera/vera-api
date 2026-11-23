@@ -23,6 +23,7 @@ function messageOf(overrides: Partial<WhatsAppMessage> = {}): WhatsAppMessage {
     return {
         id: 'm1',
         companyId: 'c1',
+        linkId: null,
         peer: '5511999990000',
         direction: 'out',
         kind: 'text',

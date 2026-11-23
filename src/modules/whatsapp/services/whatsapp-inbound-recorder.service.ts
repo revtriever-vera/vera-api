@@ -8,7 +8,7 @@ export class WhatsAppInboundRecorder {
     public constructor(private readonly messages: WhatsAppMessageDomain) {}
 
     @AsCompany()
-    public async record(_companyId: string, message: InboundMessage): Promise<boolean> {
-        return this.messages.recordInbound(message);
+    public async record(_companyId: string, message: InboundMessage, linkId: string | null = null): Promise<boolean> {
+        return this.messages.recordInbound(message, linkId);
     }
 }

@@ -628,6 +628,37 @@ export interface WhatsAppHealth {
     tokenInvalidAt: Timestamp | null;
 }
 
+export interface WhatsAppLinkCodes {
+    canceledAt: Timestamp | null;
+    codeHash: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    expiresAt: Timestamp;
+    id: string;
+    updatedAt: Generated<Timestamp>;
+    usedAt: Timestamp | null;
+    userId: string;
+}
+
+export interface WhatsAppLinks {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    lastInboundAt: Timestamp | null;
+    linkedAt: Timestamp;
+    optInAt: Timestamp;
+    optInSource: string;
+    phoneHash: string;
+    phoneLast4: string;
+    phoneSealed: Json;
+    status: string;
+    unlinkedAt: Timestamp | null;
+    unlinkReason: string | null;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface WhatsAppMessages {
     billable: boolean | null;
     body: string | null;
@@ -640,6 +671,7 @@ export interface WhatsAppMessages {
     failedAt: Timestamp | null;
     id: string;
     kind: string;
+    linkId: string | null;
     payload: Json | null;
     peer: string;
     pricingCategory: string | null;
@@ -721,6 +753,8 @@ export interface DB {
     Transactions: Transactions;
     Users: Users;
     WhatsAppHealth: WhatsAppHealth;
+    WhatsAppLinkCodes: WhatsAppLinkCodes;
+    WhatsAppLinks: WhatsAppLinks;
     WhatsAppMessages: WhatsAppMessages;
     WhatsAppTemplateRegistrations: WhatsAppTemplateRegistrations;
     WhatsAppWebhookEvents: WhatsAppWebhookEvents;

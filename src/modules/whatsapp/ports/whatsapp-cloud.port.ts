@@ -28,5 +28,6 @@ export abstract class WhatsAppCloudPort {
     public abstract listTemplates(channel: WhatsAppChannel): Promise<readonly RemoteTemplate[]>;
     public abstract submitTemplate(channel: WhatsAppChannel, template: TemplateDefinition): Promise<{ readonly remoteId: string }>;
     public abstract phoneHealth(channel: WhatsAppChannel): Promise<PhoneHealth>;
+    public abstract displayNumber(channel: WhatsAppChannel): Promise<string | null>;
     public abstract markRead(channel: WhatsAppChannel, wamid: string): Promise<void>;
 }

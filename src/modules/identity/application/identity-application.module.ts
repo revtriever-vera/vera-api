@@ -24,6 +24,7 @@ import { AccountExportBuilder } from '../services/account-export.builder';
 import { AccountSpreadsheetRegistry } from '../services/account-spreadsheet.registry';
 import { AccountProvisioningService } from '../services/account-provisioning.service';
 import { CompanyTimezoneService } from '../services/company-timezone.service';
+import { UserLocaleService } from '../services/user-locale.service';
 import { CurrentUserService } from '../services/current-user.service';
 import { FacebookGraphClient } from '../services/facebook-graph.client';
 import { FacebookIdentityVerifier } from '../services/facebook-identity.verifier';
@@ -97,6 +98,7 @@ import { SocialLoginApplication } from './social-login.application';
         { provide: SessionIssuerPort, useExisting: SessionIssuerService },
         CurrentUserService,
         CompanyTimezoneService,
+        UserLocaleService,
         JwtAuthGuard,
         RolesGuard,
         RefreshCookieAdapter,
@@ -116,6 +118,7 @@ import { SocialLoginApplication } from './social-login.application';
         MembersCleanupApplication,
         CurrentUserService,
         CompanyTimezoneService,
+        UserLocaleService,
         MemberDirectoryService,
         OwnerRecipientsService,
         JwtAuthGuard,

@@ -18,6 +18,9 @@ import { SignatureVerifier } from '../services/signature.verifier';
 import { WebhookBodyService } from '../services/webhook-body.service';
 import { WhatsAppAccountEraser } from '../services/whatsapp-account.eraser';
 import { WhatsAppAccountExporter } from '../services/whatsapp-account.exporter';
+import { WhatsAppConversationEraser } from '../services/whatsapp-conversation-eraser.service';
+import { WhatsAppDirectReply } from '../services/whatsapp-direct-reply.service';
+import { WhatsAppDisplayNumber } from '../services/whatsapp-display-number.service';
 import { WhatsAppAvailability } from '../services/whatsapp-availability';
 import { WhatsAppChannelService } from '../services/whatsapp-channel.service';
 import { WhatsAppEventProcessor } from '../services/whatsapp-event-processor.service';
@@ -54,6 +57,9 @@ import { WebhookApplication } from './webhook.application';
         WhatsAppAccountEraser,
         WhatsAppEventProcessor,
         WhatsAppInboundRecorder,
+        WhatsAppConversationEraser,
+        WhatsAppDirectReply,
+        WhatsAppDisplayNumber,
         InboundDispatchRegistry,
         WhatsAppHousekeepingService,
         SignatureVerifier,
@@ -82,7 +88,10 @@ import { WebhookApplication } from './webhook.application';
         WhatsAppOutboundService,
         WhatsAppChannelService,
         WhatsAppWindowService,
-        WhatsAppInboundRecorder
+        WhatsAppInboundRecorder,
+        WhatsAppConversationEraser,
+        WhatsAppDirectReply,
+        WhatsAppDisplayNumber
     ]
 })
 export class WhatsAppApplicationModule {}

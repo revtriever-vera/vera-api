@@ -15,11 +15,13 @@ import {
 } from '../domain/whatsapp.types';
 import { WhatsAppCloudPort } from '../ports/whatsapp-cloud.port';
 import {
+    DisplayNumberResponse,
     HealthResponse,
     SendResponse,
     SubmitResponse,
     TemplateEntry,
     TemplatesResponse,
+    displayNumberResponseSchema,
     healthResponseSchema,
     sendResponseSchema,
     submitResponseSchema,
@@ -138,6 +140,19 @@ export class CloudWhatsAppDriver extends WhatsAppCloudPort {
             messagingLimitTier: response.messaging_limit_tier ?? null,
             status: response.status ?? UNKNOWN
         };
+    }
+
+    public async displayNumber(channel: WhatsAppChannel): Promise<string | null> {
+        const response: DisplayNumberResponse = await this.http.request(
+            {
+                method: 'GET',
+                path: channel.phoneNumberId,
+                accessToken: channel.accessToken,
+                query: { fields: 'display_phone_number' }
+            },
+            displayNumberResponseSchema
+        );
+        return response.display_phone_number ?? null;
     }
 
     public async markRead(channel: WhatsAppChannel, wamid: string): Promise<void> {

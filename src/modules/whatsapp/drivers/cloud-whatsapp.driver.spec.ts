@@ -154,4 +154,14 @@ describe('CloudWhatsAppDriver', () => {
         expect(network.kind).toBe('transient');
         expect(JSON.stringify([window.message, format.message, network.message])).not.toContain('token-for-spec');
     });
+
+    it('lê o número de exibição pelo campo display_phone_number', async () => {
+        const fetchMock = stubFetch(reply(200, { display_phone_number: '+55 11 4000-0000', id: 'phone-1' }), reply(200, { id: 'phone-1' }));
+
+        expect(await driver.displayNumber(CHANNEL)).toBe('+55 11 4000-0000');
+        expect(await driver.displayNumber(CHANNEL)).toBeNull();
+        const call = lastCall(fetchMock);
+        expect(call.url).toContain('/v21.0/phone-1?');
+        expect(call.url).toContain('fields=display_phone_number');
+    });
 });

@@ -58,4 +58,10 @@ describe('MockWhatsAppDriver', () => {
         ]);
         expect(await driver.phoneHealth()).toMatchObject({ qualityRating: 'GREEN' });
     });
+
+    it('responde um número de exibição fixo', async () => {
+        const driver: MockWhatsAppDriver = new MockWhatsAppDriver(new MockOutbox());
+
+        expect(await driver.displayNumber()).toBe('+55 11 4000-0000');
+    });
 });
