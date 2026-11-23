@@ -12,7 +12,7 @@ describe('PlanUsageContextAdapter', () => {
         const adapter: PlanUsageContextAdapter = new PlanUsageContextAdapter(
             { capMicros: vi.fn().mockResolvedValue(4_000_000) } as unknown as PlanLimitService,
             { timezoneOfCompany: vi.fn().mockResolvedValue('Asia/Tokyo') } as unknown as CompanyTimezoneService,
-            { register } as unknown as UsageContextHolder
+            { register, configuredCapMicros: () => 4_000_000 } as unknown as UsageContextHolder
         );
 
         adapter.onModuleInit();

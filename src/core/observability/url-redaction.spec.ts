@@ -21,6 +21,11 @@ describe('redação de segredo na URL', () => {
         expect(redactUrl('/qualquer/token/segredo/mais')).toBe('/qualquer/token/<oculto>/mais');
     });
 
+    it('esconde o token do webhook da Revtriever, que e metade da autenticacao', () => {
+        expect(redactUrl('/billing/revtriever/events/segredo')).toBe('/billing/revtriever/events/<oculto>');
+        expect(redactUrl('/billing/revtriever/events/segredo?x=1')).toBe('/billing/revtriever/events/<oculto>?x=1');
+    });
+
     it('tira o token do convite também da linha serializada do log', () => {
         const logged: string = JSON.stringify(redactRequest({ url: '/invites/SEGREDO', params: { token: 'SEGREDO' } }));
 

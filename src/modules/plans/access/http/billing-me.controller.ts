@@ -40,7 +40,7 @@ const SELF_HOSTED_EXAMPLE: BillingMe = {
         state: 'ok',
         resetsAt: '2026-12-01T03:00:00.000Z',
         byFeature: { ai: { usedBps: 4200 }, whatsapp: { usedBps: 0 } },
-        capMicros: 4000000
+        capMicros: null
     }
 };
 

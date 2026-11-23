@@ -11,7 +11,7 @@ export const usageSchema = z.object({
     usedBps: z.number().int().min(0).describe('Share of the monthly cap used, in basis points; 0 when there is no cap'),
     resetsAt: z.string().describe('When the period turns, 00:00 of day 1 in the company time zone (ISO 8601, UTC)'),
     byFeature: z.object({ ai: featureUsageSchema, whatsapp: featureUsageSchema }).describe('Usage by feature'),
-    capMicros: z.number().int().nullable().describe('Cap in micros of BRL; only for self-hosted with a cap')
+    capMicros: z.number().int().nullable().describe('Cap in micros of BRL; null when there is no cap or it is not exposed (hosted)')
 });
 
 export class UsageDto extends createZodDto(usageSchema) {}

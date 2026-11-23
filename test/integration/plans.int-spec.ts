@@ -7,7 +7,7 @@ import { JwtAuthGuard } from '../../src/modules/identity/services/jwt-auth.guard
 import { RequiresRole } from '../../src/modules/identity/services/requires-role.decorator';
 import { RolesGuard } from '../../src/modules/identity/services/roles.guard';
 import { PremiumEndedRetryApplication } from '../../src/modules/plans/application/premium-ended-retry.application';
-import { PlanLimitService } from '../../src/modules/plans/services/plan-limit.service';
+import { PlanUsageContextAdapter } from '../../src/modules/plans/services/plan-usage-context.adapter';
 import { PlansApplicationModule } from '../../src/modules/plans/application/plans-application.module';
 import { PaidFeature, PaidUsageSnapshot } from '../../src/modules/plans/domain/plans.types';
 import { PaidFeatureAvailabilityPort } from '../../src/modules/plans/services/paid-feature-availability.port';
@@ -252,7 +252,7 @@ describe('plans (hosted)', () => {
 
             const me = await harness.call<Me>(account.token, 'GET', '/billing/me');
             const cap: number | null = await harness.inCompany(account.company.id, async () =>
-                harness.app.get(PlanLimitService, { strict: false }).capMicros()
+                harness.app.get(PlanUsageContextAdapter, { strict: false }).capMicros()
             );
 
             expect(me.body).toMatchObject({ plan: 'premium', features: { ai: 'available' }, trial: { kind: 'no_card', daysLeft: 14 } });

@@ -111,7 +111,7 @@ export const billingMeSchema = z.object({
             state: z.enum(['ok', 'warning', 'paused']).describe('ok, warning from 80%, paused at 100%'),
             resetsAt: z.string().describe('When the period turns (ISO 8601)'),
             byFeature: z.object({ ai: usedBpsSchema, whatsapp: usedBpsSchema }).describe('Usage by feature'),
-            capMicros: z.number().int().nullable().describe('Cap in micros of BRL; only for self-hosted with a cap')
+            capMicros: z.number().int().nullable().describe('Cap in micros of BRL; null when there is no cap or it is not exposed (hosted)')
         })
         .nullable()
         .describe('Paid usage of the month; null when nothing meters it')

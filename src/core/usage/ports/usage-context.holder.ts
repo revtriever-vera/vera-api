@@ -18,6 +18,10 @@ export class UsageContextHolder {
         if (this.port !== null) {
             return this.port.capMicros();
         }
+        return this.configuredCapMicros();
+    }
+
+    public configuredCapMicros(): number | null {
         return this.config.PAID_USAGE_CAP_MICROS === 0 ? null : this.config.PAID_USAGE_CAP_MICROS;
     }
 

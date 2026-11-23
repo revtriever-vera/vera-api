@@ -3,6 +3,7 @@ const SECRET_PATH_SEGMENTS: readonly RegExp[] = [
     /^(\/invites\/)[^/?]+/,
     /^(\/notifications\/unsubscribe\/)[^/?]+/,
     /^(\/billing\/_dev\/capture\/)[^/?]+/,
+    /^(\/billing\/revtriever\/events\/)[^/?]+/,
     /(\/tokens?\/)[^/?]+/
 ];
 
