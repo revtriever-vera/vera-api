@@ -113,9 +113,9 @@ describe('account spreadsheet export', () => {
         const a: Account = await harness.signUp('zip-a');
         const b: Account = await harness.signUp('zip-b');
         await seed(a, 'aaa');
-        await seed(b, 'bbb');
+        await seed(b, 'qzq');
         await markRecurring(a, 'pluggy:aaa-1');
-        await markRecurring(b, 'pluggy:bbb-1');
+        await markRecurring(b, 'pluggy:qzq-1');
 
         const response: RawResponse = await harness.callRaw(a.token, PATH);
 
@@ -137,16 +137,16 @@ describe('account spreadsheet export', () => {
         const transactions: string[] = textsOf((await sheetsOf(zip, 'transacoes.xlsx'))[0] as Worksheet);
         expect(transactions).toContain('compra aaa');
         expect(transactions).toContain("'=salario aaa");
-        expect(transactions.join('|')).not.toContain('bbb');
+        expect(transactions.join('|')).not.toContain('qzq');
         const rules: string[] = textsOf((await sheetsOf(zip, 'regras.xlsx'))[0] as Worksheet);
         expect(rules).toContain('petz aaa');
-        expect(rules.join('|')).not.toContain('bbb');
+        expect(rules.join('|')).not.toContain('qzq');
         const recurring: Worksheet[] = await sheetsOf(zip, 'assinaturas-e-contas.xlsx');
         expect(recurring.map((sheet: Worksheet) => sheet.name)).toEqual(['Assinaturas e contas']);
         const recurringTexts: string[] = textsOf(recurring[0] as Worksheet);
         expect(recurringTexts).toContain('Compra Aaa');
         expect(recurringTexts).toContain('Confirmada');
-        expect(recurringTexts.join('|')).not.toContain('bbb');
+        expect(recurringTexts.join('|')).not.toContain('qzq');
         const goals: Worksheet[] = await sheetsOf(zip, 'metas.xlsx');
         expect(goals.map((sheet: Worksheet) => sheet.name)).toEqual(['Classes', 'Metas por ativo', 'Preferências']);
         const json: {
@@ -158,7 +158,7 @@ describe('account spreadsheet export', () => {
         expect(json.account.company.name).toBe('Empresa zip-a');
         expect(json.sections.recurring.series.map((item) => [item.name, item.account])).toEqual([['Compra Aaa', 'Conta aaa']]);
         expect(json.sections.recurring.series[0]?.charges).toHaveLength(1);
-        expect(JSON.stringify(json)).not.toContain('bbb');
+        expect(JSON.stringify(json)).not.toContain('qzq');
 
         for (let call: number = 1; call < EXPORTS_PER_HOUR; call += 1) {
             expect((await harness.callRaw(a.token, PATH)).status).toBe(200);
