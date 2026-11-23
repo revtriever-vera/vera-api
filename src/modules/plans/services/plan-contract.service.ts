@@ -78,6 +78,10 @@ export class PlanContractService {
         return true;
     }
 
+    public async isPlatformCompany(): Promise<boolean> {
+        return (await this.trials.history()).isPlatform;
+    }
+
     public async trialUsed(): Promise<boolean> {
         return (await this.trials.history()).trialUsed;
     }

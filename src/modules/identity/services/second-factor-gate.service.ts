@@ -39,4 +39,8 @@ export class SecondFactorGateService {
         }
         throw new TooManyAttemptsError();
     }
+
+    public async cleared(user: User): Promise<void> {
+        await this.throttle.forget(`second-factor:${user.id}`);
+    }
 }

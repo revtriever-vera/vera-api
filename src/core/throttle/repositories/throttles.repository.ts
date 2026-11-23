@@ -13,6 +13,10 @@ export class ThrottlesRepository extends GlobalRepository<'Throttles'> {
         super(database, 'Throttles');
     }
 
+    public async forget(key: string): Promise<void> {
+        await this.hardDeleteWhere({ key }, 1);
+    }
+
     public async registerAttempt(key: string, windowSeconds: number): Promise<number> {
         const expired: RawBuilder<boolean> = this
             .rawSql<boolean>`"Throttles"."windowStartedAt" + make_interval(secs => ${windowSeconds}) < now()`;

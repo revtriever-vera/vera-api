@@ -44,6 +44,11 @@ export class SubscriptionController {
         example: { next: 'card_capture', captureUrl: 'https://pay.example.com/capture/abc' }
     })
     @ApiProblemResponse({
+        status: 403,
+        description: 'The platform company does not subscribe to Premium (billing.platform_company)',
+        example: { type: 'billing.platform_company', title: 'PlatformCompanyCannotSubscribeError', status: 403 }
+    })
+    @ApiProblemResponse({
         status: 409,
         description: 'Already Premium or self-hosted (billing.already_subscribed, billing.not_available)',
         example: { type: 'billing.already_subscribed', title: 'AlreadySubscribedError', status: 409 }

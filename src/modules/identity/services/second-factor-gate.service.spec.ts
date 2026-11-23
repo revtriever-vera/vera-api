@@ -13,16 +13,18 @@ function build(options: { enabled?: boolean; claims?: unknown; attempts?: number
     gate: SecondFactorGateService;
     locked: ReturnType<typeof vi.fn>;
     countAttempt: ReturnType<typeof vi.fn>;
+    forget: ReturnType<typeof vi.fn>;
 } {
     const locked: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const countAttempt: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(options.attempts ?? 1);
+    const forget: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const gate: SecondFactorGateService = new SecondFactorGateService(
         { enabled: () => options.enabled ?? true } as unknown as PlatformAvailabilityService,
         { verifySecondFactorToken: () => options.claims ?? null } as unknown as TokenService,
-        { countAttempt } as unknown as ThrottleService,
+        { countAttempt, forget } as unknown as ThrottleService,
         { locked } as unknown as SecondFactorNotifierService
     );
-    return { gate, locked, countAttempt };
+    return { gate, locked, countAttempt, forget };
 }
 
 describe('SecondFactorGateService', () => {
@@ -49,6 +51,14 @@ describe('SecondFactorGateService', () => {
 
         expect(countAttempt).toHaveBeenCalledWith('second-factor:user-1', 900);
         expect(locked).not.toHaveBeenCalled();
+    });
+
+    it('cleared zera o contador do usuário: só os erros contam', async () => {
+        const { gate, forget } = build();
+
+        await gate.cleared(USER);
+
+        expect(forget).toHaveBeenCalledWith('second-factor:user-1');
     });
 
     it('a sexta tentativa leva 429 e grava admin.totp_locked uma vez só', async () => {
