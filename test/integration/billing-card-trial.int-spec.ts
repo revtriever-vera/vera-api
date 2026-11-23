@@ -22,6 +22,8 @@ interface Me {
         readonly card: { readonly last4: string } | null;
         readonly canResume: boolean;
         readonly graceEndsAt: string | null;
+        readonly discount: { readonly percent: number; readonly cycle: number; readonly endsAt: string } | null;
+        readonly nextChargeAmountMinor: number | null;
     } | null;
     readonly trial: { readonly kind: string; readonly endsAt: string; readonly daysLeft: number } | null;
 }
@@ -190,6 +192,8 @@ describe('teste com cartão (driver fake)', () => {
         expect(confirmed.trial).toMatchObject({ kind: 'card' });
         expect(confirmed.trial?.daysLeft).toBeGreaterThanOrEqual(TRIAL_DAYS - 1);
         expect(confirmed.subscription?.nextChargeAt).toBe(confirmed.trial?.endsAt);
+        expect(confirmed.subscription?.discount).toMatchObject({ percent: 50, cycle: 1 });
+        expect(confirmed.subscription?.nextChargeAmountMinor).toBe(Math.round(confirmed.priceCents / 2));
         expect(mails('premium_trial_started')).toBe(1);
         await sync();
         const invoices = await harness.pg.query('SELECT count(*)::int AS total FROM "BillingInvoices" WHERE "companyId" = $1', [

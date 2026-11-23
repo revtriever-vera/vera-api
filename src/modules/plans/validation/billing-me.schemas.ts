@@ -53,7 +53,22 @@ export const billingMeSchema = z.object({
                 .describe('Saved card, when there is one'),
             graceEndsAt: z.string().nullable().describe('End of the grace period after an overdue invoice (ISO 8601)'),
             withdrawalEndsAt: z.string().nullable().describe('End of the 7-day withdrawal window (ISO 8601)'),
-            canResume: z.boolean().describe('True when a canceled subscription can be resumed')
+            canResume: z.boolean().describe('True when a canceled subscription can be resumed'),
+            discount: z
+                .object({
+                    percent: z.number().int().describe('Discount on the Premium price, in percent'),
+                    cycle: z.number().int().describe('Cycle of the discount scale the next charge falls in (starts at 1)'),
+                    endsAt: z.string().describe('When the discount stops applying (ISO 8601): the end of the last discounted cycle')
+                })
+                .nullable()
+                .describe('Discount that applies to the next charge; null when the next charge is at full price or there is none'),
+            nextChargeAmountMinor: z
+                .number()
+                .int()
+                .nullable()
+                .describe(
+                    'Amount of the next charge in cents of BRL, discount included (same rule as the price endpoint); null when there is no next charge'
+                )
         })
         .nullable()
         .describe('Subscription summary; null when there is none'),

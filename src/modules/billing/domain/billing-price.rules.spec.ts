@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { discountPercentOf, isPremiumProductRef, priceDescriptionOf, resolvePrice } from './billing-price.rules';
+import { discountPercentOf, discountViewOf, isPremiumProductRef, priceDescriptionOf, resolvePrice } from './billing-price.rules';
 
 describe('regras do preço', () => {
     it('só o produto Premium é cotado', () => {
@@ -38,6 +38,21 @@ describe('regras do preço', () => {
 
         it('sem régua o preço é cheio', () => {
             expect(resolvePrice(1490, [], 1)).toEqual({ amountCents: 1490, percent: null });
+        });
+    });
+
+    describe('desconto vigente', () => {
+        const rules = [{ percent: 50, fromCycle: 1, toCycle: 3 }];
+
+        it('termina ao fim do último ciclo da faixa', () => {
+            const view = discountViewOf(rules, 2, new Date('2026-12-10T03:00:00.000Z'));
+            expect(view?.percent).toBe(50);
+            expect(view?.cycle).toBe(2);
+            expect(view?.endsAt.toISOString()).toBe('2027-02-10T03:00:00.000Z');
+        });
+
+        it('sem faixa no ciclo, sem desconto', () => {
+            expect(discountViewOf(rules, 4, new Date('2026-12-10T03:00:00.000Z'))).toBeNull();
         });
     });
 });

@@ -27,6 +27,24 @@ export function resolvePrice(baseCents: number, rules: readonly BillingOfferRule
     return { amountCents: Math.round((baseCents * (PERCENT_BASE - percent)) / PERCENT_BASE), percent };
 }
 
+export interface DiscountView {
+    readonly percent: number;
+    readonly cycle: number;
+    readonly endsAt: Date;
+}
+
+export function discountViewOf(rules: readonly BillingOfferRule[], cycle: number, chargeAt: Date): DiscountView | null {
+    const rule: BillingOfferRule | undefined = rules.find(
+        (candidate: BillingOfferRule): boolean => cycle >= candidate.fromCycle && cycle <= candidate.toCycle
+    );
+    if (rule === undefined) {
+        return null;
+    }
+    const endsAt: Date = new Date(chargeAt);
+    endsAt.setUTCMonth(endsAt.getUTCMonth() + (rule.toCycle - cycle + 1));
+    return { percent: rule.percent, cycle, endsAt };
+}
+
 export function priceDescriptionOf(periodEnd: string, percent: number | null = null, locale: string = 'pt-BR'): string {
     const month: string = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
         new Date(`${periodEnd.slice(0, 10)}T00:00:00Z`)
