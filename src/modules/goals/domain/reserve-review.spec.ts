@@ -7,6 +7,11 @@ describe('reserve-review', () => {
         expect(suggestedReserveMinor(null, 6)).toBeNull();
     });
 
+    it('arredonda a sugestão para R$ 100, sem centavos soltos', () => {
+        expect(suggestedReserveMinor(123456, 6)).toBe(740000);
+        expect(suggestedReserveMinor(123457, 3)).toBe(370000);
+    });
+
     it('a base é o alvo dividido pelos meses, meio para cima', () => {
         expect(reserveBaseOf(3120000, 6)).toBe(520000);
         expect(reserveBaseOf(1001, 2)).toBe(501);

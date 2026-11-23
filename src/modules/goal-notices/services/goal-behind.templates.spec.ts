@@ -35,6 +35,8 @@ describe('template goal-behind', () => {
         expect(mail.text).toContain('para chegar a R$ 31.200 em junho de 2027, são R$ 1.480 por mês. Eram R$ 1.200.');
         expect(mail.text).toContain('https://app.example.com/portfolio/goals');
         expect(mail.html).toContain('href="https://api.example.com/u/abc"');
+        expect(mail.text).toContain('Este e-mail foi enviado automaticamente.');
+        expect(mail.text).toContain('Não quero mais receber estes avisos: https://api.example.com/u/abc');
         expect(mail.html).toContain('Reserva &lt;b&gt;');
         expect(mail.html).not.toContain('Reserva <b>');
     });

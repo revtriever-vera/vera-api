@@ -10,8 +10,14 @@ export interface ReserveReview {
     readonly shouldUpdate: boolean;
 }
 
+/** A reserva sugerida arredonda para R$ 100, sem centavos soltos. */
+const SUGGESTION_STEP_MINOR: number = 10_000;
+
 export function suggestedReserveMinor(averageMinor: number | null, months: number): number | null {
-    return averageMinor === null ? null : averageMinor * months;
+    if (averageMinor === null) {
+        return null;
+    }
+    return DecimalUtil.roundHalfUpToInteger(DecimalUtil.of(averageMinor * months).div(SUGGESTION_STEP_MINOR)) * SUGGESTION_STEP_MINOR;
 }
 
 /** O alvo da reserva guarda a base usada (alvo ÷ meses, meio para cima), para avisar quando a média anda mais de 10%. */

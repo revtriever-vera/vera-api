@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MailContent } from '../../../core/mail/mail.types';
 import { TemplateProps, TemplateRegistry } from '../../../core/mail/template.registry';
-import { baseLayout } from '../../../core/mail/templates/base-layout';
+import { baseLayout, textFooter } from '../../../core/mail/templates/base-layout';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { GOALS_PROP, GOALS_URL_PROP } from '../domain/goal-behind-props';
 import { GoalBehindCopy, goalBehindCopy } from '../domain/goal-behind-copy';
@@ -40,15 +40,18 @@ function htmlOf(copy: GoalBehindCopy, greeting: string, locale: AppLocale, props
     });
 }
 
-function textOf(copy: GoalBehindCopy, greeting: string, props: TemplateProps): string {
+function textOf(copy: GoalBehindCopy, greeting: string, locale: AppLocale, props: TemplateProps): string {
     const items: string[] = copy.lines.map((line: string): string => `- ${line}`);
-    return [greeting, '', copy.intro, ...items, '', `${copy.ctaLabel}: ${props[GOALS_URL_PROP] ?? ''}`, '', copy.footnote].join('\n');
+    return (
+        [greeting, '', copy.intro, ...items, '', `${copy.ctaLabel}: ${props[GOALS_URL_PROP] ?? ''}`, '', copy.footnote].join('\n') +
+        textFooter(locale, props['unsubscribeUrl'])
+    );
 }
 
 function render(locale: AppLocale, props: TemplateProps): MailContent {
     const copy: GoalBehindCopy = goalBehindCopy(goalsOf(props), locale);
     const greeting: string = greetingOf(locale, props);
-    return { subject: copy.subject, html: htmlOf(copy, greeting, locale, props), text: textOf(copy, greeting, props) };
+    return { subject: copy.subject, html: htmlOf(copy, greeting, locale, props), text: textOf(copy, greeting, locale, props) };
 }
 
 @Injectable()

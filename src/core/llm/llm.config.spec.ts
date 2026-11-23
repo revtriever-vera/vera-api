@@ -33,7 +33,12 @@ describe('llm.config', () => {
     });
 
     it('fora do local o mock nunca é aceito, nem por padrão nem pedindo', () => {
-        for (const env of [{} as Record<string, string>, { IS_LOCAL: 'false' }, { LLM_DRIVER: 'mock' }, { IS_LOCAL: 'false', LLM_DRIVER: 'mock' }]) {
+        for (const env of [
+            {} as Record<string, string>,
+            { IS_LOCAL: 'false' },
+            { LLM_DRIVER: 'mock' },
+            { IS_LOCAL: 'false', LLM_DRIVER: 'mock' }
+        ]) {
             expect(load(env).LLM_DRIVER).toBe('live');
         }
     });
@@ -58,6 +63,19 @@ describe('llm.config', () => {
         expect(() =>
             load({ DEPLOYMENT_MODE: 'hosted', AI_GATEWAY_API_KEY: 'k', LLM_MODEL: 'vendor/outro', LLM_PRICE_TABLE: PRICED })
         ).toThrow('vendor/outro');
+    });
+
+    it('LLM_MODEL e LLM_MODEL_ID vazios valem como ausentes e caem no modelo padrão', () => {
+        const config = load({
+            DEPLOYMENT_MODE: 'hosted',
+            AI_GATEWAY_API_KEY: 'k',
+            LLM_MODEL: '',
+            LLM_MODEL_ID: '',
+            LLM_PRICE_TABLE: PRICED
+        });
+
+        expect(config.LLM_MODEL).toBeUndefined();
+        expect(config.LLM_MODEL_ID).toBe('meta/muse-spark-1.3-contributor');
     });
 
     it('hospedada com chave e preço sobe', () => {

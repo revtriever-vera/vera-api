@@ -128,7 +128,11 @@ export const emergencySuggestionSchema = z.object({
     averageMonths: z
         .array(z.string())
         .describe('Closed months (YYYY-MM, oldest first) the average used, up to 3, only months with transactions'),
-    suggestedMinor: z.number().int().nullable().describe('`months` times the average, BRL cents; null without data (ask the person)')
+    suggestedMinor: z
+        .number()
+        .int()
+        .nullable()
+        .describe('`months` times the average rounded to R$ 100, BRL cents; null without data (ask the person)')
 });
 
 export const reserveReviewSchema = z
