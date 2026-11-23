@@ -1,5 +1,15 @@
 import { DateUtil } from '../../../shared/utils/date.util';
-import { Goal, GoalHoldingKind, GoalHoldingLink, GoalHoldingRow, GoalKind, GoalMonthStart, GoalPlan, GoalRow } from './goals.types';
+import {
+    Goal,
+    GoalHoldingKind,
+    GoalHoldingLink,
+    GoalHoldingRow,
+    GoalKind,
+    GoalMonthStart,
+    GoalPlan,
+    GoalRow,
+    ReserveBasis
+} from './goals.types';
 
 export function toGoal(row: GoalRow, holdings: readonly GoalHoldingRow[]): Goal {
     return {
@@ -13,10 +23,17 @@ export function toGoal(row: GoalRow, holdings: readonly GoalHoldingRow[]): Goal 
         manualUpdatedAt: row.manualUpdatedAt === null ? null : new Date(row.manualUpdatedAt),
         plan: toPlan(row),
         monthStart: toMonthStart(row),
+        reserve: toReserve(row),
         holdings: holdings.map(toLink),
         createdAt: new Date(row.createdAt),
         updatedAt: new Date(row.updatedAt)
     };
+}
+
+function toReserve(row: GoalRow): ReserveBasis | null {
+    return row.reserveMonths === null || row.reserveBaseMinor === null
+        ? null
+        : { months: row.reserveMonths, baseMinor: Number(row.reserveBaseMinor) };
 }
 
 function toLink(row: GoalHoldingRow): GoalHoldingLink {

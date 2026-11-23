@@ -1,5 +1,6 @@
 import { Holding, PortfolioSnapshot } from '../../portfolio/services/portfolio-snapshot.service';
 import { balanceOf, progressOf, shareOfMinor } from '../domain/goal-calculator';
+import { ReserveReview } from '../domain/reserve-review';
 import { holdingKeyOf } from '../domain/goal.domain';
 import { Goal, GOAL_STATUSES, GoalHoldingLink, GoalProgress, LinkValue } from '../domain/goals.types';
 import { GoalsList, GoalView } from '../validation/goals.schemas';
@@ -21,7 +22,7 @@ export function balanceOfLinks(manualMinor: number, links: readonly GoalHoldingL
     return balanceOf(manualMinor, linkValuesOf(links, holdings));
 }
 
-export function toGoalView(goal: Goal, holdings: HoldingIndex, today: string): GoalView {
+export function toGoalView(goal: Goal, holdings: HoldingIndex, today: string, reserve: ReserveReview | null = null): GoalView {
     const progress: GoalProgress = progressOf(goal, linkValuesOf(goal.holdings, holdings), today);
     return {
         id: goal.id,
@@ -33,6 +34,7 @@ export function toGoalView(goal: Goal, holdings: HoldingIndex, today: string): G
         manualMinor: goal.manualMinor,
         manualUpdatedAt: goal.manualUpdatedAt?.toISOString() ?? null,
         ...progress,
+        reserve,
         holdings: goal.holdings.map((link: GoalHoldingLink) => toHoldingView(link, holdings)),
         createdAt: goal.createdAt.toISOString(),
         updatedAt: goal.updatedAt.toISOString()

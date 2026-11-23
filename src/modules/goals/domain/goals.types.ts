@@ -31,6 +31,9 @@ export const GOAL_STATUSES = {
 
 export type GoalStatus = (typeof GOAL_STATUSES)[keyof typeof GOAL_STATUSES];
 
+export const RESERVE_MONTH_OPTIONS = [3, 6, 12] as const;
+export const DEFAULT_RESERVE_MONTHS: number = 6;
+export const RESERVE_CHANGE_THRESHOLD_BPS: number = 1000;
 export const MAX_GOALS_PER_COMPANY: number = 20;
 export const MAX_HOLDINGS_PER_GOAL: number = 50;
 export const MAX_NAME_LENGTH: number = 60;
@@ -54,6 +57,11 @@ export interface GoalMonthStart {
     readonly minor: number;
 }
 
+export interface ReserveBasis {
+    readonly months: number;
+    readonly baseMinor: number;
+}
+
 export interface Goal {
     readonly id: string;
     readonly kind: GoalKind;
@@ -65,6 +73,7 @@ export interface Goal {
     readonly manualUpdatedAt: Date | null;
     readonly plan: GoalPlan;
     readonly monthStart: GoalMonthStart;
+    readonly reserve: ReserveBasis | null;
     readonly holdings: readonly GoalHoldingLink[];
     readonly createdAt: Date;
     readonly updatedAt: Date;
@@ -96,6 +105,7 @@ export interface NewGoalData {
     readonly manualMinor: number;
     readonly plan: GoalPlan;
     readonly monthStart: GoalMonthStart;
+    readonly reserve: ReserveBasis | null;
 }
 
 export interface GoalChanges {
@@ -105,6 +115,7 @@ export interface GoalChanges {
     readonly holderUserId?: string | null;
     readonly manualMinor?: number;
     readonly plan?: GoalPlan;
+    readonly reserve?: ReserveBasis;
 }
 
 export interface CreateGoalInput {
@@ -114,6 +125,7 @@ export interface CreateGoalInput {
     readonly targetDate: string;
     readonly holderUserId?: string | null;
     readonly manualMinor?: number;
+    readonly reserveMonths?: number;
     readonly holdings: readonly GoalHoldingLink[];
 }
 
@@ -123,5 +135,6 @@ export interface UpdateGoalInput {
     readonly targetDate?: string;
     readonly holderUserId?: string | null;
     readonly manualMinor?: number;
+    readonly reserveMonths?: number;
     readonly holdings?: readonly GoalHoldingLink[];
 }

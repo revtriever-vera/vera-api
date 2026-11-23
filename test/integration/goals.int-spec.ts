@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { IndexSyncApplication } from '../../src/modules/fixed-income/application/index-sync.application';
 import { addDays } from '../../src/modules/fixed-income/domain/curve/business-days';
+import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
+import { TransactionIngestionService } from '../../src/modules/transactions/services/transaction-ingestion.service';
+import { addMonths, monthOfDate } from '../../src/modules/spending-summary/domain/month';
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { asRole } from '../support/as-role';
 import { Account, AllocationHarness } from './support/allocation-harness';
@@ -41,6 +44,24 @@ interface GoalBody {
 interface ListBody {
     readonly items: GoalBody[];
     readonly totals: { count: number; monthlyNeededMinor: number; onTrackCount: number; behindCount: number; doneCount: number };
+}
+
+interface SuggestionBody {
+    readonly months: number;
+    readonly averageMinor: number | null;
+    readonly averageMonths: string[];
+    readonly suggestedMinor: number | null;
+    readonly type?: string;
+}
+
+interface ReserveBody extends GoalBody {
+    readonly reserve: {
+        months: number;
+        baseMinor: number;
+        averageMinor: number | null;
+        suggestedMinor: number | null;
+        shouldUpdate: boolean;
+    } | null;
 }
 
 interface IdBody {
@@ -310,5 +331,93 @@ describe('goals', () => {
         const removed = await harness.call(owner.token, 'DELETE', `/goals/${created.body.id}`);
         expect(removed.status).toBe(204);
         expect((await harness.call(owner.token, 'GET', `/goals/${created.body.id}`)).status).toBe(404);
+    });
+
+    async function spend(owner: Account, key: string, amountsByMonthsAgo: Record<number, number>): Promise<void> {
+        const accounts: FinancialAccountService = harness.app.get(FinancialAccountService, { strict: false });
+        const ingestion: TransactionIngestionService = harness.app.get(TransactionIngestionService, { strict: false });
+        const currentMonth: string = monthOfDate(TODAY);
+        const account = await harness.inCompany(owner.company.id, async () =>
+            accounts.upsertProviderAccount({
+                provider: 'pluggy',
+                externalId: `acc-${key}`,
+                kind: 'checking',
+                name: 'Conta',
+                institutionName: 'Banco',
+                numberLast4: '1234',
+                currency: 'BRL'
+            })
+        );
+        const items = Object.entries(amountsByMonthsAgo).map(([ago, amountMinor]) => ({
+            externalId: `pluggy:${key}-${ago}`,
+            date: `${addMonths(currentMonth, -Number(ago))}-15`,
+            amountMinor: -amountMinor,
+            currency: 'BRL',
+            description: 'Compra do mes',
+            counterpartyName: null,
+            counterpartyDocument: null,
+            providerCategoryId: null
+        }));
+        await harness.inCompany(owner.company.id, async () =>
+            ingestion.ingest({ accountId: account.id, source: 'pluggy', importId: null, items })
+        );
+    }
+
+    it('sugere a reserva pela média dos gastos dos meses fechados, sem dados pede o valor e lê em qualquer papel', async () => {
+        const owner: Account = await harness.signUp('reserve-suggestion');
+        const viewer: Account = await asRole(harness, owner, 'viewer');
+
+        const empty = await harness.call<SuggestionBody>(viewer.token, 'GET', '/goals/emergency-suggestion');
+        await spend(owner, 'main', { 1: 500_000, 2: 520_000, 3: 540_000, 0: 9_999_999 });
+        const six = await harness.call<SuggestionBody>(viewer.token, 'GET', '/goals/emergency-suggestion');
+        const twelve = await harness.call<SuggestionBody>(owner.token, 'GET', '/goals/emergency-suggestion?months=12');
+        const invalid = await harness.call<SuggestionBody>(owner.token, 'GET', '/goals/emergency-suggestion?months=5');
+        const anonymous = await harness.call(null, 'GET', '/goals/emergency-suggestion');
+
+        expect(empty.status).toBe(200);
+        expect(empty.body).toEqual({ months: 6, averageMinor: null, averageMonths: [], suggestedMinor: null });
+        expect(six.body).toMatchObject({ months: 6, averageMinor: 520_000, suggestedMinor: 3_120_000 });
+        expect(six.body.averageMonths).toEqual([-3, -2, -1].map((delta) => addMonths(monthOfDate(TODAY), delta)));
+        expect(twelve.body).toMatchObject({ months: 12, suggestedMinor: 6_240_000 });
+        expect([invalid.status, anonymous.status]).toEqual([400, 401]);
+    });
+
+    it('guarda a base da reserva, avisa quando a média passa de 10% e o alvo só muda quando a pessoa atualiza', async () => {
+        const owner: Account = await harness.signUp('reserve-review');
+        await spend(owner, 'main', { 1: 500_000, 2: 520_000, 3: 540_000 });
+        const created = await create(owner, { kind: 'emergency_reserve', name: 'Reserva', targetMinor: 3_120_000, reserveMonths: 6 });
+
+        const before = await harness.call<ReserveBody>(owner.token, 'GET', `/goals/${created.body.id}`);
+        await spend(owner, 'extra', { 1: 300_000 });
+        const after = await harness.call<ReserveBody>(owner.token, 'GET', `/goals/${created.body.id}`);
+        const listed = await harness.call<{ items: ReserveBody[] }>(owner.token, 'GET', '/goals');
+        const updated = await harness.call<ReserveBody>(owner.token, 'PATCH', `/goals/${created.body.id}`, {
+            targetMinor: after.body.reserve?.suggestedMinor
+        });
+
+        expect(created.status).toBe(201);
+        expect(before.body.reserve).toMatchObject({ months: 6, baseMinor: 520_000, averageMinor: 520_000, shouldUpdate: false });
+        expect(after.body.targetMinor).toBe(3_120_000);
+        expect(after.body.reserve).toMatchObject({
+            baseMinor: 520_000,
+            averageMinor: 620_000,
+            suggestedMinor: 3_720_000,
+            shouldUpdate: true
+        });
+        expect(listed.body.items[0]?.reserve?.shouldUpdate).toBe(true);
+        expect(updated.body.targetMinor).toBe(3_720_000);
+        expect(updated.body.reserve).toMatchObject({ baseMinor: 620_000, shouldUpdate: false });
+    });
+
+    it('recusa os meses da reserva em objetivo que não é reserva e deixa a reserva sem base quando não vêm os meses', async () => {
+        const owner: Account = await harness.signUp('reserve-kinds');
+
+        const travel = await create(owner, { reserveMonths: 6 });
+        const plain = await create(owner, { kind: 'emergency_reserve', name: 'Reserva' });
+        const invalid = await create(owner, { kind: 'emergency_reserve', name: 'Outra', reserveMonths: 5 });
+
+        expect([travel.status, plain.status, invalid.status]).toEqual([422, 201, 400]);
+        expect(travel.body.type).toBe('goals.reserve_months_not_allowed');
+        expect((plain.body as ReserveBody).reserve).toBeNull();
     });
 });

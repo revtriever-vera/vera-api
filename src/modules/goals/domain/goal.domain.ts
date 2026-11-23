@@ -66,7 +66,9 @@ export class GoalDomain {
             planStartMinor: data.plan.startMinor,
             planMonths: data.plan.months,
             monthStartMonth: data.monthStart.month,
-            monthStartMinor: data.monthStart.minor
+            monthStartMinor: data.monthStart.minor,
+            reserveMonths: data.reserve?.months ?? null,
+            reserveBaseMinor: data.reserve?.baseMinor ?? null
         });
         return toGoal(row, await this.holdings.insertMany(row.id, links));
     }
@@ -111,6 +113,8 @@ function patchOf(changes: GoalChanges): GoalPatch {
         manualUpdatedAt: changes.manualMinor === undefined ? undefined : new Date(),
         planStartMonth: changes.plan?.startMonth,
         planStartMinor: changes.plan?.startMinor,
-        planMonths: changes.plan?.months
+        planMonths: changes.plan?.months,
+        reserveMonths: changes.reserve?.months,
+        reserveBaseMinor: changes.reserve?.baseMinor
     };
 }

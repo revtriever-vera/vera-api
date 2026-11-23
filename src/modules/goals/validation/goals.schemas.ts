@@ -7,7 +7,8 @@ import {
     GOAL_KINDS,
     GOAL_STATUSES,
     MAX_HOLDINGS_PER_GOAL,
-    MAX_NAME_LENGTH
+    MAX_NAME_LENGTH,
+    RESERVE_MONTH_OPTIONS
 } from '../domain/goals.types';
 
 const DATE_PATTERN: RegExp = /^\d{4}-\d{2}-\d{2}$/;
@@ -52,6 +53,12 @@ export const goalHoldingInputSchema = z
     })
     .strict();
 
+export const reserveMonthsSchema = z
+    .union([z.literal(3), z.literal(6), z.literal(12)])
+    .describe(
+        'Months of spending the emergency reserve covers (3, 6 or 12). Only for `emergency_reserve`; remembers the spending base of the target'
+    );
+
 const holdingsSchema = z
     .array(goalHoldingInputSchema)
     .max(MAX_HOLDINGS_PER_GOAL)
@@ -71,6 +78,7 @@ export const createGoalSchema = z
         targetDate: targetDateSchema,
         holderUserId: holderUserIdSchema.optional(),
         manualMinor: manualMinorSchema.optional(),
+        reserveMonths: reserveMonthsSchema.optional(),
         holdings: holdingsSchema
     })
     .strict();
@@ -82,6 +90,7 @@ export const updateGoalSchema = z
         targetDate: targetDateSchema.optional(),
         holderUserId: holderUserIdSchema.optional(),
         manualMinor: manualMinorSchema.optional(),
+        reserveMonths: reserveMonthsSchema.optional(),
         holdings: holdingsSchema.optional().describe('When present, replaces every link of the goal')
     })
     .strict();
@@ -99,6 +108,42 @@ const goalHoldingViewSchema = z.object({
     name: z.string().nullable().describe('Name of the holding; null when it was removed'),
     valueMinor: z.number().int().nullable().describe('Part of the holding that counts for the goal today, in BRL cents; null when removed')
 });
+
+export const emergencySuggestionQuerySchema = z.object({
+    months: z.coerce
+        .number()
+        .int()
+        .refine((value: number): boolean => (RESERVE_MONTH_OPTIONS as readonly number[]).includes(value), 'must be 3, 6 or 12')
+        .default(6)
+        .describe('Months of spending the reserve covers: 3, 6 (default) or 12')
+});
+
+export const emergencySuggestionSchema = z.object({
+    months: z.number().int().describe('Months of spending the suggestion covers'),
+    averageMinor: z
+        .number()
+        .int()
+        .nullable()
+        .describe('Monthly average of the spending of the closed months, BRL cents; null without data'),
+    averageMonths: z
+        .array(z.string())
+        .describe('Closed months (YYYY-MM, oldest first) the average used, up to 3, only months with transactions'),
+    suggestedMinor: z.number().int().nullable().describe('`months` times the average, BRL cents; null without data (ask the person)')
+});
+
+export const reserveReviewSchema = z
+    .object({
+        months: z.number().int().describe('Months the target was built on'),
+        baseMinor: z.number().int().describe('Monthly spending the target was built on (target divided by months), BRL cents'),
+        averageMinor: z.number().int().nullable().describe('Monthly average of the spending today; null without data'),
+        suggestedMinor: z.number().int().nullable().describe('`months` times the average today, BRL cents'),
+        deltaBps: z.number().int().nullable().describe('Change of the average against the base, basis points'),
+        shouldUpdate: z
+            .boolean()
+            .describe('True when the average moved more than 10% from the base: offer "Atualizar o valor". The target never changes alone')
+    })
+    .nullable()
+    .describe('Only for an emergency reserve created with `reserveMonths`; null otherwise');
 
 export const goalViewSchema = z.object({
     id: z.string().uuid(),
@@ -118,6 +163,7 @@ export const goalViewSchema = z.object({
     planMonthlyMinor: z.number().int().describe('Monthly amount of the reference plan'),
     monthDeltaMinor: z.number().int().nullable().describe('Change since the start of the month; null when the start of month is unknown'),
     removedHoldings: z.number().int().describe('How many linked holdings were removed from the portfolio'),
+    reserve: reserveReviewSchema,
     holdings: z.array(goalHoldingViewSchema),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime()
@@ -134,10 +180,12 @@ export const goalsListSchema = z.object({
     })
 });
 
+export type EmergencySuggestion = z.infer<typeof emergencySuggestionSchema>;
 export type GoalView = z.infer<typeof goalViewSchema>;
 export type GoalsList = z.infer<typeof goalsListSchema>;
 
 export class CreateGoalDto extends createZodDto(createGoalSchema) {}
 export class UpdateGoalDto extends createZodDto(updateGoalSchema) {}
+export class EmergencySuggestionQueryDto extends createZodDto(emergencySuggestionQuerySchema) {}
 export class GoalIdParamsDto extends createZodDto(goalIdParamsSchema) {}
 export class GoalsQueryDto extends createZodDto(goalsQuerySchema) {}
