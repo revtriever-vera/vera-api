@@ -13,6 +13,7 @@ describe('redação de segredo na URL', () => {
     it('esconde o token do convite, que é a credencial do link', () => {
         expect(redactUrl('/invites/abc123SEGREDO')).toBe('/invites/<oculto>');
         expect(redactUrl('/invites/abc123SEGREDO?x=1')).toBe('/invites/<oculto>?x=1');
+        expect(redactUrl('/notifications/unsubscribe/abc123SEGREDO.f00d')).toBe('/notifications/unsubscribe/<oculto>');
     });
 
     it('esconde o token da captura de cartão de dev e qualquer rota com /token/ no path', () => {

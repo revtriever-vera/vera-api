@@ -484,6 +484,28 @@ export interface LlmCalls {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface NoticePreferences {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    enabled: boolean;
+    id: string;
+    type: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
+export interface NoticeSends {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    key: string;
+    type: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface OnboardingStates {
     assetsDoneAt: Timestamp | null;
     assetsSkippedAt: Timestamp | null;
@@ -887,6 +909,8 @@ export interface DB {
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
     LlmCalls: LlmCalls;
+    NoticePreferences: NoticePreferences;
+    NoticeSends: NoticeSends;
     OnboardingStates: OnboardingStates;
     PaidUsageEntries: PaidUsageEntries;
     PaidUsageNotices: PaidUsageNotices;

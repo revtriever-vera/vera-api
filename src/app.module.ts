@@ -31,6 +31,7 @@ import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
 import { IssuersModule } from './modules/issuers/issuers.module';
 import { MarketDataModule } from './modules/market-data/market-data.module';
+import { NoticesModule } from './modules/notices/notices.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { PortfolioExportModule } from './modules/portfolio-export/portfolio-export.module';
@@ -108,7 +109,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         WhatsAppLinkModule,
         WhatsAppChatModule,
         GoogleCalendarModule,
-        RemindersModule
+        RemindersModule,
+        NoticesModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },
