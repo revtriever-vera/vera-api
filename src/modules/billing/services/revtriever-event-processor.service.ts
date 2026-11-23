@@ -180,7 +180,7 @@ export class RevtrieverEventProcessor {
         await this.contracts.open('premium', { startsAt: paidAt, subscriptionId: subscription.id });
         await this.contracts.convertCardTrial('premium');
         this.logs.subscription('activated', subscription.id, subscription.paymentMethod);
-        await this.mailer.notify({ kind: NOTIFICATION_KINDS.activated, subjectId: subscription.id, paidThrough });
+        await this.mailer.notify({ kind: NOTIFICATION_KINDS.activated, subjectId: subscription.id, paidThroughDay: paidThrough });
     }
 
     private async applyChargeFailed(event: AppliedEvent): Promise<void> {
@@ -216,7 +216,7 @@ export class RevtrieverEventProcessor {
             await this.mailer.notify({
                 kind: NOTIFICATION_KINDS.canceled,
                 subjectId: subscription.id,
-                paidThrough: subscription.paidThrough
+                paidThroughDay: subscription.paidThrough
             });
         }
     }
