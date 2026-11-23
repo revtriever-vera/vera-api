@@ -154,6 +154,9 @@ describe('a task do serviço', () => {
         expect(plainNames).not.toContain('REVTRIEVER_API_KEY');
         expect(plainNames).not.toContain('REVTRIEVER_GATEWAY_CONNECTION_ID');
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('REVTRIEVER_API_KEY');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toEqual(
+            expect.arrayContaining(['REVTRIEVER_WEBHOOK_TOKEN', 'REVTRIEVER_WEBHOOK_SECRETS'])
+        );
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/revtriever-api-key');
     });
 

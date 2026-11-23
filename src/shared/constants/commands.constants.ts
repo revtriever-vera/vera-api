@@ -20,7 +20,11 @@ export const COMMAND_KEYS = {
     remindersGauge: 'reminders-gauge-command',
     recurringDaily: 'recurring-daily-command',
     goalNoticesDaily: 'goal-notices-daily-command',
-    recurringNoticesDaily: 'recurring-notices-daily-command'
+    recurringNoticesDaily: 'recurring-notices-daily-command',
+    billingProvisioningRescue: 'billing-provisioning-rescue-command',
+    billingEventsReplay: 'billing-events-replay-command',
+    billingInvoicesReconcile: 'billing-invoices-reconcile-command',
+    billingStandingSweep: 'billing-standing-sweep-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
