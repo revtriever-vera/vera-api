@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
-import { PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
+import { PortfolioSnapshot, PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
 import { GoalDomain } from '../domain/goal.domain';
 import { Goal } from '../domain/goals.types';
 import { GoalsList } from '../validation/goals.schemas';
+import { GoalPriority, prioritiesOf } from './goal-priority';
 import { HoldingIndex, indexHoldings, toGoalsList, toGoalView } from './goal-view.mapper';
 
 export interface GoalsNeed {
@@ -29,5 +30,13 @@ export class GoalsReaderService {
         const holdings: HoldingIndex = indexHoldings(await this.snapshots.build(ANY_HOLDER));
         const list: GoalsList = toGoalsList(goals.map((goal: Goal) => toGoalView(goal, holdings, today)));
         return { monthlyNeededMinor: list.totals.monthlyNeededMinor, behindCount: list.totals.behindCount };
+    }
+
+    public async priorities(snapshot: PortfolioSnapshot): Promise<GoalPriority[]> {
+        const goals: Goal[] = await this.goals.list(ANY_HOLDER);
+        if (goals.length === 0) {
+            return [];
+        }
+        return prioritiesOf(goals, snapshot, await this.timezones.todayInCompany());
     }
 }

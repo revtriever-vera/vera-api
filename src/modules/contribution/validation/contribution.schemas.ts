@@ -11,7 +11,34 @@ export const suggestRequestSchema = z.object({
         .int()
         .min(1)
         .max(MAX_CONTRIBUTION_MINOR)
-        .describe('Contribution in minor units of the base currency of the portfolio, from 1 to 100,000,000,000')
+        .describe('Contribution in minor units of the base currency of the portfolio, from 1 to 100,000,000,000'),
+    prioritizeGoals: z
+        .boolean()
+        .optional()
+        .describe(
+            'Start with the goals that are behind or overdue and have a linked holding; defaults to true. Only applies to portfolios in BRL'
+        )
+});
+
+export const goalSuggestionSchema = z.object({
+    goalId: z.string().uuid().describe('Goal id'),
+    kind: z.enum(['emergency_reserve', 'travel', 'home_down_payment', 'other']).describe('Kind of the goal'),
+    name: z.string().describe('Name of the goal'),
+    targetDate: z.string().describe('Target date of the goal, YYYY-MM-DD'),
+    amountMinor: minorSchema('Amount set apart for the goal, in minor units of the base currency'),
+    destination: z
+        .object({
+            kind: z.enum(['position', 'fixed_income']).describe('position: asset valued by quantity x quote; fixed_income: title'),
+            id: z.string().uuid().describe('Position id or fixed income title id, according to kind'),
+            symbol: z.string().describe('Ticker or title name'),
+            name: z.string().describe('Asset or title name'),
+            typeGroup: z.string().describe('Kind of holding used to group and label it'),
+            hint: z
+                .enum(['new_or_reinforce'])
+                .nullable()
+                .describe('new_or_reinforce: fixed income, a new title or a reinforcement of this one; null otherwise')
+        })
+        .describe('The holding linked to the goal with the largest share, matured titles excluded')
 });
 
 export const assetSuggestionSchema = z.object({
@@ -62,9 +89,14 @@ export const suggestResponseSchema = z.object({
     totalBeforeMinor: minorSchema('Net worth before the contribution'),
     totalAfterMinor: minorSchema('Net worth after the contribution'),
     warnings: z.array(z.enum(['class_targets_not_100'])).describe('class_targets_not_100: the class targets do not add up to 100%'),
+    goalsAmountMinor: minorSchema('Part of the contribution set apart for behind or overdue goals; 0 without them'),
+    goals: z.array(goalSuggestionSchema).describe('Goals that come first, by nearest target date; the amounts add up to goalsAmountMinor'),
     classes: z
         .array(classSuggestionSchema)
-        .describe('Only classes that receive money, by amount descending; the amounts add up to amountMinor')
+        .describe(
+            'Only classes that receive money, by amount descending; the amounts add up to amountMinor minus goalsAmountMinor. ' +
+                'The value and share before already count what the goals receive'
+        )
 });
 
 export type SuggestRequest = z.infer<typeof suggestRequestSchema>;
