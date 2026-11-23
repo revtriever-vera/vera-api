@@ -37,7 +37,7 @@ describe('guardSummary', () => {
             ok: true,
             paragraphs: [
                 'Entraram **R$ 28.000** e saíram R$ 22.400. Você guardou R$ 5.600, 20% da renda: 5 pontos abaixo da meta de 25%.',
-                'A diferença veio dos gastos flexíveis: delivery (+38% sobre a sua média).',
+                'A diferença veio dos gastos flexíveis: Delivery (+38% sobre a sua média).',
                 'Pix Maria somou R$ 11.200 em 14 transações.'
             ]
         });

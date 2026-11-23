@@ -67,7 +67,7 @@
   },
   "expect": {
     "mustCite": ["R$ 530.000"],
-    "mustMention": [],
+    "mustMention": ["mais duas classes"],
     "mustNotMention": [],
     "sentences": {
       "min": 3,
@@ -76,7 +76,7 @@
   },
   "reference": [
     "Sua carteira soma **R$ 530.000**, com 25% em dólar.",
-    "[[cls:rf_pos]] está abaixo da meta (15% contra 25%) e [[cls:rf_ipca]] está abaixo da meta (8% contra 15%) e [[cls:acoes_br]] está acima (33% contra 25%) e [[cls:cripto]] está acima (9% contra 5%).",
+    "[[cls:rf_pos]] está abaixo da meta (15% contra 25%), [[cls:acoes_br]] está acima (33% contra 25%) e [[cls:rf_ipca]] está abaixo (8% contra 15%), e mais duas classes fora da meta.",
     "Não precisa vender; basta não aportar nelas por um tempo.",
     "Com **R$ 10.000** de aporte, a sugestão é R$ 6.000 em [[cls:rf_pos]] e R$ 4.000 em [[cls:rf_ipca]]."
   ]

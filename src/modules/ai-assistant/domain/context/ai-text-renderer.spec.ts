@@ -11,17 +11,17 @@ const KEYS: ReadonlyMap<string, LabelSource> = new Map<string, LabelSource>([
 describe('AiTextRenderer', () => {
     const renderer: AiTextRenderer = new AiTextRenderer();
 
-    it('troca os marcadores pelo nome, em minúscula no meio da frase', () => {
+    it('troca os marcadores pelo nome, com a grafia da tela em qualquer posição', () => {
         const result = renderer.render('Você gastou mais com [[cat:eating_out]] e [[cat:custom_1]] em [[cls:rf_pos]].', KEYS);
 
         expect(result).toEqual({
             ok: true,
-            text: 'Você gastou mais com delivery e restaurantes e pets em renda fixa pós.',
+            text: 'Você gastou mais com Delivery e restaurantes e Pets em Renda fixa pós.',
             markers: 3
         });
     });
 
-    it('mantém o nome como está no começo do texto, de frase ou de linha', () => {
+    it('mantém o nome como está também no começo do texto, de frase ou de linha', () => {
         const result = renderer.render('[[cat:custom_1]] subiu. [[cls:rf_pos]] caiu!\n[[cat:eating_out]] ficou.', KEYS);
 
         expect(result).toEqual({ ok: true, text: 'Pets subiu. Renda fixa pós caiu!\nDelivery e restaurantes ficou.', markers: 3 });
