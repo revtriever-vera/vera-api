@@ -25,7 +25,10 @@ describe('prefilterOf', () => {
         'quanto gastei com delivery em setembro?',
         'como está minha carteira?',
         'quanto paguei de boleto em outubro?',
-        'oi, quanto gastei com mercado?'
+        'oi, quanto gastei com mercado?',
+        'Me lembra de pagar o condomínio todo dia 12',
+        'me lembra de pagar o boleto da escola dia 10',
+        'remind me to pay the rent on the 5th'
     ])('"%s" vai ao modelo', (text: string) => {
         expect(prefilterOf(text)).toBeNull();
     });

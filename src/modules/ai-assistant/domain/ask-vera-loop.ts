@@ -211,6 +211,23 @@ function correctionOf(text: string, verdict: Extract<AnswerVerdict, { ok: false 
     ];
 }
 
+const ACTION_CLAIMS: readonly RegExp[] = [
+    /confirma?\s*\?/i,
+    /(?:lembrete|reuni[aã]o|evento|compromisso)[^.!?\n]{0,60}\b(?:criad|marcad|agendad)[oa]\b/i,
+    /\b(?:created|scheduled|booked|criei|marquei|agendei)\b/i
+];
+
+/** Texto do modelo que afirma uma ação pendente (ou pede o "sim") sem a ferramenta de proposta ter rodado. */
+function claimsUnproposedAction(text: string, run: Run, tools: readonly AskVeraTool[]): boolean {
+    const proposers: Set<string> = new Set(
+        tools
+            .filter((tool: AskVeraTool): boolean => tool.kind === ASK_VERA_TOOL_KINDS.proposal)
+            .map((tool: AskVeraTool): string => tool.name)
+    );
+    const called: boolean = run.toolsUsed.some((name: string): boolean => proposers.has(name));
+    return proposers.size > 0 && !called && ACTION_CLAIMS.some((claim: RegExp): boolean => claim.test(text));
+}
+
 interface Executed {
     readonly blocks: LlmContentBlock[];
     readonly direct: string | null;
@@ -266,8 +283,18 @@ class AskVeraLoop {
         return null;
     }
 
+    /** Com proposta, o resumo chega com os botões: o texto do modelo só repetiria (e arriscaria) o que ele diz. */
     private answer(response: LlmGenerationResponse, step: number): AskLoopResult | null {
-        const verdict: AnswerVerdict = this.input.check(response.text, factsOf(this.run));
+        if (this.run.proposals.length > 0) {
+            return this.result('answered', '', step);
+        }
+        const verdict: AnswerVerdict = claimsUnproposedAction(response.text, this.run, this.input.tools)
+            ? {
+                  ok: false,
+                  check: 'unproposed',
+                  detail: 'you wrote that something is created or asked for confirmation without calling the tool; call the tool, the system sends the confirmation buttons'
+              }
+            : this.input.check(response.text, factsOf(this.run));
         if (verdict.ok) {
             return this.result('answered', verdict.text, step);
         }
