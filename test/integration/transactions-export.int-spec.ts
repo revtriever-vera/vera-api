@@ -88,7 +88,7 @@ describe('transactions export', () => {
         await harness.pg.query(`UPDATE "Users" SET "locale" = 'en' WHERE "id" = $1`, [owner.user.id]);
         const issuer: SessionIssuerPort = harness.app.get(SessionIssuerPort, { strict: false });
         const tokens: AuthTokens = await harness.inCompany(owner.company.id, async () =>
-            issuer.issueForNewLogin({ ...owner.user, locale: 'en' }, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin({ ...owner.user, locale: 'en' }, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google', 'app')
         );
         return tokens.accessToken;
     }

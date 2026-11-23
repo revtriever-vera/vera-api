@@ -123,7 +123,7 @@ describe('onboarding flow', () => {
             })
         );
         const tokens = await inCompany(company.id, async () =>
-            issuer.issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google', 'app')
         );
         return { company, token: tokens.accessToken };
     }

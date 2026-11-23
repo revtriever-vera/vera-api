@@ -204,7 +204,7 @@ describe('whatsapp link (hospedada, driver mock)', () => {
             })
         );
         const tokens: AuthTokens = await harness.inCompany(account.company.id, async () =>
-            issuer.issueForNewLogin(user, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin(user, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google', 'app')
         );
         return { company: account.company, user, token: tokens.accessToken };
     }

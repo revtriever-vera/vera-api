@@ -6,7 +6,7 @@ import { Company, NewCompany } from '../domain/identity.types';
 
 const HARD_DELETE_BATCH: number = 10;
 
-type CreateCompanyData = Pick<NewCompany, 'name'> & Partial<Pick<NewCompany, 'locale' | 'timezone'>>;
+type CreateCompanyData = Pick<NewCompany, 'name'> & Partial<Pick<NewCompany, 'locale' | 'timezone' | 'isPlatform'>>;
 
 @Injectable()
 export class CompaniesRepository extends GlobalRepository<'Companies'> {
@@ -16,6 +16,10 @@ export class CompaniesRepository extends GlobalRepository<'Companies'> {
 
     public async create(data: CreateCompanyData): Promise<Company> {
         return this.createRow({ id: IdUtil.newId(), ...data });
+    }
+
+    public async findPlatform(): Promise<Company | null> {
+        return this.findOne({ isPlatform: true });
     }
 
     public async lockById(id: string): Promise<Company | null> {

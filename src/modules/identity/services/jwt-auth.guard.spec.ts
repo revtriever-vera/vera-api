@@ -33,8 +33,19 @@ describe('JwtAuthGuard', () => {
         expect(() => run(() => guard.canActivate(executionOf('Bearer nao-e-jwt')))).toThrow(UnauthorizedError);
     });
 
+    it('leva o claim platform para o contexto', () => {
+        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en', true);
+
+        const seen = run(() => {
+            guard.canActivate(executionOf(`Bearer ${token}`));
+            return context.get();
+        });
+
+        expect(seen.platform).toBe(true);
+    });
+
     it('com token válido, preenche o contexto com usuário, company, sessão e locale', () => {
-        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en');
+        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en', false);
 
         const seen = run(() => {
             const allowed: boolean = guard.canActivate(executionOf(`Bearer ${token}`));

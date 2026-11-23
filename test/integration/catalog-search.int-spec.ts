@@ -85,7 +85,9 @@ describe('catalog search', () => {
             })
         );
         const tokens: AuthTokens = await context.run({ requestId: 'test', companyId: company.id, locale: 'pt-BR' }, async () =>
-            app.get(SessionIssuerPort, { strict: false }).issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google')
+            app
+                .get(SessionIssuerPort, { strict: false })
+                .issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google', 'app')
         );
         return { token: tokens.accessToken, companyId: company.id };
     }

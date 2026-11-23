@@ -25,7 +25,7 @@ export async function asRole(harness: AllocationHarness, owner: Account, role: U
         return found;
     });
     const tokens: AuthTokens = await harness.inCompany(owner.company.id, async () =>
-        issuer.issueForNewLogin(user, { ip: '203.0.113.8', userAgent: 'int-test' }, 'google')
+        issuer.issueForNewLogin(user, { ip: '203.0.113.8', userAgent: 'int-test' }, 'google', 'app')
     );
     return { company: owner.company, user, token: tokens.accessToken };
 }

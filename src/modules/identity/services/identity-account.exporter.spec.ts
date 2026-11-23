@@ -30,6 +30,7 @@ const COMPANY: Company = {
     name: 'Empresa Teste',
     locale: 'pt-BR',
     timezone: 'America/Sao_Paulo',
+    isPlatform: false,
     createdAt: AT,
     updatedAt: AT,
     deletedAt: null,

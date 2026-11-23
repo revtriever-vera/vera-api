@@ -156,3 +156,54 @@ export class AccountExportFailedError extends AppError {
         });
     }
 }
+
+export class PlatformOnlyError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_only',
+            status: 403,
+            detail: 'This area is restricted to the people of the platform company.'
+        });
+    }
+}
+
+export class PlatformDisabledError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_disabled',
+            status: 404,
+            detail: 'The platform admin does not exist in this deployment.'
+        });
+    }
+}
+
+export class AdminAudienceRequiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.admin_audience_required',
+            status: 403,
+            detail: 'People of the platform company sign in through the admin audience only.'
+        });
+    }
+}
+
+export class PlatformCompanyProtectedError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_company_protected',
+            status: 403,
+            detail: 'The platform company cannot be deleted.'
+        });
+    }
+}
+
+export class PlatformSeedRefusedError extends AppError {
+    public constructor(reason: string) {
+        super({
+            code: 'identity.platform_seed_refused',
+            status: 409,
+            detail: `The platform seed cannot run: ${reason}.`,
+            meta: { reason }
+        });
+    }
+}

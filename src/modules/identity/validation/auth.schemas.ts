@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { APP_LOCALES } from '../../../shared/i18n/locale';
-import { LOGIN_PROVIDERS, USER_ROLES } from '../domain/identity.types';
+import { LOGIN_AUDIENCES, LOGIN_PROVIDERS, USER_ROLES } from '../domain/identity.types';
 
 export const authUserSchema = z.object({
     id: z.string().uuid().describe('User id'),
@@ -28,7 +28,14 @@ export type LoginResponse = z.infer<typeof loginResponseSchema>;
 const inviteTokenSchema = z.string().min(20).max(200).optional().describe('Token of the invite link, to enter the account that invited');
 
 export const googleLoginSchema = z
-    .object({ idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)'), inviteToken: inviteTokenSchema })
+    .object({
+        idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)'),
+        inviteToken: inviteTokenSchema,
+        audience: z
+            .nativeEnum(LOGIN_AUDIENCES)
+            .optional()
+            .describe('`app` (default) is the app of the accounts; `admin` is the platform admin, only for people of the platform company')
+    })
     .strict();
 
 export class GoogleLoginDto extends createZodDto(googleLoginSchema) {}

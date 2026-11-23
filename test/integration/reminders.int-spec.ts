@@ -676,7 +676,7 @@ describe('lembretes pelo WhatsApp (drivers mock)', () => {
             })
         );
         const tokens: AuthTokens = await harness.inCompany(alice.account.company.id, async () =>
-            issuer.issueForNewLogin(viewer, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin(viewer, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google', 'app')
         );
 
         const listed = await harness.call<ListBody>(alice.account.token, 'GET', '/reminders');

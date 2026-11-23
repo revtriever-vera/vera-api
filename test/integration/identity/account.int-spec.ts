@@ -165,8 +165,8 @@ describe('identity account deletion and export', () => {
             })
         );
         const meta = { ip: '203.0.113.7', userAgent: 'int-test' };
-        const tokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google'));
-        const otherTokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google'));
+        const tokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google', 'app'));
+        const otherTokens: AuthTokens = await inCompany(company.id, async () => issuer.issueForNewLogin(user, meta, 'google', 'app'));
         return { company, user, tokens, otherTokens };
     }
 

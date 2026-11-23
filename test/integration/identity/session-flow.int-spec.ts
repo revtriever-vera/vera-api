@@ -101,7 +101,7 @@ describe('identity session flow', () => {
             users.createOwner({ email, name: `Pessoa ${label}`, emailVerifiedAt: new Date(), termsAcceptedAt: new Date() })
         );
         const tokens: AuthTokens = await inCompany(company.id, async () =>
-            issuer.issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, provider)
+            issuer.issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, provider, 'app')
         );
         return { company, user, tokens };
     }

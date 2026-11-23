@@ -177,7 +177,7 @@ describe('resumos escritos pelo modelo', () => {
             throw new Error('owner not found');
         }
         const tokens: AuthTokens = await harness.inCompany(owner.company.id, async () =>
-            issuer.issueForNewLogin(user, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin(user, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google', 'app')
         );
         return tokens.accessToken;
     }
