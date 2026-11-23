@@ -65,7 +65,7 @@ describe('runAskLoop', () => {
         const result: AskLoopResult = await run();
         expect(result).toMatchObject({
             ending: 'answered',
-            text: 'Foram *R$ 3.200* em delivery.',
+            text: 'Foram *R$ 3.200* em Delivery.',
             steps: 2,
             toolsUsed: ['spending_by_category']
         });

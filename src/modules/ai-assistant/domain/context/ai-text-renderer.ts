@@ -13,21 +13,7 @@ export interface RenderOptions {
 }
 
 const MARKER: RegExp = /\[\[(cat|cls):([a-z0-9_]+)\]\]/g;
-const SENTENCE_TERMINATORS: string = '.!?';
 const LEFTOVER: RegExp = /\[\[|\]\]/;
-
-function atSentenceStart(before: string): boolean {
-    const line: string = before.slice(before.lastIndexOf('\n') + 1);
-    const trimmed: string = line.trimEnd();
-    if (trimmed === '') {
-        return true;
-    }
-    return trimmed !== line && SENTENCE_TERMINATORS.includes(trimmed.slice(-1));
-}
-
-function renderName(name: string, before: string): string {
-    return atSentenceStart(before) ? name : name.toLowerCase();
-}
 
 @Injectable()
 export class AiTextRenderer {
@@ -50,9 +36,9 @@ export class AiTextRenderer {
     }
 
     private replace(text: string, keys: ReadonlyMap<string, LabelSource>): string {
-        return text.replace(MARKER, (_whole: string, kind: string, chave: string, offset: number): string => {
+        return text.replace(MARKER, (_whole: string, kind: string, chave: string): string => {
             const source: LabelSource | undefined = keys.get(markerKeyOf(kind as AiMarkerKind, chave));
-            return renderName(source?.name ?? '', text.slice(0, offset));
+            return source?.name ?? '';
         });
     }
 }

@@ -15,7 +15,7 @@ describe('guardAnswer', () => {
     it('troca o marcador pelo nome e converte o destaque para o negrito do WhatsApp', () => {
         expect(check('Em setembro foram **R$ 3.200** em [[cat:eating_out]], 18% acima da média.')).toEqual({
             ok: true,
-            text: 'Em setembro foram *R$ 3.200* em delivery e restaurantes, 18% acima da média.'
+            text: 'Em setembro foram *R$ 3.200* em Delivery e restaurantes, 18% acima da média.'
         });
     });
 

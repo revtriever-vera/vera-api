@@ -11,7 +11,7 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 30_000,
         maxRetries: 2,
         evalThreshold: 0.8,
-        promptVersion: 'v1'
+        promptVersion: 'v2'
     },
     {
         task: LLM_TASKS.summaryCuts,
@@ -22,7 +22,7 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 30_000,
         maxRetries: 2,
         evalThreshold: 0.8,
-        promptVersion: 'v1'
+        promptVersion: 'v2'
     },
     {
         task: LLM_TASKS.summaryPortfolio,
@@ -33,7 +33,7 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 30_000,
         maxRetries: 2,
         evalThreshold: 0.8,
-        promptVersion: 'v1'
+        promptVersion: 'v2'
     },
     {
         task: LLM_TASKS.askVeraStep,

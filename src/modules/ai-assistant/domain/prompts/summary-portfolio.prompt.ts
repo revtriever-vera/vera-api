@@ -4,12 +4,12 @@ import { summaryPromptOf } from './summary-rules.prompt';
 const TASK: Readonly<Record<AppLocale, string>> = {
     'pt-BR':
         'Tarefa: resumo da carteira. Diga o que está fora da meta e para onde vai o próximo aporte: (1) o total e a exposição ao dólar (total, exposicao_dolar_pct); ' +
-        '(2) as classes abaixo e acima da faixa (carteira_pct com situacao, atual, meta; a faixa é tolerancia_pp); ' +
+        '(2) em uma só frase curta, as classes fora da faixa (carteira_pct com situacao, atual, meta; a faixa é tolerancia_pp), citando as classes de maior desvio, no máximo três, com "atual contra meta" entre parênteses e sem repetir o verbo para cada uma; havendo mais de três fora da faixa, feche a frase com "e mais N classes fora da meta", com N por extenso; ' +
         '(3) para as classes acima, a frase fixa "Não precisa vender; basta não aportar nelas por um tempo."; ' +
         '(4) só se aporte_planejado existir, termine com a frase do aporte: "Com [total] de aporte, a sugestão é ..." citando as classes de por_classe. Sem aporte_planejado, não fale de aporte.',
     en:
         'Task: portfolio summary. Say what is off target and where the next contribution goes: (1) the total and the dollar exposure (total, exposicao_dolar_pct); ' +
-        '(2) the classes below and above the band (carteira_pct with situacao, atual, meta; the band is tolerancia_pp); ' +
+        '(2) in a single short sentence, the classes off the band (carteira_pct with situacao, atual, meta; the band is tolerancia_pp), naming the classes with the largest gap, at most three, with "current against target" in parentheses and without repeating the verb for each one; with more than three off the band, close the sentence with "and N more classes off target", with N in words; ' +
         '(3) for classes above the band, the fixed sentence "You don\'t need to sell; just hold off on contributing to them for a while."; ' +
         '(4) only if aporte_planejado exists, end with the contribution sentence: "With [total] to contribute, the suggestion is ..." naming the classes in por_classe. Without aporte_planejado, say nothing about a contribution.'
 };
