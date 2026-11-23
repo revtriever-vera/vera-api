@@ -20,6 +20,7 @@ const CODE_BY_STATUS: Readonly<Record<number, string>> = {
 };
 const FALLBACK_DETAIL: string = 'Unexpected error.';
 const SERVER_ERROR_FLOOR: number = 500;
+const PROBLEM_CONTENT_TYPE: string = 'application/problem+json';
 
 interface ProblemBody {
     readonly type: string;
@@ -40,7 +41,7 @@ export class AppErrorFilter implements ExceptionFilter {
     public catch(exception: unknown, host: ArgumentsHost): void {
         const response: Response = host.switchToHttp().getResponse<Response>();
         const body: ProblemBody = this.toProblem(exception);
-        response.status(body.status).json(body);
+        response.status(body.status).type(PROBLEM_CONTENT_TYPE).json(body);
     }
 
     private toProblem(exception: unknown): ProblemBody {

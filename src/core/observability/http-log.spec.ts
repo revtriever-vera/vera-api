@@ -34,7 +34,10 @@ describe('linha de request do pino-http', () => {
     });
 
     it('carrega o requestId da resposta, para juntar a linha de request com os logs da aplicação', () => {
-        expect(requestLogProps(request('/stores'), response(200, { 'x-request-id': 'req-123' }))).toEqual({ requestId: 'req-123' });
+        expect(requestLogProps(request('/stores'), response(200, { 'x-request-id': 'req-123' }))).toEqual({
+            requestId: 'req-123',
+            locale: 'pt-BR'
+        });
     });
 
     it('não amarra nada na chegada do request, antes de a resposta sair', () => {
@@ -42,6 +45,11 @@ describe('linha de request do pino-http', () => {
     });
 
     it('não inventa requestId quando a resposta saiu sem ele', () => {
-        expect(requestLogProps(request('/stores'), response(200))).toEqual({});
+        expect(requestLogProps(request('/stores'), response(200))).toEqual({ locale: 'pt-BR' });
+    });
+
+    it('registra o locale resolvido do Accept-Language', () => {
+        const req = { url: '/stores', headers: { 'accept-language': 'en-US' } } as unknown as IncomingMessage;
+        expect(requestLogProps(req, response(200))).toEqual({ locale: 'en' });
     });
 });

@@ -86,9 +86,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           PROJECT_KEY: revtriever-vera_vera-api
         run: |
-          STATUS="$(curl -fsS -u "${SONAR_TOKEN}:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${PROJECT_KEY}" \
-            | jq -r '.projectStatus.status' || echo "desconhecido")"
+          RESPONSE="$(curl -fsS -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${PROJECT_KEY}" || true)"
+          STATUS="$(printf '%s' "$RESPONSE" | jq -r '.projectStatus.status // "desconhecido"' 2>/dev/null || true)"
+          STATUS="${STATUS:-desconhecido}"
           {
             echo "### Sonar"
             echo "Quality gate: **${STATUS}**"

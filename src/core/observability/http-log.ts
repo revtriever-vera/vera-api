@@ -1,5 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { LevelWithSilent } from 'pino';
+import { resolveLocale } from '../../shared/i18n/locale';
 
 const HEALTH_PATH: string = '/health';
 const REQUEST_ID_HEADER: string = 'x-request-id';
@@ -16,12 +17,13 @@ export function requestLogLevel(req: RoutedRequest, res: ServerResponse, error?:
 }
 
 /** Only binds once the response is out: pino-http also calls this on arrival, and binding there would repeat requestId on app log lines. */
-export function requestLogProps(_req: IncomingMessage, res: ServerResponse): Record<string, string> {
+export function requestLogProps(req: IncomingMessage, res: ServerResponse): Record<string, string> {
     if (!res.headersSent) {
         return {};
     }
+    const locale: string = resolveLocale(req.headers?.['accept-language']);
     const requestId: number | string | string[] | undefined = res.getHeader(REQUEST_ID_HEADER);
-    return typeof requestId === 'string' ? { requestId } : {};
+    return typeof requestId === 'string' ? { requestId, locale } : { locale };
 }
 
 function isHealthProbe(req: RoutedRequest): boolean {

@@ -59,13 +59,25 @@ jobs:
     outputs:
       proceed: ${{ steps.check.outputs.proceed }}
     steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.ref != ''
+        with:
+          fetch-depth: 0
+
       - id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EVENT: ${{ github.event_name }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_REF: ${{ inputs.ref }}
         run: |
           if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ -n "$INPUT_REF" ]; then
+              if ! git merge-base --is-ancestor "$(git rev-parse --verify "${INPUT_REF}^{commit}")" origin/main; then
+                echo "::error::ref $INPUT_REF não é ancestral da main; deploy recusado."
+                exit 1
+              fi
+            fi
             echo "proceed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
