@@ -3,12 +3,13 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ConcentrationApplication } from '../../application/concentration.application';
 import { ConcentrationResponse, concentrationResponseSchema } from '../../validation/concentration.schemas';
 
 @ApiTags('portfolio')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('portfolio')
 export class ConcentrationController {
     public constructor(private readonly concentration: ConcentrationApplication) {}
