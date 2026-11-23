@@ -50,6 +50,24 @@ function canceledAndEnded(subscription: BillingSubscription | null, now: Date): 
     );
 }
 
+function isTrialSubscription(subscription: BillingSubscription | null): subscription is BillingSubscription & { trialEndsAt: Date } {
+    return subscription !== null && subscription.trialEndsAt !== null && subscription.firstPaidAt === null;
+}
+
+function canceledTrialEnded(subscription: BillingSubscription | null, now: Date): boolean {
+    return (
+        isTrialSubscription(subscription) &&
+        subscription.status === SUBSCRIPTION_STATUSES.canceled &&
+        subscription.trialStartedAt !== null &&
+        subscription.paidThrough === null &&
+        now >= subscription.trialEndsAt
+    );
+}
+
+function trialRunning(subscription: BillingSubscription | null, now: Date): boolean {
+    return isTrialSubscription(subscription) && subscription.trialStartedAt !== null && now < subscription.trialEndsAt;
+}
+
 export function standingTransitionOf(
     invoices: readonly BillingInvoice[],
     subscription: BillingSubscription | null,
@@ -59,7 +77,13 @@ export function standingTransitionOf(
     if (canceledAndEnded(subscription, now)) {
         return { status: STANDING_STATUSES.expired, reason: STANDING_REASONS.canceledPeriodEnded };
     }
+    if (canceledTrialEnded(subscription, now)) {
+        return { status: STANDING_STATUSES.expired, reason: STANDING_REASONS.trialCanceled };
+    }
     const overdueSince: Date | null = overdueSinceOfOldest(invoices);
+    if (overdueSince === null && trialRunning(subscription, now)) {
+        return { status: STANDING_STATUSES.trialing, reason: STANDING_REASONS.trialStarted };
+    }
     if (overdueSince === null) {
         return { status: STANDING_STATUSES.active, reason: STANDING_REASONS.invoicePaid };
     }

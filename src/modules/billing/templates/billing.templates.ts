@@ -102,6 +102,54 @@ function endedEn(props: TemplateProps): MailContent {
     );
 }
 
+function trialStartedPtBr(props: TemplateProps): MailContent {
+    return noticeContent(
+        {
+            subject: 'Seu teste do Premium começou',
+            title: 'Teste do Premium',
+            body: `O Premium está ativo e nada será cobrado agora. A primeira cobrança, de ${valueOf(props, 'amount')} no cartão final ${valueOf(props, 'cardLast4')}, acontece em ${valueOf(props, 'trialEndsAt')}. Para cancelar antes disso, sem custo, acesse ${valueOf(props, 'url')}.`
+        },
+        'pt-BR',
+        props
+    );
+}
+
+function trialStartedEn(props: TemplateProps): MailContent {
+    return noticeContent(
+        {
+            subject: 'Your Premium trial has started',
+            title: 'Premium trial',
+            body: `Premium is active and nothing is charged now. The first charge, ${valueOf(props, 'amount')} on the card ending in ${valueOf(props, 'cardLast4')}, happens on ${valueOf(props, 'trialEndsAt')}. To cancel before that at no cost, go to ${valueOf(props, 'url')}.`
+        },
+        'en',
+        props
+    );
+}
+
+function trialEndingPtBr(props: TemplateProps): MailContent {
+    return noticeContent(
+        {
+            subject: 'Seu teste do Premium termina em breve',
+            title: 'O teste está acabando',
+            body: `Em ${valueOf(props, 'trialEndsAt')} cobraremos ${valueOf(props, 'amount')} no cartão final ${valueOf(props, 'cardLast4')}. Se não quiser continuar, cancele antes dessa data em ${valueOf(props, 'url')} e nada será cobrado.`
+        },
+        'pt-BR',
+        props
+    );
+}
+
+function trialEndingEn(props: TemplateProps): MailContent {
+    return noticeContent(
+        {
+            subject: 'Your Premium trial ends soon',
+            title: 'Your trial is ending',
+            body: `On ${valueOf(props, 'trialEndsAt')} we will charge ${valueOf(props, 'amount')} on the card ending in ${valueOf(props, 'cardLast4')}. If you do not want to continue, cancel before that date at ${valueOf(props, 'url')} and nothing is charged.`
+        },
+        'en',
+        props
+    );
+}
+
 function refundRequestedContent(props: TemplateProps): MailContent {
     return noticeContent(
         {
@@ -127,6 +175,10 @@ export class BillingTemplates implements OnModuleInit {
         this.registry.register(NOTIFICATION_KINDS.canceled, 'en', canceledEn);
         this.registry.register(NOTIFICATION_KINDS.ended, 'pt-BR', endedPtBr);
         this.registry.register(NOTIFICATION_KINDS.ended, 'en', endedEn);
+        this.registry.register(NOTIFICATION_KINDS.trialStarted, 'pt-BR', trialStartedPtBr);
+        this.registry.register(NOTIFICATION_KINDS.trialStarted, 'en', trialStartedEn);
+        this.registry.register(NOTIFICATION_KINDS.trialEnding, 'pt-BR', trialEndingPtBr);
+        this.registry.register(NOTIFICATION_KINDS.trialEnding, 'en', trialEndingEn);
         this.registry.register(REFUND_REQUESTED_TEMPLATE, 'pt-BR', refundRequestedContent);
         this.registry.register(REFUND_REQUESTED_TEMPLATE, 'en', refundRequestedContent);
     }

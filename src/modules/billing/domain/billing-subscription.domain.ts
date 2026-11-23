@@ -51,6 +51,18 @@ export class BillingSubscriptionDomain {
         await this.subscriptions.recordPayment(current, paidThrough, paidAt);
     }
 
+    public async markTrialStarted(id: string, at: Date): Promise<boolean> {
+        return this.subscriptions.markTrialStarted(id, at);
+    }
+
+    public async listUnconfirmedTrialsAcrossTenants(before: Date, limit: number): Promise<BillingSubscription[]> {
+        return this.subscriptions.listUnconfirmedTrialsAcrossTenants(before, limit);
+    }
+
+    public async listEndingTrialsAcrossTenants(now: Date, until: Date, limit: number): Promise<BillingSubscription[]> {
+        return this.subscriptions.listEndingTrialsAcrossTenants(now, until, limit);
+    }
+
     public async findByEngineSubscriptionIdAcrossTenants(
         engine: BillingEngine,
         engineSubscriptionId: string

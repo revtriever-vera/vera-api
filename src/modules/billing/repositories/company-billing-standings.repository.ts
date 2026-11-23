@@ -30,6 +30,6 @@ export class CompanyBillingStandingsRepository extends BareTenantRepository<'Com
     }
 
     public statuses(): readonly StandingStatus[] {
-        return [STANDING_STATUSES.active, STANDING_STATUSES.pastDue, STANDING_STATUSES.expired];
+        return [STANDING_STATUSES.active, STANDING_STATUSES.trialing, STANDING_STATUSES.pastDue, STANDING_STATUSES.expired];
     }
 }

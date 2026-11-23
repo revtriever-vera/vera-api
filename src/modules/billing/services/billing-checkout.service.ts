@@ -10,10 +10,12 @@ import {
     BillingEngineRejectedError,
     BillingProviderDisabledError,
     NotResumableError,
-    SelfHostedNotAvailableError
+    SelfHostedNotAvailableError,
+    TrialRequiresCardError
 } from '../domain/billing-engine.errors';
 import { PaymentMethod } from '../domain/billing-engine.types';
-import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
+import { BillingTrialService, CardTrialOffer } from './billing-trial.service';
+import { CardTrialDates, resumableUntilOf } from '../domain/billing-trial.rules';
 import { BillingSubscription, PROVISIONING_STALE_MINUTES, SUBSCRIPTION_STATUSES, SWEEP_BATCH } from '../domain/billing.types';
 import { BillingLogService } from './billing-log.service';
 import { BillingMetricsService } from './billing-metrics.service';
@@ -29,7 +31,7 @@ export class BillingCheckoutService {
         private readonly gate: PlanGateService,
         private readonly contracts: PlanContractService,
         private readonly provisioning: BillingProvisioningService,
-        private readonly subscriptions: BillingSubscriptionDomain,
+        private readonly trials: BillingTrialService,
         private readonly reservations: BillingReservationService,
         private readonly logs: BillingLogService,
         private readonly metrics: BillingMetricsService
@@ -41,7 +43,12 @@ export class BillingCheckoutService {
         if ((await this.gate.planOf()) === 'premium' && trial?.subscriptionId !== null) {
             throw new AlreadySubscribedError();
         }
-        const row: BillingSubscription = await this.reservations.forSubscribe(method, trial);
+        const cardTrial: CardTrialOffer | null = await this.trials.offerOf();
+        if (cardTrial !== null && method !== 'card') {
+            throw new TrialRequiresCardError();
+        }
+        const dates: CardTrialDates | null = cardTrial === null ? null : await this.trials.datesOf(cardTrial, new Date());
+        const row: BillingSubscription = await this.reservations.forSubscribe(method, trial, dates);
         const active: BillingSubscription = row.status === SUBSCRIPTION_STATUSES.pending ? await this.provisionCounting(row) : row;
         if (trial !== null) {
             await this.contracts.attachSubscription('premium', active.id);
@@ -54,18 +61,21 @@ export class BillingCheckoutService {
     public async resume(): Promise<void> {
         this.assertAvailable();
         const current: BillingSubscription | null = await this.reservations.currentOf();
-        const paidThrough: Date | null = current?.status === SUBSCRIPTION_STATUSES.canceled ? current.paidThrough : null;
+        const paidThrough: Date | null = resumableUntilOf(current);
         if (current === null || paidThrough === null || new Date() >= paidThrough) {
             throw new NotResumableError();
         }
-        const fresh: BillingSubscription = await this.reservations.forResume(current, paidThrough);
+        const trialDates: CardTrialDates | null =
+            current.trialEndsAt === null ? null : await this.trials.resumeDatesOf(current.trialEndsAt);
+        const fresh: BillingSubscription = await this.reservations.forResume(current, paidThrough, trialDates);
         const active: BillingSubscription = await this.provisionCounting(fresh);
         await this.provisioning.inheritCard(active);
+        await this.trials.carryOver(active);
         this.logs.subscription('resumed', active.id, active.paymentMethod);
     }
 
     public async rescue(): Promise<number> {
-        const stale: BillingSubscription[] = await this.subscriptions.listStalePendingAcrossTenants(
+        const stale: BillingSubscription[] = await this.reservations.stalePendingOf(
             DateUtil.addMinutes(new Date(), -PROVISIONING_STALE_MINUTES),
             SWEEP_BATCH
         );

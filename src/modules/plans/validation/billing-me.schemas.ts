@@ -40,7 +40,9 @@ export const billingMeSchema = z.object({
     currency: z.literal('BRL').describe('Currency of the price'),
     subscription: z
         .object({
-            status: z.enum(['pending', 'active', 'past_due', 'canceled', 'expired']).describe('Subscription status'),
+            status: z
+                .enum(['pending', 'active', 'trialing', 'past_due', 'canceled', 'expired'])
+                .describe('Subscription status; `trialing` while the card trial runs and nothing was charged yet'),
             method: z.enum(['card', 'pix']).describe('Chosen payment method'),
             since: z.string().nullable().describe('When the subscription started (ISO 8601)'),
             paidThrough: z.string().nullable().describe('End of the paid cycle (ISO 8601)'),
@@ -66,12 +68,16 @@ export const billingMeSchema = z.object({
         .describe('Invoice waiting for payment; null when there is none'),
     trial: z
         .object({
-            kind: z.literal('no_card').describe('Trial opened without a card'),
-            endsAt: z.string().describe('When the trial ends (ISO 8601)'),
+            kind: z
+                .enum(['no_card', 'card'])
+                .describe(
+                    '`no_card`: opened without a card; `card`: the card is saved and the first charge waits for the end of the trial'
+                ),
+            endsAt: z.string().describe('When the trial ends (ISO 8601); with a card it is the day of the first charge'),
             daysLeft: z.number().int().min(0).describe('Whole days left, rounded up')
         })
         .nullable()
-        .describe('Free Premium trial in course; null when there is none'),
+        .describe('Premium trial in course; null when there is none'),
     offer: billingOfferSchema
         .nullable()
         .describe(

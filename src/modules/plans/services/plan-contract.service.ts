@@ -5,7 +5,15 @@ import { CompanyTrialService } from '../../identity/services/company-trial.servi
 import { PlanCatalogDomain } from '../domain/plan-catalog.domain';
 import { PlanDomain } from '../domain/plan.domain';
 import { BillingNotAvailableError, TrialAlreadyUsedError, TrialUnavailableError } from '../domain/plans.errors';
-import { ClosePremiumInput, CompanyProduct, GlobalProduct, OpenPremiumInput, OpenTrialInput, PRODUCT_KEYS } from '../domain/plans.types';
+import {
+    ClosePremiumInput,
+    CompanyProduct,
+    GlobalProduct,
+    OpenCardTrialInput,
+    OpenPremiumInput,
+    OpenTrialInput,
+    PRODUCT_KEYS
+} from '../domain/plans.types';
 import { PlanResolverService } from './plan-resolver.service';
 import { PlansLogService } from './plans-log.service';
 import { PremiumEndedService } from './premium-ended.service';
@@ -13,6 +21,10 @@ import { PremiumEndedService } from './premium-ended.service';
 export interface TrialContract {
     readonly endsAt: Date;
     readonly subscriptionId: string | null;
+}
+
+export interface CardTrialContract {
+    readonly endsAt: Date;
 }
 
 @Injectable()
@@ -50,6 +62,38 @@ export class PlanContractService {
         const endsAt: Date = DateUtil.addDays(input.startsAt, input.days);
         await this.plans.open(product.id, 0, input.startsAt, 'trial', null, endsAt);
         this.logs.contractOpened(PRODUCT_KEYS.premium);
+    }
+
+    @UsingTransaction()
+    public async openCardTrial(_product: 'premium', input: OpenCardTrialInput): Promise<boolean> {
+        const product: GlobalProduct = await this.catalog.productOf(PRODUCT_KEYS.premium);
+        if ((await this.plans.openLineOf(product.id)) !== null) {
+            return false;
+        }
+        if (!(await this.trials.markStarted(input.startsAt))) {
+            throw new TrialAlreadyUsedError();
+        }
+        await this.plans.open(product.id, 0, input.startsAt, 'card_trial', input.subscriptionId, input.endsAt);
+        this.logs.contractOpened(PRODUCT_KEYS.premium);
+        return true;
+    }
+
+    public async trialUsed(): Promise<boolean> {
+        return (await this.trials.history()).trialUsed;
+    }
+
+    public async cardTrialOf(_product: 'premium'): Promise<CardTrialContract | null> {
+        const product: GlobalProduct = await this.catalog.productOf(PRODUCT_KEYS.premium);
+        const line: CompanyProduct | null = await this.plans.openLineOf(product.id);
+        if (line?.source !== 'card_trial' || line.trialEndsAt === null) {
+            return null;
+        }
+        return { endsAt: line.trialEndsAt };
+    }
+
+    public async convertCardTrial(_product: 'premium'): Promise<boolean> {
+        const product: GlobalProduct = await this.catalog.productOf(PRODUCT_KEYS.premium);
+        return this.plans.convertCardTrial(product.id, await this.catalog.priceCentsOf('premium', PRODUCT_KEYS.premium));
     }
 
     public async everHadPremium(): Promise<boolean> {

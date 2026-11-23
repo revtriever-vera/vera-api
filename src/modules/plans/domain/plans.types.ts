@@ -33,11 +33,11 @@ export const USAGE_UNITS = { costMicros: 'cost_micros' } as const;
 
 export const PLAN_KEYS = { free: 'free', premium: 'premium' } as const;
 
-export type ContractEndReason = 'canceled' | 'expired' | 'refunded' | 'account_deleted' | 'trial_ended';
-export type ContractSource = 'subscription' | 'manual' | 'trial';
+export type ContractEndReason = 'canceled' | 'expired' | 'refunded' | 'account_deleted' | 'trial_ended' | 'trial_canceled';
+export type ContractSource = 'subscription' | 'manual' | 'trial' | 'card_trial';
 
 export const TRIAL_NOTICE_DAYS: number = 3;
-export const TRIAL_KINDS = { noCard: 'no_card' } as const;
+export const TRIAL_KINDS = { noCard: 'no_card', card: 'card' } as const;
 export type TrialKind = (typeof TRIAL_KINDS)[keyof typeof TRIAL_KINDS];
 
 export const NOTIFICATION_STATUSES = { pending: 'pending', done: 'done', failed: 'failed' } as const;
@@ -62,6 +62,12 @@ export interface OpenPremiumInput {
     readonly subscriptionId: string;
 }
 
+export interface OpenCardTrialInput {
+    readonly startsAt: Date;
+    readonly endsAt: Date;
+    readonly subscriptionId: string;
+}
+
 export interface OpenTrialInput {
     readonly startsAt: Date;
     readonly days: number;
@@ -78,7 +84,7 @@ export interface ClosePremiumInput {
     readonly reason: ContractEndReason;
 }
 
-export type SubscriptionStatus = 'pending' | 'active' | 'past_due' | 'canceled' | 'expired';
+export type SubscriptionStatus = 'pending' | 'active' | 'trialing' | 'past_due' | 'canceled' | 'expired';
 
 export interface SubscriptionSummary {
     readonly status: SubscriptionStatus;

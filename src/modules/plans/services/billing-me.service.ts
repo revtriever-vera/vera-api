@@ -13,7 +13,7 @@ import {
 } from '../domain/plans.types';
 import { BillingOfferRegistry } from './billing-offer.registry';
 import { PaidUsageReader } from './paid-usage-reader.service';
-import { PlanContractService, TrialContract } from './plan-contract.service';
+import { CardTrialContract, PlanContractService, TrialContract } from './plan-contract.service';
 import { PlanGateService } from './plan-gate.service';
 import { PlanLimitService } from './plan-limit.service';
 import { SubscriptionSummaryRegistry } from './subscription-summary.registry';
@@ -54,6 +54,10 @@ export class BillingMeService {
     private async trial(plan: EffectivePlan): Promise<TrialSnapshot | null> {
         if (plan !== 'premium') {
             return null;
+        }
+        const card: CardTrialContract | null = await this.contract.cardTrialOf('premium');
+        if (card !== null) {
+            return { kind: TRIAL_KINDS.card, endsAt: card.endsAt.toISOString(), daysLeft: DateUtil.daysLeftUntil(card.endsAt) };
         }
         const contract: TrialContract | null = await this.contract.trialOf('premium');
         if (contract === null) {

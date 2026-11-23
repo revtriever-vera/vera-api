@@ -67,6 +67,10 @@ export class PlanDomain {
         return this.contracts.convertTrial(productId, subscriptionId, priceCents);
     }
 
+    public async convertCardTrial(productId: string, priceCents: number): Promise<boolean> {
+        return this.contracts.convertCardTrial(productId, priceCents);
+    }
+
     public async markTrialNoticeSent(productId: string, at: Date): Promise<boolean> {
         return this.contracts.markNoticeSent(productId, at);
     }

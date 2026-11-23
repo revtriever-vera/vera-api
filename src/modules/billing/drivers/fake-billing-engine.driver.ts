@@ -74,7 +74,7 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         this.subscriptions.set(subscription.id, subscription);
         this.created.set(input.idempotencyKey, subscription.id);
         await this.emit('subscription.created', subscription.id, {});
-        if (input.paymentMethod === 'pix') {
+        if (input.paymentMethod === 'pix' && !this.chargeIsFuture(subscription)) {
             await this.issueInvoice(subscription.id);
         }
         return subscription;
@@ -181,7 +181,9 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         this.captures.delete(token);
         this.cards.set(capture.subscriptionId, FAKE_TEST_CARD);
         await this.emit('subscription.card_saved', capture.subscriptionId, { brand: FAKE_TEST_CARD.brand, last4: FAKE_TEST_CARD.last4 });
-        await this.chargeAfterCard(capture.subscriptionId);
+        if (!this.chargeIsFuture(this.subscriptionById(capture.subscriptionId))) {
+            await this.chargeAfterCard(capture.subscriptionId);
+        }
         return capture.returnUrl;
     }
 
@@ -196,6 +198,29 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
             this.activate(invoice.subscriptionId);
         }
         return true;
+    }
+
+    public async releaseFirstCharge(subscriptionId: string): Promise<void> {
+        this.assertAvailable();
+        const subscription: EngineSubscription = this.subscriptionById(subscriptionId);
+        if (subscription.status === 'canceled' || this.invoicesOf(subscriptionId).length > 0) {
+            return;
+        }
+        if (subscription.paymentMethod === 'card') {
+            if (this.cards.has(subscriptionId)) {
+                await this.chargeAfterCard(subscriptionId);
+            }
+            return;
+        }
+        await this.issueInvoice(subscriptionId);
+    }
+
+    private chargeIsFuture(subscription: EngineSubscription): boolean {
+        return subscription.firstChargeDate !== null && subscription.firstChargeDate > dateOnly(new Date());
+    }
+
+    private invoicesOf(subscriptionId: string): EngineInvoice[] {
+        return [...this.invoices.values()].filter((invoice: EngineInvoice): boolean => invoice.subscriptionId === subscriptionId);
     }
 
     private async chargeAfterCard(subscriptionId: string): Promise<void> {

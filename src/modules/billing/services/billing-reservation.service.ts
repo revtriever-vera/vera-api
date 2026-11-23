@@ -10,6 +10,7 @@ import { AlreadySubscribedError } from '../domain/billing-engine.errors';
 import { PaymentMethod } from '../domain/billing-engine.types';
 import { BillingPriceQuoteDomain } from '../domain/billing-price-quote.domain';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
+import { CardTrialDates } from '../domain/billing-trial.rules';
 import { BillingSubscription, SUBSCRIPTION_STATUSES } from '../domain/billing.types';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { discountRulesSchema } from '../validation/billing-discount.schemas';
@@ -27,6 +28,7 @@ interface ReservationRequest {
     readonly method: PaymentMethod;
     readonly firstChargeDate: string;
     readonly discount: ReservedDiscount;
+    readonly trialEndsAt: Date | null;
 }
 
 @Injectable()
@@ -44,19 +46,33 @@ export class BillingReservationService {
         return this.subscriptions.findCurrent(this.engine.engine);
     }
 
-    public async forSubscribe(method: PaymentMethod, trial: TrialContract | null): Promise<BillingSubscription> {
+    public async stalePendingOf(before: Date, limit: number): Promise<BillingSubscription[]> {
+        return this.subscriptions.listStalePendingAcrossTenants(before, limit);
+    }
+
+    public async forSubscribe(
+        method: PaymentMethod,
+        trial: TrialContract | null,
+        cardTrial: CardTrialDates | null = null
+    ): Promise<BillingSubscription> {
         const offer: UsableOffer | null = await this.offers.usable();
         return this.reserved({
             method,
-            firstChargeDate: await this.firstChargeDateOf(trial, offer),
+            firstChargeDate: cardTrial?.firstChargeDate ?? (await this.firstChargeDateOf(trial, offer)),
+            trialEndsAt: cardTrial?.trialEndsAt ?? null,
             discount: { rules: offer?.rules ?? [], cycleOffset: 0, consumesOffer: offer !== null }
         });
     }
 
-    public async forResume(previous: BillingSubscription, paidThrough: Date): Promise<BillingSubscription> {
+    public async forResume(
+        previous: BillingSubscription,
+        paidThrough: Date,
+        cardTrial: CardTrialDates | null = null
+    ): Promise<BillingSubscription> {
         return this.reserved({
             method: previous.paymentMethod === 'card' ? 'card' : 'pix',
-            firstChargeDate: DateUtil.onlyDateString(paidThrough),
+            firstChargeDate: cardTrial?.firstChargeDate ?? DateUtil.onlyDateString(paidThrough),
+            trialEndsAt: cardTrial?.trialEndsAt ?? null,
             discount: await this.inheritedDiscountOf(previous)
         });
     }
@@ -87,6 +103,7 @@ export class BillingReservationService {
             planId: this.config.REVTRIEVER_PLAN_ID ?? FAKE_PLAN_ID,
             paymentMethod: request.method,
             firstChargeDate: request.firstChargeDate,
+            trialEndsAt: request.trialEndsAt,
             discountRules: request.discount.rules,
             discountCycleOffset: request.discount.cycleOffset
         });

@@ -286,6 +286,8 @@ export interface BillingSubscriptions {
     paymentMethod: string;
     planId: string;
     status: string;
+    trialEndsAt: Timestamp | null;
+    trialStartedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
 }
 

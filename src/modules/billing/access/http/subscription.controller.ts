@@ -33,7 +33,8 @@ export class SubscriptionController {
         description:
             'Owner only. Creates the subscription in two phases (a pending row, then the billing provider) and answers the next step: ' +
             '`card_capture` with the page where the card is saved, or `pay_invoice` for Pix. Refused when the plan is already Premium ' +
-            'or the installation is self-hosted. Limited to 10 per hour per company.'
+            'or the installation is self-hosted. With a redeemed card-trial offer the subscription is card only and the first charge waits ' +
+            'for the end of the trial; Premium opens when the saved card is confirmed. Limited to 10 per hour per company.'
     })
     @ApiZodBody(subscribeSchema)
     @ApiZodResponse({
@@ -46,6 +47,11 @@ export class SubscriptionController {
         status: 409,
         description: 'Already Premium or self-hosted (billing.already_subscribed, billing.not_available)',
         example: { type: 'billing.already_subscribed', title: 'AlreadySubscribedError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'The redeemed offer has a card trial and the method is not card (billing.trial_requires_card)',
+        example: { type: 'billing.trial_requires_card', title: 'TrialRequiresCardError', status: 422 }
     })
     @ApiProblemResponse({
         status: 502,
@@ -68,7 +74,8 @@ export class SubscriptionController {
         summary: 'Cancel the subscription',
         description:
             'Owner only. Premium goes on until the end of the paid cycle. Within the withdrawal window of the first payment Premium ' +
-            'ends at once and a manual refund request is recorded (the API does not refund).'
+            'ends at once and a manual refund request is recorded (the API does not refund). Canceled during the card trial, Premium ' +
+            'goes on until the trial ends with no charge and no refund request.'
     })
     @ApiZodResponse({
         status: 200,
@@ -90,8 +97,8 @@ export class SubscriptionController {
     @ApiOperation({
         summary: 'Resume a canceled subscription',
         description:
-            'Owner only. Only while the paid cycle of a canceled subscription is still running: creates a new subscription ' +
-            'with the same method and the first charge on the day the paid cycle ends.'
+            'Owner only. Only while the paid cycle of a canceled subscription (or the card trial) is still running: creates a new ' +
+            'subscription with the same method and the first charge on the day the paid cycle or the trial ends.'
     })
     @ApiZodResponse({ status: 200, description: 'Billing state after resuming', schema: billingMeSchema })
     @ApiProblemResponse({

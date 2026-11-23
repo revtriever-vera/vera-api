@@ -11,12 +11,20 @@ export class BillingOfferRegistry {
         return this.port()?.offer() ?? null;
     }
 
+    public async trialStarted(at: Date): Promise<void> {
+        await this.port()?.trialStarted(at);
+    }
+
     public async usable(): Promise<UsableOffer | null> {
         return this.port()?.usable() ?? null;
     }
 
     public async markApplied(): Promise<boolean> {
         return (await this.port()?.markApplied()) ?? false;
+    }
+
+    public async release(): Promise<void> {
+        await this.port()?.release();
     }
 
     private port(): BillingOfferPort | undefined {

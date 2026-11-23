@@ -12,12 +12,20 @@ export class SignupRedemptionDomain {
         return this.redemptions.current();
     }
 
+    public async markTrialStarted(at: Date): Promise<boolean> {
+        return this.redemptions.markTrialStarted(at);
+    }
+
     public async markApplied(at: Date): Promise<boolean> {
         return this.redemptions.markApplied(at);
     }
 
     public async refreshUnapplied(link: SignupLink, now: Date): Promise<void> {
         await this.redemptions.refreshUnapplied(link, now);
+    }
+
+    public async release(at: Date): Promise<boolean> {
+        return this.redemptions.release(at);
     }
 
     public async record(link: SignupLink, source: RedemptionSource, now: Date): Promise<SignupRedemption | null> {

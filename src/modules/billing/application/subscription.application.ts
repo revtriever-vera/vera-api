@@ -3,6 +3,7 @@ import { PaymentMethod } from '../domain/billing-engine.types';
 import { BillingCancellationService } from '../services/billing-cancellation.service';
 import { BillingCardService } from '../services/billing-card.service';
 import { BillingCheckoutService, SubscribeResult } from '../services/billing-checkout.service';
+import { BillingTrialService } from '../services/billing-trial.service';
 import { BillingPendingCancellationService } from '../services/billing-pending-cancellation.service';
 import { BillingMeService } from '../../plans/services/billing-me.service';
 import { BillingMe } from '../../plans/services/billing-me-contract';
@@ -16,6 +17,7 @@ export class SubscriptionApplication {
         private readonly cancellation: BillingCancellationService,
         private readonly cards: BillingCardService,
         private readonly pending: BillingPendingCancellationService,
+        private readonly trials: BillingTrialService,
         private readonly me: BillingMeService
     ) {}
 
@@ -40,6 +42,10 @@ export class SubscriptionApplication {
     public async resume(): Promise<BillingMe> {
         await this.checkout.resume();
         return this.me.get();
+    }
+
+    public async sweepTrials(): Promise<number> {
+        return this.trials.sweep();
     }
 
     public async rescue(): Promise<number> {
