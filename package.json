@@ -39,6 +39,7 @@
     "billing:provision": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/billing-provision.js",
     "platform:seed": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/platform-seed.js",
     "catalog:seed": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/catalog-seed.js",
+    "openapi:dump": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/openapi-dump.js",
     "cdk": "cdk"
   },
   "dependencies": {
