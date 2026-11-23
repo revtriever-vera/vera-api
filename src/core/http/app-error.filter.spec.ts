@@ -24,6 +24,7 @@ interface Setup {
     readonly context: AlsAppContext;
     readonly status: ReturnType<typeof vi.fn>;
     readonly json: ReturnType<typeof vi.fn>;
+    readonly type: ReturnType<typeof vi.fn>;
     readonly host: ArgumentsHost;
     readonly error: ReturnType<typeof vi.fn>;
 }
@@ -33,11 +34,12 @@ function setup(): Setup {
     const error: ReturnType<typeof vi.fn> = vi.fn();
     const logService: LogService = { error, warn: vi.fn(), info: vi.fn(), debug: vi.fn() } as unknown as LogService;
     const json: ReturnType<typeof vi.fn> = vi.fn();
-    const status: ReturnType<typeof vi.fn> = vi.fn(() => ({ json }));
+    const type: ReturnType<typeof vi.fn> = vi.fn(() => ({ json }));
+    const status: ReturnType<typeof vi.fn> = vi.fn(() => ({ type }));
     const host: ArgumentsHost = {
         switchToHttp: () => ({ getResponse: () => ({ status }) })
     } as unknown as ArgumentsHost;
-    return { filter: new AppErrorFilter(context, logService), context, status, json, host, error };
+    return { filter: new AppErrorFilter(context, logService), context, status, json, type, host, error };
 }
 
 function sentBody(json: ReturnType<typeof vi.fn>): Record<string, unknown> {
@@ -46,13 +48,14 @@ function sentBody(json: ReturnType<typeof vi.fn>): Record<string, unknown> {
 
 describe('AppErrorFilter', () => {
     it('maps an AppError to problem+json carrying its own technical detail, not a translated catalog message', () => {
-        const { filter, context, status, json, host }: Setup = setup();
+        const { filter, context, status, json, type, host }: Setup = setup();
 
         context.run({ requestId: 'req-9', locale: 'pt-BR' }, () => {
             filter.catch(new ItemNotFoundError('ch-1'), host);
         });
 
         expect(status).toHaveBeenCalledWith(404);
+        expect(type).toHaveBeenCalledWith('application/problem+json');
         expect(sentBody(json)).toMatchObject({
             type: 'sample.item_not_found',
             title: 'ItemNotFoundError',
