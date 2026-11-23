@@ -8,6 +8,7 @@ import { GoalsAccountExporter } from '../services/goals-account.exporter';
 import { GoalsAccountSpreadsheet } from '../services/goals-account.spreadsheet';
 import { GoalsHolderDepartureHandler } from '../services/goals-holder-departure.handler';
 import { GoalsSampleDataService } from '../services/goals-sample-data.service';
+import { GoalsOverviewTool } from '../services/goals-overview.tool';
 import { GoalsReaderService } from '../services/goals-reader.service';
 import { GoalsApplication } from './goals.application';
 
@@ -16,6 +17,7 @@ import { GoalsApplication } from './goals.application';
     providers: [
         GoalsApplication,
         GoalsReaderService,
+        GoalsOverviewTool,
         GoalsAccountExporter,
         GoalsAccountSpreadsheet,
         GoalsHolderDepartureHandler,

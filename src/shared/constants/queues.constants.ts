@@ -11,6 +11,7 @@ export const QUEUES = {
     whatsapp: 'vera-whatsapp',
     reminders: 'vera-reminders',
     recurring: 'vera-recurring',
+    goalNotices: 'vera-goal-notices',
     recurringNotices: 'vera-recurring-notices'
 } as const;
 
@@ -50,6 +51,8 @@ export const MESSAGE_TYPES = {
     remindersGaugeRequested: 'reminders.gauge.requested',
     recurringDetectRequested: 'recurring.detect.requested',
     recurringDailyRequested: 'recurring.daily.requested',
+    goalNoticesDailyRequested: 'goal-notices.daily.requested',
+    goalNoticesEvaluateRequested: 'goal-notices.evaluate.requested',
     recurringNoticesDailyRequested: 'recurring-notices.daily.requested',
     recurringNoticesScheduleRequested: 'recurring-notices.schedule.requested',
     recurringWeekDue: 'recurring-notices.week.due',

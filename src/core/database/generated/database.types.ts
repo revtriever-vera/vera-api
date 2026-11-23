@@ -415,6 +415,16 @@ export interface GoalHoldings {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface GoalNoticeMarks {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    goalId: string;
+    id: string;
+    month: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Goals {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1047,6 +1057,7 @@ export interface DB {
     GlobalProductLimits: GlobalProductLimits;
     GlobalProducts: GlobalProducts;
     GoalHoldings: GoalHoldings;
+    GoalNoticeMarks: GoalNoticeMarks;
     Goals: Goals;
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
