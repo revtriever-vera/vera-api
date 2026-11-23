@@ -1,0 +1,29 @@
+{
+  "id": "meta-batida",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {},
+  "context": {
+    "meta_economia_pct": "25%",
+    "falta_por_mes": "R$ 0",
+    "status": "meta_batida",
+    "categorias_flexiveis": []
+  },
+  "fixedFigures": {
+    "goalBps": 2500,
+    "surplusMinor": 180000,
+    "currency": "BRL"
+  },
+  "expect": {
+    "mustCite": ["R$ 1.800"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Você já guarda mais que a meta de 25%: sobram **R$ 1.800** acima dela. Não precisa cortar nada; esse dinheiro pode ir para o aporte."
+  ]
+}

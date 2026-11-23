@@ -1,0 +1,83 @@
+{
+  "id": "varias-fora-da-faixa",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:rf_ipca": "Renda fixa IPCA+",
+    "cls:acoes_br": "Ações Brasil",
+    "cls:cripto": "Cripto",
+    "cls:fii": "FIIs"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$ 530.000",
+    "exposicao_dolar_pct": "25%",
+    "tolerancia_pp": "3 pp",
+    "carteira_pct": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "atual": "15%",
+        "meta": "25%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "rf_ipca",
+        "rotulo_padrao": "Renda fixa IPCA+",
+        "atual": "8%",
+        "meta": "15%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "atual": "33%",
+        "meta": "25%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "cripto",
+        "rotulo_padrao": "Cripto",
+        "atual": "9%",
+        "meta": "5%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "FIIs",
+        "atual": "35%",
+        "meta": "30%",
+        "situacao": "acima"
+      }
+    ],
+    "aporte_planejado": {
+      "total": "R$ 10.000",
+      "por_classe": [
+        {
+          "chave": "rf_pos",
+          "valor": "R$ 6.000"
+        },
+        {
+          "chave": "rf_ipca",
+          "valor": "R$ 4.000"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "mustCite": ["R$ 530.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **R$ 530.000**, com 25% em dólar.",
+    "[[cls:rf_pos]] está abaixo da meta (15% contra 25%) e [[cls:rf_ipca]] está abaixo da meta (8% contra 15%) e [[cls:acoes_br]] está acima (33% contra 25%) e [[cls:cripto]] está acima (9% contra 5%).",
+    "Não precisa vender; basta não aportar nelas por um tempo.",
+    "Com **R$ 10.000** de aporte, a sugestão é R$ 6.000 em [[cls:rf_pos]] e R$ 4.000 em [[cls:rf_ipca]]."
+  ]
+}

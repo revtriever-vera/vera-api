@@ -1,0 +1,64 @@
+{
+  "id": "mes-sem-renda",
+  "task": "summary_month",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:housing": "Moradia",
+    "cat:transport": "Transporte"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": false,
+    "renda": "R$ 0",
+    "gastos": "R$ 5.300",
+    "guardado": "-R$ 5.300",
+    "taxa_poupanca": null,
+    "meta_economia_pct": "20%",
+    "falta_para_meta": "R$ 5.300",
+    "fixos": {
+      "total": "R$ 3.100",
+      "pct_renda": null
+    },
+    "flexiveis": {
+      "total": "R$ 2.200"
+    },
+    "sem_categoria": {
+      "total": "R$ 200",
+      "transacoes": 2
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Moradia",
+        "tipo": "fixo",
+        "total": "R$ 3.100",
+        "media_3m": "R$ 3.100",
+        "variacao_pct": "0%",
+        "nova": false
+      },
+      {
+        "chave": "transport",
+        "rotulo_padrao": "Transporte",
+        "tipo": "flexivel",
+        "total": "R$ 2.200",
+        "media_3m": "R$ 1.500",
+        "variacao_pct": "+47%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 5.300"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Saíram **R$ 5.300** e não há renda registrada no mês.",
+    "Sem renda, não dá para calcular a taxa de poupança.",
+    "O que mais subiu foi [[cat:transport]] (+47% sobre a sua média)."
+  ]
+}

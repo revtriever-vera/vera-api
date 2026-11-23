@@ -9,6 +9,9 @@ export const LLM_TASKS = {
     askVeraStep: 'ask_vera_step'
 } as const;
 
+export const LLM_REASONING_LEVELS = ['provider-default', 'minimal'] as const;
+export type LlmReasoning = (typeof LLM_REASONING_LEVELS)[number];
+
 export type LlmTask = (typeof LLM_TASKS)[keyof typeof LLM_TASKS];
 
 export const LLM_FEATURES = ['ai', 'whatsapp'] as const;

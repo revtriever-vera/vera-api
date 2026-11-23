@@ -1,0 +1,65 @@
+{
+  "id": "partial-month",
+  "task": "summary_month",
+  "locale": "en",
+  "labels": {
+    "cat:groceries": "Groceries",
+    "cat:housing": "Housing"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": true,
+    "renda": "R$9,000",
+    "gastos": "R$4,200",
+    "guardado": "R$4,800",
+    "taxa_poupanca": "53%",
+    "meta_economia_pct": "20%",
+    "falta_para_meta": "R$0",
+    "fixos": {
+      "total": "R$2,800",
+      "pct_renda": "31%"
+    },
+    "flexiveis": {
+      "total": "R$1,400"
+    },
+    "sem_categoria": {
+      "total": "R$300",
+      "transacoes": 3
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "groceries",
+        "rotulo_padrao": "Groceries",
+        "tipo": "flexivel",
+        "total": "R$1,500",
+        "media_3m": "R$1,200",
+        "variacao_pct": "+25%",
+        "nova": false
+      },
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Housing",
+        "tipo": "fixo",
+        "total": "R$2,800",
+        "media_3m": "R$2,800",
+        "variacao_pct": "0%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$9,000"],
+    "mustMention": ["not over"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "**R$9,000** came in and R$4,200 went out, so you saved R$4,800, 53% of income against your 20% goal.",
+    "What rose most was [[cat:groceries]] (+25% over your average).",
+    "Fixed costs ([[cat:housing]]) add up to **R$2,800**, 31% of income.",
+    "The month is not over yet."
+  ]
+}

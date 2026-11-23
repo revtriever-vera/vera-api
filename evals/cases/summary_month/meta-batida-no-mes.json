@@ -1,0 +1,74 @@
+{
+  "id": "meta-batida-no-mes",
+  "task": "summary_month",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:housing": "Moradia",
+    "cat:leisure": "Lazer",
+    "cat:eating_out": "Delivery e restaurantes"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": false,
+    "renda": "R$ 20.000",
+    "gastos": "R$ 13.000",
+    "guardado": "R$ 7.000",
+    "taxa_poupanca": "35%",
+    "meta_economia_pct": "25%",
+    "falta_para_meta": "R$ 0",
+    "fixos": {
+      "total": "R$ 8.000",
+      "pct_renda": "40%"
+    },
+    "flexiveis": {
+      "total": "R$ 5.000"
+    },
+    "sem_categoria": {
+      "total": "R$ 400",
+      "transacoes": 5
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Moradia",
+        "tipo": "fixo",
+        "total": "R$ 8.000",
+        "media_3m": "R$ 8.000",
+        "variacao_pct": "0%",
+        "nova": false
+      },
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Lazer",
+        "tipo": "flexivel",
+        "total": "R$ 1.900",
+        "media_3m": "R$ 2.400",
+        "variacao_pct": "-21%",
+        "nova": false
+      },
+      {
+        "chave": "eating_out",
+        "rotulo_padrao": "Delivery e restaurantes",
+        "tipo": "flexivel",
+        "total": "R$ 1.700",
+        "media_3m": "R$ 1.600",
+        "variacao_pct": "+6%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 20.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Entraram **R$ 20.000** e saíram R$ 13.000, então você guardou R$ 7.000, 35% da renda contra a meta de 25%.",
+    "O que mais subiu foi [[cat:eating_out]] (+6% sobre a sua média).",
+    "Os fixos ([[cat:housing]]) somam **R$ 8.000**, 40% da renda."
+  ]
+}

@@ -15,6 +15,7 @@ const PROBE_SPEC: LlmTaskSpec = {
     maxOutputTokens: 1,
     maxCostMicros: 0,
     temperature: 0,
+    reasoning: 'provider-default',
     timeoutMs: PROBE_TIMEOUT_MS,
     maxRetries: 0,
     evalThreshold: 0,

@@ -102,6 +102,7 @@ export abstract class AiSdkLlmDriver extends LlmDriver {
                 : {}),
             maxOutputTokens: spec.maxOutputTokens,
             temperature: spec.temperature,
+            reasoning: spec.reasoning,
             providerOptions: this.providerOptionsOf(call),
             maxRetries: 0,
             abortSignal

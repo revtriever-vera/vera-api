@@ -21,6 +21,7 @@ function call(overrides: Partial<LlmDriverCall['spec']> = {}, request: Partial<L
             maxOutputTokens: 100,
             maxCostMicros: 1,
             temperature: 0.2,
+            reasoning: 'provider-default',
             timeoutMs: 1000,
             maxRetries: 2,
             evalThreshold: 0.8,
@@ -87,6 +88,15 @@ describe('GatewayLlmDriver', () => {
             attempts: 1
         });
         expect(logService.warn).not.toHaveBeenCalled();
+    });
+
+    it('repassa o nível de raciocínio do catálogo ao SDK', async () => {
+        generate.mockResolvedValueOnce(answer());
+
+        await driver.generate(call({ reasoning: 'minimal' }));
+
+        const options = generate.mock.calls[0]?.[0] as unknown as Record<string, unknown>;
+        expect(options['reasoning']).toBe('minimal');
     });
 
     it('descobre o pino do modelo pelo prefixo', () => {
