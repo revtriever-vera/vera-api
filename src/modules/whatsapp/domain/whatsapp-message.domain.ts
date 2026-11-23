@@ -36,8 +36,9 @@ export class WhatsAppMessageDomain {
         });
     }
 
-    public async recordInbound(message: InboundMessage): Promise<boolean> {
+    public async recordInbound(message: InboundMessage, linkId: string | null = null): Promise<boolean> {
         return this.messages.insertInbound({
+            linkId,
             id: IdUtil.newId(),
             peer: message.from,
             direction: 'in',
@@ -87,6 +88,10 @@ export class WhatsAppMessageDomain {
 
     public async eraseAll(batch: number): Promise<number> {
         return this.messages.eraseAll(batch);
+    }
+
+    public async clearTextOf(linkId: string, peer: string): Promise<number> {
+        return this.messages.clearTextOf(linkId, peer);
     }
 
     public async purgeTextBefore(cutoff: Date, batch: number): Promise<number> {

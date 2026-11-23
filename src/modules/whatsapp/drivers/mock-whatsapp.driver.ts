@@ -12,6 +12,7 @@ import {
 import { WhatsAppCloudPort } from '../ports/whatsapp-cloud.port';
 import { MockOutbox } from '../services/mock-outbox.service';
 
+export const MOCK_DISPLAY_NUMBER: string = '+55 11 4000-0000';
 const REFUSED_WORDS: RegExp = /desconto|promo|oferta/i;
 
 @Injectable()
@@ -54,6 +55,10 @@ export class MockWhatsAppDriver extends WhatsAppCloudPort {
 
     public phoneHealth(): Promise<PhoneHealth> {
         return Promise.resolve({ qualityRating: 'GREEN', messagingLimitTier: 'TIER_1K', status: 'CONNECTED' });
+    }
+
+    public displayNumber(): Promise<string | null> {
+        return Promise.resolve(MOCK_DISPLAY_NUMBER);
     }
 
     public markRead(): Promise<void> {

@@ -37,7 +37,8 @@ export const MESSAGE_TYPES = {
     whatsappSendRequested: 'whatsapp.send.requested',
     whatsappTemplatesSyncRequested: 'whatsapp.templates.sync.requested',
     whatsappHealthRequested: 'whatsapp.health.requested',
-    whatsappRetentionRequested: 'whatsapp.retention.requested'
+    whatsappRetentionRequested: 'whatsapp.retention.requested',
+    whatsappLinksStaleRequested: 'whatsapp.links.stale.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

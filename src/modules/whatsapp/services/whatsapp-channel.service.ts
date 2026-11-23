@@ -8,8 +8,11 @@ import {
 } from '../../integration-credentials/services/integration-credentials.service';
 import { PlanGateService } from '../../plans/services/plan-gate.service';
 import { whatsappConfig } from '../config/whatsapp.config';
+import { WhatsAppProviderDisabledError } from '../domain/whatsapp.errors';
 import { HOSTED_CHANNEL_KEY, WhatsAppChannel } from '../domain/whatsapp.types';
 import { SignatureVerifier } from './signature.verifier';
+
+export type { WhatsAppChannel } from '../domain/whatsapp.types';
 
 @Injectable()
 export class WhatsAppChannelService {
@@ -39,6 +42,14 @@ export class WhatsAppChannelService {
         }
         const credentials: WhatsAppCredentials | null = await this.credentials.resolve('whatsapp');
         return credentials === null ? null : this.channelOf(credentials, companyId);
+    }
+
+    public async require(): Promise<WhatsAppChannel> {
+        const channel: WhatsAppChannel | null = await this.current();
+        if (channel === null) {
+            throw new WhatsAppProviderDisabledError();
+        }
+        return channel;
     }
 
     public async byPhoneNumberId(phoneNumberId: string): Promise<WhatsAppChannel | null> {

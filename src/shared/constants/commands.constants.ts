@@ -13,7 +13,8 @@ export const COMMAND_KEYS = {
     aiSummariesRetention: 'ai-summaries-retention-command',
     whatsappTemplatesSync: 'whatsapp-templates-sync-command',
     whatsappHealth: 'whatsapp-health-command',
-    whatsappRetention: 'whatsapp-retention-command'
+    whatsappRetention: 'whatsapp-retention-command',
+    whatsappLinksStale: 'whatsapp-links-stale-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];

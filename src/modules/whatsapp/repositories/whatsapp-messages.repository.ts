@@ -65,6 +65,12 @@ export class WhatsAppMessagesRepository extends BareTenantRepository<'WhatsAppMe
         return row?.last ?? null;
     }
 
+    public async clearTextOf(linkId: string, peer: string): Promise<number> {
+        const byLink: WhatsAppMessage[] = await this.updateManyRows({ linkId }, { body: null, payload: null, updatedAt: new Date() });
+        const byPeer: WhatsAppMessage[] = await this.updateManyRows({ peer }, { body: null, payload: null, updatedAt: new Date() });
+        return byLink.length + byPeer.length;
+    }
+
     public async listForExport(offset: number): Promise<WhatsAppMessage[]> {
         return this.findMany({}, { limit: EXPORT_PAGE, offset, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
     }

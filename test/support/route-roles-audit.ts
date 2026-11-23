@@ -16,7 +16,9 @@ export const VIEWER_WRITE_ALLOWLIST: readonly string[] = [
     'POST /portfolio/contributions/suggest',
     'POST /portfolio/fgc/simulate',
     'PATCH /auth/me/preferences',
-    'POST /members/me/leave'
+    'POST /members/me/leave',
+    'POST /whatsapp/link/code',
+    'DELETE /whatsapp/link'
 ];
 
 const READ_METHODS: readonly string[] = ['GET', 'HEAD'];

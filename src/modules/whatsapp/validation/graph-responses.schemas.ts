@@ -23,8 +23,11 @@ export const healthResponseSchema = z.object({
     status: z.string().optional()
 });
 
+export const displayNumberResponseSchema = z.object({ display_phone_number: z.string().optional() });
+
 export const successSchema = z.object({ success: z.boolean().optional() });
 
+export type DisplayNumberResponse = z.infer<typeof displayNumberResponseSchema>;
 export type SendResponse = z.infer<typeof sendResponseSchema>;
 export type TemplatesResponse = z.infer<typeof templatesResponseSchema>;
 export type SubmitResponse = z.infer<typeof submitResponseSchema>;
