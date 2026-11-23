@@ -351,10 +351,6 @@ const recurringSchema = z.object({
 });
 
 const bankConnectionsSchema = z.object({
-    credentials: z
-        .object({ configured: z.literal(true), status: z.string() })
-        .nullable()
-        .describe('Pluggy credentials, status only'),
     connections: z.array(
         z.object({
             connectorName: z.string().nullable(),
