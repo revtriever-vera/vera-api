@@ -35,6 +35,7 @@ import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { PortfolioExportModule } from './modules/portfolio-export/portfolio-export.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
+import { GoalsModule } from './modules/goals/goals.module';
 import { PositionsModule } from './modules/positions/positions.module';
 import { SpendingCategoriesModule } from './modules/spending-categories/spending-categories.module';
 import { SpendingCutsModule } from './modules/spending-cuts/spending-cuts.module';
@@ -87,6 +88,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         FixedIncomeModule,
         FixedIncomeCoverageModule,
         FixedIncomeScheduleModule,
+        GoalsModule,
         PositionsModule,
         MarketDataModule,
         PortfolioModule,

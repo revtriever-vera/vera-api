@@ -403,6 +403,39 @@ export interface GlobalProducts {
     kind: string;
 }
 
+export interface GoalHoldings {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    goalId: string;
+    holdingId: string;
+    holdingKind: string;
+    id: string;
+    shareBps: number;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface Goals {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    holderUserId: string | null;
+    id: string;
+    isSample: Generated<boolean>;
+    kind: string;
+    manualMinor: Generated<Int8>;
+    manualUpdatedAt: Timestamp | null;
+    monthStartMinor: Int8;
+    monthStartMonth: Timestamp;
+    name: string;
+    planMonths: number;
+    planStartMinor: Int8;
+    planStartMonth: Timestamp;
+    targetDate: Timestamp;
+    targetMinor: Int8;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface IndexSeriesPoints {
     date: Timestamp;
     fetchedAt: Generated<Timestamp>;
@@ -849,6 +882,8 @@ export interface DB {
     GlobalPlans: GlobalPlans;
     GlobalProductLimits: GlobalProductLimits;
     GlobalProducts: GlobalProducts;
+    GoalHoldings: GoalHoldings;
+    Goals: Goals;
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
     LlmCalls: LlmCalls;
