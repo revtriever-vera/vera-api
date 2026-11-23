@@ -12,6 +12,10 @@ export class PlatformAuditRecorderService {
         await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.signupLinkCreated, meta);
     }
 
+    public async signupLinkUpdated(operatorUserId: string | null, meta: AuditMeta): Promise<void> {
+        await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.signupLinkUpdated, meta);
+    }
+
     public async signupLinkRevoked(operatorUserId: string | null, meta: AuditMeta): Promise<void> {
         await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.signupLinkRevoked, meta);
     }

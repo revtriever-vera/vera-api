@@ -7,12 +7,20 @@ const NOW: Date = new Date('2026-11-23T12:00:00.000Z');
 const DAY_MS: number = 24 * 60 * 60 * 1000;
 
 function offer(overrides: Partial<LinkOfferInput> = {}): LinkOfferInput {
-    return { label: 'Parceria', trial: { kind: TRIAL_KINDS.none, days: null }, rules: [], maxUses: null, expiresAt: null, ...overrides };
+    return {
+        label: 'Parceria',
+        trial: { kind: TRIAL_KINDS.none, days: null },
+        rules: [],
+        maxUses: null,
+        expiresAt: null,
+        offerValidityDays: 30,
+        ...overrides
+    };
 }
 
 function reasonOf(input: LinkOfferInput): string | null {
     try {
-        SignupLinkOfferValidation.assertValid(input, NOW);
+        SignupLinkOfferValidation.assertValid(input, NOW, true);
         return null;
     } catch (error: unknown) {
         return error instanceof SignupLinkInvalidOfferError ? (error.meta?.['reason'] as string) : 'other';
@@ -70,5 +78,23 @@ describe('SignupLinkOfferValidation', () => {
 
     it('teste com cartão não exige limite nem validade', () => {
         expect(reasonOf(offer({ trial: { kind: TRIAL_KINDS.card, days: 14 } }))).toBeNull();
+    });
+
+    it('a validade da oferta fica entre 1 e 365 dias', () => {
+        expect(reasonOf(offer({ offerValidityDays: 0 }))).toBe('offer_validity_out_of_range');
+        expect(reasonOf(offer({ offerValidityDays: 366 }))).toBe('offer_validity_out_of_range');
+        expect(reasonOf(offer({ offerValidityDays: 1.5 }))).toBe('offer_validity_out_of_range');
+        expect(reasonOf(offer({ offerValidityDays: 365 }))).toBeNull();
+    });
+
+    it('na edição, um vencimento que não mudou não é checado contra o passado', () => {
+        const past: LinkOfferInput = offer({ expiresAt: new Date(NOW.getTime() - DAY_MS) });
+
+        expect(() => {
+            SignupLinkOfferValidation.assertValid(past, NOW, false);
+        }).not.toThrow();
+        expect(() => {
+            SignupLinkOfferValidation.assertValid(past, NOW, true);
+        }).toThrow(SignupLinkInvalidOfferError);
     });
 });

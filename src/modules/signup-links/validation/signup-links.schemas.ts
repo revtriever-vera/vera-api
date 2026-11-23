@@ -7,6 +7,13 @@ const MAX_CYCLE: number = 1200;
 const MAX_LABEL: number = 80;
 const LIST_LIMIT: number = 200;
 
+const offerValidityDaysSchema = z
+    .number()
+    .int()
+    .min(SIGNUP_LINK_LIMITS.minOfferValidityDays)
+    .max(SIGNUP_LINK_LIMITS.maxOfferValidityDays)
+    .describe('Days the offer stays usable after an account redeems the link (1 to 365)');
+
 export const discountRuleSchema = z.object({
     percent: z
         .number()
@@ -42,14 +49,17 @@ export const trialSchema = z.object({
 
 export type TrialView = z.infer<typeof trialSchema>;
 
+const labelSchema = z.string().trim().min(1).max(MAX_LABEL).describe('Internal name of the link, for the operators only');
+
+const rulesInputSchema = z
+    .array(discountRuleSchema)
+    .max(SIGNUP_LINK_LIMITS.maxRules)
+    .describe('Discount scale by paid cycle, 0 to 20 rules; the first rule that matches the cycle wins');
+
 export const createSignupLinkSchema = z.object({
-    label: z.string().trim().min(1).max(MAX_LABEL).describe('Internal name of the link, for the operators only'),
+    label: labelSchema,
     trial: trialSchema.describe('The trial part of the offer'),
-    rules: z
-        .array(discountRuleSchema)
-        .max(SIGNUP_LINK_LIMITS.maxRules)
-        .default([])
-        .describe('Discount scale by paid cycle, 0 to 20 rules; the first rule that matches the cycle wins'),
+    rules: rulesInputSchema.default([]),
     maxUses: z
         .number()
         .int()
@@ -63,10 +73,34 @@ export const createSignupLinkSchema = z.object({
         .datetime()
         .nullable()
         .default(null)
-        .describe('When the link stops accepting new redemptions (required with `no_card`, at most 90 days ahead)')
+        .describe('When the link stops accepting new redemptions (required with `no_card`, at most 90 days ahead)'),
+    offerValidityDays: offerValidityDaysSchema.default(SIGNUP_LINK_LIMITS.defaultOfferValidityDays)
 });
 
 export class CreateSignupLinkDto extends createZodDto(createSignupLinkSchema) {}
+
+export const updateSignupLinkSchema = z.object({
+    label: labelSchema.optional(),
+    trial: trialSchema.optional().describe('The trial part of the offer; omit to keep it'),
+    rules: rulesInputSchema.optional(),
+    maxUses: z
+        .number()
+        .int()
+        .min(1)
+        .max(MAX_USES_CEILING)
+        .nullable()
+        .optional()
+        .describe('How many accounts can redeem the link; null is unlimited; omit to keep it'),
+    expiresAt: z
+        .string()
+        .datetime()
+        .nullable()
+        .optional()
+        .describe('When the link stops accepting new redemptions; null never expires; omit to keep it'),
+    offerValidityDays: offerValidityDaysSchema.optional()
+});
+
+export class UpdateSignupLinkDto extends createZodDto(updateSignupLinkSchema) {}
 
 export const signupLinkIdParamsSchema = z.object({
     id: z.string().uuid().describe('Signup link id')
@@ -89,6 +123,7 @@ export const signupLinkSchema = z.object({
     rules: z.array(discountRuleSchema).describe('Discount scale by paid cycle'),
     maxUses: z.number().int().nullable().describe('Redemption limit; null is unlimited'),
     expiresAt: z.string().datetime().nullable().describe('When the link stops accepting redemptions; null never expires'),
+    offerValidityDays: z.number().int().describe('Days the offer stays usable after a redemption'),
     status: z
         .enum([LINK_STATUSES.active, LINK_STATUSES.revoked, LINK_STATUSES.expired, LINK_STATUSES.exhausted])
         .describe('Whether the link still accepts redemptions'),

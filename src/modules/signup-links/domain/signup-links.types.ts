@@ -14,8 +14,6 @@ export const REDEMPTION_SOURCES = {
 
 export type RedemptionSource = (typeof REDEMPTION_SOURCES)[keyof typeof REDEMPTION_SOURCES];
 
-export const REDEMPTION_VALIDITY_DAYS: number = 30;
-
 export const REDEEM_REJECTIONS = {
     notOwner: 'not_owner',
     platformAccount: 'platform_account',
@@ -76,6 +74,16 @@ export interface LinkOfferInput {
     readonly rules: readonly DiscountRule[];
     readonly maxUses: number | null;
     readonly expiresAt: Date | null;
+    readonly offerValidityDays: number;
+}
+
+export interface LinkOfferPatch {
+    readonly label?: string;
+    readonly trial?: LinkTrial;
+    readonly rules?: readonly DiscountRule[];
+    readonly maxUses?: number | null;
+    readonly expiresAt?: Date | null;
+    readonly offerValidityDays?: number;
 }
 
 export const SIGNUP_LINK_LIMITS = {
@@ -84,5 +92,8 @@ export const SIGNUP_LINK_LIMITS = {
     maxPercent: 90,
     minTrialDays: 1,
     maxTrialDays: 60,
-    noCardMaxValidityDays: 90
+    noCardMaxValidityDays: 90,
+    minOfferValidityDays: 1,
+    maxOfferValidityDays: 365,
+    defaultOfferValidityDays: 30
 } as const;

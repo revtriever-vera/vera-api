@@ -86,6 +86,7 @@ export const PLATFORM_AUDIT_ACTIONS = {
     totpLocked: 'admin.totp_locked',
     totpReset: 'admin.totp_reset',
     signupLinkCreated: 'signup_link.created',
+    signupLinkUpdated: 'signup_link.updated',
     signupLinkRevoked: 'signup_link.revoked',
     accountViewed: 'account.viewed'
 } as const;
