@@ -28,6 +28,11 @@ export class CompaniesRepository extends GlobalRepository<'Companies'> {
         return row ?? null;
     }
 
+    public async markTrialStarted(id: string, at: Date): Promise<boolean> {
+        const rows: Company[] = await this.updateManyRows({ id, trialStartedAt: null }, { trialStartedAt: at, updatedAt: at });
+        return rows.length > 0;
+    }
+
     public async hardDeleteById(id: string): Promise<boolean> {
         return (await this.hardDeleteWhere({ id }, HARD_DELETE_BATCH)) > 0;
     }

@@ -34,7 +34,8 @@ const COMPANY: Company = {
     timezone: 'America/Sao_Paulo',
     createdAt: new Date(),
     updatedAt: new Date(),
-    deletedAt: null
+    deletedAt: null,
+    trialStartedAt: null
 };
 
 const SESSION: Session = {

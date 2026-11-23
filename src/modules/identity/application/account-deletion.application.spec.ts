@@ -38,7 +38,8 @@ const COMPANY: Company = {
     timezone: 'America/Sao_Paulo',
     createdAt: AT,
     updatedAt: AT,
-    deletedAt: null
+    deletedAt: null,
+    trialStartedAt: null
 };
 
 interface Options {

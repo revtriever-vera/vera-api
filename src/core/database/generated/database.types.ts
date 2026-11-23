@@ -279,6 +279,7 @@ export interface Companies {
     locale: Generated<string>;
     name: string;
     timezone: Generated<string>;
+    trialStartedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
 }
 
@@ -313,6 +314,8 @@ export interface CompanyProducts {
     source: string;
     startsAt: Timestamp;
     subscriptionId: string | null;
+    trialEndsAt: Timestamp | null;
+    trialNoticeSentAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
 }
 

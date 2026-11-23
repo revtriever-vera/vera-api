@@ -24,6 +24,10 @@ export class CompanyDomain {
         return this.companies.lockById(companyId);
     }
 
+    public async markTrialStarted(companyId: string, at: Date): Promise<boolean> {
+        return this.companies.markTrialStarted(companyId, at);
+    }
+
     public async eraseCompany(companyId: string): Promise<boolean> {
         return this.companies.hardDeleteById(companyId);
     }

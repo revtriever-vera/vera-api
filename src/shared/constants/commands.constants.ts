@@ -7,6 +7,7 @@ export const COMMAND_KEYS = {
     marketDataPtaxAfternoon: 'market-data-ptax-afternoon-command',
     bankConnectionsSyncDaily: 'bank-connections-sync-daily-command',
     plansPremiumEndedSweep: 'plans-premium-ended-sweep-command',
+    plansTrialSweep: 'plans-trial-sweep-command',
     identityMembersCleanup: 'identity-members-cleanup-command',
     usageCleanup: 'usage-cleanup-command',
     usageGauge: 'usage-gauge-command',

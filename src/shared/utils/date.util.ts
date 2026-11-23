@@ -95,6 +95,10 @@ export class DateUtil {
         return Math.floor((rightDay - leftDay) / DAY_MS);
     }
 
+    public static daysLeftUntil(endsAt: Date, now: Date = new Date()): number {
+        return Math.max(0, Math.ceil((endsAt.getTime() - now.getTime()) / DAY_MS));
+    }
+
     public static isSameCalendarDay(a: DateInput, b: DateInput): boolean {
         if (DateUtil.isMissing(a) || DateUtil.isMissing(b)) {
             return DateUtil.isMissing(a) && DateUtil.isMissing(b);

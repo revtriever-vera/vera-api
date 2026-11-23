@@ -42,3 +42,23 @@ export class PlanUnavailableError extends AppError {
         });
     }
 }
+
+export class TrialAlreadyUsedError extends AppError {
+    public constructor() {
+        super({
+            code: 'billing.trial_already_used',
+            status: 409,
+            detail: 'This account already had its free trial.'
+        });
+    }
+}
+
+export class TrialUnavailableError extends AppError {
+    public constructor() {
+        super({
+            code: 'billing.trial_unavailable',
+            status: 409,
+            detail: 'The account already has a Premium contract.'
+        });
+    }
+}

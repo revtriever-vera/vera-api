@@ -33,8 +33,12 @@ export const USAGE_UNITS = { costMicros: 'cost_micros' } as const;
 
 export const PLAN_KEYS = { free: 'free', premium: 'premium' } as const;
 
-export type ContractEndReason = 'canceled' | 'expired' | 'refunded' | 'account_deleted';
-export type ContractSource = 'subscription' | 'manual';
+export type ContractEndReason = 'canceled' | 'expired' | 'refunded' | 'account_deleted' | 'trial_ended';
+export type ContractSource = 'subscription' | 'manual' | 'trial';
+
+export const TRIAL_NOTICE_DAYS: number = 3;
+export const TRIAL_KINDS = { noCard: 'no_card' } as const;
+export type TrialKind = (typeof TRIAL_KINDS)[keyof typeof TRIAL_KINDS];
 
 export const NOTIFICATION_STATUSES = { pending: 'pending', done: 'done', failed: 'failed' } as const;
 export const MAX_NOTIFICATION_ATTEMPTS: number = 10;
@@ -56,6 +60,17 @@ export interface LimitRow {
 export interface OpenPremiumInput {
     readonly startsAt: Date;
     readonly subscriptionId: string;
+}
+
+export interface OpenTrialInput {
+    readonly startsAt: Date;
+    readonly days: number;
+}
+
+export interface TrialSnapshot {
+    readonly kind: TrialKind;
+    readonly endsAt: string;
+    readonly daysLeft: number;
 }
 
 export interface ClosePremiumInput {
