@@ -106,6 +106,26 @@ describe('a task do serviço', () => {
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('OTEL_EXPORTER_OTLP_HEADERS');
     });
 
+    it('liga o fake por padrão: driver no ambiente e nenhuma chave da Revtriever pedida ao SSM', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+
+        expect(api.Environment).toContainEqual({ Name: 'BILLING_ENGINE_DRIVER', Value: 'fake' });
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('REVTRIEVER_API_KEY');
+    });
+
+    it('com o driver revtriever, entrega a chave pelo SSM e o plano pelo ambiente', () => {
+        const billing = { driver: 'revtriever', apiUrl: 'https://api.example.test', planId: 'plan-x', gatewayConnectionId: null } as const;
+        const api: ContainerResource = container(taskContainers(appTemplate('prod', { billing }), 'vera-api-prod'), 'api');
+        const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
+
+        expect(api.Environment).toContainEqual({ Name: 'BILLING_ENGINE_DRIVER', Value: 'revtriever' });
+        expect(api.Environment).toContainEqual({ Name: 'REVTRIEVER_PLAN_ID', Value: 'plan-x' });
+        expect(plainNames).not.toContain('REVTRIEVER_API_KEY');
+        expect(plainNames).not.toContain('REVTRIEVER_GATEWAY_CONNECTION_ID');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('REVTRIEVER_API_KEY');
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/revtriever-api-key');
+    });
+
     it('lê o token do túnel do SSM', () => {
         const tunnel: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'cloudflared');
 

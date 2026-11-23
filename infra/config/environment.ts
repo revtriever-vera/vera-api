@@ -21,6 +21,13 @@ export interface SharedInfrastructureConfig {
     readonly openIdConnectProviderArn: string;
 }
 
+export interface BillingEnvironmentConfig {
+    readonly driver: 'fake' | 'revtriever';
+    readonly apiUrl: string | null;
+    readonly planId: string | null;
+    readonly gatewayConnectionId: string | null;
+}
+
 export interface EnvironmentConfig {
     readonly name: EnvironmentName;
     readonly account: string;
@@ -39,6 +46,7 @@ export interface EnvironmentConfig {
     readonly mailpit: MailpitEnvironmentConfig | null;
     readonly otlpEndpointParameter: string;
     readonly otlpHeadersParameter: string | null;
+    readonly billing: BillingEnvironmentConfig;
 }
 
 export interface MailpitSettings {
@@ -129,6 +137,28 @@ function hostPrefix(env: NodeJS.ProcessEnv): string {
     return value;
 }
 
+function optionalVariable(env: NodeJS.ProcessEnv, variable: string): string | null {
+    const value: string = (env[variable] ?? '').trim();
+    return value.length === 0 ? null : value;
+}
+
+function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
+    const driver: string = optionalVariable(env, 'BILLING_ENGINE_DRIVER') ?? 'fake';
+    if (driver !== 'fake' && driver !== 'revtriever') {
+        throw new Error('BILLING_ENGINE_DRIVER inválida: use fake ou revtriever');
+    }
+    const planId: string | null = optionalVariable(env, 'REVTRIEVER_PLAN_ID');
+    if (driver === 'revtriever' && planId === null) {
+        throw new Error('REVTRIEVER_PLAN_ID não definida: obrigatória com BILLING_ENGINE_DRIVER=revtriever');
+    }
+    return {
+        driver,
+        apiUrl: optionalVariable(env, 'REVTRIEVER_API_URL'),
+        planId,
+        gatewayConnectionId: optionalVariable(env, 'REVTRIEVER_GATEWAY_CONNECTION_ID')
+    };
+}
+
 function parseJson(variable: string, raw: string): unknown {
     try {
         return JSON.parse(raw);
@@ -184,7 +214,7 @@ function mailpit(settings: EnvironmentSettings, hosts: HostNaming): MailpitEnvir
 function operationalSettings(
     settings: EnvironmentSettings,
     hosts: HostNaming
-): Omit<EnvironmentConfig, 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'> {
+): Omit<EnvironmentConfig, 'billing' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'> {
     return {
         githubRepository: settings.githubRepository,
         githubSubjects: settings.githubSubjects,
@@ -212,6 +242,7 @@ export function fromEnvironment(name: EnvironmentName, env: NodeJS.ProcessEnv): 
         appHost: hostOf('app', settings, hosts),
         shared: shared(env, `SHARED_INFRA_${suffix}`),
         imagePullAccounts: imagePullAccounts(env),
+        billing: billing(env),
         ...operationalSettings(settings, hosts)
     };
 }
