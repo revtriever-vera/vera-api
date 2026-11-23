@@ -7,6 +7,7 @@ import { clampName, titleCase } from '../domain/series-lifecycle';
 import { detectedFieldsOf, desiredChargesOf, planSync, SeriesAction } from '../domain/series-sync';
 import { detectRecurring } from '../domain/recurring-detector';
 import { DetectedSeries, DetectorTransaction } from '../domain/recurring.types';
+import { RecurringAlertService } from './recurring-alert.service';
 import { DetectionCounts, RecurringLogService } from './recurring-log.service';
 import { RecurringDetectionInputService } from './recurring-detection-input.service';
 
@@ -26,6 +27,7 @@ export class RecurringDetectionService {
         private readonly domain: RecurringSeriesDomain,
         private readonly input: RecurringDetectionInputService,
         private readonly timezones: CompanyTimezoneService,
+        private readonly alerts: RecurringAlertService,
         private readonly logs: RecurringLogService
     ) {}
 
@@ -37,6 +39,7 @@ export class RecurringDetectionService {
         const detected: readonly DetectedSeries[] = detectRecurring(transactions);
         const labels: Map<string, string> = await this.input.labelsOf(detected.map(latestChargeOf));
         const counts: DetectionCounts = await this.apply(detected, labels, today, now);
+        await this.alerts.refresh(transactions, today);
         this.logs.detected(counts, Date.now() - startedAt);
         return counts;
     }

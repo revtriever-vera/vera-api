@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RecurringChargesRepository } from '../repositories/recurring-charges.repository';
 import { RecurringSeriesRepository } from '../repositories/recurring-series.repository';
 import { RecurringSuppressionsRepository } from '../repositories/recurring-suppressions.repository';
+import { SeriesCharges } from './recurring-alerts.types';
 import { toRecord } from './recurring-series.mapper';
 import { InvalidSeriesStateError, SeriesLimitReachedError, SeriesNotFoundError } from './recurring.errors';
 import {
@@ -136,6 +137,18 @@ export class RecurringSeriesDomain {
         }));
     }
 
+    public async chargesBySeries(seriesIds: readonly string[] | null): Promise<Map<string, SeriesCharges>> {
+        const rows: ChargeRow[] = seriesIds === null ? await this.charges.listAll() : await this.charges.listBySeriesIds(seriesIds);
+        const grouped: Map<string, SeriesCharges> = new Map<string, SeriesCharges>();
+        for (const row of rows) {
+            const entry: SeriesCharges = grouped.get(row.seriesId) ?? { chargeIds: [], duplicateIds: [], trialIds: [] };
+            const target: string[] | null = this.bucketOf(entry, row.role);
+            target?.push(row.transactionId);
+            grouped.set(row.seriesId, entry);
+        }
+        return grouped;
+    }
+
     public async storedSuppressions(): Promise<StoredSuppression[]> {
         const rows: SuppressionRow[] = await this.suppressions.listAll();
         return rows.map((row: SuppressionRow): StoredSuppression => ({
@@ -245,6 +258,16 @@ export class RecurringSeriesDomain {
         }
         await this.charges.setRole(link.id, CHARGE_ROLES.excluded);
         return true;
+    }
+
+    private bucketOf(entry: SeriesCharges, role: string): string[] | null {
+        if (role === CHARGE_ROLES.charge) {
+            return entry.chargeIds;
+        }
+        if (role === CHARGE_ROLES.duplicate) {
+            return entry.duplicateIds;
+        }
+        return role === CHARGE_ROLES.trial ? entry.trialIds : null;
     }
 
     private async syncCharges(seriesId: string, desired: readonly DesiredCharge[]): Promise<void> {

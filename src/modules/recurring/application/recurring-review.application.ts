@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { RecurrenceTransaction, TransactionReaderService } from '../../transactions/services/transaction-reader.service';
+import { RecurringAlertsDomain } from '../domain/recurring-alerts.domain';
 import { buildManualSeries, ManualSeries } from '../domain/manual-series';
 import { addDaysTo } from '../domain/recurring-dates';
 import { detectRecurring } from '../domain/recurring-detector';
@@ -24,7 +25,7 @@ import { RecurringDetectionInputService } from '../services/recurring-detection-
 import { RecurringDetectionService } from '../services/recurring-detection.service';
 import { RecurringLogService } from '../services/recurring-log.service';
 import { toSeriesView } from '../services/recurring-view.mapper';
-import { ConfirmedSeriesView, SeriesView } from '../validation/recurring.schemas';
+import { AlertSeenView, ConfirmedSeriesView, SeriesView } from '../validation/recurring.schemas';
 
 const BASE_CURRENCY: string = 'BRL';
 
@@ -64,6 +65,7 @@ function confirmationOf(record: RecurringSeriesRecord): Pick<ConfirmInput, 'name
 export class RecurringReviewApplication {
     public constructor(
         private readonly domain: RecurringSeriesDomain,
+        private readonly alerts: RecurringAlertsDomain,
         private readonly categoryRules: RecurringCategoryService,
         private readonly detection: RecurringDetectionService,
         private readonly input: RecurringDetectionInputService,
@@ -130,6 +132,12 @@ export class RecurringReviewApplication {
         const record: RecurringSeriesRecord = await this.domain.stop(id, STOPPED_BY.user, new Date());
         this.logs.written('stop', id);
         return toSeriesView(record);
+    }
+
+    public async markAlertSeen(id: string): Promise<AlertSeenView> {
+        await this.alerts.markSeen(id, new Date());
+        this.logs.written('alert_seen', id);
+        return { id, seen: true };
     }
 
     public async removeCharge(id: string, transactionId: string): Promise<void> {

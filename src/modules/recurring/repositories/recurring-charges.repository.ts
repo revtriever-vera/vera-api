@@ -18,6 +18,10 @@ export class RecurringChargesRepository extends TenantRepository<'RecurringCharg
         return this.findMany({}, { limit: CHARGES_LIMIT });
     }
 
+    public async listBySeriesIds(seriesIds: readonly string[]): Promise<ChargeRow[]> {
+        return seriesIds.length === 0 ? [] : this.findMany({ seriesId: [...seriesIds] }, { limit: CHARGES_LIMIT });
+    }
+
     public async listBySeries(seriesId: string): Promise<ChargeRow[]> {
         return this.findMany({ seriesId }, { limit: CHARGES_LIMIT });
     }

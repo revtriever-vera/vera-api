@@ -22,6 +22,10 @@ export class RecurringLogService {
         this.logService.info({ message: 'recurring detection finished', identifier: DETECT, meta: { ...counts, durationMs } });
     }
 
+    public alertsSynced(total: number): void {
+        this.logService.info({ message: 'recurring alerts synced', identifier: DETECT, meta: { total } });
+    }
+
     public written(action: string, seriesId: string): void {
         this.logService.info({ message: 'recurring series changed', identifier: WRITE, meta: { action, seriesId } });
     }

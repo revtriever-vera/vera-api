@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { ALERT_KINDS, CALENDAR_DEFAULT_DAYS, CALENDAR_MAX_DAYS } from '../domain/recurring-alerts.types';
 import { SERIES_KINDS, SERIES_NAME_MAX_LENGTH, SERIES_ORIGINS, SERIES_STATUSES, STOPPED_BY } from '../domain/recurring-series.types';
 import { CADENCES, VALUE_MODES } from '../domain/recurring.types';
 
@@ -122,3 +123,103 @@ export class SeriesIdParamsDto extends createZodDto(seriesIdParamsSchema) {}
 export class ChargeParamsDto extends createZodDto(chargeParamsSchema) {}
 
 export const detectPayloadSchema = z.object({ companyId: z.string().uuid() });
+
+const moneySchema = z.number().int();
+
+export const calendarQuerySchema = z.object({
+    days: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(CALENDAR_MAX_DAYS)
+        .default(CALENDAR_DEFAULT_DAYS)
+        .describe('How many days ahead to forecast, from today in the company time zone. Default 60, up to 90')
+});
+
+export const alertIdParamsSchema = z.object({ id: z.string().uuid().describe('Alert id') });
+
+export const lastChargeSchema = z.object({
+    transactionId: z.string().uuid(),
+    date: z.string().describe('YYYY-MM-DD'),
+    amountMinor: moneySchema.describe('Amount in BRL cents, positive')
+});
+
+export const itemViewSchema = seriesViewSchema.extend({
+    accountName: z.string().describe('Name of the financial account of the series'),
+    institutionName: z.string().nullable(),
+    accountKind: z.string().describe('`checking`, `savings`, `credit_card` or `other`'),
+    nextDate: z.string().nullable().describe('Next expected charge, YYYY-MM-DD. Null when the series is stopped or dismissed'),
+    monthlyEquivalentMinor: moneySchema.describe('What the series costs per month: weekly x52/12, biweekly x26/12, annual /12 and so on'),
+    lastCharges: z.array(lastChargeSchema).describe('Up to the 3 last charges. Filled only for the list "review"')
+});
+
+export const totalsSchema = z.object({
+    monthlyMinor: moneySchema.describe('Sum of the monthly equivalents of the confirmed series, in BRL cents'),
+    yearlyMinor: moneySchema.describe('`monthlyMinor` x 12'),
+    byKind: z
+        .object({
+            subscription: moneySchema,
+            bill: moneySchema,
+            other: moneySchema
+        })
+        .describe('Monthly total of the confirmed series by type'),
+    suggestions: z
+        .object({ count: z.number().int(), monthlyMinor: moneySchema })
+        .describe('Suggestions to review. They are not part of the total')
+});
+
+export const alertViewSchema = z.object({
+    id: z.string().describe('Row id for the stored alerts (uuid) or `<kind>:<seriesId>` for the ones computed from the date'),
+    kind: z
+        .nativeEnum(ALERT_KINDS)
+        .describe('`price_increase`, `duplicate_charge`, `duplicate_account`, `trial_converted`, `returned`, `still_using` or `renewal`'),
+    seriesId: z.string().uuid(),
+    seriesName: z.string(),
+    occurredOn: z.string().describe('Date of the charge that raised the alert, YYYY-MM-DD'),
+    canMarkSeen: z.boolean().describe('True when `POST /spending/recurring/alerts/{id}/seen` clears the alert'),
+    data: z
+        .record(z.string(), z.union([z.string(), z.number()]))
+        .describe(
+            'Numbers and dates for the text. price_increase: fromAmountMinor, toAmountMinor, percent, chargeDate. duplicate_charge: ' +
+                'firstDate, firstAmountMinor, secondDate, secondAmountMinor. duplicate_account: accountId, accountName, otherAccountId, ' +
+                'otherAccountName, otherSeriesId, amountMinor, otherAmountMinor. trial_converted: trialAmountMinor, firstAmountMinor, ' +
+                'chargeDate. returned: lastDate, returnDate, amountMinor, gapDays. still_using: chargeCount, amountMinor. renewal: ' +
+                'renewalDate, amountMinor, daysUntil'
+        )
+});
+
+export const overviewSchema = z.object({
+    totals: totalsSchema,
+    review: z.array(itemViewSchema).describe('Suggestions to review, without the ones snoozed'),
+    confirmed: z.array(itemViewSchema),
+    stopped: z.array(itemViewSchema),
+    dismissed: z.array(itemViewSchema).describe('Series the person said are not recurring; `restore` brings them back'),
+    alerts: z.array(alertViewSchema).describe('Alerts not marked as seen, newest first')
+});
+
+export const calendarEntrySchema = z.object({
+    date: z.string().describe('Expected date, YYYY-MM-DD'),
+    state: z.enum(['upcoming', 'missed']).describe('`missed`: the charge did not arrive within the tolerance of the expected date'),
+    seriesId: z.string().uuid(),
+    name: z.string(),
+    amountMinor: moneySchema.describe('Expected amount in BRL cents; an estimate when `isEstimate`'),
+    isEstimate: z.boolean().describe('True for variable series'),
+    isSuggestion: z.boolean().describe('True when the series was not confirmed yet'),
+    accountId: z.string().uuid(),
+    accountName: z.string(),
+    institutionName: z.string().nullable(),
+    accountKind: z.string().describe('`credit_card` means the real debit comes in the card bill, whose date the Vera does not predict')
+});
+
+export const calendarSchema = z.array(calendarEntrySchema);
+
+export const alertSeenSchema = z.object({ id: z.string().uuid(), seen: z.boolean() });
+
+export type ItemView = z.infer<typeof itemViewSchema>;
+export type AlertView = z.infer<typeof alertViewSchema>;
+export type OverviewView = z.infer<typeof overviewSchema>;
+export type CalendarEntryView = z.infer<typeof calendarEntrySchema>;
+export type AlertSeenView = z.infer<typeof alertSeenSchema>;
+
+export class CalendarQueryDto extends createZodDto(calendarQuerySchema) {}
+export class AlertIdParamsDto extends createZodDto(alertIdParamsSchema) {}
