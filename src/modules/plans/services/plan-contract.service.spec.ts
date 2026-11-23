@@ -17,7 +17,11 @@ beforeAll(() => {
 const STARTS_AT: Date = new Date('2026-11-06T12:00:00Z');
 
 function build(options: { mode?: string; open?: object | null; marked?: boolean } = {}) {
-    const plans = { openLineOf: vi.fn().mockResolvedValue(options.open ?? null), open: vi.fn().mockResolvedValue(true) };
+    const plans = {
+        openLineOf: vi.fn().mockResolvedValue(options.open ?? null),
+        open: vi.fn().mockResolvedValue(true),
+        convertCardTrial: vi.fn().mockResolvedValue(true)
+    };
     const trials = { markStarted: vi.fn().mockResolvedValue(options.marked ?? true) };
     const resolver = { mode: vi.fn().mockReturnValue(options.mode ?? 'hosted') };
     const catalog = { productOf: vi.fn().mockResolvedValue({ id: 'p1' }), priceCentsOf: vi.fn().mockResolvedValue(1490) };
@@ -71,5 +75,47 @@ describe('PlanContractService.trialOf', () => {
         expect(await trial.service.trialOf('premium')).toEqual({ endsAt, subscriptionId: 's1' });
         expect(await paid.service.trialOf('premium')).toBeNull();
         expect(await build().service.trialOf('premium')).toBeNull();
+    });
+});
+
+describe('PlanContractService card trial', () => {
+    const ENDS_AT: Date = new Date('2026-11-20T03:00:00Z');
+
+    it('opens a free card_trial contract ending at the first charge and spends the company trial', async () => {
+        const { service, plans, trials } = build();
+
+        expect(await service.openCardTrial('premium', { startsAt: STARTS_AT, endsAt: ENDS_AT, subscriptionId: 's1' })).toBe(true);
+
+        expect(trials.markStarted).toHaveBeenCalledWith(STARTS_AT);
+        expect(plans.open).toHaveBeenCalledWith('p1', 0, STARTS_AT, 'card_trial', 's1', ENDS_AT);
+    });
+
+    it('does nothing when a contract is already open, without spending the trial', async () => {
+        const { service, plans, trials } = build({ open: { id: 'l1' } });
+
+        expect(await service.openCardTrial('premium', { startsAt: STARTS_AT, endsAt: ENDS_AT, subscriptionId: 's1' })).toBe(false);
+
+        expect(trials.markStarted).not.toHaveBeenCalled();
+        expect(plans.open).not.toHaveBeenCalled();
+    });
+
+    it('refuses when the company already used its trial', async () => {
+        const { service, plans } = build({ marked: false });
+
+        await expect(
+            service.openCardTrial('premium', { startsAt: STARTS_AT, endsAt: ENDS_AT, subscriptionId: 's1' })
+        ).rejects.toBeInstanceOf(TrialAlreadyUsedError);
+        expect(plans.open).not.toHaveBeenCalled();
+    });
+
+    it('reads the card trial only from a card_trial line and converts it with the catalog price', async () => {
+        const card = build({ open: { source: 'card_trial', trialEndsAt: ENDS_AT, subscriptionId: 's1' } });
+        const noCard = build({ open: { source: 'trial', trialEndsAt: ENDS_AT, subscriptionId: 's1' } });
+
+        expect(await card.service.cardTrialOf('premium')).toEqual({ endsAt: ENDS_AT });
+        expect(await noCard.service.cardTrialOf('premium')).toBeNull();
+        expect(await build().service.cardTrialOf('premium')).toBeNull();
+        expect(await card.service.convertCardTrial('premium')).toBe(true);
+        expect(card.plans.convertCardTrial).toHaveBeenCalledWith('p1', 1490);
     });
 });

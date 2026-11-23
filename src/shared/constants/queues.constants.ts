@@ -62,7 +62,8 @@ export const MESSAGE_TYPES = {
     billingProvisioningRescueRequested: 'billing.provisioning-rescue.requested',
     billingEventsReplayRequested: 'billing.events-replay.requested',
     billingInvoicesReconcileRequested: 'billing.invoices-reconcile.requested',
-    billingStandingSweepRequested: 'billing.standing-sweep.requested'
+    billingStandingSweepRequested: 'billing.standing-sweep.requested',
+    billingTrialSweepRequested: 'billing.trial-sweep.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

@@ -206,4 +206,47 @@ describe('FakeBillingEngineDriver', () => {
         ]);
         expect(subscription.firstChargeDate).toBe('2026-12-01');
     });
+
+    it('com a primeira cobrança no futuro não emite fatura nem cobra depois do cartão, e a libera quando a data chega', async () => {
+        const { driver, delivered } = build();
+        const future: string = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const subscription = await driver.createSubscription(input({ firstChargeDate: future }));
+        const session = await driver.createCardCaptureSession(subscription.id, 'http://app.test/plan', 'k1');
+
+        await driver.saveTestCard(session.captureUrl.split('/').pop() ?? '');
+
+        expect(typesOf(delivered)).toEqual(['subscription.created', 'subscription.card_saved']);
+        expect((await driver.invoicesWithStatus('issued', 1)).total).toBe(0);
+
+        await driver.releaseFirstCharge(subscription.id);
+
+        expect(typesOf(delivered)).toEqual(['subscription.created', 'subscription.card_saved', 'invoice.issued', 'invoice.paid']);
+        await driver.releaseFirstCharge(subscription.id);
+        expect(delivered).toHaveLength(4);
+    });
+
+    it('com Pix e a primeira cobrança no futuro a fatura só sai quando a data é liberada', async () => {
+        const { driver, delivered } = build();
+        const future: string = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const subscription = await driver.createSubscription(input({ paymentMethod: 'pix', firstChargeDate: future }));
+
+        expect(typesOf(delivered)).toEqual(['subscription.created']);
+
+        await driver.releaseFirstCharge(subscription.id);
+
+        expect(typesOf(delivered)).toEqual(['subscription.created', 'invoice.issued']);
+    });
+
+    it('não libera a cobrança de assinatura cancelada nem de cartão ainda não salvo', async () => {
+        const { driver, delivered } = build();
+        const waiting = await driver.createSubscription(input());
+        const canceled = await driver.createSubscription(input({ idempotencyKey: 'vera-subscription-2', paymentMethod: 'pix' }));
+        await driver.cancelSubscription(canceled.id, 'cancel-1');
+        const before: number = delivered.length;
+
+        await driver.releaseFirstCharge(waiting.id);
+        await driver.releaseFirstCharge(canceled.id);
+
+        expect(delivered).toHaveLength(before);
+    });
 });

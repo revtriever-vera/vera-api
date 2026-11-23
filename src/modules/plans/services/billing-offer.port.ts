@@ -13,4 +13,5 @@ export interface BillingOfferSnapshot {
 
 export abstract class BillingOfferPort {
     public abstract offer(): Promise<BillingOfferSnapshot | null>;
+    public abstract trialStarted(at: Date): Promise<void>;
 }

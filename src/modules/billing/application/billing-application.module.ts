@@ -25,6 +25,7 @@ import { BillingMailerService } from '../services/billing-mailer.service';
 import { BillingMetricsService } from '../services/billing-metrics.service';
 import { BillingProvisioningService } from '../services/billing-provisioning.service';
 import { BillingStandingService } from '../services/billing-standing.service';
+import { BillingTrialService } from '../services/billing-trial.service';
 import { BillingSubscriptionSummary } from '../services/billing-subscription-summary';
 import { BillingViewMapper } from '../services/billing-view.mapper';
 import { RevtrieverEventIngestService } from '../services/revtriever-event-ingest.service';
@@ -65,6 +66,7 @@ import { SubscriptionApplication } from './subscription.application';
         BillingSweepService,
         BillingMailerService,
         BillingStandingService,
+        BillingTrialService,
         BillingViewMapper,
         RevtrieverWebhookVerifier,
         RevtrieverEventIngestService,

@@ -8,10 +8,18 @@ export class BillingOfferRegistry {
     public constructor(private readonly discovery: DiscoveryService) {}
 
     public async current(): Promise<BillingOfferSnapshot | null> {
-        const port: BillingOfferPort | undefined = this.discovery
+        const port: BillingOfferPort | undefined = this.port();
+        return port === undefined ? null : port.offer();
+    }
+
+    public async trialStarted(at: Date): Promise<void> {
+        await this.port()?.trialStarted(at);
+    }
+
+    private port(): BillingOfferPort | undefined {
+        return this.discovery
             .getProviders()
             .map((wrapper: InstanceWrapper): unknown => wrapper.instance)
             .find((instance: unknown): instance is BillingOfferPort => instance instanceof BillingOfferPort);
-        return port === undefined ? null : port.offer();
     }
 }

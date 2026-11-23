@@ -10,9 +10,12 @@ import {
     BillingEngineRejectedError,
     BillingProviderDisabledError,
     NotResumableError,
-    SelfHostedNotAvailableError
+    SelfHostedNotAvailableError,
+    TrialRequiresCardError
 } from '../domain/billing-engine.errors';
 import { PaymentMethod } from '../domain/billing-engine.types';
+import { BillingTrialService, CardTrialOffer } from './billing-trial.service';
+import { CardTrialDates, resumableUntilOf } from '../domain/billing-trial.rules';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
 import { BillingSubscription, PROVISIONING_STALE_MINUTES, SUBSCRIPTION_STATUSES, SWEEP_BATCH } from '../domain/billing.types';
 import { BillingEnginePort } from '../ports/billing-engine.port';
@@ -32,6 +35,7 @@ export class BillingCheckoutService {
         private readonly gate: PlanGateService,
         private readonly contracts: PlanContractService,
         private readonly provisioning: BillingProvisioningService,
+        private readonly trials: BillingTrialService,
         private readonly subscriptions: BillingSubscriptionDomain,
         private readonly logs: BillingLogService,
         private readonly metrics: BillingMetricsService
@@ -43,7 +47,16 @@ export class BillingCheckoutService {
         if ((await this.gate.planOf()) === 'premium' && trial?.subscriptionId !== null) {
             throw new AlreadySubscribedError();
         }
-        const row: BillingSubscription = await this.reservedRow(method, await this.firstChargeDateOf(trial));
+        const cardTrial: CardTrialOffer | null = await this.trials.offerOf();
+        if (cardTrial !== null && method !== 'card') {
+            throw new TrialRequiresCardError();
+        }
+        const dates: CardTrialDates | null = cardTrial === null ? null : await this.trials.datesOf(cardTrial, new Date());
+        const row: BillingSubscription = await this.reservedRow(
+            method,
+            dates?.firstChargeDate ?? (await this.firstChargeDateOf(trial)),
+            dates?.trialEndsAt ?? null
+        );
         const active: BillingSubscription = row.status === SUBSCRIPTION_STATUSES.pending ? await this.provisionCounting(row) : row;
         if (trial !== null) {
             await this.contracts.attachSubscription('premium', active.id);
@@ -56,16 +69,20 @@ export class BillingCheckoutService {
     public async resume(): Promise<void> {
         this.assertAvailable();
         const current: BillingSubscription | null = await this.subscriptions.findCurrent(this.engine.engine);
-        const paidThrough: Date | null = current?.status === SUBSCRIPTION_STATUSES.canceled ? current.paidThrough : null;
+        const paidThrough: Date | null = resumableUntilOf(current);
         if (current === null || paidThrough === null || new Date() >= paidThrough) {
             throw new NotResumableError();
         }
+        const trialDates: CardTrialDates | null =
+            current.trialEndsAt === null ? null : await this.trials.resumeDatesOf(current.trialEndsAt);
         const fresh: BillingSubscription = await this.reservedRow(
             current.paymentMethod === 'card' ? 'card' : 'pix',
-            DateUtil.onlyDateString(paidThrough)
+            trialDates?.firstChargeDate ?? DateUtil.onlyDateString(paidThrough),
+            trialDates?.trialEndsAt ?? null
         );
         const active: BillingSubscription = await this.provisionCounting(fresh);
         await this.provisioning.inheritCard(active);
+        await this.trials.carryOver(active);
         this.logs.subscription('resumed', active.id, active.paymentMethod);
     }
 
@@ -104,12 +121,13 @@ export class BillingCheckoutService {
         return trialEnd !== null && trialEnd > today ? trialEnd : today;
     }
 
-    private async reservedRow(method: PaymentMethod, firstChargeDate: string): Promise<BillingSubscription> {
+    private async reservedRow(method: PaymentMethod, firstChargeDate: string, trialEndsAt: Date | null): Promise<BillingSubscription> {
         const reserved: BillingSubscription | null = await this.subscriptions.reserve({
             engine: this.engine.engine,
             planId: this.config.REVTRIEVER_PLAN_ID ?? FAKE_PLAN_ID,
             paymentMethod: method,
-            firstChargeDate
+            firstChargeDate,
+            trialEndsAt
         });
         if (reserved !== null) {
             return reserved;

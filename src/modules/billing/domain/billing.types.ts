@@ -31,7 +31,7 @@ export type InvoiceRowStatus = (typeof INVOICE_STATUSES)[keyof typeof INVOICE_ST
 export const EVENT_STATUSES = { received: 'received', processed: 'processed', ignored: 'ignored', failed: 'failed' } as const;
 export type EventRowStatus = (typeof EVENT_STATUSES)[keyof typeof EVENT_STATUSES];
 
-export const STANDING_STATUSES = { active: 'active', pastDue: 'past_due', expired: 'expired' } as const;
+export const STANDING_STATUSES = { active: 'active', trialing: 'trialing', pastDue: 'past_due', expired: 'expired' } as const;
 export type StandingStatus = (typeof STANDING_STATUSES)[keyof typeof STANDING_STATUSES];
 
 export const STANDING_REASONS = {
@@ -39,7 +39,9 @@ export const STANDING_REASONS = {
     graceExpired: 'grace_expired',
     invoicePaid: 'invoice_paid',
     canceledPeriodEnded: 'canceled_period_ended',
-    refunded: 'refunded'
+    refunded: 'refunded',
+    trialStarted: 'trial_started',
+    trialCanceled: 'trial_canceled'
 } as const;
 export type StandingReason = (typeof STANDING_REASONS)[keyof typeof STANDING_REASONS];
 
@@ -47,7 +49,9 @@ export const NOTIFICATION_KINDS = {
     activated: 'premium_activated',
     pastDue: 'premium_past_due',
     canceled: 'premium_canceled',
-    ended: 'premium_ended'
+    ended: 'premium_ended',
+    trialStarted: 'premium_trial_started',
+    trialEnding: 'premium_trial_ending'
 } as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[keyof typeof NOTIFICATION_KINDS];
 
@@ -71,12 +75,15 @@ export const INVOICES_PAGE_SIZE: number = 12;
 export const CAPTURE_SESSIONS_PER_HOUR: number = 5;
 export const MAX_CHARGE_DAY: number = 28;
 export const SWEEP_BATCH: number = 500;
+export const CARD_CONFIRM_HOURS: number = 24;
+export const TRIAL_ENDING_NOTICE_DAYS: number = 3;
 
 export interface NewSubscriptionDraft {
     readonly engine: BillingEngine;
     readonly planId: string;
     readonly paymentMethod: PaymentMethod;
     readonly firstChargeDate: string | null;
+    readonly trialEndsAt: Date | null;
 }
 
 export interface InvoiceMirror {

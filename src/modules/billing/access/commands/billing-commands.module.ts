@@ -4,6 +4,7 @@ import { BillingEventsReplayCommand, BillingEventsReplayTickHandler } from './bi
 import { BillingInvoicesReconcileCommand, BillingInvoicesReconcileTickHandler } from './billing-invoices-reconcile.command';
 import { BillingProvisioningRescueCommand, BillingProvisioningRescueTickHandler } from './billing-provisioning-rescue.command';
 import { BillingStandingSweepCommand, BillingStandingSweepTickHandler } from './billing-standing-sweep.command';
+import { BillingTrialSweepCommand, BillingTrialSweepTickHandler } from './billing-trial-sweep.command';
 
 @Module({
     imports: [BillingApplicationModule],
@@ -15,7 +16,9 @@ import { BillingStandingSweepCommand, BillingStandingSweepTickHandler } from './
         BillingInvoicesReconcileCommand,
         BillingInvoicesReconcileTickHandler,
         BillingStandingSweepCommand,
-        BillingStandingSweepTickHandler
+        BillingStandingSweepTickHandler,
+        BillingTrialSweepCommand,
+        BillingTrialSweepTickHandler
     ]
 })
 export class BillingCommandsModule {}

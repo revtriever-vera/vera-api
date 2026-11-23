@@ -17,7 +17,7 @@ export class CompanyBillingStandingDomain {
     }
 
     public async countOpenByStatus(): Promise<Record<StandingStatus, number>> {
-        const totals: Record<StandingStatus, number> = { active: 0, past_due: 0, expired: 0 };
+        const totals: Record<StandingStatus, number> = { active: 0, trialing: 0, past_due: 0, expired: 0 };
         for (const status of this.standings.statuses()) {
             totals[status] = await this.standings.countOpenAcrossTenants(status);
         }

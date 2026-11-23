@@ -90,6 +90,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         PlanGateService,
         PlanContractService,
         PlanLimitService,
+        BillingOfferRegistry,
         PremiumGuard
     ]
 })

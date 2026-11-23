@@ -14,10 +14,19 @@ export interface BillingNotice {
     readonly subjectId: string;
     readonly paidThrough?: Date | null;
     readonly graceEndsAt?: Date | null;
+    readonly trialEndsAt?: Date | null;
+    readonly amountCents?: number;
+    readonly cardLast4?: string | null;
 }
+
+const CENTS_PER_UNIT: number = 100;
 
 function dateOf(at: Date | null | undefined, locale: AppLocale, timeZone: string): string {
     return at === null || at === undefined ? '' : new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone }).format(at);
+}
+
+function amountOf(cents: number | undefined, locale: AppLocale): string {
+    return cents === undefined ? '' : new Intl.NumberFormat(locale, { style: 'currency', currency: 'BRL' }).format(cents / CENTS_PER_UNIT);
 }
 
 @Injectable()
@@ -44,7 +53,10 @@ export class BillingMailerService {
                     firstName: owner.firstName,
                     url: `${this.config.APP_URL}/settings/plan`,
                     paidThrough: dateOf(notice.paidThrough, owner.locale, timeZone),
-                    graceEndsAt: dateOf(notice.graceEndsAt, owner.locale, timeZone)
+                    graceEndsAt: dateOf(notice.graceEndsAt, owner.locale, timeZone),
+                    trialEndsAt: dateOf(notice.trialEndsAt, owner.locale, timeZone),
+                    amount: amountOf(notice.amountCents, owner.locale),
+                    cardLast4: notice.cardLast4 ?? ''
                 },
                 to: { email: owner.email, name: owner.firstName },
                 reference: `${notice.subjectId}-${owner.userId}`

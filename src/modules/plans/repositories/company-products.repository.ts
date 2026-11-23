@@ -6,6 +6,7 @@ import { IdUtil } from '../../../shared/utils/id.util';
 import { CompanyProduct, ContractEndReason, ContractSource } from '../domain/plans.types';
 
 const TRIAL_SOURCE: ContractSource = 'trial';
+const CARD_TRIAL_SOURCE: ContractSource = 'card_trial';
 
 export interface NewContractLine {
     readonly productId: string;
@@ -49,7 +50,7 @@ export class CompanyProductsRepository extends BareTenantRepository<'CompanyProd
 
     public async attachSubscription(productId: string, subscriptionId: string): Promise<boolean> {
         const rows: CompanyProduct[] = await this.updateManyRows(
-            { productId, endsAt: null, source: TRIAL_SOURCE },
+            { productId, endsAt: null, source: [TRIAL_SOURCE, CARD_TRIAL_SOURCE] },
             { subscriptionId, updatedAt: new Date() }
         );
         return rows.length > 0;
@@ -66,6 +67,14 @@ export class CompanyProductsRepository extends BareTenantRepository<'CompanyProd
     public async convertTrial(productId: string, subscriptionId: string, priceCents: number): Promise<boolean> {
         const rows: CompanyProduct[] = await this.updateManyRows(
             { productId, endsAt: null, source: TRIAL_SOURCE, subscriptionId },
+            { source: 'subscription', priceCents, updatedAt: new Date() }
+        );
+        return rows.length > 0;
+    }
+
+    public async convertCardTrial(productId: string, priceCents: number): Promise<boolean> {
+        const rows: CompanyProduct[] = await this.updateManyRows(
+            { productId, endsAt: null, source: CARD_TRIAL_SOURCE },
             { source: 'subscription', priceCents, updatedAt: new Date() }
         );
         return rows.length > 0;

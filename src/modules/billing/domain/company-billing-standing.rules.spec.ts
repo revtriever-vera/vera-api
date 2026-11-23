@@ -46,6 +46,8 @@ function subscription(overrides: Partial<BillingSubscription>): BillingSubscript
         canceledAt: null,
         cardBrand: null,
         cardLast4: null,
+        trialEndsAt: null,
+        trialStartedAt: null,
         createdAt: NOW,
         updatedAt: NOW,
         ...overrides
@@ -101,5 +103,49 @@ describe('standingTransitionOf', () => {
         const paid: BillingInvoice = invoice({ status: 'paid', paidAt: NOW });
 
         expect(standingTransitionOf([paid], subscription({}), NOW, GRACE_DAYS).status).toBe('active');
+    });
+
+    describe('teste com cartão', () => {
+        const TRIAL_END: Date = new Date('2026-11-17T03:00:00Z');
+        const running = (overrides: Partial<BillingSubscription> = {}): BillingSubscription =>
+            subscription({ paidThrough: null, trialEndsAt: TRIAL_END, trialStartedAt: new Date('2026-11-10T00:00:00Z'), ...overrides });
+
+        it('com o cartão confirmado e a primeira cobrança no futuro é trialing', () => {
+            expect(standingTransitionOf([], running(), NOW, GRACE_DAYS)).toEqual({ status: 'trialing', reason: 'trial_started' });
+        });
+
+        it('antes de o cartão ser confirmado a situação ainda é ativa', () => {
+            expect(standingTransitionOf([], running({ trialStartedAt: null }), NOW, GRACE_DAYS).status).toBe('active');
+        });
+
+        it('a fatura do ciclo 1 paga leva a active', () => {
+            const paid: BillingInvoice = invoice({ status: 'paid', paidAt: NOW });
+
+            expect(standingTransitionOf([paid], running({ firstPaidAt: NOW }), NOW, GRACE_DAYS).status).toBe('active');
+        });
+
+        it('a primeira fatura vencida em aberto leva a past_due e depois a expired na carência', () => {
+            const overdue: BillingInvoice = invoice({ status: 'overdue', overdueAt: new Date('2026-11-09T00:00:00Z') });
+            const late: Date = new Date('2026-11-20T00:00:00Z');
+
+            expect(
+                standingTransitionOf([overdue], running({ trialEndsAt: new Date('2026-11-09T00:00:00Z') }), NOW, GRACE_DAYS).status
+            ).toBe('past_due');
+            expect(standingTransitionOf([overdue], running({ trialEndsAt: new Date('2026-11-09T00:00:00Z') }), late, GRACE_DAYS)).toEqual({
+                status: 'expired',
+                reason: 'grace_expired'
+            });
+        });
+
+        it('cancelada no teste segue trialing até trialEndsAt e expira depois com trial_canceled', () => {
+            const canceled: BillingSubscription = running({ status: 'canceled' });
+
+            expect(standingTransitionOf([], canceled, NOW, GRACE_DAYS).status).toBe('trialing');
+            expect(standingTransitionOf([], canceled, TRIAL_END, GRACE_DAYS)).toEqual({ status: 'expired', reason: 'trial_canceled' });
+        });
+
+        it('depois de trialEndsAt sem pagamento nem fatura vencida a situação volta a ser ativa', () => {
+            expect(standingTransitionOf([], running(), new Date('2026-11-18T00:00:00Z'), GRACE_DAYS).status).toBe('active');
+        });
     });
 });

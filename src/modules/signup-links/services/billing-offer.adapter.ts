@@ -13,6 +13,10 @@ export class BillingOfferAdapter extends BillingOfferPort {
         super();
     }
 
+    public async trialStarted(at: Date): Promise<void> {
+        await this.redemptions.markTrialStarted(at);
+    }
+
     public async offer(): Promise<BillingOfferSnapshot | null> {
         const redemption: SignupRedemption | null = await this.redemptions.current();
         if (redemption === null || redemption.expiresAt.getTime() <= Date.now()) {

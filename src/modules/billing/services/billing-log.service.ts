@@ -8,7 +8,8 @@ const EVENTS: string = 'billing-events';
 const PRICE: string = 'billing-price';
 const RECONCILE: string = 'billing-reconcile';
 
-export type SubscriptionLogAction = 'subscribed' | 'activated' | 'past_due' | 'canceled' | 'ended' | 'resumed';
+export type SubscriptionLogAction =
+    'subscribed' | 'activated' | 'past_due' | 'canceled' | 'ended' | 'resumed' | 'trial_started' | 'trial_unconfirmed_canceled';
 
 export interface EngineCallLog {
     readonly operation: BillingOperation;

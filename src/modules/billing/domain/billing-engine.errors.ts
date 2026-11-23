@@ -63,6 +63,16 @@ export class AlreadySubscribedError extends AppError {
     }
 }
 
+export class TrialRequiresCardError extends AppError {
+    public constructor() {
+        super({
+            code: 'billing.trial_requires_card',
+            status: 422,
+            detail: 'The trial of this offer starts with a saved card; Pix is not accepted.'
+        });
+    }
+}
+
 export class NotResumableError extends AppError {
     public constructor() {
         super({ code: 'billing.not_resumable', status: 409, detail: 'There is no canceled subscription that can be resumed.' });

@@ -24,7 +24,8 @@ export const COMMAND_KEYS = {
     billingProvisioningRescue: 'billing-provisioning-rescue-command',
     billingEventsReplay: 'billing-events-replay-command',
     billingInvoicesReconcile: 'billing-invoices-reconcile-command',
-    billingStandingSweep: 'billing-standing-sweep-command'
+    billingStandingSweep: 'billing-standing-sweep-command',
+    billingTrialSweep: 'billing-trial-sweep-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];

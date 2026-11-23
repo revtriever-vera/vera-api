@@ -42,7 +42,8 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
                 status: SUBSCRIPTION_STATUSES.pending,
                 planId: draft.planId,
                 paymentMethod: draft.paymentMethod,
-                firstChargeDate: draft.firstChargeDate
+                firstChargeDate: draft.firstChargeDate,
+                trialEndsAt: draft.trialEndsAt
             })
             .onConflict((conflict) => conflict.doNothing())
             .returningAll()
@@ -112,6 +113,36 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
         await this.updateRow(current.id, { paidThrough: furthest, firstPaidAt: current.firstPaidAt ?? paidAt, updatedAt: new Date() });
     }
 
+    public async markTrialStarted(id: string, at: Date): Promise<boolean> {
+        const rows: BillingSubscription[] = await this.updateManyRows({ id, trialStartedAt: null }, { trialStartedAt: at, updatedAt: at });
+        return rows.length > 0;
+    }
+
+    public async listUnconfirmedTrialsAcrossTenants(before: Date, limit: number): Promise<BillingSubscription[]> {
+        return this.selectSkipConstraint()
+            .selectAll()
+            .where('status', '=', SUBSCRIPTION_STATUSES.active)
+            .where('trialEndsAt', 'is not', null)
+            .where('trialStartedAt', 'is', null)
+            .where('createdAt', '<', before)
+            .orderBy('createdAt')
+            .limit(limit)
+            .execute();
+    }
+
+    public async listEndingTrialsAcrossTenants(now: Date, until: Date, limit: number): Promise<BillingSubscription[]> {
+        return this.selectSkipConstraint()
+            .selectAll()
+            .where('status', '=', SUBSCRIPTION_STATUSES.active)
+            .where('trialStartedAt', 'is not', null)
+            .where('firstPaidAt', 'is', null)
+            .where('trialEndsAt', '>', now)
+            .where('trialEndsAt', '<=', until)
+            .orderBy('trialEndsAt')
+            .limit(limit)
+            .execute();
+    }
+
     public async findByEngineSubscriptionIdAcrossTenants(
         engine: BillingEngine,
         engineSubscriptionId: string
@@ -141,7 +172,17 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
             .select('companyId')
             .distinct()
             .where('status', '=', SUBSCRIPTION_STATUSES.canceled)
-            .where('paidThrough', '<', now)
+            .where((eb) =>
+                eb.or([
+                    eb('paidThrough', '<', now),
+                    eb.and([
+                        eb('paidThrough', 'is', null),
+                        eb('firstPaidAt', 'is', null),
+                        eb('trialStartedAt', 'is not', null),
+                        eb('trialEndsAt', '<', now)
+                    ])
+                ])
+            )
             .where(withoutExpiredStanding)
             .limit(limit)
             .execute();

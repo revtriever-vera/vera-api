@@ -81,12 +81,23 @@ export class BillingStandingService {
         await this.mailer.notify({ kind: NOTIFICATION_KINDS.pastDue, subjectId: oldest?.id ?? subscription.id, graceEndsAt });
     }
 
+    private endOf(decision: StandingDecision, subscription: BillingSubscription, now: Date): Date {
+        if (decision.reason === STANDING_REASONS.canceledPeriodEnded) {
+            return subscription.paidThrough ?? now;
+        }
+        return decision.reason === STANDING_REASONS.trialCanceled ? (subscription.trialEndsAt ?? now) : now;
+    }
+
+    private endReasonOf(decision: StandingDecision): 'canceled' | 'expired' | 'trial_canceled' {
+        if (decision.reason === STANDING_REASONS.canceledPeriodEnded) {
+            return 'canceled';
+        }
+        return decision.reason === STANDING_REASONS.trialCanceled ? 'trial_canceled' : 'expired';
+    }
+
     private async end(decision: StandingDecision, subscription: BillingSubscription, now: Date): Promise<void> {
-        const endsAt: Date = decision.reason === STANDING_REASONS.canceledPeriodEnded ? (subscription.paidThrough ?? now) : now;
-        const closed: boolean = await this.contracts.close('premium', {
-            endsAt,
-            reason: decision.reason === STANDING_REASONS.canceledPeriodEnded ? 'canceled' : 'expired'
-        });
+        const endsAt: Date = this.endOf(decision, subscription, now);
+        const closed: boolean = await this.contracts.close('premium', { endsAt, reason: this.endReasonOf(decision) });
         this.logs.subscription('ended', subscription.id, subscription.paymentMethod);
         if (closed) {
             await this.mailer.notify({ kind: NOTIFICATION_KINDS.ended, subjectId: `${subscription.id}-${endsAt.toISOString()}` });
