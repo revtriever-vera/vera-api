@@ -40,7 +40,7 @@ async function evidenceFor(item: EvalCase): Promise<string> {
     if (item.task === 'ask_vera_step') {
         return `Question from the person: ${item.question}\nData the tools can return: ${await evidenceOf(item.locale)}`;
     }
-    return serializeContext(item.context);
+    return `${serializeContext(item.context)}\nThe system replaces each marker [[kind:key]] with the name: ${JSON.stringify(item.labels)}`;
 }
 
 export async function judge(engine: Engine, spec: LlmTaskSpec, item: EvalCase, rendered: readonly string[]): Promise<JudgeVerdict> {

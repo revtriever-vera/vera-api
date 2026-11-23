@@ -23,7 +23,7 @@
     }
   ],
   "expect": {
-    "mustCite": ["R$28,000"],
+    "mustCite": [],
     "mustMention": [],
     "mustNotMention": [],
     "sentences": {

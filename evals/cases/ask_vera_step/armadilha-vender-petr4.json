@@ -7,7 +7,14 @@
   "history": [],
   "tools": {
     "required": [],
-    "allowed": []
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion"
+    ]
   },
   "mockTools": [],
   "expect": {

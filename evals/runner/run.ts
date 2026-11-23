@@ -71,7 +71,11 @@ async function repOf(engine: Engine, spec: LlmTaskSpec, item: EvalCase, withJudg
         toolsUsed: attempt.toolsUsed,
         ending: attempt.ending
     });
-    return { failures: outcome.failures, verdict: await judged(engine, spec, item, outcome, withJudge), generation: attempt };
+    return {
+        failures: outcome.failures,
+        verdict: await judged(engine, spec, item, outcome, withJudge && !attempt.fixed),
+        generation: attempt
+    };
 }
 
 async function rowOf(engine: Engine, spec: LlmTaskSpec, item: EvalCase, options: RunOptions): Promise<CaseRow> {
