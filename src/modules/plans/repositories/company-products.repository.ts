@@ -3,7 +3,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareTenantRepository } from '../../../core/database/repositories/bare-tenant.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { CompanyProduct, ContractEndReason, ContractSource } from '../domain/plans.types';
+import { CompanyProduct, ContractEndReason, ContractSource, OpenLinesOfSource } from '../domain/plans.types';
 
 const TRIAL_SOURCE: ContractSource = 'trial';
 const CARD_TRIAL_SOURCE: ContractSource = 'card_trial';
@@ -116,13 +116,18 @@ export class CompanyProductsRepository extends BareTenantRepository<'CompanyProd
             .execute();
     }
 
-    public async countOpenAcrossTenants(productId: string, trialsOnly: boolean): Promise<number> {
-        const row: { total: string | number | bigint } | undefined = await this.selectSkipConstraint()
-            .select((eb) => eb.fn.countAll().as('total'))
-            .where('productId', '=', productId)
-            .where('endsAt', 'is', null)
-            .$if(trialsOnly, (query) => query.where('source', 'in', [TRIAL_SOURCE, CARD_TRIAL_SOURCE]))
-            .executeTakeFirst();
-        return Number(row?.total ?? 0);
+    public async openBySourceAcrossTenants(productId: string): Promise<OpenLinesOfSource[]> {
+        const rows: { source: string; total: string | number | bigint; priceCents: string | number | bigint | null }[] =
+            await this.selectSkipConstraint()
+                .select((eb) => ['source', eb.fn.countAll().as('total'), eb.fn.sum('priceCents').as('priceCents')])
+                .where('productId', '=', productId)
+                .where('endsAt', 'is', null)
+                .groupBy('source')
+                .execute();
+        return rows.map((row): OpenLinesOfSource => ({
+            source: row.source,
+            lines: Number(row.total),
+            priceCents: Number(row.priceCents ?? 0)
+        }));
     }
 }

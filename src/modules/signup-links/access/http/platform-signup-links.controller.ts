@@ -93,6 +93,11 @@ export class PlatformSignupLinksController {
         example: { type: 'signup_links.not_found', title: 'SignupLinkNotFoundError', status: 404 }
     })
     @ApiProblemResponse({
+        status: 409,
+        description: 'The link is revoked and cannot be edited (signup_links.revoked)',
+        example: { type: 'signup_links.revoked', title: 'SignupLinkRevokedError', status: 409 }
+    })
+    @ApiProblemResponse({
         status: 422,
         description: 'The resulting offer breaks a rule of the platform (signup_links.invalid_offer)',
         example: {

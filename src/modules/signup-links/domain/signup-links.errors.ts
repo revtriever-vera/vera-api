@@ -10,6 +10,16 @@ export class SignupLinkNotFoundError extends AppError {
     }
 }
 
+export class SignupLinkRevokedError extends AppError {
+    public constructor() {
+        super({
+            code: 'signup_links.revoked',
+            status: 409,
+            detail: 'A revoked signup link cannot be edited.'
+        });
+    }
+}
+
 export class SignupLinkInvalidOfferError extends AppError {
     public constructor(reason: string) {
         super({

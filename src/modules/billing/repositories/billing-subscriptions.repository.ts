@@ -145,6 +145,19 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
             .execute();
     }
 
+    public async listUnpaidWithFirstChargeAcrossTenants(from: string, until: string, limit: number): Promise<BillingSubscription[]> {
+        return this.selectSkipConstraint()
+            .selectAll()
+            .where('status', '=', SUBSCRIPTION_STATUSES.active)
+            .where('trialEndsAt', 'is', null)
+            .where('firstPaidAt', 'is', null)
+            .where('firstChargeDate', '>=', from)
+            .where('firstChargeDate', '<=', until)
+            .orderBy('firstChargeDate')
+            .limit(limit)
+            .execute();
+    }
+
     public async findByEngineSubscriptionIdAcrossTenants(
         engine: BillingEngine,
         engineSubscriptionId: string

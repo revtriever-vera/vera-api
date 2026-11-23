@@ -53,4 +53,12 @@ export class SignupLinksRepository extends BareGlobalRepository<'SignupLinks'> {
             updatedAt: now
         });
     }
+
+    public async addFunnel(locked: SignupLink, change: { trials: number; subscriptions: number }, now: Date): Promise<SignupLink | null> {
+        return this.updateRow(locked.id, {
+            trialCount: Math.max(0, locked.trialCount + change.trials),
+            subscriptionCount: Math.max(0, locked.subscriptionCount + change.subscriptions),
+            updatedAt: now
+        });
+    }
 }

@@ -11,6 +11,7 @@ import {
 } from '../../identity/services/platform-account-reader.service';
 import { PlatformAuditRecorderService } from '../../identity/services/platform-audit-recorder.service';
 import { PlatformPlanOfCompany, PlatformPlanOverview, PlatformPlanReaderService } from '../../plans/services/platform-plan-reader.service';
+import { PlatformBillingReaderService } from '../../billing/services/platform-billing-reader.service';
 import { PlatformAccountNotFoundError } from '../domain/platform-admin.errors';
 import {
     ACCESS_LAYERS,
@@ -32,6 +33,7 @@ export class PlatformAccountsApplication {
     public constructor(
         private readonly accounts: PlatformAccountReaderService,
         private readonly plans: PlatformPlanReaderService,
+        private readonly billing: PlatformBillingReaderService,
         private readonly audit: PlatformAuditRecorderService,
         private readonly context: AppContext
     ) {}
@@ -41,7 +43,15 @@ export class PlatformAccountsApplication {
         const plans: PlatformPlanOverview = await this.plans.overview();
         return {
             accounts: { total: customers.total, createdLast30Days: customers.createdSince },
-            plans: { free: Math.max(customers.total - plans.premium, 0), premium: plans.premium, trials: plans.trials }
+            plans: {
+                free: Math.max(customers.total - plans.premium, 0),
+                premium: plans.premium,
+                trials: plans.trials,
+                trialsWithCard: plans.cardTrials,
+                trialsWithoutCard: plans.noCardTrials,
+                pastDue: await this.billing.pastDueCount()
+            },
+            revenue: { estimatedMonthlyCents: plans.estimatedMonthlyRevenueCents }
         };
     }
 

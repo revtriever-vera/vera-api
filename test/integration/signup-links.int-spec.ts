@@ -351,6 +351,9 @@ describe('links de cadastro (hospedada)', () => {
 
         expect((await request('DELETE', `/platform/signup-links/${created.id}`, undefined, adminToken)).status).toBe(204);
         expect((await request('DELETE', `/platform/signup-links/${created.id}`, undefined, adminToken)).status).toBe(204);
+        const edit: Response = await request('PATCH', `/platform/signup-links/${created.id}`, { label: 'Depois de revogar' }, adminToken);
+        expect(edit.status).toBe(409);
+        expect(((await edit.json()) as ProblemBody).type).toBe('signup_links.revoked');
         const revoked: Response = await request('GET', `/signup-links/${created.token}`);
         const unknown: Response = await request('GET', `/signup-links/${'x'.repeat(32)}`);
         expect(revoked.status).toBe(404);

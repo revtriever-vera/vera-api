@@ -34,6 +34,12 @@ export const USAGE_UNITS = { costMicros: 'cost_micros' } as const;
 export const PLAN_KEYS = { free: 'free', premium: 'premium' } as const;
 
 export type ContractEndReason = 'canceled' | 'expired' | 'refunded' | 'account_deleted' | 'trial_ended' | 'trial_canceled';
+export interface OpenLinesOfSource {
+    readonly source: string;
+    readonly lines: number;
+    readonly priceCents: number;
+}
+
 export type ContractSource = 'subscription' | 'manual' | 'trial' | 'card_trial';
 
 export const TRIAL_NOTICE_DAYS: number = 3;
