@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../core/http/api-zod.decorators';
 import { PlatformOnly } from '../../identity/services/platform-only.decorator';
@@ -78,6 +78,7 @@ export class PlatformAccountsController {
             'and the layers, in the same transaction as the read: no audit entry, no data. Keys, credentials, tokens, card data and WhatsApp ' +
             'conversations never come out. The account owner sees the access in "Support accesses".'
     })
+    @ApiParam({ name: 'id', format: 'uuid', description: 'Account id' })
     @ApiZodBody(accessRequestSchema)
     @ApiZodResponse({ status: 200, description: 'The layers asked for', schema: accessResponseSchema })
     @ApiProblemResponse({

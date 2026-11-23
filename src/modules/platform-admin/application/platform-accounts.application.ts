@@ -17,6 +17,7 @@ import {
     AccessLayer,
     AccessRequestDto,
     AccessResponseView,
+    AccountDataView,
     AccountItemView,
     AccountListView,
     AccountsQueryDto,
@@ -80,7 +81,7 @@ export class PlatformAccountsApplication {
         if (!layers.includes(ACCESS_LAYERS.data)) {
             return response;
         }
-        return { ...response, data: await this.accounts.dataSections(company.id) };
+        return { ...response, data: (await this.accounts.dataSections(company.id)) as AccountDataView };
     }
 
     private async summaryOf(company: CustomerAccount): Promise<AccountSummaryView> {
@@ -92,9 +93,9 @@ export class PlatformAccountsApplication {
             locale: company.locale,
             timezone: company.timezone,
             people: people.map((person: CustomerMember) => ({ ...person, joinedAt: person.joinedAt.toISOString() })),
-            billing: sections['billing'] ?? null,
-            offer: sections['signup_offer'] ?? null,
-            usage: sections['usage'] ?? null
+            billing: (sections['billing'] ?? null) as AccountSummaryView['billing'],
+            offer: (sections['signup_offer'] ?? null) as AccountSummaryView['offer'],
+            usage: (sections['usage'] ?? null) as AccountSummaryView['usage']
         };
     }
 

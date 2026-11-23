@@ -89,27 +89,304 @@ const memberSchema = z.object({
     joinedAt: z.string().datetime()
 });
 
+const isoSchema = z.string().datetime();
+
+const billingSubscriptionSchema = z.object({
+    id: z.string().uuid(),
+    status: z.string().describe('`pending`, `active`, `failed` or `canceled`'),
+    paymentMethod: z.enum(['card', 'pix']),
+    paidThrough: isoSchema.nullable().describe('Until when the subscription is paid'),
+    firstPaidAt: isoSchema.nullable().describe('When the first charge was paid'),
+    canceledAt: isoSchema.nullable(),
+    createdAt: isoSchema
+});
+
+const billingInvoiceSchema = z.object({
+    id: z.string().uuid(),
+    status: z.string().describe('`issued`, `overdue` or `paid`'),
+    totalCents: z.number().int().nullable().describe('Invoice total in cents (BRL); null while not priced'),
+    method: z.enum(['card', 'pix']).nullable(),
+    dueDate: isoSchema.nullable(),
+    cycleStart: isoSchema.nullable(),
+    cycleEnd: isoSchema.nullable(),
+    paidAt: isoSchema.nullable()
+});
+
+export const accountBillingSchema = z
+    .object({
+        subscriptions: z.array(billingSubscriptionSchema).describe('Every subscription of the account, card data left out'),
+        invoices: z.array(billingInvoiceSchema).describe('The 100 most recent invoices')
+    })
+    .nullable()
+    .describe('Subscriptions and invoices, without any card data');
+
+export const accountOfferSchema = z
+    .object({
+        trial: z.object({
+            kind: z
+                .enum(['none', 'card', 'no_card'])
+                .describe('`none`: no trial. `card`: trial with the card saved. `no_card`: trial without a card'),
+            days: z.number().int().nullable().describe('Trial length in days; null when there is no trial')
+        }),
+        rules: z
+            .array(
+                z.object({
+                    percent: z.number().int().describe('Discount on the Premium price, in percent'),
+                    fromCycle: z.number().int().describe('First paid cycle the rule covers'),
+                    toCycle: z.number().int().describe('Last paid cycle the rule covers, inclusive')
+                })
+            )
+            .describe('Discount scale by paid cycle'),
+        redeemedAt: isoSchema.describe('When the account redeemed the link'),
+        expiresAt: isoSchema.describe('Until when the offer can still start'),
+        source: z.string().describe('Where the redemption came from'),
+        trialStartedAt: isoSchema.nullable(),
+        appliedAt: isoSchema.nullable().describe('When the offer was applied to a subscription')
+    })
+    .nullable()
+    .describe('Signup link offer the account redeemed; null when none');
+
+export const accountUsageSchema = z
+    .array(
+        z.object({
+            period: z.string().describe('Billing period, `YYYY-MM`'),
+            feature: z.string().describe('`ai` or `whatsapp`'),
+            costMicros: z.number().int().describe('Cost in millionths of a BRL (1_000_000 = R$ 1,00)'),
+            entries: z.number().int().describe('Paid uses in the period')
+        })
+    )
+    .nullable()
+    .describe('Paid usage per period and feature');
+
 export const accountSummarySchema = z.object({
     account: accountItemSchema,
     locale: z.string(),
     timezone: z.string(),
     people: z.array(memberSchema).describe('People of the account'),
-    billing: z.unknown().describe('Subscriptions and invoices, without any card data'),
-    offer: z.unknown().describe('Signup link offer the account redeemed; null when none'),
-    usage: z.unknown().describe('Paid usage per period and feature')
+    billing: accountBillingSchema,
+    offer: accountOfferSchema,
+    usage: accountUsageSchema
 });
 
 export type AccountSummaryView = z.infer<typeof accountSummarySchema>;
 
+const minorSchema = (what: string): z.ZodNumber => z.number().int().describe(`${what}, in cents (minor units)`);
+
+const positionSchema = z.object({
+    symbol: z.string().nullable(),
+    name: z.string().nullable(),
+    quantity: z.string().describe('Decimal quantity, as text'),
+    averagePrice: z.string().nullable().describe('Decimal average price, as text'),
+    classId: z.string().uuid().nullable(),
+    holderUserId: z.string().uuid().nullable(),
+    createdAt: isoSchema
+});
+
+const fixedIncomeTitleSchema = z.object({
+    id: z.string().uuid(),
+    kind: z.string(),
+    name: z.string(),
+    issuerId: z.string().nullable(),
+    holderUserId: z.string().uuid().nullable(),
+    indexer: z.string(),
+    rateBps: z.number().int().describe('Rate in basis points'),
+    currency: z.string(),
+    appliedMinor: minorSchema('Amount applied'),
+    appliedAt: z.string().describe('Date of the application, `YYYY-MM-DD`'),
+    maturityDate: z.string().describe('Maturity date, `YYYY-MM-DD`'),
+    taxRegime: z.string(),
+    createdAt: isoSchema
+});
+
+const allocationSchema = z.object({
+    settings: z.object({ baseCurrency: z.string(), toleranceBps: z.number().int().describe('Rebalance tolerance in basis points') }),
+    classes: z.array(
+        z.object({
+            id: z.string().uuid(),
+            systemKey: z.string().nullable(),
+            aliasKeys: z.array(z.string()),
+            name: z.string().nullable(),
+            colorKey: z.string(),
+            targetBps: z.number().int().describe('Target share of the portfolio in basis points'),
+            sortOrder: z.number().int(),
+            createdAt: isoSchema
+        })
+    ),
+    assetTargets: z.array(
+        z.object({
+            subjectType: z.string(),
+            subjectId: z.string(),
+            classId: z.string().uuid(),
+            targetInClassBps: z.number().int().describe('Target share inside the class in basis points')
+        })
+    )
+});
+
+const goalsSchema = z.object({
+    goals: z.array(
+        z.object({
+            id: z.string().uuid(),
+            kind: z.string(),
+            name: z.string(),
+            targetMinor: minorSchema('Target amount'),
+            targetDate: z.string().describe('Target date, `YYYY-MM-DD`'),
+            holderUserId: z.string().uuid().nullable(),
+            manualMinor: minorSchema('Amount saved by hand'),
+            reserveMonths: z.number().int().nullable().describe('Months of expenses of an emergency reserve goal'),
+            createdAt: isoSchema
+        })
+    ),
+    goalHoldings: z.array(
+        z.object({
+            goalId: z.string().uuid(),
+            holdingKind: z.string(),
+            holdingId: z.string(),
+            shareBps: z.number().int().describe('Share of the holding given to the goal, in basis points')
+        })
+    )
+});
+
+const transactionsSchema = z.object({
+    accounts: z.array(
+        z.object({
+            name: z.string(),
+            kind: z.string(),
+            institutionName: z.string().nullable(),
+            numberLast4: z.string().nullable(),
+            currency: z.string(),
+            source: z.enum(['pluggy', 'file'])
+        })
+    ),
+    transactions: z.array(
+        z.object({
+            date: z.string().describe('`YYYY-MM-DD`'),
+            amountMinor: minorSchema('Signed amount'),
+            currency: z.string(),
+            description: z.string(),
+            counterpartyName: z.string().nullable(),
+            category: z.string().nullable(),
+            categorySource: z.string(),
+            account: z.string().describe('Name of the financial account'),
+            source: z.string(),
+            installment: z.object({ number: z.number().int(), total: z.number().int() }).nullable()
+        })
+    ),
+    imports: z.array(
+        z.object({
+            format: z.string(),
+            fileName: z.string(),
+            rows: z.number().int(),
+            inserted: z.number().int(),
+            duplicates: z.number().int(),
+            createdAt: isoSchema,
+            status: z.string()
+        })
+    )
+});
+
+const spendingCategoriesSchema = z.object({
+    categories: z.array(
+        z.object({
+            systemKey: z.string().nullable(),
+            name: z.string().nullable(),
+            kind: z.string(),
+            flexibility: z.string().nullable(),
+            icon: z.string()
+        })
+    ),
+    rules: z.array(
+        z.object({
+            matchType: z.string(),
+            pattern: z.string().nullable(),
+            label: z.string(),
+            appliesTo: z.string(),
+            categoryKey: z.string().nullable()
+        })
+    )
+});
+
+const spendingSettingsDataSchema = z
+    .object({
+        savingsGoalBps: z.number().int().describe('Savings goal in basis points of the income'),
+        incomeMode: z.string().describe('`transactions` or `declared`'),
+        declaredIncomeMinor: minorSchema('Monthly income declared').nullable()
+    })
+    .nullable();
+
+const recurringSchema = z.object({
+    series: z.array(
+        z.object({
+            name: z.string(),
+            merchantKey: z.string(),
+            account: z.string(),
+            kind: z.string(),
+            cadence: z.string(),
+            valueMode: z.string(),
+            status: z.string(),
+            origin: z.string(),
+            typicalAmountMinor: minorSchema('Typical charge'),
+            minAmountMinor: minorSchema('Smallest charge'),
+            maxAmountMinor: minorSchema('Largest charge'),
+            expectedDay: z.number().int().nullable(),
+            firstDate: z.string().describe('`YYYY-MM-DD`'),
+            lastDate: z.string().describe('`YYYY-MM-DD`'),
+            snoozedUntil: z.string().nullable().describe('`YYYY-MM-DD`'),
+            confirmedAt: isoSchema.nullable(),
+            dismissedAt: isoSchema.nullable(),
+            stoppedAt: isoSchema.nullable(),
+            stoppedBy: z.string().nullable(),
+            charges: z.array(z.object({ date: z.string().describe('`YYYY-MM-DD`'), amountMinor: minorSchema('Charge'), role: z.string() }))
+        })
+    ),
+    suppressions: z.array(z.object({ merchantKey: z.string(), typicalAmountMinor: minorSchema('Typical charge'), createdAt: isoSchema })),
+    alerts: z.array(
+        z.object({
+            series: z.string().describe('Name of the series'),
+            kind: z.string(),
+            occurredOn: z.string().describe('`YYYY-MM-DD`'),
+            seen: z.boolean(),
+            data: z.record(z.string(), z.union([z.string(), z.number()]))
+        })
+    )
+});
+
+const bankConnectionsSchema = z.object({
+    credentials: z
+        .object({ configured: z.literal(true), status: z.string() })
+        .nullable()
+        .describe('Pluggy credentials, status only'),
+    connections: z.array(
+        z.object({
+            connectorName: z.string().nullable(),
+            status: z.string(),
+            createdAt: isoSchema,
+            lastSuccessAt: isoSchema.nullable()
+        })
+    )
+});
+
+export const accountDataSchema = z
+    .object({
+        positions: z.array(positionSchema),
+        fixed_income: z.object({ titles: z.array(fixedIncomeTitleSchema) }),
+        allocation: allocationSchema,
+        goals: goalsSchema,
+        transactions: transactionsSchema,
+        spending_categories: spendingCategoriesSchema,
+        spending_settings: spendingSettingsDataSchema,
+        recurring: recurringSchema,
+        bank_connections: bankConnectionsSchema
+    })
+    .describe(
+        'Present when the `data` layer was asked: one entry per area. Money is in cents. Keys, credentials, tokens, hints and WhatsApp conversations never appear'
+    );
+
+export type AccountDataView = z.infer<typeof accountDataSchema>;
+
 export const accessResponseSchema = z.object({
     accountId: z.string().uuid(),
     summary: accountSummarySchema.optional().describe('Present when the `summary` layer was asked'),
-    data: z
-        .record(z.string(), z.unknown())
-        .optional()
-        .describe(
-            'Present when the `data` layer was asked: one entry per area. Keys, credentials, tokens and WhatsApp conversations never appear'
-        )
+    data: accountDataSchema.optional()
 });
 
 export type AccessResponseView = z.infer<typeof accessResponseSchema>;
