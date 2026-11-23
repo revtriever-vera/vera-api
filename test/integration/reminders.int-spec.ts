@@ -27,6 +27,7 @@ import { LinkContactService } from '../../src/modules/whatsapp-link/services/lin
 import { TurnAnsweredHandler } from '../../src/modules/whatsapp-chat/access/queue/answer.handler';
 import { TurnRequestedHandler } from '../../src/modules/whatsapp-chat/access/queue/turn.handler';
 import { Account, AllocationHarness } from './support/allocation-harness';
+import { seedUsdRate } from './support/portfolio-seed';
 import { CapturingPublisher, PublishedMessage } from './support/queue';
 
 interface IssuedBody {
@@ -305,6 +306,7 @@ describe('lembretes pelo WhatsApp (drivers mock)', () => {
     beforeAll(async () => {
         Object.assign(process.env, ENV);
         harness = await AllocationHarness.start('reminders', publisher);
+        await seedUsdRate(harness);
         outbox = harness.app.get(MockOutbox, { strict: false });
         llm = harness.app.get(MockLlmDriver, { strict: false });
         engine = harness.app.get(ReminderEngineService, { strict: false });

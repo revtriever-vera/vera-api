@@ -23,6 +23,7 @@ import { TurnRequestedHandler } from '../../src/modules/whatsapp-chat/access/que
 import { CalendarCreateEventTool } from '../../src/modules/google-calendar/services/calendar-ask-vera.tools';
 import { CalendarCreateExecutor } from '../../src/modules/google-calendar/services/calendar-pending-actions';
 import { Account, AllocationHarness } from './support/allocation-harness';
+import { seedUsdRate } from './support/portfolio-seed';
 import { CapturingPublisher, PublishedMessage } from './support/queue';
 
 const executed: { readonly kind: string; readonly payload: JsonObject }[] = [];
@@ -281,6 +282,7 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
     beforeAll(async () => {
         Object.assign(process.env, HOSTED_ENV);
         harness = await AllocationHarness.start('whatsapp_chat', publisher, [FakeChatModule]);
+        await seedUsdRate(harness);
         outbox = harness.app.get(MockOutbox, { strict: false });
         llm = harness.app.get(MockLlmDriver, { strict: false });
         const tool: CalendarCreateEventTool = harness.app.get(CalendarCreateEventTool, { strict: false });

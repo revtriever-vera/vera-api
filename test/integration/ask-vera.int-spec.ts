@@ -14,6 +14,7 @@ import { SpendingDataset, SpendingDatasetService } from '../../src/modules/trans
 import { TransactionIngestionService } from '../../src/modules/transactions/services/transaction-ingestion.service';
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { Account, AllocationHarness } from './support/allocation-harness';
+import { seedUsdRate } from './support/portfolio-seed';
 import { CapturingPublisher } from './support/queue';
 
 const HOSTED_ENV: Record<string, string> = {
@@ -50,6 +51,7 @@ describe('AskVeraService', () => {
         process.env['LLM_REPEAT_LIMIT'] = '1000';
         Object.assign(process.env, HOSTED_ENV);
         harness = await AllocationHarness.start('ask_vera', new CapturingPublisher());
+        await seedUsdRate(harness);
         dataset = new SpendingDatasetService().build(DateUtil.localDateIn(DateUtil.BRAZIL_TIMEZONE));
         service = harness.app.get(AskVeraService, { strict: false });
         mock = harness.app.get(MockLlmDriver, { strict: false });
