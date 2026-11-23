@@ -84,4 +84,40 @@ describe('FakeEventDelivery', () => {
             ['invoice.paid', 'unreachable']
         ]);
     });
+
+    describe('quote', () => {
+        const ASK = { subscriptionId: 'fake_x_sub_000001', customerExternalRef: 'company-1', cycle: 2, periodStart: '2026-12-01', periodEnd: '2026-12-31' };
+        const ENV: NodeJS.ProcessEnv = {
+            FAKE_BILLING_WEBHOOK_URL: 'http://localhost:3333/hook',
+            FAKE_BILLING_PUBLIC_URL: 'http://localhost:3333',
+            FAKE_BILLING_WEBHOOK_SECRET: 'segredo-de-teste-longo'
+        };
+
+        it('pergunta o preço ao endpoint da própria API, assinado, e devolve o valor', async () => {
+            const fetchMock = vi.fn().mockResolvedValue(Response.json({ amount: 1490, description: 'Premium' }));
+            vi.stubGlobal('fetch', fetchMock);
+
+            expect(await build(ENV).delivery.quote(ASK)).toBe(1490);
+
+            const [url, init] = fetchMock.mock.calls[0] as [string, { body: string }];
+            expect(url).toBe('http://localhost:3333/billing/revtriever/price');
+            expect(JSON.parse(init.body)).toMatchObject({ cycle: 2, subscription: { externalRef: ASK.subscriptionId } });
+        });
+
+        it('sem cliente, sem configuração ou sem valor na resposta, devolve nulo', async () => {
+            vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ skip: true })));
+
+            expect(await build(ENV).delivery.quote(ASK)).toBeNull();
+            expect(await build(ENV).delivery.quote({ ...ASK, customerExternalRef: null })).toBeNull();
+            expect(await build({}).delivery.quote(ASK)).toBeNull();
+        });
+
+        it('API fora do ar não derruba a emissão da fatura', async () => {
+            vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('down')));
+            const { delivery, failed } = build(ENV);
+
+            expect(await delivery.quote(ASK)).toBeNull();
+            expect(failed).toHaveBeenCalledWith('price', 'unreachable');
+        });
+    });
 });
