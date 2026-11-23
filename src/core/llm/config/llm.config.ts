@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
 import { deployEnvironmentSchema, isLocalSchema } from '../../../shared/config/environment.schema';
 
-const DEFAULT_MODEL_ID: string = 'meta/muse-spark-1.3-contributor';
+export const DEFAULT_MODEL_ID: string = 'meta/muse-spark-1.3-contributor';
 const DEFAULT_TIMEOUT_MS: number = 30_000;
 const DEFAULT_MAX_RETRIES: number = 2;
 const DEFAULT_REPEAT_LIMIT: number = 3;

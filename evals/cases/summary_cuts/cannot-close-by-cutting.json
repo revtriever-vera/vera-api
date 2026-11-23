@@ -32,7 +32,7 @@
   "expect": {
     "mustCite": ["R$4,200"],
     "mustMention": ["does not close"],
-    "mustNotMention": [],
+    "mustNotMention": ["average"],
     "sentences": {
       "min": 3,
       "max": 4
@@ -40,7 +40,7 @@
   },
   "reference": [
     "To save 30% of income, **R$4,200** per month is missing.",
-    "Going back to your average in [[cat:eating_out]] frees R$400, but cutting flexible spending alone does not close the gap.",
+    "Bringing spending down to the suggested limit in [[cat:eating_out]] frees R$400, but cutting flexible spending alone does not close the gap.",
     "Money would still be missing even after the suggested cuts."
   ]
 }

@@ -41,7 +41,7 @@
   "expect": {
     "mustCite": ["R$2,100"],
     "mustMention": [],
-    "mustNotMention": [],
+    "mustNotMention": ["average"],
     "sentences": {
       "min": 3,
       "max": 4
@@ -49,7 +49,7 @@
   },
   "reference": [
     "To save 20% of income, **R$2,100** per month is missing.",
-    "The lightest path is going back to your own average where spending rose: [[cat:eating_out]] (from R$2,100 to R$1,500) and [[cat:subscriptions]] (from R$700 to R$400).",
+    "The lightest path is bringing spending down to the suggested limit: [[cat:eating_out]] (from R$2,100 to R$1,500) and [[cat:subscriptions]] (from R$700 to R$400).",
     "If you pick only one, start with [[cat:eating_out]]: cutting **R$600** is the largest part of the R$2,100 that is missing."
   ]
 }

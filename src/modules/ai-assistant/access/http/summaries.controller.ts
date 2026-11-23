@@ -8,7 +8,7 @@ import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../../identity/services/requires-role.decorator';
 import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PremiumGuard } from '../../../plans/services/premium.guard';
-import { RequiresFeature } from '../../../plans/services/requires-feature.decorator';
+import { AllowsPausedUsage, RequiresFeature } from '../../../plans/services/requires-feature.decorator';
 import { SummariesApplication } from '../../application/summaries.application';
 import { SummaryView } from '../../domain/summary.types';
 import {
@@ -99,11 +99,13 @@ export class SummariesController {
     @Get(':kind')
     @RequiresRole('viewer')
     @RequiresFeature('ai')
+    @AllowsPausedUsage()
     @ApiOperation({
         summary: 'The written summary of the month, of the savings cuts or of the portfolio',
         description:
             'Returns the stored text when the figures did not change (`cached`). When they changed, writes a new one, at most once per hour ' +
-            'automatically: inside the hour it returns the stored text with `stale: true`. A savings goal already met gets a fixed text ' +
+            'automatically: inside the hour it returns the stored text with `stale: true`. With the monthly cap reached the stored text is still ' +
+            'returned (`stale: true` when the figures changed, with `usage.state: paused`); only a new text is blocked (429).  A savings goal already met gets a fixed text ' +
             '(`source: fixed`) with no model call and no permission. Needs the permission of the account for the model text. 204 when there ' +
             'is no data (the card does not appear).'
     })

@@ -96,7 +96,25 @@ export class SummariesApplication {
         if (force) {
             this.metrics.summaryRegeneration(kind);
         }
-        return this.generated(kind, context, locale, !force);
+        return this.generatedOrStored(kind, context, locale, force, stored);
+    }
+
+    /** Com a cota pausada, o texto guardado segue valendo (mesmo velho): só gerar um novo fica bloqueado. */
+    private async generatedOrStored(
+        kind: SummaryKind,
+        context: SummaryContext,
+        locale: AppLocale,
+        force: boolean,
+        stored: AiSummary | null
+    ): Promise<SummaryView> {
+        try {
+            return await this.generated(kind, context, locale, !force);
+        } catch (error: unknown) {
+            if (!force && stored !== null && error instanceof CapReachedError) {
+                return this.fromStored(kind, context, stored, true);
+            }
+            throw error;
+        }
     }
 
     private async fromStored(kind: SummaryKind, context: SummaryContext, stored: AiSummary, stale: boolean): Promise<SummaryView> {

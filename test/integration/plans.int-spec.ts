@@ -358,13 +358,11 @@ describe('plans (self_hosted)', () => {
 
     beforeAll(async () => {
         process.env['DEPLOYMENT_MODE'] = 'self_hosted';
-        process.env['PAID_USAGE_CAP_MICROS'] = '2500000';
         harness = await AllocationHarness.start('plans_self', new CapturingPublisher(), [FakeFeaturesModule]);
     });
 
     afterAll(async () => {
         delete process.env['DEPLOYMENT_MODE'];
-        delete process.env['PAID_USAGE_CAP_MICROS'];
         await harness.stop();
     });
 

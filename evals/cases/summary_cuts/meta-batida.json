@@ -17,7 +17,7 @@
   "expect": {
     "mustCite": ["R$ 1.800"],
     "mustMention": [],
-    "mustNotMention": [],
+    "mustNotMention": ["média"],
     "sentences": {
       "min": 1,
       "max": 4

@@ -15,7 +15,7 @@ export class PlanLimitService {
 
     public async capMicros(at: Date = new Date()): Promise<number | null> {
         if (this.config.DEPLOYMENT_MODE === 'self_hosted') {
-            return this.config.PAID_USAGE_CAP_MICROS === 0 ? null : this.config.PAID_USAGE_CAP_MICROS;
+            return null;
         }
         const product: GlobalProduct = await this.catalog.productOf(PRODUCT_KEYS.paidUsage);
         const company: CompanyProductLimit[] = await this.limits.companyLimits(product.id, USAGE_UNITS.costMicros);
