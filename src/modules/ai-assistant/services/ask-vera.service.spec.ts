@@ -41,7 +41,7 @@ function build(responses: (LlmGenerationResponse | Error)[], tools: AskVeraToolP
 }
 
 function ask(service: AskVeraService, text: string) {
-    return service.ask({ text, history: [], locale: 'pt-BR', messageId: 'm1' });
+    return service.ask({ text, history: [], locale: 'pt-BR', messageId: 'm1', allowedTools: new Set() });
 }
 
 describe('AskVeraService', () => {

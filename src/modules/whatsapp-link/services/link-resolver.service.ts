@@ -8,6 +8,8 @@ import { LinkDomain } from '../domain/link.domain';
 import { LINK_STATUSES, ResolvedSender, WhatsAppLink } from '../domain/whatsapp-link.types';
 import { PhoneVault } from './phone-vault.service';
 
+export type { ResolvedSender } from '../domain/whatsapp-link.types';
+
 @Injectable()
 export class LinkResolverService {
     public constructor(
@@ -24,6 +26,15 @@ export class LinkResolverService {
     public async lookup(from: string, channel: WhatsAppChannel): Promise<WhatsAppLink | null> {
         const link: WhatsAppLink | null = await this.links.liveByPhoneHashAcrossTenants(this.vault.hashOf(from));
         return link !== null && channelServes(channel, link.companyId) ? link : null;
+    }
+
+    public async liveById(linkId: string): Promise<ResolvedSender | null> {
+        const link: WhatsAppLink | null = await this.links.byId(linkId);
+        if (link === null || link.status === LINK_STATUSES.unlinked) {
+            return null;
+        }
+        const locale: AppLocale = await this.locales.localeOf(link.userId, link.companyId);
+        return { linkId: link.id, companyId: link.companyId, userId: link.userId, locale };
     }
 
     @AsCompany()

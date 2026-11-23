@@ -23,4 +23,12 @@ export class WhatsAppDirectReply {
             return false;
         }
     }
+
+    public async markRead(channel: WhatsAppChannel, wamid: string): Promise<void> {
+        try {
+            await this.port.markRead(channel, wamid);
+        } catch {
+            return;
+        }
+    }
 }

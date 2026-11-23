@@ -11,10 +11,10 @@ export class AskVeraToolRegistry {
         private readonly gate: PlanGateService
     ) {}
 
-    public async available(): Promise<readonly AskVeraToolPort[]> {
+    public async available(allowed: ReadonlySet<string>): Promise<readonly AskVeraToolPort[]> {
         const offered: AskVeraToolPort[] = [];
         for (const tool of this.all()) {
-            if (await this.gate.allows(tool.feature)) {
+            if (allowed.has(tool.name) && (await this.gate.allows(tool.feature))) {
                 offered.push(tool);
             }
         }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { WhatsAppConversationEraser } from '../../whatsapp/services/whatsapp-conversation-eraser.service';
 import { LinkCodeDomain } from '../domain/link-code.domain';
 import { LinkDomain } from '../domain/link.domain';
-import { UnlinkReason, WhatsAppLink } from '../domain/whatsapp-link.types';
+import { UNLINK_REASONS, UnlinkReason, WhatsAppLink } from '../domain/whatsapp-link.types';
 import { PhoneVault } from './phone-vault.service';
 import { ReminderCancellationRegistry } from './reminder-cancellation.registry';
 import { WhatsAppLinkLogService } from './whatsapp-link-log.service';
@@ -29,6 +29,11 @@ export class LinkUnlinkService {
         this.logs.unlinked(reason);
         this.metrics.unlinked(reason);
         return true;
+    }
+
+    public async unlinkPremiumEnded(linkId: string): Promise<boolean> {
+        const link: WhatsAppLink | null = await this.links.byId(linkId);
+        return link === null ? false : this.unlink(link, UNLINK_REASONS.premiumEnded);
     }
 
     public async unlinkUser(userId: string, reason: UnlinkReason): Promise<boolean> {

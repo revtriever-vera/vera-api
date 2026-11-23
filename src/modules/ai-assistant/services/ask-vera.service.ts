@@ -27,6 +27,8 @@ import { AskVeraToolPort } from './ask-vera-tool.port';
 import { AskVeraToolRegistry } from './ask-vera-tool.registry';
 
 export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraTurn } from '../domain/ask-vera.types';
+export { CVM_NOTICE_TOOLS } from '../domain/ask-vera.types';
+export { cvmNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
 
 function isCvmNoticeTool(tool: string): boolean {
     return CVM_NOTICE_TOOLS.has(tool);
@@ -68,7 +70,7 @@ export class AskVeraService {
     }
 
     private async answer(input: AskVeraInput, text: string): Promise<AskVeraAnswer> {
-        const tools: readonly AskVeraToolPort[] = await this.registry.available();
+        const tools: readonly AskVeraToolPort[] = await this.registry.available(input.allowedTools);
         const today: string = await this.timezones.todayInCompany();
         const result: AskLoopResult = await this.loop(input, text, tools, today);
         return this.finish(result, input.locale);
