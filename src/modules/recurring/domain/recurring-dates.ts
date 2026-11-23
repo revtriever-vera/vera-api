@@ -49,3 +49,7 @@ export function distanceToDay(date: string, expectedDay: number): number {
         daysBetween(date, dateInMonth(addMonths(month, 1), expectedDay))
     );
 }
+
+export function addDaysTo(date: string, days: number): string {
+    return new Date((dayNumber(date) + days) * DAY_MS).toISOString().slice(0, 10);
+}

@@ -83,6 +83,10 @@ export class TransactionDomain {
         return this.transactions.listAfter(filter, cursor, size);
     }
 
+    public async listByIds(ids: readonly string[]): Promise<Transaction[]> {
+        return this.transactions.listByIds(ids);
+    }
+
     public async totals(filter: TransactionFilter): Promise<TransactionTotals> {
         return this.transactions.totals(filter);
     }

@@ -37,6 +37,7 @@ import { PortfolioExportModule } from './modules/portfolio-export/portfolio-expo
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { GoalsModule } from './modules/goals/goals.module';
 import { PositionsModule } from './modules/positions/positions.module';
+import { RecurringModule } from './modules/recurring/recurring.module';
 import { SpendingCategoriesModule } from './modules/spending-categories/spending-categories.module';
 import { SpendingCutsModule } from './modules/spending-cuts/spending-cuts.module';
 import { SpendingSummaryModule } from './modules/spending-summary/spending-summary.module';
@@ -89,6 +90,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         FixedIncomeCoverageModule,
         FixedIncomeScheduleModule,
         GoalsModule,
+        RecurringModule,
         PositionsModule,
         MarketDataModule,
         PortfolioModule,

@@ -5,6 +5,7 @@ import { ObservabilityModule } from '../../../core/observability/observability.m
 import { SpendingCategoriesDomainModule } from '../domain/spending-categories-domain.module';
 import { CategoryReaderService } from '../services/category-reader.service';
 import { CategoryRuleService } from '../services/category-rule.service';
+import { MerchantDictionaryService } from '../services/merchant-dictionary.service';
 import { DescriptionNormalizerService } from '../services/description-normalizer.service';
 import { RecategorizationRegistry } from '../services/recategorization.registry';
 import { RulesAccountSpreadsheet } from '../services/rules-account.spreadsheet';
@@ -28,9 +29,12 @@ import { RuleApplication } from './rule.application';
         CategoryReaderService,
         CategoryRuleService,
         DescriptionNormalizerService,
+        MerchantDictionaryService,
         TransactionCategorizerService
     ],
     exports: [
+        MerchantDictionaryService,
+        RecategorizationRegistry,
         CategoryApplication,
         RuleApplication,
         CategoryReaderService,
