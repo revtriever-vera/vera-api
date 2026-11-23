@@ -43,6 +43,10 @@ export class TransactionsLogService {
         this.logService.info({ message: 'recategorization port ran', identifier: PORT, meta: { scope, affected } });
     }
 
+    public changeNotificationFailed(reason: string): void {
+        this.logService.warn({ message: 'transactions change notification failed', identifier: PORT, meta: { scope: 'changed', reason } });
+    }
+
     public sample(action: SampleAction, count: number): void {
         this.logService.info({ message: 'spending sample data', identifier: SAMPLE, meta: { action, count } });
     }

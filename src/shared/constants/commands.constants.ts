@@ -17,7 +17,8 @@ export const COMMAND_KEYS = {
     whatsappRetention: 'whatsapp-retention-command',
     whatsappLinksStale: 'whatsapp-links-stale-command',
     remindersSweep: 'reminders-sweep-command',
-    remindersGauge: 'reminders-gauge-command'
+    remindersGauge: 'reminders-gauge-command',
+    recurringDaily: 'recurring-daily-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];

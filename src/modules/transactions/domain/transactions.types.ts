@@ -197,6 +197,22 @@ export interface ExportTransaction {
     readonly source: TransactionSource;
 }
 
+export interface RecurrenceTransaction {
+    readonly id: string;
+    readonly accountId: string;
+    readonly date: string;
+    readonly amountMinor: number;
+    readonly currency: string;
+    readonly description: string;
+    readonly normalizedDescription: string;
+    readonly counterpartyName: string | null;
+    readonly counterpartyKey: string | null;
+    readonly categoryId: string | null;
+    readonly categorySource: CategoryOrigin;
+    readonly installmentTotal: number | null;
+    readonly isSample: boolean;
+}
+
 export interface TransactionView {
     readonly id: string;
     readonly accountId: string;

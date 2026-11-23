@@ -6,11 +6,13 @@ import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionImportDomain } from '../domain/transaction-import.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { TransactionImportService } from './transaction-import.service';
+import { TransactionsChangedService } from './transactions-changed.service';
 
 function build(status: string = 'completed'): {
     service: TransactionImportService;
     imports: Record<string, ReturnType<typeof vi.fn>>;
     transactions: Record<string, ReturnType<typeof vi.fn>>;
+    notify: ReturnType<typeof vi.fn>;
 } {
     const imports: Record<string, ReturnType<typeof vi.fn>> = {
         record: vi.fn().mockResolvedValue(makeTransactionImport({ id: 'i1', status: 'processing' })),
@@ -28,12 +30,14 @@ function build(status: string = 'completed'): {
         removeByImport: vi.fn().mockResolvedValue(5),
         releaseAbsorbedByImport: vi.fn().mockResolvedValue(2)
     };
+    const notify: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const service: TransactionImportService = new TransactionImportService(
         imports as unknown as TransactionImportDomain,
         { require: vi.fn().mockResolvedValue({}) } as unknown as FinancialAccountDomain,
-        transactions as unknown as TransactionDomain
+        transactions as unknown as TransactionDomain,
+        { notify } as unknown as TransactionsChangedService
     );
-    return { service, imports, transactions };
+    return { service, imports, transactions, notify };
 }
 
 beforeEach(() => {
@@ -53,10 +57,11 @@ describe('TransactionImportService', () => {
     });
 
     it('desfazer remove as linhas, solta as absorvidas e marca o lote como undone', async () => {
-        const { service, imports, transactions } = build();
+        const { service, imports, transactions, notify } = build();
 
         const undone = await service.undo('i1');
 
+        expect(notify).toHaveBeenCalledTimes(1);
         expect(undone).toEqual({ removed: 5 });
         expect(transactions['removeByImport']).toHaveBeenCalledWith('i1');
         expect(transactions['releaseAbsorbedByImport']).toHaveBeenCalledWith('i1');

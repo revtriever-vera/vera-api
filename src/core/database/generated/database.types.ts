@@ -625,6 +625,58 @@ export interface QuoteFetchFailures {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface RecurringCharges {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    role: string;
+    seriesId: string;
+    transactionId: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface RecurringSeries {
+    accountId: string;
+    cadence: string;
+    companyId: string;
+    confirmedAt: Timestamp | null;
+    createdAt: Generated<Timestamp>;
+    dayChangeFrom: number | null;
+    dayChangeTo: number | null;
+    deletedAt: Timestamp | null;
+    dismissedAt: Timestamp | null;
+    expectedDay: number | null;
+    firstDate: Timestamp;
+    id: string;
+    kind: string;
+    knownSubscription: Generated<boolean>;
+    lastDate: Timestamp;
+    maxAmountMinor: Int8;
+    merchantKey: string;
+    minAmountMinor: Int8;
+    name: string;
+    origin: string;
+    snoozedUntil: Timestamp | null;
+    status: string;
+    stoppedAt: Timestamp | null;
+    stoppedBy: string | null;
+    typicalAmountMinor: Int8;
+    updatedAt: Generated<Timestamp>;
+    valueMode: string;
+}
+
+export interface RecurringSuppressions {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    merchantKey: string;
+    seriesId: string | null;
+    typicalAmountMinor: Int8;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface ReminderOccurrences {
     channel: string | null;
     companyId: string;
@@ -921,6 +973,9 @@ export interface DB {
     PremiumEndedNotifications: PremiumEndedNotifications;
     ProviderUsage: ProviderUsage;
     QuoteFetchFailures: QuoteFetchFailures;
+    RecurringCharges: RecurringCharges;
+    RecurringSeries: RecurringSeries;
+    RecurringSuppressions: RecurringSuppressions;
     ReminderOccurrences: ReminderOccurrences;
     Reminders: Reminders;
     Sessions: Sessions;

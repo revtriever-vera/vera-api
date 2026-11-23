@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DiscoveryModule } from '@nestjs/core';
 import { ContextModule } from '../../../core/context/context.module';
 import { CryptoModule } from '../../../core/crypto/crypto.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
@@ -15,6 +16,7 @@ import { TransactionFingerprintService } from '../services/transaction-fingerpri
 import { TransactionImportService } from '../services/transaction-import.service';
 import { TransactionIngestionService } from '../services/transaction-ingestion.service';
 import { TransactionReaderService } from '../services/transaction-reader.service';
+import { TransactionsChangedService } from '../services/transactions-changed.service';
 import { TransactionsLogService } from '../services/transactions-log.service';
 import { TransactionsMetricsService } from '../services/transactions-metrics.service';
 import { TransactionsRecategorizationDriver } from '../services/transactions-recategorization.driver';
@@ -29,7 +31,8 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         IdentityApplicationModule,
         CryptoModule,
         ContextModule,
-        ObservabilityModule
+        ObservabilityModule,
+        DiscoveryModule
     ],
     providers: [
         TransactionListApplication,
@@ -37,6 +40,7 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         AccountApplication,
         TransactionsLogService,
         TransactionsMetricsService,
+        TransactionsChangedService,
         TransactionsRecategorizationDriver,
         TransactionIngestionService,
         FinancialAccountService,
