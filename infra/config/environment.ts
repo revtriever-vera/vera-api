@@ -22,6 +22,7 @@ export interface SharedInfrastructureConfig {
 }
 
 export interface LlmEnvironmentConfig {
+    readonly model: string;
     readonly priceTable: string;
 }
 
@@ -164,13 +165,15 @@ function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
     };
 }
 
+const DEFAULT_LLM_MODEL: string = 'meta/muse-spark-1.3-contributor';
+
 function llm(env: NodeJS.ProcessEnv): LlmEnvironmentConfig {
     const priceTable: string = requiredVariable(env, 'LLM_PRICE_TABLE');
     const parsed: unknown = parseJson('LLM_PRICE_TABLE', priceTable);
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
         throw new Error('LLM_PRICE_TABLE inválida: use um objeto JSON com o preço de cada modelo');
     }
-    return { priceTable };
+    return { model: optionalVariable(env, 'LLM_MODEL') ?? DEFAULT_LLM_MODEL, priceTable };
 }
 
 function parseJson(variable: string, raw: string): unknown {

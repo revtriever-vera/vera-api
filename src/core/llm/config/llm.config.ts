@@ -39,6 +39,7 @@ const schema = z
         LLM_DRIVER: z.enum(['live', 'mock']).default('mock'),
         AI_GATEWAY_API_KEY: z.string().default(''),
         LLM_MODEL_ID: z.string().min(1).default(DEFAULT_MODEL_ID),
+        LLM_MODEL: z.string().optional(),
         LLM_PRICE_TABLE: priceTableEnvSchema,
         LLM_TIMEOUT_MS: z.coerce.number().int().min(1).default(DEFAULT_TIMEOUT_MS),
         LLM_MAX_RETRIES: z.coerce.number().int().min(0).default(DEFAULT_MAX_RETRIES),
@@ -48,11 +49,12 @@ const schema = z
     })
     .superRefine((value, context: z.RefinementCtx) => {
         const hostedWithKey: boolean = value.DEPLOYMENT_MODE === 'hosted' && value.AI_GATEWAY_API_KEY.length > 0;
-        if (hostedWithKey && value.LLM_PRICE_TABLE[value.LLM_MODEL_ID] === undefined) {
+        const model: string = value.LLM_MODEL ?? value.LLM_MODEL_ID;
+        if (hostedWithKey && value.LLM_PRICE_TABLE[model] === undefined) {
             context.addIssue({
                 code: z.ZodIssueCode.custom,
                 path: ['LLM_PRICE_TABLE'],
-                message: `LLM_PRICE_TABLE não tem preço para o modelo ${value.LLM_MODEL_ID}`
+                message: `LLM_PRICE_TABLE não tem preço para o modelo ${model}`
             });
         }
     });

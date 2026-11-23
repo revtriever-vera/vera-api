@@ -12,6 +12,7 @@ import { OpenAiCompatibleLlmDriver } from './drivers/openai-compatible-llm.drive
 import { LlmBootCheck } from './llm-boot-check';
 import { LlmPort } from './llm.port';
 import { ConfigLlmCredentialsAdapter } from './ports/config-llm-credentials.adapter';
+import { LlmCredentialsHolder } from './ports/llm-credentials.holder';
 import { LlmCredentialsPort } from './ports/llm-credentials.port';
 import { LlmAvailabilityService } from './services/llm-availability.service';
 import { LlmCallsHistoryService } from './services/llm-calls-history.service';
@@ -31,7 +32,9 @@ import { LlmTaskRegistryService } from './services/llm-task-registry.service';
         LlmDriverRouter,
         MeteredLlmDriver,
         { provide: LlmPort, useExisting: MeteredLlmDriver },
-        { provide: LlmCredentialsPort, useClass: ConfigLlmCredentialsAdapter },
+        ConfigLlmCredentialsAdapter,
+        LlmCredentialsHolder,
+        { provide: LlmCredentialsPort, useExisting: LlmCredentialsHolder },
         LlmLogService,
         LlmMetricsService,
         LlmPricingService,
@@ -42,6 +45,14 @@ import { LlmTaskRegistryService } from './services/llm-task-registry.service';
         LlmCallsHistoryService,
         LlmBootCheck
     ],
-    exports: [LlmPort, LlmCredentialsPort, LlmAvailabilityService, LlmProbeService, LlmCallsHistoryService, MockLlmDriver]
+    exports: [
+        LlmPort,
+        LlmCredentialsPort,
+        LlmCredentialsHolder,
+        LlmAvailabilityService,
+        LlmProbeService,
+        LlmCallsHistoryService,
+        MockLlmDriver
+    ]
 })
 export class LlmModule {}

@@ -338,6 +338,7 @@ export class AppStack extends Stack {
             DEPLOYMENT_MODE: 'hosted',
             ...this.billingEnvironment(props.config.billing),
             LLM_DRIVER: 'live',
+            LLM_MODEL: props.config.llm.model,
             LLM_PRICE_TABLE: props.config.llm.priceTable,
             APP_URL: `https://${props.config.appHost}`,
             CORS_ORIGINS: `https://${props.config.appHost}`

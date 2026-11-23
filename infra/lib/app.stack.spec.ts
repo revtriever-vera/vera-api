@@ -92,6 +92,7 @@ describe('a task do serviço', () => {
         const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
 
         expect(api.Environment).toContainEqual({ Name: 'LLM_DRIVER', Value: 'live' });
+        expect(api.Environment).toContainEqual({ Name: 'LLM_MODEL', Value: 'meta/muse-spark-1.3-contributor' });
         expect(api.Environment).toContainEqual({ Name: 'LLM_PRICE_TABLE', Value: FAKE_LLM_PRICE_TABLE });
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('AI_GATEWAY_API_KEY');
         expect(plainNames).not.toContain('AI_GATEWAY_API_KEY');

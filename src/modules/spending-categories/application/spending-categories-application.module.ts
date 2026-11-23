@@ -7,6 +7,7 @@ import { CategoryReaderService } from '../services/category-reader.service';
 import { CategoryRuleService } from '../services/category-rule.service';
 import { DescriptionNormalizerService } from '../services/description-normalizer.service';
 import { RecategorizationRegistry } from '../services/recategorization.registry';
+import { RulesAccountSpreadsheet } from '../services/rules-account.spreadsheet';
 import { SpendingCategoriesAccountExporter } from '../services/spending-categories-account.exporter';
 import { SpendingCategoriesLogService } from '../services/spending-categories-log.service';
 import { SpendingCategoriesMetricsService } from '../services/spending-categories-metrics.service';
@@ -22,6 +23,7 @@ import { RuleApplication } from './rule.application';
         SpendingCategoriesLogService,
         SpendingCategoriesMetricsService,
         SpendingCategoriesAccountExporter,
+        RulesAccountSpreadsheet,
         RecategorizationRegistry,
         CategoryReaderService,
         CategoryRuleService,

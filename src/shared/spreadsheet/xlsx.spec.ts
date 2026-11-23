@@ -1,6 +1,6 @@
 import { Workbook, Worksheet } from 'exceljs';
 import { describe, expect, it } from 'vitest';
-import { buildXlsx, currencyFormatOf, XlsxCell, XlsxColumn } from './xlsx';
+import { buildXlsx, currencyFormatOf, XlsxCell, XlsxColumn, XlsxWorkbookBuilder } from './xlsx';
 
 const COLUMNS: readonly XlsxColumn[] = [
     { header: 'Date', type: 'date', width: 14 },
@@ -48,5 +48,23 @@ describe('currencyFormatOf', () => {
         expect(currencyFormatOf('BRL')).toBe('"R$" #,##0.00');
         expect(currencyFormatOf('USD')).toBe('"US$" #,##0.00');
         expect(currencyFormatOf('JPY')).toBe('"JPY" #,##0');
+    });
+});
+
+describe('XlsxWorkbookBuilder', () => {
+    it('writes several sheets into one workbook, one after the other', async () => {
+        const book: XlsxWorkbookBuilder = new XlsxWorkbookBuilder();
+        const first = book.sheet({ name: 'One', columns: COLUMNS });
+        first.append([null, 'a', 1]);
+        first.commit();
+        const second = book.sheet({ name: 'Two', columns: COLUMNS });
+        second.append([null, 'b', 2]);
+        second.commit();
+        const workbook: Workbook = new Workbook();
+
+        await workbook.xlsx.load((await book.finish()) as unknown as Parameters<Workbook['xlsx']['load']>[0]);
+
+        expect(workbook.worksheets.map((sheet: Worksheet) => sheet.name)).toEqual(['One', 'Two']);
+        expect((workbook.getWorksheet('Two') as Worksheet).getCell('B2').value).toBe('b');
     });
 });

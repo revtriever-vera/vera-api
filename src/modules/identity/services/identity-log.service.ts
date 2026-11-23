@@ -5,6 +5,7 @@ import { LoginProvider } from '../domain/identity.types';
 const AUTH: string = 'identity-auth';
 const PROVISIONING: string = 'identity-provisioning';
 const ACCOUNT: string = 'identity-account';
+const ACCOUNT_EXPORT: string = 'account-export';
 const REFRESH_REUSE: string = 'auth-refresh-reuse';
 const MEMBERS_AUTHZ: string = 'members-authz';
 const ROUTE_ROLE_MISSING: string = 'route-role-missing';
@@ -51,6 +52,18 @@ export class IdentityLogService {
 
     public exportRequested(areas: readonly string[]): void {
         this.logService.info({ message: 'account export requested', identifier: ACCOUNT, meta: { areas } });
+    }
+
+    public spreadsheetsExported(sheets: number, rows: number, ms: number): void {
+        this.logService.info({ message: 'spreadsheets exported', identifier: ACCOUNT_EXPORT, meta: { sheets, rows, ms } });
+    }
+
+    public spreadsheetsFailed(error: unknown): void {
+        this.logService.error({
+            message: 'spreadsheets export failed',
+            identifier: ACCOUNT_EXPORT,
+            meta: { errorName: error instanceof Error ? error.name : typeof error }
+        });
     }
 
     public deletionStarted(): void {

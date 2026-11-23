@@ -7,6 +7,7 @@ const MANAGED: readonly string[] = [
     'LLM_DRIVER',
     'AI_GATEWAY_API_KEY',
     'LLM_MODEL_ID',
+    'LLM_MODEL',
     'LLM_PRICE_TABLE',
     'LLM_TIMEOUT_MS',
     'LLM_MAX_RETRIES',
@@ -44,6 +45,12 @@ describe('llm.config', () => {
         expect(() => load({ DEPLOYMENT_MODE: 'hosted', AI_GATEWAY_API_KEY: 'k', LLM_DRIVER: 'live' })).toThrow(
             'LLM_PRICE_TABLE não tem preço'
         );
+    });
+
+    it('o modelo da instância (LLM_MODEL) é o que precisa de preço', () => {
+        expect(() =>
+            load({ DEPLOYMENT_MODE: 'hosted', AI_GATEWAY_API_KEY: 'k', LLM_MODEL: 'vendor/outro', LLM_PRICE_TABLE: PRICED })
+        ).toThrow('vendor/outro');
     });
 
     it('hospedada com chave e preço sobe', () => {

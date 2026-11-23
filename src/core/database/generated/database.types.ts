@@ -338,6 +338,23 @@ export interface IndexSeriesPoints {
     value: Numeric;
 }
 
+export interface IntegrationCredentials {
+    baseUrl: string | null;
+    clientId: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    hint: string;
+    id: string;
+    kind: string;
+    model: string | null;
+    phoneNumberId: string | null;
+    sealed: string;
+    sealerDriver: string;
+    updatedAt: Generated<Timestamp>;
+    verifiedAt: Timestamp;
+}
+
 export interface LlmCalls {
     attempts: number;
     cacheReadTokens: Generated<number>;
@@ -614,6 +631,7 @@ export interface DB {
     GlobalProductLimits: GlobalProductLimits;
     GlobalProducts: GlobalProducts;
     IndexSeriesPoints: IndexSeriesPoints;
+    IntegrationCredentials: IntegrationCredentials;
     LlmCalls: LlmCalls;
     OnboardingStates: OnboardingStates;
     PaidUsageEntries: PaidUsageEntries;
