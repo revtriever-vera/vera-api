@@ -7,6 +7,7 @@ export const WHATSAPP_CHANNEL_TOOLS: ReadonlySet<string> = new Set([
     'list_categories',
     'portfolio_overview',
     'contribution_suggestion',
+    'goals_overview',
     'calendar_list_events',
     'calendar_create_event',
     'reminder_list',

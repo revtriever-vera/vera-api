@@ -25,6 +25,11 @@ type GoalFields = Pick<
     | 'isSample'
 >;
 
+function localDateOf(isoDate: string): Date {
+    const [year, month, day]: string[] = isoDate.split('-');
+    return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
 @Injectable()
 export class GoalsRepository extends TenantRepository<'Goals'> {
     public constructor(database: DatabaseClient, context: AppContext) {
@@ -71,6 +76,17 @@ export class GoalsRepository extends TenantRepository<'Goals'> {
             .select((builder) => builder.fn.countAll().as('total'))
             .executeTakeFirst();
         return Number(row?.total ?? 0);
+    }
+
+    public async companyIdsWithRealGoalsAcrossTenants(targetDate: string | null): Promise<string[]> {
+        const rows: { companyId: string }[] = await this.selectSkipConstraint()
+            .select('companyId')
+            .distinct()
+            .where('deletedAt', 'is', null)
+            .where('isSample', '=', false)
+            .$if(targetDate !== null, (builder) => builder.where('targetDate', '=', localDateOf(targetDate ?? '')))
+            .execute();
+        return rows.map((row: { companyId: string }): string => row.companyId);
     }
 
     public async patch(id: string, patch: GoalPatch): Promise<GoalRow | null> {

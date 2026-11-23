@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { GoalHoldingsRepository } from '../repositories/goal-holdings.repository';
 import { GoalsRepository } from '../repositories/goals.repository';
+import { isFirstOfMonth, noticeLeadDate } from './goal-notice-due';
 import { toGoal } from './goal.mapper';
 import { Goal, GOAL_KINDS, GoalChanges, GoalHoldingLink, GoalHoldingRow, GoalPatch, GoalRow, NewGoalData } from './goals.types';
 
@@ -35,6 +36,10 @@ export class GoalDomain {
     public async listReal(): Promise<Goal[]> {
         const rows: GoalRow[] = await this.goals.listReal();
         return this.withLinks(rows);
+    }
+
+    public async companyIdsDueAcrossTenants(today: string): Promise<string[]> {
+        return this.goals.companyIdsWithRealGoalsAcrossTenants(isFirstOfMonth(today) ? null : noticeLeadDate(today));
     }
 
     public async hasSamples(): Promise<boolean> {

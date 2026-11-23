@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { WHATSAPP_CHANNEL_TOOLS, pendingKindOfTool } from './channel-tools';
 
 describe('channel-tools', () => {
-    it('lista leitura de gastos, cortes e carteira, agenda e lembretes, e nada além', () => {
+    it('lista leitura de gastos, cortes, carteira e objetivos, agenda e lembretes, e nada além', () => {
         expect([...WHATSAPP_CHANNEL_TOOLS].sort()).toEqual([
             'calendar_create_event',
             'calendar_list_events',
             'contribution_suggestion',
+            'goals_overview',
             'list_categories',
             'portfolio_overview',
             'reminder_cancel',

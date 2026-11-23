@@ -25,12 +25,16 @@ function goalOf(overrides: Partial<Goal>): Goal {
     };
 }
 
-function build(goals: Goal[]) {
+function build(goals: Goal[], today: string = '2026-11-23') {
     const build = vi.fn().mockResolvedValue({ holdings: [] });
     const service = new GoalsReaderService(
-        { list: vi.fn().mockResolvedValue(goals) } as unknown as GoalDomain,
+        {
+            list: vi.fn().mockResolvedValue(goals),
+            listReal: vi.fn().mockResolvedValue(goals),
+            companyIdsDueAcrossTenants: vi.fn().mockResolvedValue(['c1'])
+        } as unknown as GoalDomain,
         { build } as unknown as PortfolioSnapshotService,
-        { todayInCompany: vi.fn().mockResolvedValue('2026-11-23') } as unknown as CompanyTimezoneService
+        { todayInCompany: vi.fn().mockResolvedValue(today) } as unknown as CompanyTimezoneService
     );
     return { service, build };
 }
@@ -50,5 +54,55 @@ describe('GoalsReaderService', () => {
 
         expect(need.monthlyNeededMinor).toBe(257_144);
         expect(need.behindCount).toBe(0);
+    });
+
+    it('no dia 1 devolve só os objetivos atrasados', async () => {
+        const { service } = build([goalOf({}), goalOf({ id: 'g2', manualMinor: 1_200_000 })], '2026-12-01');
+
+        const due = await service.behindDue();
+
+        expect(due.today).toBe('2026-12-01');
+        expect(due.goals).toEqual([
+            {
+                id: 'g1',
+                name: 'Viagem',
+                targetMinor: 1_200_000,
+                targetDate: '2027-06-15',
+                remainingMinor: 1_200_000,
+                monthlyMinor: 200_000,
+                planMonthlyMinor: 171_429,
+                overdue: false
+            }
+        ]);
+    });
+
+    it('fora do dia 1 só avalia o objetivo a 30 dias da data', async () => {
+        const { service, build: snapshot } = build([goalOf({})], '2026-12-02');
+
+        expect((await service.behindDue()).goals).toEqual([]);
+        expect(snapshot).not.toHaveBeenCalled();
+    });
+
+    it('a 30 dias da data o objetivo atrasado entra, e o vencido sai marcado', async () => {
+        const { service } = build([goalOf({ targetDate: '2027-01-01' })], '2026-12-02');
+
+        const due = await service.behindDue();
+
+        expect(due.goals.map((goal) => goal.id)).toEqual(['g1']);
+        const overdue = build([goalOf({ targetDate: '2026-11-15' })], '2026-12-01');
+        expect((await overdue.service.behindDue()).goals[0]?.overdue).toBe(true);
+    });
+
+    it('lista as empresas com vencimento pela porta do domínio', async () => {
+        const { service } = build([]);
+
+        expect(await service.companyIdsDue('2026-12-01')).toEqual(['c1']);
+    });
+
+    it('o resumo sem objetivos não consulta a carteira', async () => {
+        const { service, build: snapshot } = build([]);
+
+        expect(await service.overview()).toEqual([]);
+        expect(snapshot).not.toHaveBeenCalled();
     });
 });
