@@ -75,6 +75,7 @@ export interface DetectedSeries {
     readonly accountIds: readonly string[];
     readonly categoryKey: string | null;
     readonly knownSubscription: boolean;
+    readonly pixToPerson: boolean;
     readonly firstDate: string;
     readonly lastDate: string;
 }

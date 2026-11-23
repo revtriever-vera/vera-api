@@ -1,6 +1,6 @@
 import { daysBetween, signedDaysBetween } from './recurring-dates';
 import { merchantKeyOf } from './merchant-key';
-import { DetectorTransaction, MIRROR_MAX_DAYS, REFUND_MAX_DAYS, REFUND_VALUE_TOLERANCE } from './recurring.types';
+import { DetectorTransaction, MERCHANT_KEY_MIN_LENGTH, MIRROR_MAX_DAYS, REFUND_MAX_DAYS, REFUND_VALUE_TOLERANCE } from './recurring.types';
 
 function byDateThenId(left: DetectorTransaction, right: DetectorTransaction): number {
     return left.date.localeCompare(right.date) || left.id.localeCompare(right.id);
@@ -59,11 +59,27 @@ export function findMirrorIds(transactions: readonly DetectorTransaction[]): Rea
     return mirrored;
 }
 
+const REFUND_PREFIX: RegExp = /^(?:(?:ESTORNO|CRED|CREDITO|DEVOLUCAO|REEMBOLSO)\s+)(?:(?:DE|DA|DO)\s+)?/;
+
+function withoutRefundPrefix(key: string): string {
+    let current: string = key;
+    let previous: string = '';
+    while (previous !== current) {
+        previous = current;
+        current = current.replace(REFUND_PREFIX, '').trim();
+    }
+    return current;
+}
+
 function refundKeys(transaction: DetectorTransaction): readonly string[] {
     const keys: string[] = [];
     const merchant: string | null = merchantKeyOf(transaction);
     if (merchant !== null) {
         keys.push(`m:${merchant}`);
+        const stripped: string = transaction.amountMinor > 0 ? withoutRefundPrefix(merchant) : merchant;
+        if (stripped !== merchant && stripped.length >= MERCHANT_KEY_MIN_LENGTH) {
+            keys.push(`m:${stripped}`);
+        }
     }
     if (transaction.counterpartyKey !== null) {
         keys.push(`c:${transaction.counterpartyKey}`);
