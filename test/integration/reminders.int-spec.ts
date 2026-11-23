@@ -497,8 +497,9 @@ describe('lembretes pelo WhatsApp (drivers mock)', () => {
         expect((await occurrencesOf(reminder.id))[0]?.status).toBe('unreached');
     });
 
-    it('cota pausada: a ocorrência vira missed e nada sai', async () => {
+    it('cota pausada com a janela fechada: a ocorrência vira missed e nada sai', async () => {
         const { account, phone } = await linked('rem-paused');
+        await closeWindow(phone);
         const reminder: ReminderRow = await schedule(account, 'pagar a fatura');
         const before: number = bodiesTo(phone).length;
         const state = vi.spyOn(harness.app.get(PlanGateService, { strict: false }), 'stateOf').mockResolvedValueOnce('paused');
@@ -508,6 +509,19 @@ describe('lembretes pelo WhatsApp (drivers mock)', () => {
         state.mockRestore();
         expect((await occurrencesOf(reminder.id))[0]?.status).toBe('missed');
         expect(bodiesTo(phone)).toHaveLength(before);
+    });
+
+    it('cota pausada com a janela aberta: o lembrete sai como texto, que não custa', async () => {
+        const { account, phone } = await linked('rem-paused-open');
+        const reminder: ReminderRow = await schedule(account, 'pagar a fatura');
+        const templates: number = (await messagesOfKind(phone, 'template')).length;
+        const state = vi.spyOn(harness.app.get(PlanGateService, { strict: false }), 'stateOf').mockResolvedValueOnce('paused');
+
+        await fire(account, ((await occurrencesOf(reminder.id))[0] as OccurrenceRow).id);
+
+        state.mockRestore();
+        expect((await occurrencesOf(reminder.id))[0]?.status).toBe('sent');
+        expect(await messagesOfKind(phone, 'template')).toHaveLength(templates);
     });
 
     it('janela fechada sem cota para o template: missed, e o limite de disparos por template do mês também vira missed', async () => {

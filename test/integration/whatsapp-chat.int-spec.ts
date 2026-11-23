@@ -20,27 +20,12 @@ import { SignatureVerifier } from '../../src/modules/whatsapp/services/signature
 import { WhatsAppDirectReply } from '../../src/modules/whatsapp/services/whatsapp-direct-reply.service';
 import { TurnAnsweredHandler } from '../../src/modules/whatsapp-chat/access/queue/answer.handler';
 import { TurnRequestedHandler } from '../../src/modules/whatsapp-chat/access/queue/turn.handler';
-import { PendingActionExecutorPort } from '../../src/modules/whatsapp-chat/services/pending-action-executor.port';
+import { CalendarCreateEventTool } from '../../src/modules/google-calendar/services/calendar-ask-vera.tools';
+import { CalendarCreateExecutor } from '../../src/modules/google-calendar/services/calendar-pending-actions';
 import { Account, AllocationHarness } from './support/allocation-harness';
 import { CapturingPublisher, PublishedMessage } from './support/queue';
 
 const executed: { readonly kind: string; readonly payload: JsonObject }[] = [];
-
-abstract class FakeExecutor extends PendingActionExecutorPort {
-    public execute(payload: JsonObject): Promise<string | null> {
-        executed.push({ kind: this.kind, payload });
-        return Promise.resolve(null);
-    }
-
-    public describe(payload: JsonObject): string {
-        return `Confirmar: ${payload['title'] as string}`;
-    }
-}
-
-@Injectable()
-class FakeCalendarExecutor extends FakeExecutor {
-    public readonly kind = 'calendar_create' as const;
-}
 
 abstract class FakeTool extends AskVeraToolPort {
     public readonly feature: PaidFeature = 'whatsapp';
@@ -57,18 +42,12 @@ abstract class FakeTool extends AskVeraToolPort {
 }
 
 @Injectable()
-class FakeCalendarTool extends FakeTool {
-    public readonly name: string = 'calendar_create_event';
-    public readonly kind: AskVeraToolKind = 'proposal';
-}
-
-@Injectable()
 class FakeOutsideTool extends FakeTool {
     public readonly name: string = 'secret_tool';
     public readonly kind: AskVeraToolKind = 'read';
 }
 
-@Module({ providers: [FakeCalendarExecutor, FakeCalendarTool, FakeOutsideTool] })
+@Module({ providers: [FakeOutsideTool] })
 class FakeChatModule {}
 
 interface IssuedBody {
@@ -304,6 +283,17 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
         harness = await AllocationHarness.start('whatsapp_chat', publisher, [FakeChatModule]);
         outbox = harness.app.get(MockOutbox, { strict: false });
         llm = harness.app.get(MockLlmDriver, { strict: false });
+        const tool: CalendarCreateEventTool = harness.app.get(CalendarCreateEventTool, { strict: false });
+        vi.spyOn(tool, 'run').mockImplementation((input: unknown): Promise<AskVeraToolOutput> => {
+            const title: string = (input as { title: string }).title;
+            return Promise.resolve({ payload: { status: 'ok' }, proposal: { summary: `Proposta: ${title}`, payload: { title } } });
+        });
+        const executor: CalendarCreateExecutor = harness.app.get(CalendarCreateExecutor, { strict: false });
+        vi.spyOn(executor, 'execute').mockImplementation((payload: JsonObject): Promise<string | null> => {
+            executed.push({ kind: 'calendar_create', payload });
+            return Promise.resolve(null);
+        });
+        vi.spyOn(executor, 'describe').mockImplementation((payload: JsonObject): string => `Confirmar: ${payload['title'] as string}`);
     });
 
     afterAll(async () => {
