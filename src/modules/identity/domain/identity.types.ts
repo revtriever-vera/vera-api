@@ -74,7 +74,9 @@ export type LoginAudience = (typeof LOGIN_AUDIENCES)[keyof typeof LOGIN_AUDIENCE
 
 export const PLATFORM_AUDIT_ACTIONS = {
     login: 'admin.login',
-    denied: 'admin.denied'
+    denied: 'admin.denied',
+    signupLinkCreated: 'signup_link.created',
+    signupLinkRevoked: 'signup_link.revoked'
 } as const;
 
 export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[keyof typeof PLATFORM_AUDIT_ACTIONS];

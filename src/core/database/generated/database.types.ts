@@ -741,6 +741,24 @@ export interface Sessions {
     userId: string;
 }
 
+export interface SignupLinks {
+    createdAt: Generated<Timestamp>;
+    createdByUserId: string | null;
+    expiresAt: Timestamp | null;
+    id: string;
+    label: string;
+    maxUses: number | null;
+    redemptionCount: Generated<number>;
+    revokedAt: Timestamp | null;
+    rules: Generated<Json>;
+    subscriptionCount: Generated<number>;
+    token: string;
+    trialCount: Generated<number>;
+    trialDays: number | null;
+    trialKind: Generated<string>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface SpendingCategories {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -996,6 +1014,7 @@ export interface DB {
     ReminderOccurrences: ReminderOccurrences;
     Reminders: Reminders;
     Sessions: Sessions;
+    SignupLinks: SignupLinks;
     SpendingCategories: SpendingCategories;
     SpendingSettings: SpendingSettings;
     Throttles: Throttles;
