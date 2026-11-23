@@ -24,6 +24,7 @@ function link(overrides: Partial<SignupLink> = {}): SignupLink {
         rules: [],
         maxUses: 10,
         expiresAt: new Date(NOW.getTime() + 86_400_000),
+        offerValidityDays: 30,
         redemptionCount: 0,
         trialCount: 0,
         subscriptionCount: 0,

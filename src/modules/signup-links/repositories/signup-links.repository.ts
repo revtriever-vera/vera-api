@@ -3,9 +3,11 @@ import { DatabaseClient } from '../../../core/database/database.client';
 import { BareGlobalRepository } from '../../../core/database/repositories/bare-global.repository';
 import { NewSignupLink, SignupLink } from '../domain/signup-links.types';
 
+type OfferData = Pick<NewSignupLink, 'label' | 'trialKind' | 'trialDays' | 'rules' | 'maxUses' | 'expiresAt' | 'offerValidityDays'>;
+
 type CreateData = Pick<
     NewSignupLink,
-    'id' | 'token' | 'label' | 'trialKind' | 'trialDays' | 'rules' | 'maxUses' | 'expiresAt' | 'createdByUserId'
+    'id' | 'token' | 'label' | 'trialKind' | 'trialDays' | 'rules' | 'maxUses' | 'expiresAt' | 'offerValidityDays' | 'createdByUserId'
 >;
 
 @Injectable()
@@ -16,6 +18,10 @@ export class SignupLinksRepository extends BareGlobalRepository<'SignupLinks'> {
 
     public async create(data: CreateData): Promise<SignupLink> {
         return this.createRow(data);
+    }
+
+    public async updateOffer(id: string, offer: OfferData, now: Date): Promise<SignupLink | null> {
+        return this.updateRow(id, { ...offer, updatedAt: now });
     }
 
     public async findByToken(token: string): Promise<SignupLink | null> {

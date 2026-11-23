@@ -24,7 +24,7 @@ export class BillingOfferController {
         summary: 'Redeem a signup link in the signed-in account',
         description:
             'For an account that already exists: it must be Free, never have paid for Premium nor had a trial, and not have redeemed another link. ' +
-            'A no-card trial opens Premium right away; a card trial and the discount scale start when the owner subscribes, within 30 days. ' +
+            'A no-card trial opens Premium right away; a card trial and the discount scale start when the owner subscribes, within the validity set by the link (30 days by default). ' +
             'Trial offers need an email verified by the sign-in provider and that never redeemed a trial before. Limited per IP per day.'
     })
     @ApiZodBody(redeemOfferSchema)

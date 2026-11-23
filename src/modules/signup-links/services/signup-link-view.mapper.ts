@@ -19,12 +19,24 @@ export class SignupLinkViewMapper {
             rules: this.rulesOf(link),
             maxUses: link.maxUses,
             expiresAt: link.expiresAt?.toISOString() ?? null,
+            offerValidityDays: link.offerValidityDays,
             status: statusOf(link, now),
             redemptionCount: link.redemptionCount,
             trialCount: link.trialCount,
             subscriptionCount: link.subscriptionCount,
             revokedAt: link.revokedAt?.toISOString() ?? null,
             createdAt: link.createdAt.toISOString()
+        };
+    }
+
+    public toAuditSnapshot(link: SignupLink): Record<string, unknown> {
+        return {
+            label: link.label,
+            trial: { kind: link.trialKind, days: link.trialDays },
+            rules: this.rulesOf(link),
+            maxUses: link.maxUses,
+            expiresAt: link.expiresAt?.toISOString() ?? null,
+            offerValidityDays: link.offerValidityDays
         };
     }
 

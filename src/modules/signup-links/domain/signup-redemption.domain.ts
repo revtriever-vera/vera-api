@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { SignupRedemptionsRepository } from '../repositories/signup-redemptions.repository';
-import { REDEMPTION_VALIDITY_DAYS, RedemptionSource, SignupLink, SignupRedemption, TRIAL_KINDS } from './signup-links.types';
+import { RedemptionSource, SignupLink, SignupRedemption, TRIAL_KINDS } from './signup-links.types';
 
 @Injectable()
 export class SignupRedemptionDomain {
@@ -16,6 +16,10 @@ export class SignupRedemptionDomain {
         return this.redemptions.markApplied(at);
     }
 
+    public async refreshUnapplied(link: SignupLink, now: Date): Promise<void> {
+        await this.redemptions.refreshUnapplied(link, now);
+    }
+
     public async record(link: SignupLink, source: RedemptionSource, now: Date): Promise<SignupRedemption | null> {
         return this.redemptions.createOnce({
             id: IdUtil.newId(),
@@ -25,7 +29,7 @@ export class SignupRedemptionDomain {
             trialDays: link.trialDays,
             rules: JSON.stringify(link.rules),
             redeemedAt: now,
-            expiresAt: DateUtil.addDays(now, REDEMPTION_VALIDITY_DAYS),
+            expiresAt: DateUtil.addDays(now, link.offerValidityDays),
             trialStartedAt: link.trialKind === TRIAL_KINDS.noCard ? now : null
         });
     }

@@ -74,7 +74,9 @@ export const billingMeSchema = z.object({
         .describe('Free Premium trial in course; null when there is none'),
     offer: billingOfferSchema
         .nullable()
-        .describe('Signup-link offer redeemed by this account and still within its 30 days; null when there is none'),
+        .describe(
+            'Signup-link offer redeemed by this account and still within the validity set by its link (30 days by default); null when there is none'
+        ),
     features: z
         .object({
             ai: featureStateSchema.describe('Text summaries and the assistant'),

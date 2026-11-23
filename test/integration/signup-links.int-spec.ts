@@ -45,6 +45,7 @@ interface LinkBody {
     readonly trial: { kind: string; days: number | null };
     readonly rules: readonly { percent: number; fromCycle: number; toCycle: number }[];
     readonly redemptionCount: number;
+    readonly offerValidityDays: number;
 }
 
 interface ProblemBody {
@@ -158,6 +159,146 @@ describe('links de cadastro (hospedada)', () => {
             operatorUserId: adminId,
             meta: { linkId: created.id, trialKind: 'card' }
         });
+    });
+
+    it('a validade da oferta vem do link (30 dias por padrão) e define o vencimento do resgate', async () => {
+        const standard = (await (await createLink({ label: 'Padrão', trial: { kind: 'none', days: null } })).json()) as LinkBody;
+        const custom = (await (
+            await createLink({ label: 'Dez dias', trial: { kind: 'none', days: null }, offerValidityDays: 10 })
+        ).json()) as LinkBody;
+
+        expect(standard.offerValidityDays).toBe(30);
+        expect(custom.offerValidityDays).toBe(10);
+        expect((await createLink({ label: 'Zero', trial: { kind: 'none', days: null }, offerValidityDays: 0 })).status).toBe(400);
+        const account = (await (
+            await request('POST', '/auth/google', {
+                idToken: GOOGLE.register({
+                    subject: `g-${crypto.randomUUID()}`,
+                    email: `ana-${crypto.randomUUID()}@example.test`,
+                    name: 'Ana'
+                })
+            })
+        ).json()) as LoginBody;
+        expect((await request('POST', '/billing/offer/redeem', { token: custom.token }, account.accessToken)).status).toBe(200);
+        const row = await pg.query<{ days: number }>(
+            `SELECT round(extract(epoch FROM ("expiresAt" - "redeemedAt")) / 86400)::int AS days FROM "SignupRedemptions" WHERE "signupLinkId" = $1`,
+            [custom.id]
+        );
+        expect(row.rows[0]?.days).toBe(10);
+    });
+
+    it('editar o link muda o que vale para resgates novos e para ofertas resgatadas e não aplicadas, e audita antes e depois', async () => {
+        const created = (await (
+            await createLink({
+                label: 'Editável',
+                trial: { kind: 'card', days: 7 },
+                rules: [{ percent: 10, fromCycle: 1, toCycle: 2 }],
+                offerValidityDays: 30
+            })
+        ).json()) as LinkBody;
+        const pending = (await (
+            await request('POST', '/auth/google', {
+                idToken: GOOGLE.register({ subject: `g-${crypto.randomUUID()}`, email: `p-${crypto.randomUUID()}@example.test`, name: 'P' })
+            })
+        ).json()) as LoginBody;
+        const applied = (await (
+            await request('POST', '/auth/google', {
+                idToken: GOOGLE.register({ subject: `g-${crypto.randomUUID()}`, email: `a-${crypto.randomUUID()}@example.test`, name: 'A' })
+            })
+        ).json()) as LoginBody;
+        expect((await request('POST', '/billing/offer/redeem', { token: created.token }, pending.accessToken)).status).toBe(200);
+        expect((await request('POST', '/billing/offer/redeem', { token: created.token }, applied.accessToken)).status).toBe(200);
+        await pg.query(
+            `UPDATE "SignupRedemptions" SET "appliedAt" = now() WHERE "companyId" = (SELECT "companyId" FROM "Users" WHERE id = $1)`,
+            [applied.user.id]
+        );
+
+        const response: Response = await request(
+            'PATCH',
+            `/platform/signup-links/${created.id}`,
+            {
+                label: 'Editado',
+                trial: { kind: 'card', days: 21 },
+                rules: [{ percent: 40, fromCycle: 1, toCycle: 3 }],
+                offerValidityDays: 15
+            },
+            adminToken
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+            id: created.id,
+            token: created.token,
+            label: 'Editado',
+            trial: { kind: 'card', days: 21 },
+            rules: [{ percent: 40, fromCycle: 1, toCycle: 3 }],
+            offerValidityDays: 15,
+            redemptionCount: 2
+        });
+        const rows = await pg.query<{ trialDays: number; percent: number; days: number; applied: boolean }>(
+            `SELECT r."trialDays", (r.rules->0->>'percent')::int AS percent,
+                    round(extract(epoch FROM (r."expiresAt" - r."redeemedAt")) / 86400)::int AS days, r."appliedAt" IS NOT NULL AS applied
+               FROM "SignupRedemptions" r WHERE r."signupLinkId" = $1 ORDER BY applied`,
+            [created.id]
+        );
+        expect(rows.rows).toEqual([
+            { trialDays: 21, percent: 40, days: 15, applied: false },
+            { trialDays: 7, percent: 10, days: 30, applied: true }
+        ]);
+        const audit = (await (await request('GET', '/platform/audit?limit=200', undefined, adminToken)).json()) as AuditBody;
+        const entry = audit.items.find((item) => item.action === 'signup_link.updated');
+        expect(entry).toMatchObject({
+            operatorUserId: adminId,
+            meta: {
+                linkId: created.id,
+                before: { label: 'Editável', offerValidityDays: 30 },
+                after: { label: 'Editado', offerValidityDays: 15 }
+            }
+        });
+    });
+
+    it('editar sem mudar nada não grava nem audita; editar exige as mesmas regras da criação', async () => {
+        const created = (await (
+            await createLink({ label: 'Regras', trial: { kind: 'no_card', days: 7 }, maxUses: 5, expiresAt: inDays(10) })
+        ).json()) as LinkBody;
+        const updates = async (): Promise<number> => (await auditActions()).filter((action) => action === 'signup_link.updated').length;
+        const before: number = await updates();
+
+        const same: Response = await request('PATCH', `/platform/signup-links/${created.id}`, { label: 'Regras' }, adminToken);
+        const noLimit: Response = await request('PATCH', `/platform/signup-links/${created.id}`, { maxUses: null }, adminToken);
+        const noExpiry: Response = await request('PATCH', `/platform/signup-links/${created.id}`, { expiresAt: null }, adminToken);
+        const past: Response = await request('PATCH', `/platform/signup-links/${created.id}`, { expiresAt: inDays(-1) }, adminToken);
+        const tooFar: Response = await request('PATCH', `/platform/signup-links/${created.id}`, { expiresAt: inDays(91) }, adminToken);
+        const toNone: Response = await request(
+            'PATCH',
+            `/platform/signup-links/${created.id}`,
+            { trial: { kind: 'none', days: null }, maxUses: null, expiresAt: null },
+            adminToken
+        );
+
+        expect(same.status).toBe(200);
+        expect(await updates()).toBe(before + 1);
+        expect(((await noLimit.json()) as ProblemBody).meta?.reason).toBe('no_card_requires_max_uses');
+        expect(((await noExpiry.json()) as ProblemBody).meta?.reason).toBe('no_card_requires_expiry');
+        expect(((await past.json()) as ProblemBody).meta?.reason).toBe('expires_in_the_past');
+        expect(((await tooFar.json()) as ProblemBody).meta?.reason).toBe('no_card_expiry_too_far');
+        expect(toNone.status).toBe(200);
+    });
+
+    it('editar um link que não existe é 404 e quem não é da plataforma não edita', async () => {
+        const common = (await (
+            await request('POST', '/auth/google', {
+                idToken: GOOGLE.register({ subject: `g-${crypto.randomUUID()}`, email: `c-${crypto.randomUUID()}@example.test`, name: 'C' })
+            })
+        ).json()) as LoginBody;
+        const id: string = crypto.randomUUID();
+
+        const missing: Response = await request('PATCH', `/platform/signup-links/${id}`, { label: 'x' }, adminToken);
+
+        expect(missing.status).toBe(404);
+        expect(((await missing.json()) as ProblemBody).type).toBe('signup_links.not_found');
+        expect((await request('PATCH', `/platform/signup-links/${id}`, { label: 'x' }, common.accessToken)).status).toBe(403);
+        expect((await request('PATCH', `/platform/signup-links/${id}`, { label: 'x' })).status).toBe(401);
     });
 
     it('teste sem cartão sem limite ou sem validade é recusado com 422 e nada é gravado nem auditado', async () => {
