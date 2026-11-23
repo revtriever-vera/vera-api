@@ -4,7 +4,7 @@ import { LabelSource } from './context/ai-context.types';
 import { GuardCheck, GuardResult, guardSummary } from './summary-guard';
 import { ASK_VERA_MAX_ANSWER_CHARS, ASK_VERA_MAX_SENTENCES } from './ask-vera.types';
 
-export type AnswerCheck = GuardCheck | 'sentences' | 'format';
+export type AnswerCheck = GuardCheck | 'sentences' | 'format' | 'unproposed';
 
 export type AnswerVerdict =
     { readonly ok: true; readonly text: string } | { readonly ok: false; readonly check: AnswerCheck; readonly detail: string };

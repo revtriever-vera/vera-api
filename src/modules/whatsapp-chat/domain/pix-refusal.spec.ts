@@ -21,10 +21,16 @@ describe('isPaymentRequest', () => {
         expect(isPaymentRequest('pagamento do aluguel subiu?')).toBe(true);
     });
 
-    it.each(['quanto gastei com delivery?', 'como está minha carteira?', 'pixel art', 'apagar lembrete 2', 'marca reunião sexta às 15h'])(
-        '"%s" segue para o modelo',
-        (text: string) => {
-            expect(isPaymentRequest(text)).toBe(false);
-        }
-    );
+    it.each([
+        'quanto gastei com delivery?',
+        'como está minha carteira?',
+        'pixel art',
+        'apagar lembrete 2',
+        'marca reunião sexta às 15h',
+        'Me lembra de pagar o condomínio todo dia 12',
+        'me lembra de pagar a fatura do cartão',
+        'remind me to pay rent'
+    ])('"%s" segue para o modelo', (text: string) => {
+        expect(isPaymentRequest(text)).toBe(false);
+    });
 });

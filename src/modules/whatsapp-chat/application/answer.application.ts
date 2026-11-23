@@ -13,7 +13,9 @@ export class AnswerApplication {
 
     public async deliver(answer: TurnAnsweredPayload): Promise<void> {
         const text: string = replyTextOf(answer.text, { locale: answer.locale, portfolio: answer.portfolio });
-        await this.replier.text(answer.peer, text);
+        if (text !== '') {
+            await this.replier.text(answer.peer, text);
+        }
         for (const proposal of answer.proposals) {
             await this.replier.confirmation(answer.peer, proposal.summary, proposal.id, answer.locale);
         }

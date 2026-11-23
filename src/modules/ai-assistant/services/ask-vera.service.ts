@@ -29,6 +29,7 @@ import { AskVeraToolRegistry } from './ask-vera-tool.registry';
 export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraTurn } from '../domain/ask-vera.types';
 export { CVM_NOTICE_TOOLS } from '../domain/ask-vera.types';
 export { cvmNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
+export { isReminderRequest } from '../domain/ask-prefilter';
 
 function isCvmNoticeTool(tool: string): boolean {
     return CVM_NOTICE_TOOLS.has(tool);

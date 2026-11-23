@@ -147,6 +147,38 @@ describe('runAskLoop', () => {
         expect(result.proposals).toEqual([
             { tool: 'calendar_create_event', summary: 'Reunião sexta 15h', payload: { at: '2026-11-27T15:00' } }
         ]);
+        expect(result).toMatchObject({ ending: 'answered', text: '' });
+    });
+
+    it('proposta com texto do modelo que cita horário do pedido não cai na checagem de números', async () => {
+        const proposal: AskVeraToolOutput = { payload: {}, proposal: { summary: 'Reunião sexta 15h', payload: {} } };
+        const loop = build(
+            [reply('', [use('calendar_create_event', {})]), reply('Criar a reunião sexta, 27/11, às 15:00?')],
+            [tool('calendar_create_event', 'proposal', proposal)]
+        );
+        expect(await loop.run()).toMatchObject({ ending: 'answered', text: '', steps: 2 });
+    });
+
+    it('texto que diz "Lembrete criado" ou pede "Confirma?" sem chamar a ferramenta volta ao modelo para chamá-la', async () => {
+        const proposal: AskVeraToolOutput = { payload: {}, proposal: { summary: 'Lembrete dia 5', payload: {} } };
+        const loop = build(
+            [
+                reply('Vou criar um lembrete para aportar todo dia 5. Confirma?'),
+                reply('', [use('reminder_create', {})]),
+                reply('Aguardando a sua confirmação.')
+            ],
+            [tool('reminder_create', 'proposal', proposal)]
+        );
+        const result: AskLoopResult = await loop.run();
+        expect(result).toMatchObject({ ending: 'answered', steps: 3 });
+        expect(result.proposals).toHaveLength(1);
+    });
+
+    it('afirmar a criação sem ferramenta duas vezes termina em check_failed, nunca em "Lembrete criado"', async () => {
+        const claim: string = 'Lembrete criado. A Vera vai te avisar.';
+        const proposal: AskVeraToolOutput = { payload: {}, proposal: { summary: 'x', payload: {} } };
+        const result: AskLoopResult = await build([reply(claim), reply(claim)], [tool('reminder_create', 'proposal', proposal)]).run();
+        expect(result).toMatchObject({ ending: 'check_failed', text: '' });
     });
 
     it('ferramenta direta devolve o texto formatado sem voltar ao modelo', async () => {
