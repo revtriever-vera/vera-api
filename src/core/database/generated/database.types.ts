@@ -431,6 +431,8 @@ export interface Goals {
     planMonths: number;
     planStartMinor: Int8;
     planStartMonth: Timestamp;
+    reserveBaseMinor: Int8 | null;
+    reserveMonths: number | null;
     targetDate: Timestamp;
     targetMinor: Int8;
     updatedAt: Generated<Timestamp>;

@@ -60,3 +60,14 @@ export class GoalTargetDateInPastError extends AppError {
         });
     }
 }
+
+export class ReserveMonthsNotAllowedError extends AppError {
+    public constructor(kind: string) {
+        super({
+            code: 'goals.reserve_months_not_allowed',
+            status: 422,
+            detail: 'The months of the reserve only apply to an emergency reserve goal.',
+            meta: { kind }
+        });
+    }
+}
