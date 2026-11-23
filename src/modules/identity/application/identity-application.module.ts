@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DiscoveryModule } from '@nestjs/core';
 import { ContextModule } from '../../../core/context/context.module';
+import { CryptoModule } from '../../../core/crypto/crypto.module';
 import { MailModule } from '../../../core/mail/mail.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { ThrottleModule } from '../../../core/throttle/throttle.module';
@@ -49,8 +50,17 @@ import { SocialIdentityRegistry } from '../services/social-identity.registry';
 import { TokenService } from '../services/token.service';
 import { MemberRecipientsService } from '../services/member-recipients.service';
 import { OwnerRecipientsService } from '../services/owner-recipients.service';
+import { AdminSecurityMailerService } from '../services/admin-security-mailer.service';
+import { PlatformLoginService } from '../services/platform-login.service';
+import { RecoveryCodeService } from '../services/recovery-code.service';
+import { SecondFactorCodesService } from '../services/second-factor-codes.service';
+import { SecondFactorGateService } from '../services/second-factor-gate.service';
+import { SecondFactorNotifierService } from '../services/second-factor-notifier.service';
+import { TotpService } from '../services/totp.service';
+import { AdminSecurityTemplates } from '../templates/admin-security.templates';
 import { AccountDeletedTemplate } from '../templates/account-deleted.template';
 import { MemberTemplates } from '../templates/member.templates';
+import { AdminTotpApplication } from './admin-totp.application';
 import { AccountDeletionApplication } from './account-deletion.application';
 import { AccountExportApplication } from './account-export.application';
 import { AccountSpreadsheetExportApplication } from './account-spreadsheet-export.application';
@@ -70,12 +80,14 @@ import { SocialLoginApplication } from './social-login.application';
         ContextModule,
         ObservabilityModule,
         MailModule,
-        ThrottleModule
+        ThrottleModule,
+        CryptoModule
     ],
     providers: [
         ProfileApplication,
         SessionApplication,
         SocialLoginApplication,
+        AdminTotpApplication,
         AccountExportApplication,
         AccountSpreadsheetExportApplication,
         AccountDeletionApplication,
@@ -118,6 +130,14 @@ import { SocialLoginApplication } from './social-login.application';
         PlatformEnabledGuard,
         PlatformAvailabilityService,
         PlatformLoginAuditService,
+        PlatformLoginService,
+        TotpService,
+        RecoveryCodeService,
+        SecondFactorCodesService,
+        SecondFactorGateService,
+        SecondFactorNotifierService,
+        AdminSecurityMailerService,
+        AdminSecurityTemplates,
         PlatformSeedService,
         PlatformAuditReaderService,
         PlatformAuditRecorderService,
@@ -130,6 +150,7 @@ import { SocialLoginApplication } from './social-login.application';
         ProfileApplication,
         SessionApplication,
         SocialLoginApplication,
+        AdminTotpApplication,
         AccountExportApplication,
         AccountSpreadsheetExportApplication,
         AccountDeletionApplication,

@@ -9,7 +9,8 @@ import {
     AdminAudienceRequiredError,
     InvalidRefreshTokenError,
     PlatformOnlyError,
-    ReusedRefreshTokenError
+    ReusedRefreshTokenError,
+    SecondFactorRequiredError
 } from '../domain/identity.errors';
 import {
     Company,
@@ -23,6 +24,7 @@ import {
     User,
     UserRole
 } from '../domain/identity.types';
+import { SecondFactorProof } from '../domain/second-factor.proof';
 import { SessionDomain } from '../domain/session.domain';
 import { UserDomain } from '../domain/user.domain';
 import { SessionValidation } from '../domain/validations/session.validation';
@@ -60,7 +62,17 @@ export class SessionIssuerService implements SessionIssuerPort {
     ) {}
 
     public async issueForNewLogin(user: User, meta: RequestMeta, provider: LoginProvider, audience: LoginAudience): Promise<AuthTokens> {
+        if (audience === LOGIN_AUDIENCES.admin) {
+            throw new SecondFactorRequiredError();
+        }
         return this.issueInCompany(user.companyId, user, meta, provider, audience);
+    }
+
+    public async issueForPlatform(user: User, meta: RequestMeta, provider: LoginProvider, proof: SecondFactorProof): Promise<AuthTokens> {
+        if (proof.userId !== user.id) {
+            throw new SecondFactorRequiredError();
+        }
+        return this.issueInCompany(user.companyId, user, meta, provider, LOGIN_AUDIENCES.admin);
     }
 
     public async refresh(rawRefreshToken: string, meta: RequestMeta): Promise<AuthTokens> {

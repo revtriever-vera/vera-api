@@ -3,12 +3,13 @@ import { ThrottleModule } from '../../../core/throttle/throttle.module';
 import { ContextModule } from '../../../core/context/context.module';
 import { IdentityApplicationModule } from '../application/identity-application.module';
 import { AccountController } from './account.controller';
+import { AdminTotpController } from './admin-totp.controller';
 import { AuthController } from './auth.controller';
 import { InvitesController } from './invites.controller';
 import { MembersController } from './members.controller';
 
 @Module({
     imports: [IdentityApplicationModule, ContextModule, ThrottleModule],
-    controllers: [AuthController, AccountController, MembersController, InvitesController]
+    controllers: [AdminTotpController, AuthController, AccountController, MembersController, InvitesController]
 })
 export class IdentityHttpModule {}

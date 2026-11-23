@@ -865,6 +865,17 @@ export interface Transactions {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface UserRecoveryCodes {
+    codeHash: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    updatedAt: Generated<Timestamp>;
+    usedAt: Timestamp | null;
+    userId: string;
+}
+
 export interface Users {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -879,6 +890,18 @@ export interface Users {
     role: Generated<string>;
     termsAcceptedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
+}
+
+export interface UserTotps {
+    activatedAt: Timestamp | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    lastUsedStep: number | null;
+    secretEncrypted: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
 }
 
 export interface WhatsAppHealth {
@@ -1044,7 +1067,9 @@ export interface DB {
     Throttles: Throttles;
     TransactionImports: TransactionImports;
     Transactions: Transactions;
+    UserRecoveryCodes: UserRecoveryCodes;
     Users: Users;
+    UserTotps: UserTotps;
     WhatsAppHealth: WhatsAppHealth;
     WhatsAppLinkCodes: WhatsAppLinkCodes;
     WhatsAppLinks: WhatsAppLinks;

@@ -2,6 +2,11 @@ name: seed platform admin
 
 on:
   workflow_dispatch:
+    inputs:
+      reset_totp:
+        description: 'Zera o autenticador do admin em vez de criar o usuário'
+        type: boolean
+        default: false
 
 concurrency:
   group: seed-platform-admin
@@ -47,6 +52,7 @@ jobs:
       - name: cria o admin na company de sistema
         env:
           PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
+          PLATFORM_RESET_TOTP: ${{ inputs.reset_totp }}
         run: |
           PUBLIC_SUBNET_IDS="$(printf '%s' "$SHARED_INFRA_PROD" | jq -r '.publicSubnetIds | join(",")')"
           export PUBLIC_SUBNET_IDS

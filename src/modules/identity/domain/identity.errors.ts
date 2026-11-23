@@ -207,3 +207,53 @@ export class PlatformSeedRefusedError extends AppError {
         });
     }
 }
+
+export class SecondFactorRequiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.second_factor_required',
+            status: 403,
+            detail: 'A platform session is only issued after the second factor.'
+        });
+    }
+}
+
+export class InvalidTotpTokenError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.invalid_totp_token',
+            status: 401,
+            detail: 'The challenge or enrollment token is missing, expired or not valid for this step.'
+        });
+    }
+}
+
+export class InvalidTotpCodeError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.invalid_totp_code',
+            status: 401,
+            detail: 'The authenticator code or the recovery code is not valid.'
+        });
+    }
+}
+
+export class TotpNotEnrolledError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.totp_not_enrolled',
+            status: 409,
+            detail: 'There is no authenticator waiting for activation or active for this person.'
+        });
+    }
+}
+
+export class TotpAlreadyActiveError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.totp_already_active',
+            status: 409,
+            detail: 'This person already has an active authenticator; it is only reset through the platform seed.'
+        });
+    }
+}

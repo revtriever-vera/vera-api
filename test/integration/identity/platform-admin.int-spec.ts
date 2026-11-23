@@ -2,6 +2,7 @@ import { AddressInfo, Server } from 'node:net';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import { authenticator } from 'otplib';
 import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
@@ -11,7 +12,10 @@ import { InvalidGoogleTokenError, PlatformSeedRefusedError } from '../../../src/
 import { LoginProvider, PlatformSeedOutcome, SocialIdentity } from '../../../src/modules/identity/domain/identity.types';
 import { SocialIdentityVerifierPort } from '../../../src/modules/identity/ports/social-identity-verifier.port';
 import { GoogleIdentityVerifier } from '../../../src/modules/identity/services/google-identity.verifier';
+import { TokenService } from '../../../src/modules/identity/services/token.service';
 import { PlatformSeedService } from '../../../src/modules/identity/services/platform-seed.service';
+import { MailerPort } from '../../../src/core/mail/mailer.port';
+import { CapturingMailer } from '../support/capturing-mailer';
 import { createIsolatedDatabase, IsolatedDatabase } from '../support/isolated-database';
 import { isolateRedisForWorker } from '../support/queue';
 
@@ -54,6 +58,8 @@ interface Booted {
 
 const COOKIE_NAME: string = 'rt_refresh';
 const GOOGLE: FakeGoogle = new FakeGoogle();
+const MAILER: CapturingMailer = new CapturingMailer();
+const STEP_MS: number = 30_000;
 
 async function boot(label: string, deploymentMode: string): Promise<Booted> {
     const isolated: IsolatedDatabase = await createIsolatedDatabase(label);
@@ -66,6 +72,8 @@ async function boot(label: string, deploymentMode: string): Promise<Booted> {
     const testing: TestingModule = await Test.createTestingModule({ imports: [AppModule] })
         .overrideProvider(GoogleIdentityVerifier)
         .useValue(GOOGLE)
+        .overrideProvider(MailerPort)
+        .useValue(MAILER)
         .compile();
     const app: INestApplication = testing.createNestApplication();
     app.use(cookieParser());
@@ -100,6 +108,24 @@ function get(booted: Booted, path: string, token?: string): Promise<Response> {
     return fetch(`${booted.origin}${path}`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
 }
 
+interface StepBody {
+    readonly outcome: string;
+    readonly setupToken?: string;
+    readonly challengeToken?: string;
+    readonly accessToken?: string;
+    readonly recoveryCodes?: readonly string[];
+    readonly secret?: string;
+    readonly otpauthUri?: string;
+}
+
+function currentCode(secret: string): string {
+    return authenticator.clone({ epoch: Date.now() }).generate(secret);
+}
+
+function previousCode(secret: string): string {
+    return authenticator.clone({ epoch: Date.now() - 2 * STEP_MS }).generate(secret);
+}
+
 async function count(booted: Booted, table: string): Promise<number> {
     const result = await booted.pg.query<{ total: string }>(`SELECT count(*) AS total FROM "${table}"`);
     return Number(result.rows[0]?.total);
@@ -122,8 +148,25 @@ describe('company de sistema e admin (hospedada)', () => {
         await booted.pg.query('DELETE FROM "Throttles"');
     });
 
-    async function adminLogin(email: string = adminEmail, subject: string = 'g-admin'): Promise<Response> {
+    const second: { secret: string; recovery: string[] } = { secret: '', recovery: [] };
+
+    function googleAdmin(email: string, subject: string): Promise<Response> {
         return post(booted, '/auth/google', { idToken: GOOGLE.register({ subject, email, name: 'Admin' }), audience: 'admin' });
+    }
+
+    async function adminLogin(email: string = adminEmail, subject: string = 'g-admin'): Promise<Response> {
+        const step = (await (await googleAdmin(email, subject)).json()) as StepBody;
+        if (step.outcome === 'totp_enrollment_required') {
+            const enrolled = (await (await post(booted, '/auth/totp/enroll', { setupToken: step.setupToken })).json()) as StepBody;
+            second.secret = enrolled.secret ?? '';
+            const activated: Response = await post(booted, '/auth/totp/activate', {
+                setupToken: step.setupToken,
+                code: currentCode(second.secret)
+            });
+            second.recovery = [...(((await activated.clone().json()) as StepBody).recoveryCodes ?? [])];
+            return activated;
+        }
+        return post(booted, '/auth/totp/verify', { challengeToken: step.challengeToken, code: second.recovery.shift() });
     }
 
     it('o seed cria a company de sistema e o usuário; rodar de novo não faz nada; outro admin entra na mesma company', async () => {
@@ -157,7 +200,7 @@ describe('company de sistema e admin (hospedada)', () => {
         expect(body.user.email).toBe(adminEmail.toLowerCase());
         expect((jwt.decode(body.accessToken) as jwt.JwtPayload)['platform']).toBe(true);
         const audit = (await (await get(booted, '/platform/audit', body.accessToken)).json()) as AuditBody;
-        expect(audit.items[0]).toMatchObject({ action: 'admin.login', operatorUserId: body.user.id });
+        expect(audit.items.find((item) => item.action === 'admin.login')).toMatchObject({ operatorUserId: body.user.id });
     });
 
     it('o refresh da sessão admin mantém o claim e a rota continua aberta', async () => {
@@ -235,6 +278,245 @@ describe('company de sistema e admin (hospedada)', () => {
         expect(((await removal.json()) as ProblemBody).type).toBe('identity.platform_company_protected');
         expect(await count(booted, 'AccountInvites')).toBe(0);
     });
+
+    describe('segundo fator TOTP', () => {
+        interface Admin {
+            readonly email: string;
+            readonly subject: string;
+        }
+
+        async function freshAdmin(): Promise<Admin> {
+            const email: string = `totp-${crypto.randomUUID()}@example.test`;
+            await seedOf(booted, email);
+            return { email, subject: `g-${email}` };
+        }
+
+        async function step(admin: Admin): Promise<StepBody> {
+            return (await (await googleAdmin(admin.email, admin.subject)).json()) as StepBody;
+        }
+
+        async function enrolled(admin: Admin): Promise<{ secret: string; setupToken: string }> {
+            const first: StepBody = await step(admin);
+            const setupToken: string = first.setupToken ?? '';
+            const enroll = (await (await post(booted, '/auth/totp/enroll', { setupToken })).json()) as StepBody;
+            return { secret: enroll.secret ?? '', setupToken };
+        }
+
+        async function activated(admin: Admin): Promise<{ secret: string; codes: readonly string[]; body: StepBody }> {
+            const pending = await enrolled(admin);
+            const response: Response = await post(booted, '/auth/totp/activate', {
+                setupToken: pending.setupToken,
+                code: currentCode(pending.secret)
+            });
+            const body = (await response.json()) as StepBody;
+            return { secret: pending.secret, codes: body.recoveryCodes ?? [], body };
+        }
+
+        async function auditActions(): Promise<string[]> {
+            const rows = await booted.pg.query<{ action: string }>('SELECT action FROM "PlatformAuditLog" ORDER BY "createdAt", id');
+            return rows.rows.map((row) => row.action);
+        }
+
+        it('o login admin não devolve sessão: sem autenticador vem o token de cadastro, e nada é gravado como login', async () => {
+            const admin: Admin = await freshAdmin();
+            const sessions: number = await count(booted, 'Sessions');
+            const logins: number = (await auditActions()).filter((action: string) => action === 'admin.login').length;
+
+            const response: Response = await googleAdmin(admin.email, admin.subject);
+            const body = (await response.json()) as StepBody;
+
+            expect(response.status).toBe(200);
+            expect(body.outcome).toBe('totp_enrollment_required');
+            expect(body.accessToken).toBeUndefined();
+            expect(response.headers.getSetCookie().some((entry: string) => entry.startsWith(`${COOKIE_NAME}=`))).toBe(false);
+            expect(await count(booted, 'Sessions')).toBe(sessions);
+            expect((await auditActions()).filter((action: string) => action === 'admin.login')).toHaveLength(logins);
+        });
+
+        it('o cadastro devolve segredo e URI otpauth, e o segredo fica cifrado no banco', async () => {
+            const admin: Admin = await freshAdmin();
+
+            const pending = await enrolled(admin);
+            const stored = await booted.pg.query<{ secretEncrypted: string; activatedAt: Date | null }>(
+                'SELECT "secretEncrypted", "activatedAt" FROM "UserTotps"'
+            );
+
+            expect(pending.secret).toMatch(/^[A-Z2-7]+$/);
+            expect(stored.rows.some((row) => row.activatedAt === null && !row.secretEncrypted.includes(pending.secret))).toBe(true);
+            const again = (await (await post(booted, '/auth/totp/enroll', { setupToken: pending.setupToken })).json()) as StepBody;
+            expect(again.otpauthUri).toContain('otpauth://totp/Vera%20admin:');
+            expect(again.otpauthUri).toContain('issuer=Vera%20admin');
+            expect(again.secret).not.toBe(pending.secret);
+        });
+
+        it('a ativação com código errado leva 401; com o código certo traz dez códigos de recuperação em hash, a sessão, o e-mail e a trilha', async () => {
+            const admin: Admin = await freshAdmin();
+            const pending = await enrolled(admin);
+
+            const wrong: Response = await post(booted, '/auth/totp/activate', {
+                setupToken: pending.setupToken,
+                code: previousCode(pending.secret)
+            });
+            expect(wrong.status).toBe(401);
+            expect(((await wrong.json()) as ProblemBody).type).toBe('identity.invalid_totp_code');
+
+            const right: Response = await post(booted, '/auth/totp/activate', {
+                setupToken: pending.setupToken,
+                code: currentCode(pending.secret)
+            });
+            const body = (await right.json()) as StepBody & LoginBody;
+
+            expect(right.status).toBe(200);
+            expect(body.recoveryCodes).toHaveLength(10);
+            expect((jwt.decode(body.accessToken) as jwt.JwtPayload)['platform']).toBe(true);
+            expect((await get(booted, '/platform/audit', body.accessToken)).status).toBe(200);
+            const hashes = await booted.pg.query<{ codeHash: string }>('SELECT "codeHash" FROM "UserRecoveryCodes" WHERE "userId" = $1', [
+                body.user.id
+            ]);
+            expect(hashes.rowCount).toBe(10);
+            for (const code of body.recoveryCodes ?? []) {
+                expect(hashes.rows.map((row) => row.codeHash)).not.toContain(code);
+            }
+            expect(MAILER.latestFor(admin.email).template).toBe('admin-totp-activated');
+            const actions: string[] = await auditActions();
+            expect(actions).toContain('admin.totp_enrolled');
+            expect(actions.at(-1)).toBe('admin.login');
+        });
+
+        it('com autenticador ativo o login pede o desafio; o código só vale uma vez e o token do desafio não abre a API', async () => {
+            const admin: Admin = await freshAdmin();
+            const { secret } = await activated(admin);
+
+            const challenge: StepBody = await step(admin);
+            expect(challenge.outcome).toBe('totp_required');
+            expect(challenge.accessToken).toBeUndefined();
+            const opened: Response = await get(booted, '/platform/audit', challenge.challengeToken);
+            expect(opened.status).toBe(401);
+
+            const replay: Response = await post(booted, '/auth/totp/verify', {
+                challengeToken: challenge.challengeToken,
+                code: currentCode(secret)
+            });
+            expect(replay.status).toBe(401);
+            expect(((await replay.json()) as ProblemBody).type).toBe('identity.invalid_totp_code');
+        });
+
+        it('o código do passo seguinte e o de duas janelas atrás são recusados', async () => {
+            const admin: Admin = await freshAdmin();
+            const { secret } = await activated(admin);
+            const challenge: StepBody = await step(admin);
+            const future: string = authenticator.clone({ epoch: Date.now() + STEP_MS }).generate(secret);
+
+            const early: Response = await post(booted, '/auth/totp/verify', { challengeToken: challenge.challengeToken, code: future });
+            const stale: Response = await post(booted, '/auth/totp/verify', {
+                challengeToken: challenge.challengeToken,
+                code: previousCode(secret)
+            });
+
+            expect(early.status).toBe(401);
+            expect(stale.status).toBe(401);
+        });
+
+        it('código de recuperação entra uma vez só, avisa por e-mail e grava admin.recovery_code_used', async () => {
+            const admin: Admin = await freshAdmin();
+            const { codes } = await activated(admin);
+            const challenge: StepBody = await step(admin);
+            const code: string = (codes[0] ?? '').toUpperCase().replace('-', ' ');
+
+            const used: Response = await post(booted, '/auth/totp/verify', { challengeToken: challenge.challengeToken, code });
+            const body = (await used.json()) as LoginBody;
+
+            expect(used.status).toBe(200);
+            expect((jwt.decode(body.accessToken) as jwt.JwtPayload)['platform']).toBe(true);
+            expect(MAILER.latestFor(admin.email).template).toBe('admin-recovery-code-used');
+            expect(await auditActions()).toContain('admin.recovery_code_used');
+            const second: StepBody = await step(admin);
+            const again: Response = await post(booted, '/auth/totp/verify', { challengeToken: second.challengeToken, code: codes[0] });
+            expect(again.status).toBe(401);
+        });
+
+        it('cinco tentativas em 15 minutos e a sexta leva 429 com admin.totp_locked, mesmo com o código certo', async () => {
+            const admin: Admin = await freshAdmin();
+            const { secret } = await activated(admin);
+            await booted.pg.query('DELETE FROM "Throttles"');
+            const challenge: StepBody = await step(admin);
+            const attempt = (code: string): Promise<Response> =>
+                post(booted, '/auth/totp/verify', { challengeToken: challenge.challengeToken, code });
+
+            for (let index: number = 0; index < 5; index += 1) {
+                expect((await attempt('zzzzz-zzzzz')).status).toBe(401);
+            }
+            const locked: Response = await attempt('zzzzz-zzzzz');
+            const right: Response = await attempt(authenticator.clone({ epoch: Date.now() + STEP_MS }).generate(secret));
+
+            expect(locked.status).toBe(429);
+            expect(((await locked.json()) as ProblemBody).type).toBe('core.too_many_attempts');
+            expect(right.status).toBe(429);
+            expect((await auditActions()).filter((action: string) => action === 'admin.totp_locked')).toHaveLength(1);
+        });
+
+        it('cada token só serve ao seu passo, e sem token a rota responde 401', async () => {
+            const admin: Admin = await freshAdmin();
+            const setup: StepBody = await step(admin);
+
+            const wrongStep: Response = await post(booted, '/auth/totp/verify', { challengeToken: setup.setupToken, code: '123456' });
+            const forged: Response = await post(booted, '/auth/totp/enroll', { setupToken: 'x'.repeat(40) });
+
+            expect(wrongStep.status).toBe(401);
+            expect(((await wrongStep.json()) as ProblemBody).type).toBe('identity.invalid_totp_token');
+            expect(forged.status).toBe(401);
+        });
+
+        it('quem já tem autenticador ativo não recadastra, nem com um token de cadastro válido', async () => {
+            const admin: Admin = await freshAdmin();
+            const { body } = await activated(admin);
+            const user = (body as unknown as LoginBody).user;
+            const setupToken: string = booted.app.get(TokenService).signSecondFactorToken('totp_enrollment', user.id, user.companyId);
+
+            const response: Response = await post(booted, '/auth/totp/enroll', { setupToken });
+
+            expect(response.status).toBe(409);
+            expect(((await response.json()) as ProblemBody).type).toBe('identity.totp_already_active');
+        });
+
+        it('o token de desafio não serve para cadastrar', async () => {
+            const admin: Admin = await freshAdmin();
+            await activated(admin);
+            const challenge: StepBody = await step(admin);
+
+            const response: Response = await post(booted, '/auth/totp/enroll', { setupToken: challenge.challengeToken });
+
+            expect(response.status).toBe(401);
+        });
+
+        it('zerar pelo seed apaga o autenticador, revoga as sessões, audita e o próximo login cadastra de novo', async () => {
+            const admin: Admin = await freshAdmin();
+            const { body } = await activated(admin);
+            const context: AppContext = booted.app.get(AppContext);
+
+            const outcome: string = await context.run({ requestId: 'seed', locale: 'pt-BR' }, async () =>
+                booted.app.get(PlatformSeedService).resetTotp(admin.email)
+            );
+
+            expect(outcome).toBe('reset');
+            expect(await auditActions()).toContain('admin.totp_reset');
+            const live = await booted.pg.query<{ total: string }>(
+                'SELECT count(*) AS total FROM "Sessions" WHERE "userId" = $1 AND "revokedAt" IS NULL',
+                [(body as unknown as LoginBody).user.id]
+            );
+            expect(Number(live.rows[0]?.total)).toBe(0);
+            const remaining = await booted.pg.query<{ total: string }>(
+                'SELECT count(*) AS total FROM "UserTotps" WHERE "deletedAt" IS NULL AND "userId" = $1',
+                [(body as unknown as LoginBody).user.id]
+            );
+            expect(Number(remaining.rows[0]?.total)).toBe(0);
+            expect((await step(admin)).outcome).toBe('totp_enrollment_required');
+            const common: string = await context.run({ requestId: 'seed', locale: 'pt-BR' }, async () =>
+                booted.app.get(PlatformSeedService).resetTotp('ninguem@example.test')
+            );
+            expect(common).toBe('not_found');
+        });
+    });
 });
 
 describe('auto-hospedada sem admin', () => {
@@ -247,6 +529,13 @@ describe('auto-hospedada sem admin', () => {
     afterAll(async () => {
         await stop(booted);
         process.env['DEPLOYMENT_MODE'] = 'hosted';
+    });
+
+    it('os passos do TOTP respondem 404', async () => {
+        const response: Response = await post(booted, '/auth/totp/verify', { challengeToken: 'x'.repeat(40), code: '123456' });
+
+        expect(response.status).toBe(404);
+        expect(((await response.json()) as ProblemBody).type).toBe('identity.platform_disabled');
     });
 
     it('/platform responde 404, até sem token', async () => {

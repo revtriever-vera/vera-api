@@ -10,7 +10,7 @@ import { IdentityLogService } from '../services/identity-log.service';
 import { IdentityMetricsService } from '../services/identity-metrics.service';
 import { LoginOfferOutcome } from '../services/login-offer.port';
 import { LoginOfferRegistry } from '../services/login-offer.registry';
-import { PlatformLoginAuditService } from '../services/platform-login-audit.service';
+import { AdminLoginStep, PlatformLoginService } from '../services/platform-login.service';
 import { SocialIdentityRegistry } from '../services/social-identity.registry';
 
 const MS_PER_SECOND: number = 1000;
@@ -31,7 +31,7 @@ export class SocialLoginApplication {
         private readonly context: AppContext,
         private readonly logs: IdentityLogService,
         private readonly metrics: IdentityMetricsService,
-        private readonly platformLogin: PlatformLoginAuditService,
+        private readonly platformLogin: PlatformLoginService,
         private readonly offers: LoginOfferRegistry
     ) {}
 
@@ -54,7 +54,7 @@ export class SocialLoginApplication {
         }
     }
 
-    public async loginAdmin(credential: string, meta: RequestMeta): Promise<SocialLoginResult> {
+    public async loginAdmin(credential: string, meta: RequestMeta): Promise<AdminLoginStep> {
         this.platformLogin.assertEnabled();
         const verifier: SocialIdentityVerifierPort = this.registry.for(LOGIN_PROVIDERS.google);
         if (!verifier.enabled) {
@@ -68,11 +68,7 @@ export class SocialLoginApplication {
         }
     }
 
-    private async authenticateAdmin(
-        verifier: SocialIdentityVerifierPort,
-        credential: string,
-        meta: RequestMeta
-    ): Promise<SocialLoginResult> {
+    private async authenticateAdmin(verifier: SocialIdentityVerifierPort, credential: string, meta: RequestMeta): Promise<AdminLoginStep> {
         const identity: SocialIdentity = await this.verified(verifier, credential);
         const user: User | null = identity.emailVerified ? await this.provisioning.resolvePlatformUser(identity) : null;
         if (!user) {
@@ -80,10 +76,7 @@ export class SocialLoginApplication {
             throw new PlatformOnlyError();
         }
         this.context.enrich({ companyId: user.companyId, userId: user.id });
-        const tokens: AuthTokens = await this.sessionIssuer.issueForNewLogin(user, meta, verifier.provider, LOGIN_AUDIENCES.admin);
-        await this.platformLogin.granted(user, meta.ip);
-        this.metrics.login(verifier.provider, LOGIN_OUTCOMES.success);
-        return { tokens, isNewAccount: false, joinedAccount: false, offer: null };
+        return this.platformLogin.nextStep(user);
     }
 
     private async authenticate(

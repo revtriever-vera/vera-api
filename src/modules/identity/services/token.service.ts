@@ -34,6 +34,21 @@ interface RawClaims {
 const JWT_ALGORITHM: Algorithm = 'HS256';
 const OPAQUE_TOKEN_BYTES: number = 32;
 const SECONDS_PER_MINUTE: number = 60;
+const CHALLENGE_TTL_SECONDS: number = 5 * SECONDS_PER_MINUTE;
+const ENROLLMENT_TTL_SECONDS: number = 15 * SECONDS_PER_MINUTE;
+
+export type SecondFactorPurpose = typeof TOKEN_PURPOSES.totpChallenge | typeof TOKEN_PURPOSES.totpEnrollment;
+
+export interface SecondFactorClaims {
+    readonly sub: string;
+    readonly companyId: string;
+}
+
+interface RawSecondFactorClaims {
+    readonly sub?: unknown;
+    readonly companyId?: unknown;
+    readonly purpose?: unknown;
+}
 
 @Injectable()
 export class TokenService {
@@ -52,6 +67,21 @@ export class TokenService {
     public signAccessToken(userId: string, companyId: string, sessionId: string, locale: AppLocale, platform: boolean): string {
         const claims: TokenClaims = { sub: userId, companyId, purpose: TOKEN_PURPOSES.access, sessionId, locale, platform };
         return this.jwt.sign({ ...claims }, { expiresIn: this.accessTtlSeconds });
+    }
+
+    public signSecondFactorToken(purpose: SecondFactorPurpose, userId: string, companyId: string): string {
+        const ttl: number = purpose === TOKEN_PURPOSES.totpChallenge ? CHALLENGE_TTL_SECONDS : ENROLLMENT_TTL_SECONDS;
+        return this.jwt.sign({ sub: userId, companyId, purpose }, { expiresIn: ttl });
+    }
+
+    public verifySecondFactorToken(token: string, purpose: SecondFactorPurpose): SecondFactorClaims | null {
+        try {
+            const raw: RawSecondFactorClaims = this.jwt.verify<RawSecondFactorClaims>(token);
+            const valid: boolean = raw.purpose === purpose && typeof raw.sub === 'string' && typeof raw.companyId === 'string';
+            return valid ? { sub: raw.sub as string, companyId: raw.companyId as string } : null;
+        } catch {
+            return null;
+        }
     }
 
     public verifyAccessToken(token: string): TokenClaims | null {
