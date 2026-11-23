@@ -10,7 +10,7 @@ function fitsBand(band: readonly Charge[], candidate: Charge): boolean {
 export function groupIntoBands(charges: readonly Charge[]): readonly (readonly Charge[])[] {
     const bands: Charge[][] = [];
     for (const charge of [...charges].sort(byAmount)) {
-        const current: Charge[] | undefined = bands[bands.length - 1];
+        const current: Charge[] | undefined = bands.at(-1);
         if (current !== undefined && fitsBand(current, charge)) {
             current.push(charge);
             continue;

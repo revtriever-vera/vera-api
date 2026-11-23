@@ -18,6 +18,11 @@ type ToolKind = AskVeraToolPort['kind'];
 
 const FEATURE: PaidFeature = 'whatsapp';
 
+function invalidFieldOf(error: ReminderInvalidScheduleError): string {
+    const reason: unknown = error.meta?.['reason'];
+    return typeof reason === 'string' ? reason : 'at';
+}
+
 @Injectable()
 export class ReminderCreateTool extends AskVeraToolPort {
     public readonly name: string = 'reminder_create';
@@ -47,21 +52,21 @@ export class ReminderCreateTool extends AskVeraToolPort {
             return { payload: { status: 'refused', reason: 'limit_reached', say: texts.limitReached(limit) }, numbers: [limit] };
         }
         try {
-            const resolved: ResolvedReminder = resolveReminder(
-                input as ReminderRequest,
-                await this.timezones.timezoneOfCompany(),
-                new Date()
-            );
-            return {
-                payload: { status: 'proposed' },
-                proposal: { summary: texts.summaryCreate(resolved.text, whenOf(resolved, locale)), payload: this.payloadOf(resolved) }
-            };
+            return await this.propose(input as ReminderRequest, texts, locale);
         } catch (error: unknown) {
             if (error instanceof ReminderInvalidScheduleError) {
-                return { payload: { status: 'invalid', field: String(error.meta?.['reason'] ?? 'at') } };
+                return { payload: { status: 'invalid', field: invalidFieldOf(error) } };
             }
             throw error;
         }
+    }
+
+    private async propose(request: ReminderRequest, texts: ReminderTexts, locale: AppLocale): Promise<AskVeraToolOutput> {
+        const resolved: ResolvedReminder = resolveReminder(request, await this.timezones.timezoneOfCompany(), new Date());
+        return {
+            payload: { status: 'proposed' },
+            proposal: { summary: texts.summaryCreate(resolved.text, whenOf(resolved, locale)), payload: this.payloadOf(resolved) }
+        };
     }
 
     private payloadOf(resolved: ResolvedReminder): JsonObject {

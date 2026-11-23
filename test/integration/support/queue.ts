@@ -11,13 +11,12 @@ export interface PublishedMessage {
 
 export class CapturingPublisher extends QueuePublisherPort {
     public readonly published: PublishedMessage[] = [];
+    public readonly removed: { readonly queue: QueueName; readonly jobId: string }[] = [];
 
     public async publish(queue: QueueName, type: string, payload: unknown, options?: PublishOptions): Promise<void> {
         this.published.push({ queue, type, payload, options });
         return Promise.resolve();
     }
-
-    public readonly removed: { readonly queue: QueueName; readonly jobId: string }[] = [];
 
     public remove(queue: QueueName, jobId: string): Promise<void> {
         this.removed.push({ queue, jobId });

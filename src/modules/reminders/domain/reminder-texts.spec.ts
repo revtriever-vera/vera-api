@@ -36,10 +36,9 @@ describe('reminder texts', () => {
     });
 
     it('os títulos dos botões cabem nos 20 caracteres do WhatsApp', () => {
-        for (const locale of ['pt-BR', 'en'] as const) {
-            for (const title of Object.values(reminderTextsFor(locale).buttons)) {
-                expect(title.length).toBeLessThanOrEqual(20);
-            }
+        const titles: string[] = (['pt-BR', 'en'] as const).flatMap((locale): string[] => Object.values(reminderTextsFor(locale).buttons));
+        for (const title of titles) {
+            expect(title.length).toBeLessThanOrEqual(20);
         }
     });
 });

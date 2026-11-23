@@ -12,7 +12,7 @@ describe('RecurringDetectPublisherService', () => {
         expect(detectJobId('c1', start)).toBe(detectJobId('c1', start + WINDOW - 1));
         expect(detectJobId('c1', start)).not.toBe(detectJobId('c1', start + WINDOW));
         expect(detectJobId('c1', start)).not.toBe(detectJobId('c2', start));
-        expect(detectJobId('c1', start)).toBe('recurring-detect:c1:40');
+        expect(detectJobId('c1', start)).toBe('recurring-detect-c1-40');
     });
 
     it('o job espera o fim da janela, para pegar o que chegar durante a rajada', () => {
@@ -31,7 +31,7 @@ describe('RecurringDetectPublisherService', () => {
             MESSAGE_TYPES.recurringDetectRequested,
             { companyId: 'c1' },
             {
-                jobId: 'recurring-detect:c1:40',
+                jobId: 'recurring-detect-c1-40',
                 delayMs: 500_000
             }
         );

@@ -5,9 +5,9 @@ import { LocalParts, TimeOfDay, clippedTextOf, parseLocalAt, parseTimeOfDay, tim
 export type ReminderRequest = {
     readonly text: string;
     readonly kind: ReminderKind;
-    readonly at?: string | undefined;
-    readonly dayOfMonth?: number | undefined;
-    readonly time?: string | undefined;
+    readonly at?: string;
+    readonly dayOfMonth?: number;
+    readonly time?: string;
 };
 
 export type ResolvedReminder = {

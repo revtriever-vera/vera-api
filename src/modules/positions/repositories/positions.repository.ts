@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+// eslint-disable-next-line local/repository-escape -- o índice único de posição é por expressão (COALESCE do holder): o ON CONFLICT só se escreve em SQL
 import { sql } from 'kysely';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';

@@ -16,6 +16,19 @@ export function signatureOf(secret: string, timestamp: number, body: string): st
     return `t=${String(timestamp)},v1=${digest}`;
 }
 
+function post(url: string, secret: string, body: string): Promise<Response> {
+    const timestamp: number = Math.floor(Date.now() / MS_PER_SECOND);
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+            [SIGNATURE_HEADER]: signatureOf(secret, timestamp, body)
+        },
+        body,
+        signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS)
+    });
+}
+
 @Injectable()
 export class FakeEventDelivery {
     public constructor(
@@ -29,18 +42,8 @@ export class FakeEventDelivery {
         if (url === null || secret === null) {
             return;
         }
-        const body: string = JSON.stringify(event);
-        const timestamp: number = Math.floor(Date.now() / MS_PER_SECOND);
         try {
-            const response: Response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                    [SIGNATURE_HEADER]: signatureOf(secret, timestamp, body)
-                },
-                body,
-                signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS)
-            });
+            const response: Response = await post(url, secret, JSON.stringify(event));
             await response.body?.cancel();
             if (!response.ok) {
                 this.logs.fakeDeliveryFailed(event.type, `status_${String(response.status)}`);

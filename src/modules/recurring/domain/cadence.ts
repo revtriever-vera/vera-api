@@ -43,7 +43,7 @@ export function collapseDuplicates(charges: readonly Charge[]): CollapsedCharges
     const kept: Charge[] = [];
     const duplicates: Charge[] = [];
     for (const charge of [...charges].sort(byDate)) {
-        const previous: Charge | undefined = kept[kept.length - 1];
+        const previous: Charge | undefined = kept.at(-1);
         if (previous !== undefined && isDuplicateOf(charge, previous)) {
             duplicates.push(charge);
             continue;

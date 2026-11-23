@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
 import { MemberDirectoryService } from '../../identity/services/member-directory.service';
-import type { Issuer, ResolvedIssuer } from '../../issuers/domain/issuer.types';
+import type { Issuer, ResolvedIssuer } from '../../issuers/services/issuer-directory.service';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';

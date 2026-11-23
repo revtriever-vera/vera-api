@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { RecurrenceTransaction } from '../../transactions/services/transaction-reader.service';
 import { CategoryReaderService } from '../../spending-categories/services/category-reader.service';
 import { CategoryRuleService } from '../../spending-categories/services/category-rule.service';
-import { MerchantDictionaryService } from '../../spending-categories/services/merchant-dictionary.service';
 import { RecategorizationRegistry } from '../../spending-categories/services/recategorization.registry';
 import { TransactionReaderService } from '../../transactions/services/transaction-reader.service';
 import { RecurringSeriesRecord } from '../domain/recurring-series.types';
@@ -51,7 +50,7 @@ function build(charges: RecurrenceTransaction[], dictionaryPattern: string | nul
         { upsertFromCorrection: upsert } as unknown as CategoryRuleService,
         {
             resolve: vi.fn().mockReturnValue(dictionaryPattern === null ? null : { pattern: dictionaryPattern, category: 'subscriptions' })
-        } as unknown as MerchantDictionaryService,
+        },
         { recategorize } as unknown as RecategorizationRegistry,
         { categoryRule: vi.fn() } as unknown as RecurringLogService
     );

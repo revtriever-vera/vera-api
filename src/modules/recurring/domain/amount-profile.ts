@@ -31,7 +31,7 @@ export function profileAmounts(amounts: readonly number[]): AmountProfile | null
     const minAmountMinor: number = Math.min(...amounts);
     const maxAmountMinor: number = Math.max(...amounts);
     if (isFixed(amounts)) {
-        return { mode: VALUE_MODES.fixed, typicalAmountMinor: amounts[amounts.length - 1] ?? 0, minAmountMinor, maxAmountMinor };
+        return { mode: VALUE_MODES.fixed, typicalAmountMinor: amounts.at(-1) ?? 0, minAmountMinor, maxAmountMinor };
     }
     if (spreadOf(amounts) > VARIABLE_TOLERANCE * median(amounts)) {
         return null;

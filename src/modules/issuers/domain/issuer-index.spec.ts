@@ -109,6 +109,10 @@ describe('assertKnownIdsKept', () => {
         expect(() => {
             assertKnownIdsKept(['banco-a'], index.records);
         }).not.toThrow();
-        expect(reason(() => assertKnownIdsKept(['banco-b'], index.records))).toBe('known_id_removed');
+        expect(
+            reason(() => {
+                assertKnownIdsKept(['banco-b'], index.records);
+            })
+        ).toBe('known_id_removed');
     });
 });

@@ -8,7 +8,7 @@ export interface DetectPayload {
 }
 
 export function detectJobId(companyId: string, now: number): string {
-    return `recurring-detect:${companyId}:${String(Math.floor(now / DETECT_WINDOW_MS))}`;
+    return `recurring-detect-${companyId}-${String(Math.floor(now / DETECT_WINDOW_MS))}`;
 }
 
 export function untilWindowEnd(now: number): number {

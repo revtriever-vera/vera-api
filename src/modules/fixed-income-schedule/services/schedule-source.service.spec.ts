@@ -70,7 +70,7 @@ function build(options: { titles?: ValuedTitle[]; positions?: Position[]; assets
 describe('ScheduleSourceService', () => {
     it('passa o filtro de titular às posições e leva o titular do Tesouro', async () => {
         const doubles = build({
-            positions: [{ ...position('p1', 'a1'), holderUserId: 'ana' } as Position],
+            positions: [{ ...position('p1', 'a1'), holderUserId: 'ana' }],
             assets: [asset('a1')],
             prices: { a1: '1000' }
         });

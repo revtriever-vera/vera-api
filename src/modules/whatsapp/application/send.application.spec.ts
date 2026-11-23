@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { isRecipientAllowed } from '../domain/recipient-allowlist';
 import { ChannelHealthDomain } from '../domain/channel-health.domain';
 import { WhatsAppMessageDomain } from '../domain/whatsapp-message.domain';
 import { WhatsAppMessage, WhatsAppChannel } from '../domain/whatsapp.types';
@@ -73,14 +74,14 @@ function build(options: {
         health as unknown as ChannelHealthDomain,
         {
             current: vi.fn().mockResolvedValue(options.channel === undefined ? CHANNEL : options.channel),
-            keyOf: () => 'phone-1'
+            keyOf: () => 'phone-1',
+            isRecipientAllowed: (peer: string) => isRecipientAllowed(options.allowed ?? ['*'], peer)
         } as unknown as WhatsAppChannelService,
         { isOpen: vi.fn().mockResolvedValue(options.windowOpen ?? true) } as unknown as WhatsAppWindowService,
         port as unknown as WhatsAppCloudPort,
         new MockOutbox(),
         { message: vi.fn() } as unknown as WhatsAppMetricsService,
-        { notify: vi.fn().mockResolvedValue(undefined) } as unknown as OutboundFailureRegistry,
-        { WHATSAPP_ALLOWED_RECIPIENTS: options.allowed ?? ['*'] } as never
+        { notify: vi.fn().mockResolvedValue(undefined) } as unknown as OutboundFailureRegistry
     );
     return { application, messages, health, port };
 }

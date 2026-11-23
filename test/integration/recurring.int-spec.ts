@@ -152,7 +152,7 @@ describe('recurring', () => {
 
         expect(requests.length).toBeGreaterThan(0);
         expect(requests[0]?.payload).toEqual({ companyId: owner.company.id });
-        expect(requests[0]?.options?.jobId).toMatch(new RegExp(`^recurring-detect:${owner.company.id}:\\d+$`));
+        expect(requests[0]?.options?.jobId).toMatch(new RegExp(`^recurring-detect-${owner.company.id}-\\d+$`));
         expect(requests[0]?.options?.delayMs).toBeGreaterThan(0);
         expect(requests[0]?.options?.delayMs).toBeLessThanOrEqual(600_000);
     });

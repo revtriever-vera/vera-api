@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
 import { makeTitle } from '../../../../test/support/fixed-income-fixtures';
-import { InvalidHolderError } from '../../identity/domain/members.errors';
+import { InvalidHolderError } from '../../identity/services/member-directory.service';
 import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { IssuersLogService } from '../../issuers/services/issuers-log.service';

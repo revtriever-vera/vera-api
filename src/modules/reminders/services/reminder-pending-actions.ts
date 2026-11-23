@@ -24,9 +24,11 @@ function whenOfPayload(payload: CreatePayload, locale: AppLocale): string {
     );
 }
 
+type ExecutorKind = PendingActionExecutorPort['kind'];
+
 @Injectable()
 export class ReminderCreateExecutor extends PendingActionExecutorPort {
-    public readonly kind: 'reminder_create' = 'reminder_create';
+    public readonly kind: ExecutorKind = 'reminder_create';
 
     public constructor(
         private readonly engine: ReminderEngineService,
@@ -76,7 +78,7 @@ export class ReminderCreateExecutor extends PendingActionExecutorPort {
 
 @Injectable()
 export class ReminderDeleteExecutor extends PendingActionExecutorPort {
-    public readonly kind: 'reminder_delete' = 'reminder_delete';
+    public readonly kind: ExecutorKind = 'reminder_delete';
 
     public constructor(
         private readonly domain: ReminderDomain,

@@ -8,6 +8,7 @@ import {
 } from '../../integration-credentials/services/integration-credentials.service';
 import { PlanGateService } from '../../plans/services/plan-gate.service';
 import { whatsappConfig } from '../config/whatsapp.config';
+import { isRecipientAllowed } from '../domain/recipient-allowlist';
 import { WhatsAppProviderDisabledError } from '../domain/whatsapp.errors';
 import { HOSTED_CHANNEL_KEY, WhatsAppChannel } from '../domain/whatsapp.types';
 import { SignatureVerifier } from './signature.verifier';
@@ -26,6 +27,10 @@ export class WhatsAppChannelService {
 
     public keyOf(channel: WhatsAppChannel): string {
         return channel.companyId === null ? HOSTED_CHANNEL_KEY : channel.phoneNumberId;
+    }
+
+    public isRecipientAllowed(peer: string): boolean {
+        return isRecipientAllowed(this.config.WHATSAPP_ALLOWED_RECIPIENTS, peer);
     }
 
     public isHosted(): boolean {

@@ -1,4 +1,4 @@
-import { BillingCatalogPort, CatalogPlan, CatalogProduct } from '../ports/billing-catalog.port';
+import { BillingCatalogPort, CatalogPlan, CatalogPlanDraft, CatalogProduct } from '../ports/billing-catalog.port';
 
 export const PREMIUM_PRODUCT_REF: string = 'vera_premium';
 export const PREMIUM_PLAN_REF: string = 'vera_premium_monthly';
@@ -45,7 +45,7 @@ async function ensureProduct(catalog: BillingCatalogPort, settings: ProvisionSet
 export async function provisionCatalog(catalog: BillingCatalogPort, settings: ProvisionSettings): Promise<ProvisionResult> {
     await catalog.integrationOk();
     const { product, created }: ProductOutcome = await ensureProduct(catalog, settings);
-    const draft = { externalRef: PREMIUM_PLAN_REF, name: PREMIUM_NAME, productId: product.id, interval: 'monthly' } as const;
+    const draft: CatalogPlanDraft = { externalRef: PREMIUM_PLAN_REF, name: PREMIUM_NAME, productId: product.id, interval: 'monthly' };
     const existing: CatalogPlan | null = await catalog.planByRef(PREMIUM_PLAN_REF);
     if (existing === null) {
         const plan: CatalogPlan = await catalog.createPlan(draft);

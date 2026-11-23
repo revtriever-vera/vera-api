@@ -44,16 +44,11 @@ export class PositionApplication {
 
     @UsingTransaction()
     public async create(input: CreatePositionInput): Promise<PositionView> {
-        const asset: Asset = await this.catalog.requireById(input.assetId);
-        if (asset.status !== ACTIVE_ASSET_STATUS) {
-            throw new AssetNotAvailableError(asset.id);
-        }
+        const asset: Asset = await this.activeAsset(input.assetId);
         this.assertQuantity(input.quantity, asset);
         const holderUserId: string | null = await this.holderOf(input.holderUserId);
         const classId: string = await this.classIdFor(asset, input.classId);
-        if ((await this.positions.countAll()) >= MAX_POSITIONS_PER_COMPANY) {
-            throw new PositionLimitReachedError(MAX_POSITIONS_PER_COMPANY);
-        }
+        await this.assertRoom();
         const created: Position | null = await this.positions.createIfAbsent({
             assetId: asset.id,
             quantity: input.quantity,
@@ -91,6 +86,20 @@ export class PositionApplication {
         await this.positions.remove(position.id);
         await this.assignments.release(POSITION_SUBJECT_TYPE, position.id);
         this.recordWrite(POSITION_ACTIONS.removed, position);
+    }
+
+    private async activeAsset(assetId: string): Promise<Asset> {
+        const asset: Asset = await this.catalog.requireById(assetId);
+        if (asset.status !== ACTIVE_ASSET_STATUS) {
+            throw new AssetNotAvailableError(asset.id);
+        }
+        return asset;
+    }
+
+    private async assertRoom(): Promise<void> {
+        if ((await this.positions.countAll()) >= MAX_POSITIONS_PER_COMPANY) {
+            throw new PositionLimitReachedError(MAX_POSITIONS_PER_COMPANY);
+        }
     }
 
     private async require(id: string): Promise<Position> {

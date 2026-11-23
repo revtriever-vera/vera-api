@@ -65,7 +65,7 @@ export class RevtrieverHttp {
         }
     }
 
-    private async send<T>(request: RevtrieverRequest<T>): Promise<Response> {
+    private headersOf<T>(request: RevtrieverRequest<T>): Record<string, string> {
         const headers: Record<string, string> = {
             accept: 'application/json',
             authorization: `Bearer ${this.options.apiKey}`
@@ -76,10 +76,14 @@ export class RevtrieverHttp {
         if (request.idempotencyKey !== undefined) {
             headers['idempotency-key'] = request.idempotencyKey;
         }
+        return headers;
+    }
+
+    private async send<T>(request: RevtrieverRequest<T>): Promise<Response> {
         try {
             return await fetch(`${this.options.baseUrl}${request.path}`, {
                 method: request.method,
-                headers,
+                headers: this.headersOf(request),
                 body: request.body === undefined ? undefined : JSON.stringify(request.body),
                 signal: AbortSignal.timeout(this.options.timeoutMs)
             });

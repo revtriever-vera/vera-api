@@ -9,6 +9,6 @@ export async function problemTypeOf(response: Response): Promise<string | null> 
     } catch {
         return null;
     }
-    const parsed = revtrieverProblemSchema.safeParse(body);
+    const parsed: ReturnType<typeof revtrieverProblemSchema.safeParse> = revtrieverProblemSchema.safeParse(body);
     return parsed.success ? (parsed.data.type ?? null) : null;
 }

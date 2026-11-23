@@ -1,8 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
-import { whatsappConfig } from '../config/whatsapp.config';
+import { Injectable } from '@nestjs/common';
 import { ChannelHealthDomain } from '../domain/channel-health.domain';
-import { isRecipientAllowed } from '../domain/recipient-allowlist';
 import { WhatsAppMessageDomain } from '../domain/whatsapp-message.domain';
 import { MESSAGE_KINDS, SentMessage, WhatsAppChannel, WhatsAppMessage } from '../domain/whatsapp.types';
 import { WhatsAppCloudPort, WhatsAppGraphError } from '../ports/whatsapp-cloud.port';
@@ -24,8 +21,7 @@ export class SendApplication {
         private readonly port: WhatsAppCloudPort,
         private readonly outbox: MockOutbox,
         private readonly metrics: WhatsAppMetricsService,
-        private readonly failures: OutboundFailureRegistry,
-        @Inject(whatsappConfig.KEY) private readonly config: ConfigType<typeof whatsappConfig>
+        private readonly failures: OutboundFailureRegistry
     ) {}
 
     public devOutbox(): readonly MockSentMessage[] {
@@ -53,7 +49,7 @@ export class SendApplication {
         if (channel === null) {
             return 'provider_disabled';
         }
-        if (!isRecipientAllowed(this.config.WHATSAPP_ALLOWED_RECIPIENTS, message.peer)) {
+        if (!this.channels.isRecipientAllowed(message.peer)) {
             return 'recipient_not_allowed';
         }
         const needsWindow: boolean = message.kind !== MESSAGE_KINDS.template;

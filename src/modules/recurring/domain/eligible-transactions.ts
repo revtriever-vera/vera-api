@@ -29,16 +29,23 @@ function closestMirror(
     return best;
 }
 
-export function findMirrorIds(transactions: readonly DetectorTransaction[]): ReadonlySet<string> {
+function inflowsByAmountOf(transactions: readonly DetectorTransaction[]): ReadonlyMap<string, readonly DetectorTransaction[]> {
     const inflowsByAmount: Map<string, DetectorTransaction[]> = new Map<string, DetectorTransaction[]>();
     for (const transaction of transactions) {
         if (transaction.amountMinor > 0) {
             pushTo(inflowsByAmount, String(transaction.amountMinor), transaction);
         }
     }
+    return inflowsByAmount;
+}
+
+export function findMirrorIds(transactions: readonly DetectorTransaction[]): ReadonlySet<string> {
+    const inflowsByAmount: ReadonlyMap<string, readonly DetectorTransaction[]> = inflowsByAmountOf(transactions);
     const mirrored: Set<string> = new Set<string>();
-    const outflows: DetectorTransaction[] = transactions.filter((item: DetectorTransaction): boolean => item.amountMinor < 0);
-    for (const outflow of outflows.sort(byDateThenId)) {
+    const outflows: DetectorTransaction[] = transactions
+        .filter((item: DetectorTransaction): boolean => item.amountMinor < 0)
+        .toSorted(byDateThenId);
+    for (const outflow of outflows) {
         const mirror: DetectorTransaction | null = closestMirror(
             inflowsByAmount.get(String(-outflow.amountMinor)) ?? [],
             outflow,
@@ -75,26 +82,33 @@ function takeRefund(
     inflowsByKey: ReadonlyMap<string, readonly DetectorTransaction[]>,
     used: ReadonlySet<string>
 ): DetectorTransaction | null {
-    for (const key of refundKeys(outflow)) {
-        for (const inflow of inflowsByKey.get(key) ?? []) {
-            if (!used.has(inflow.id) && isRefundOf(inflow, outflow)) {
-                return inflow;
-            }
-        }
+    return (
+        refundKeys(outflow)
+            .flatMap((key: string): readonly DetectorTransaction[] => inflowsByKey.get(key) ?? [])
+            .find((inflow: DetectorTransaction): boolean => !used.has(inflow.id) && isRefundOf(inflow, outflow)) ?? null
+    );
+}
+
+function inflowsByKeyOf(transactions: readonly DetectorTransaction[]): ReadonlyMap<string, readonly DetectorTransaction[]> {
+    const inflowsByKey: Map<string, DetectorTransaction[]> = new Map<string, DetectorTransaction[]>();
+    const keyed: readonly { readonly key: string; readonly transaction: DetectorTransaction }[] = transactions
+        .toSorted(byDateThenId)
+        .filter((transaction: DetectorTransaction): boolean => transaction.amountMinor > 0)
+        .flatMap((transaction: DetectorTransaction) => refundKeys(transaction).map((key: string) => ({ key, transaction })));
+    for (const { key, transaction } of keyed) {
+        pushTo(inflowsByKey, key, transaction);
     }
-    return null;
+    return inflowsByKey;
 }
 
 export function findRefundedIds(transactions: readonly DetectorTransaction[]): ReadonlySet<string> {
-    const inflowsByKey: Map<string, DetectorTransaction[]> = new Map<string, DetectorTransaction[]>();
-    for (const transaction of [...transactions].sort(byDateThenId)) {
-        for (const key of transaction.amountMinor > 0 ? refundKeys(transaction) : []) {
-            pushTo(inflowsByKey, key, transaction);
-        }
-    }
+    const inflowsByKey: ReadonlyMap<string, readonly DetectorTransaction[]> = inflowsByKeyOf(transactions);
     const used: Set<string> = new Set<string>();
     const refunded: Set<string> = new Set<string>();
-    for (const outflow of transactions.filter((item: DetectorTransaction): boolean => item.amountMinor < 0).sort(byDateThenId)) {
+    const outflows: readonly DetectorTransaction[] = transactions
+        .filter((item: DetectorTransaction): boolean => item.amountMinor < 0)
+        .toSorted(byDateThenId);
+    for (const outflow of outflows) {
         const inflow: DetectorTransaction | null = takeRefund(outflow, inflowsByKey, used);
         if (inflow !== null) {
             used.add(inflow.id);
