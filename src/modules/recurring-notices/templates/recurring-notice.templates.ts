@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MailContent } from '../../../core/mail/mail.types';
 import { TemplateProps, TemplateRegistry } from '../../../core/mail/template.registry';
-import { baseLayout } from '../../../core/mail/templates/base-layout';
+import { baseLayout, textFooter } from '../../../core/mail/templates/base-layout';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { formatMoney } from '../../../shared/utils/format-money';
 import { weekdayIndexOf } from '../domain/notice-dates';
@@ -165,7 +165,7 @@ function weekContent(locale: AppLocale, props: TemplateProps): MailContent {
             ctaUrl: appUrlOf(props),
             unsubscribeUrl: props['unsubscribeUrl']
         }),
-        text: `${greeting}\n\n${bulletsOf(lines)}${lookText}\n\n${copy.cta}: ${appUrlOf(props)}`
+        text: `${greeting}\n\n${bulletsOf(lines)}${lookText}\n\n${copy.cta}: ${appUrlOf(props)}${textFooter(locale, props['unsubscribeUrl'])}`
     };
 }
 
@@ -188,7 +188,7 @@ function dueContent(locale: AppLocale, props: TemplateProps): MailContent {
             ctaUrl: appUrlOf(props),
             unsubscribeUrl: props['unsubscribeUrl']
         }),
-        text: `${greeting}\n\n${due.name}${SEPARATOR}${amount}\n${body}\n\n${copy.cta}: ${appUrlOf(props)}`
+        text: `${greeting}\n\n${due.name}${SEPARATOR}${amount}\n${body}\n\n${copy.cta}: ${appUrlOf(props)}${textFooter(locale, props['unsubscribeUrl'])}`
     };
 }
 

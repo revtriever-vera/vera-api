@@ -34,13 +34,15 @@ const priceTableEnvSchema = z
         return z.NEVER;
     });
 
+const blankAsUndefined = (value: unknown): unknown => (typeof value === 'string' && value.trim() === '' ? undefined : value);
+
 const schema = z
     .object({
         IS_LOCAL: isLocalSchema,
         LLM_DRIVER: z.enum(['live', 'mock']).default('mock'),
         AI_GATEWAY_API_KEY: z.string().default(''),
-        LLM_MODEL_ID: z.string().min(1).default(DEFAULT_MODEL_ID),
-        LLM_MODEL: z.string().optional(),
+        LLM_MODEL_ID: z.preprocess(blankAsUndefined, z.string().trim().min(1).default(DEFAULT_MODEL_ID)),
+        LLM_MODEL: z.preprocess(blankAsUndefined, z.string().trim().optional()),
         LLM_PRICE_TABLE: priceTableEnvSchema,
         LLM_TIMEOUT_MS: z.coerce.number().int().min(1).default(DEFAULT_TIMEOUT_MS),
         LLM_MAX_RETRIES: z.coerce.number().int().min(0).default(DEFAULT_MAX_RETRIES),
