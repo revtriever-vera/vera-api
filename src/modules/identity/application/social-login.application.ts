@@ -15,6 +15,7 @@ const MS_PER_SECOND: number = 1000;
 export interface SocialLoginResult {
     readonly tokens: AuthTokens;
     readonly isNewAccount: boolean;
+    readonly joinedAccount: boolean;
 }
 
 @Injectable()
@@ -28,26 +29,35 @@ export class SocialLoginApplication {
         private readonly metrics: IdentityMetricsService
     ) {}
 
-    public async login(provider: LoginProvider, credential: string, meta: RequestMeta): Promise<SocialLoginResult> {
+    public async login(provider: LoginProvider, credential: string, meta: RequestMeta, inviteToken?: string): Promise<SocialLoginResult> {
         const verifier: SocialIdentityVerifierPort = this.registry.for(provider);
         if (!verifier.enabled) {
             throw new ProviderDisabledError(provider);
         }
         try {
-            return await this.authenticate(verifier, credential, meta);
+            return await this.authenticate(verifier, credential, meta, inviteToken);
         } catch (error: unknown) {
             this.metrics.login(provider, LOGIN_OUTCOMES.failed);
             throw error;
         }
     }
 
-    private async authenticate(verifier: SocialIdentityVerifierPort, credential: string, meta: RequestMeta): Promise<SocialLoginResult> {
+    private async authenticate(
+        verifier: SocialIdentityVerifierPort,
+        credential: string,
+        meta: RequestMeta,
+        inviteToken?: string
+    ): Promise<SocialLoginResult> {
         const identity: SocialIdentity = await this.verified(verifier, credential);
-        const result: ProvisionResult = await this.provisioning.resolve(identity, this.context.get().locale);
+        const result: ProvisionResult = await this.provisioning.resolve(identity, this.context.get().locale, inviteToken);
         this.context.enrich({ companyId: result.user.companyId, userId: result.user.id });
         const tokens: AuthTokens = await this.sessionIssuer.issueForNewLogin(result.user, meta, verifier.provider);
         this.metrics.login(verifier.provider, result.outcome);
-        return { tokens, isNewAccount: result.outcome === LOGIN_OUTCOMES.newAccount };
+        return {
+            tokens,
+            isNewAccount: result.outcome === LOGIN_OUTCOMES.newAccount,
+            joinedAccount: result.outcome === LOGIN_OUTCOMES.joined
+        };
     }
 
     private async verified(verifier: SocialIdentityVerifierPort, credential: string): Promise<SocialIdentity> {

@@ -10,6 +10,7 @@ import { AccountDataRegistry } from '../services/account-data.registry';
 import { CurrentUserService } from '../services/current-user.service';
 import { IdentityLogService } from '../services/identity-log.service';
 import { IdentityMetricsService } from '../services/identity-metrics.service';
+import { AccountClosureMailer } from '../services/account-closure-mailer.service';
 import { AccountDeletionApplication } from './account-deletion.application';
 
 const AT: Date = new Date('2026-01-01T00:00:00.000Z');
@@ -25,7 +26,9 @@ const USER: User = {
     termsAcceptedAt: AT,
     createdAt: AT,
     updatedAt: AT,
-    deletedAt: null
+    deletedAt: null,
+    removedAt: null,
+    removedByUserId: null
 };
 
 const COMPANY: Company = {
@@ -85,7 +88,7 @@ function build(options: Options = {}): Doubles {
                 return (options.eraseAll ?? (() => Promise.resolve([{ area: 'assets', erased: 2 }])))();
             })
         } as unknown as AccountDataRegistry,
-        { enqueue },
+        { othersOf: vi.fn().mockResolvedValue([]), notifyAll: enqueue } as unknown as AccountClosureMailer,
         { deletionStarted: vi.fn(), accountDeleted: vi.fn() } as unknown as IdentityLogService,
         { accountDeletion } as unknown as IdentityMetricsService
     );
@@ -105,13 +108,10 @@ describe('AccountDeletionApplication', () => {
             completedAt: expect.any(Date),
             areas: [{ area: 'assets', erased: 2 }]
         });
-        expect(doubles.enqueue).toHaveBeenCalledWith({
-            template: 'account-deleted',
-            locale: 'en',
-            props: { firstName: 'Pessoa' },
-            to: { email: 'Pessoa.Teste@Example.test', name: 'Pessoa' },
-            reference: 'hash-1'
-        });
+        expect(doubles.enqueue).toHaveBeenCalledWith(
+            expect.objectContaining({ locale: 'en', firstName: 'Pessoa', email: 'Pessoa.Teste@Example.test', others: [] }),
+            'hash-1'
+        );
         expect(doubles.accountDeletion).toHaveBeenCalledWith('success');
     });
 

@@ -333,6 +333,7 @@ export class AppStack extends Stack {
             PLUGGY_DRIVER: 'mock',
             APP_VERSION: props.imageTag,
             COOKIE_SECURE: 'true',
+            APP_URL: `https://${props.config.appHost}`,
             CORS_ORIGINS: `https://${props.config.appHost}`
         };
     }

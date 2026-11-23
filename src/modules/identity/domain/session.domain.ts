@@ -39,6 +39,10 @@ export class SessionDomain {
         return this.sessions.revokeFamily(familyId);
     }
 
+    public async revokeAllForUser(userId: string): Promise<number> {
+        return this.sessions.revokeAllForUser(userId);
+    }
+
     public async listActive(userId: string): Promise<Session[]> {
         return this.sessions.findActive(userId, new Date());
     }

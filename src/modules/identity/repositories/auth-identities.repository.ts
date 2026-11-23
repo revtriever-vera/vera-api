@@ -5,6 +5,8 @@ import { TenantRepository } from '../../../core/database/repositories/tenant.rep
 import { IdUtil } from '../../../shared/utils/id.util';
 import { AuthIdentity, NewAuthIdentity } from '../domain/identity.types';
 
+const HARD_DELETE_BATCH: number = 20;
+
 type CreateAuthIdentityData = Pick<NewAuthIdentity, 'userId' | 'provider' | 'subject' | 'email' | 'emailVerified' | 'lastLoginAt'>;
 
 @Injectable()
@@ -23,6 +25,10 @@ export class AuthIdentitiesRepository extends TenantRepository<'AuthIdentities'>
 
     public async touchLogin(id: string, at: Date): Promise<AuthIdentity | null> {
         return this.updateRow(id, { lastLoginAt: at });
+    }
+
+    public async eraseForUser(userId: string): Promise<number> {
+        return this.hardDeleteWhere({ userId }, HARD_DELETE_BATCH);
     }
 
     public async findByUser(userId: string): Promise<AuthIdentity[]> {
