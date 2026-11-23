@@ -1,6 +1,5 @@
 import { DecimalUtil } from '../../../shared/utils/decimal.util';
-import { BPS_BASE } from '../../spending-summary/domain/spending-summary.types';
-import { RESERVE_CHANGE_THRESHOLD_BPS, ReserveBasis } from './goals.types';
+import { BPS_BASE, RESERVE_CHANGE_THRESHOLD_BPS, ReserveBasis } from './goals.types';
 
 export interface ReserveReview {
     readonly months: number;

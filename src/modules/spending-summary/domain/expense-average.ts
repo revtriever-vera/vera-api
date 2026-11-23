@@ -7,6 +7,13 @@ export interface ExpenseAverage {
     readonly averageMinor: number | null;
 }
 
+function expenseOfNet(net: CategoryMonthNet, expenseIds: ReadonlySet<string>, known: ReadonlySet<string>): number {
+    if (net.categoryId !== null && expenseIds.has(net.categoryId)) {
+        return net.netMinor;
+    }
+    return net.categoryId === null || !known.has(net.categoryId) ? net.outflowMinor : 0;
+}
+
 function expenseOfMonth(month: string, nets: readonly CategoryMonthNet[], categories: readonly CategoryInfo[]): number {
     const expenseIds: ReadonlySet<string> = new Set<string>(
         categories.filter((category: CategoryInfo): boolean => category.kind === CATEGORY_KINDS.expense).map((category) => category.id)
@@ -14,13 +21,8 @@ function expenseOfMonth(month: string, nets: readonly CategoryMonthNet[], catego
     const known: ReadonlySet<string> = new Set<string>(categories.map((category: CategoryInfo): string => category.id));
     let spent: number = 0;
     for (const net of nets) {
-        if (net.month !== month) {
-            continue;
-        }
-        if (net.categoryId !== null && expenseIds.has(net.categoryId)) {
-            spent -= net.netMinor;
-        } else if (net.categoryId === null || !known.has(net.categoryId)) {
-            spent -= net.outflowMinor;
+        if (net.month === month) {
+            spent -= expenseOfNet(net, expenseIds, known);
         }
     }
     return spent;

@@ -33,6 +33,7 @@ export type GoalStatus = (typeof GOAL_STATUSES)[keyof typeof GOAL_STATUSES];
 
 export const RESERVE_MONTH_OPTIONS = [3, 6, 12] as const;
 export const DEFAULT_RESERVE_MONTHS: number = 6;
+export const BPS_BASE: number = 10_000;
 export const RESERVE_CHANGE_THRESHOLD_BPS: number = 1000;
 export const MAX_GOALS_PER_COMPANY: number = 20;
 export const MAX_HOLDINGS_PER_GOAL: number = 50;
