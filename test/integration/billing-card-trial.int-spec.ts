@@ -111,6 +111,15 @@ describe('teste com cartão (driver fake)', () => {
         return { status: response.status, text: response.text };
     }
 
+    async function funnelOf(account: Account): Promise<{ trialCount: number; subscriptionCount: number }> {
+        const rows = await harness.pg.query<{ trialCount: number; subscriptionCount: number }>(
+            `SELECT l."trialCount", l."subscriptionCount" FROM "SignupLinks" l
+             JOIN "SignupRedemptions" r ON r."signupLinkId" = l.id WHERE r."companyId" = $1`,
+            [account.company.id]
+        );
+        return rows.rows[0] ?? { trialCount: -1, subscriptionCount: -1 };
+    }
+
     function mails(template: string): number {
         return publisher.published.filter((message: PublishedMessage) => (message.payload as { template?: string }).template === template)
             .length;
@@ -183,6 +192,7 @@ describe('teste com cartão (driver fake)', () => {
         expect(row?.firstChargeDate).toBe(DateUtil.localDateIn(timezone ?? DateUtil.BRAZIL_TIMEZONE, expectedEnd));
         expect(row?.trialStartedAt).toBeNull();
         expect((await me(account)).plan).toBe('free');
+        expect(await funnelOf(account)).toEqual({ trialCount: 0, subscriptionCount: 1 });
 
         const confirmed: Me = await saveCardAndConfirm(account, captureUrl);
 
@@ -195,6 +205,7 @@ describe('teste com cartão (driver fake)', () => {
         expect(confirmed.subscription?.discount).toMatchObject({ percent: 50, cycle: 1 });
         expect(confirmed.subscription?.nextChargeAmountMinor).toBe(Math.round(confirmed.priceCents / 2));
         expect(mails('premium_trial_started')).toBe(1);
+        expect(await funnelOf(account)).toEqual({ trialCount: 1, subscriptionCount: 1 });
         await sync();
         const invoices = await harness.pg.query('SELECT count(*)::int AS total FROM "BillingInvoices" WHERE "companyId" = $1', [
             account.company.id
@@ -344,6 +355,7 @@ describe('teste com cartão (driver fake)', () => {
         ]);
         expect(rows.rows).toEqual([{ status: 'canceled' }]);
         expect((await me(account)).plan).toBe('free');
+        expect(await funnelOf(account)).toEqual({ trialCount: 0, subscriptionCount: 0 });
         const again = await harness.call<Subscribed>(account.token, 'POST', '/billing/subscription', { method: 'card' });
         expect(again.status).toBe(201);
         const reserved = await harness.pg.query<{ trialEndsAt: Date | null }>(
@@ -370,5 +382,33 @@ describe('teste com cartão (driver fake)', () => {
         const props = (sent?.payload as { props: Record<string, string> }).props;
         expect(props['cardLast4']).toBe('4242');
         expect(props['amount']).toContain('7,45');
+    });
+
+    it('quem assina durante o teste sem cartão recebe o aviso de 3 dias antes da primeira cobrança, uma vez só', async () => {
+        const account: Account = await harness.signUp('trial-no-card-subscribed');
+        const token: string = `no-card-${crypto.randomUUID()}`;
+        await harness.pg.query(
+            `INSERT INTO "SignupLinks" (id, token, label, "trialKind", "trialDays", rules, "maxUses", "expiresAt")
+             VALUES ($1, $2, 'Parceria', 'no_card', 14, '[]'::jsonb, 10, now() + interval '30 days')`,
+            [crypto.randomUUID(), token]
+        );
+        expect((await harness.call(account.token, 'POST', '/billing/offer/redeem', { token })).status).toBe(200);
+        await saveCardAndConfirm(account, await subscribeWithCard(account));
+        const before: number = mails('premium_trial_ending');
+
+        await sweepTrials();
+        expect(mails('premium_trial_ending')).toBe(before);
+
+        await harness.pg.query(`UPDATE "CompanyProducts" SET "trialEndsAt" = now() + interval '2 days' WHERE "companyId" = $1`, [
+            account.company.id
+        ]);
+        await harness.pg.query(
+            `UPDATE "BillingSubscriptions" SET "firstChargeDate" = to_char(now() + interval '2 days', 'YYYY-MM-DD') WHERE "companyId" = $1`,
+            [account.company.id]
+        );
+        await sweepTrials();
+        await sweepTrials();
+
+        expect(mails('premium_trial_ending')).toBe(before + 1);
     });
 });

@@ -22,7 +22,18 @@ export const overviewSchema = z.object({
     plans: z.object({
         free: z.number().int().describe('Accounts without an open Premium line'),
         premium: z.number().int().describe('Accounts with an open Premium line, trials included'),
-        trials: z.number().int().describe('Accounts whose open Premium line is a trial')
+        trials: z.number().int().describe('Accounts whose open Premium line is a trial'),
+        trialsWithCard: z.number().int().describe('Trials that started with a card on file (a subset of `trials`)'),
+        trialsWithoutCard: z.number().int().describe('Trials that started without a card (a subset of `trials`)'),
+        pastDue: z.number().int().describe('Accounts whose Premium has an overdue charge (`past_due` standing)')
+    }),
+    revenue: z.object({
+        estimatedMonthlyCents: z
+            .number()
+            .int()
+            .describe(
+                'Estimated monthly revenue in cents: the Premium price of every account that has an open subscription line. Launch discounts and trials are not deducted'
+            )
     })
 });
 

@@ -135,13 +135,16 @@ describe('contas e acesso com motivo (hospedada)', () => {
         };
         const overview = (await (await request('GET', '/platform/overview', undefined, adminToken)).json()) as {
             accounts: { total: number };
-            plans: { free: number };
+            plans: { free: number; trialsWithCard: number; trialsWithoutCard: number; pastDue: number };
+            revenue: { estimatedMonthlyCents: number };
         };
 
         expect(list.items.map((item) => item.id)).toEqual([customerCompanyId]);
         expect(list.items[0]?.plan).toBe('free');
         expect(overview.accounts.total).toBe(1);
         expect(overview.plans.free).toBe(1);
+        expect(overview.plans).toMatchObject({ trialsWithCard: 0, trialsWithoutCard: 0, pastDue: 0 });
+        expect(overview.revenue.estimatedMonthlyCents).toBe(0);
     });
 
     it('abre resumo e dados com motivo, grava account.viewed e o Dono vê o acesso, sem chaves nem conversas', async () => {

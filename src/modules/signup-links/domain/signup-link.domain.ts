@@ -3,11 +3,16 @@ import { Injectable } from '@nestjs/common';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { SignupLinksRepository } from '../repositories/signup-links.repository';
 import { statusOf } from './signup-link-status';
-import { SignupLinkNotFoundError } from './signup-links.errors';
+import { SignupLinkNotFoundError, SignupLinkRevokedError } from './signup-links.errors';
 import { SignupLinkOfferValidation } from './validations/signup-link-offer.validation';
 import { DiscountRule, LINK_STATUSES, LinkOfferInput, LinkOfferPatch, NewSignupLink, SignupLink, TrialKind } from './signup-links.types';
 
 const TOKEN_BYTES: number = 24;
+
+export interface FunnelChange {
+    readonly trials: number;
+    readonly subscriptions: number;
+}
 
 export interface RevokeOutcome {
     readonly link: SignupLink;
@@ -43,6 +48,9 @@ export class SignupLinkDomain {
         const before: SignupLink | null = await this.links.lockById(id);
         if (before === null) {
             throw new SignupLinkNotFoundError();
+        }
+        if (before.revokedAt !== null) {
+            throw new SignupLinkRevokedError();
         }
         const offer: LinkOfferInput = this.mergeOffer(before, patch);
         const expiryChanged: boolean = (offer.expiresAt?.getTime() ?? null) !== (before.expiresAt?.getTime() ?? null);
@@ -80,6 +88,13 @@ export class SignupLinkDomain {
             return null;
         }
         return this.links.addUse(locked, now, startsTrial);
+    }
+
+    public async countFunnel(id: string, change: FunnelChange, now: Date): Promise<void> {
+        const locked: SignupLink | null = await this.links.lockById(id);
+        if (locked !== null) {
+            await this.links.addFunnel(locked, change, now);
+        }
     }
 
     private mergeOffer(before: SignupLink, patch: LinkOfferPatch): LinkOfferInput {

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BillingOfferPort, BillingOfferSnapshot, UsableOffer } from '../../plans/services/billing-offer.port';
+import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
+import { SignupLinkDomain } from '../domain/signup-link.domain';
 import { SignupRedemptionDomain } from '../domain/signup-redemption.domain';
 import { SignupRedemption, TRIAL_KINDS } from '../domain/signup-links.types';
 import { SignupLinkViewMapper } from './signup-link-view.mapper';
@@ -8,13 +10,18 @@ import { SignupLinkViewMapper } from './signup-link-view.mapper';
 export class BillingOfferAdapter extends BillingOfferPort {
     public constructor(
         private readonly redemptions: SignupRedemptionDomain,
+        private readonly links: SignupLinkDomain,
         private readonly mapper: SignupLinkViewMapper
     ) {
         super();
     }
 
+    @UsingTransaction()
     public async trialStarted(at: Date): Promise<void> {
-        await this.redemptions.markTrialStarted(at);
+        const redemption: SignupRedemption | null = await this.redemptions.current();
+        if (redemption !== null && (await this.redemptions.markTrialStarted(at))) {
+            await this.links.countFunnel(redemption.signupLinkId, { trials: 1, subscriptions: 0 }, at);
+        }
     }
 
     public async offer(): Promise<BillingOfferSnapshot | null> {
@@ -35,11 +42,25 @@ export class BillingOfferAdapter extends BillingOfferPort {
         return { rules: snapshot.rules, cardTrialDays: isCardTrial ? snapshot.trial.days : null };
     }
 
+    @UsingTransaction()
     public async release(): Promise<void> {
-        await this.redemptions.release(new Date());
+        const now: Date = new Date();
+        const redemption: SignupRedemption | null = await this.redemptions.current();
+        const wasApplied: boolean = redemption !== null && redemption.appliedAt !== null && redemption.trialStartedAt === null;
+        const released: boolean = await this.redemptions.release(now);
+        if (redemption !== null && wasApplied && released) {
+            await this.links.countFunnel(redemption.signupLinkId, { trials: 0, subscriptions: -1 }, now);
+        }
     }
 
+    @UsingTransaction()
     public async markApplied(): Promise<boolean> {
-        return this.redemptions.markApplied(new Date());
+        const now: Date = new Date();
+        const redemption: SignupRedemption | null = await this.redemptions.current();
+        const applied: boolean = await this.redemptions.markApplied(now);
+        if (redemption !== null && applied) {
+            await this.links.countFunnel(redemption.signupLinkId, { trials: 0, subscriptions: 1 }, now);
+        }
+        return applied;
     }
 }

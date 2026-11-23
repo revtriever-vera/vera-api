@@ -63,6 +63,10 @@ export class BillingSubscriptionDomain {
         return this.subscriptions.listEndingTrialsAcrossTenants(now, until, limit);
     }
 
+    public async listUnpaidWithFirstChargeAcrossTenants(from: string, until: string, limit: number): Promise<BillingSubscription[]> {
+        return this.subscriptions.listUnpaidWithFirstChargeAcrossTenants(from, until, limit);
+    }
+
     public async findByEngineSubscriptionIdAcrossTenants(
         engine: BillingEngine,
         engineSubscriptionId: string

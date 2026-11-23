@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PlanCatalogDomain } from '../domain/plan-catalog.domain';
 import { PlanDomain } from '../domain/plan.domain';
-import { CompanyProduct, PlanKey, PRODUCT_KEYS } from '../domain/plans.types';
+import { CompanyProduct, ContractSource, OpenLinesOfSource, PlanKey, PRODUCT_KEYS } from '../domain/plans.types';
 
 export interface PlatformPlanOverview {
     readonly premium: number;
     readonly trials: number;
+    readonly cardTrials: number;
+    readonly noCardTrials: number;
+    readonly estimatedMonthlyRevenueCents: number;
 }
 
 export interface PlatformPlanOfCompany {
@@ -26,9 +29,17 @@ export class PlatformPlanReaderService {
 
     public async overview(): Promise<PlatformPlanOverview> {
         const productId: string = (await this.catalog.productOf(PRODUCT_KEYS.premium)).id;
+        const lines: OpenLinesOfSource[] = await this.plans.openLinesBySource(productId);
+        const linesOf = (source: ContractSource): number =>
+            lines.find((line: OpenLinesOfSource): boolean => line.source === source)?.lines ?? 0;
+        const cardTrials: number = linesOf('card_trial');
+        const noCardTrials: number = linesOf('trial');
         return {
-            premium: await this.plans.countOpenLines(productId, false),
-            trials: await this.plans.countOpenLines(productId, true)
+            premium: lines.reduce((total: number, line: OpenLinesOfSource): number => total + line.lines, 0),
+            trials: cardTrials + noCardTrials,
+            cardTrials,
+            noCardTrials,
+            estimatedMonthlyRevenueCents: lines.find((line: OpenLinesOfSource): boolean => line.source === 'subscription')?.priceCents ?? 0
         };
     }
 
