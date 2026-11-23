@@ -30,6 +30,8 @@ function makeUser(overrides: Partial<User> = {}): User {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        removedAt: null,
+        removedByUserId: null,
         ...overrides
     };
 }

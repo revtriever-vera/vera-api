@@ -25,6 +25,10 @@ export class AuthIdentityDomain {
         await this.identities.touchLogin(identityId, new Date());
     }
 
+    public async eraseForUser(userId: string): Promise<number> {
+        return this.identities.eraseForUser(userId);
+    }
+
     public async listForUser(userId: string): Promise<AuthIdentity[]> {
         return this.identities.findByUser(userId);
     }

@@ -19,16 +19,23 @@ export const sessionResponseSchema = z.object({
 
 export const loginResponseSchema = sessionResponseSchema.extend({
     outcome: z.literal('authenticated').describe('The provider credential was verified and a session was issued'),
-    isNewAccount: z.boolean().describe('True when this login created the company and the user')
+    isNewAccount: z.boolean().describe('True when this login created the company and the user'),
+    joinedAccount: z.boolean().describe('True when this login entered an account through an invite (no company was created)')
 });
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
-export const googleLoginSchema = z.object({ idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)') }).strict();
+const inviteTokenSchema = z.string().min(20).max(200).optional().describe('Token of the invite link, to enter the account that invited');
+
+export const googleLoginSchema = z
+    .object({ idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)'), inviteToken: inviteTokenSchema })
+    .strict();
 
 export class GoogleLoginDto extends createZodDto(googleLoginSchema) {}
 
-export const facebookLoginSchema = z.object({ accessToken: z.string().min(20).describe('Facebook JS SDK user access token') }).strict();
+export const facebookLoginSchema = z
+    .object({ accessToken: z.string().min(20).describe('Facebook JS SDK user access token'), inviteToken: inviteTokenSchema })
+    .strict();
 
 export class FacebookLoginDto extends createZodDto(facebookLoginSchema) {}
 

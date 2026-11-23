@@ -6,8 +6,18 @@ import { MailModule } from '../../../core/mail/mail.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { ThrottleModule } from '../../../core/throttle/throttle.module';
 import { authConfig } from '../config/auth.config';
+import { membersConfig } from '../config/members.config';
 import { IdentityDomainModule } from '../domain/identity-domain.module';
 import { SessionIssuerPort } from '../ports/session-issuer.port';
+import { AccountClosureMailer } from '../services/account-closure-mailer.service';
+import { InviteAcceptanceService } from '../services/invite-acceptance.service';
+import { MemberExitService } from '../services/member-exit.service';
+import { AccountEmptinessService } from '../services/account-emptiness.service';
+import { AccountInvitesExporter } from '../services/account-invites.exporter';
+import { MemberDepartureRegistry } from '../services/member-departure.registry';
+import { MembersLogService } from '../services/members-log.service';
+import { MembersMailerService } from '../services/members-mailer.service';
+import { MembersMetricsService } from '../services/members-metrics.service';
 import { AccountDataRegistry } from '../services/account-data.registry';
 import { AccountProvisioningService } from '../services/account-provisioning.service';
 import { CompanyTimezoneService } from '../services/company-timezone.service';
@@ -25,8 +35,12 @@ import { SessionIssuerService } from '../services/session-issuer.service';
 import { SocialIdentityRegistry } from '../services/social-identity.registry';
 import { TokenService } from '../services/token.service';
 import { AccountDeletedTemplate } from '../templates/account-deleted.template';
+import { MemberTemplates } from '../templates/member.templates';
 import { AccountDeletionApplication } from './account-deletion.application';
 import { AccountExportApplication } from './account-export.application';
+import { InvitesApplication } from './invites.application';
+import { MembersApplication } from './members.application';
+import { MembersCleanupApplication } from './members-cleanup.application';
 import { ProfileApplication } from './profile.application';
 import { SessionApplication } from './session.application';
 import { SocialLoginApplication } from './social-login.application';
@@ -34,6 +48,7 @@ import { SocialLoginApplication } from './social-login.application';
 @Module({
     imports: [
         ConfigModule.forFeature(authConfig),
+        ConfigModule.forFeature(membersConfig),
         DiscoveryModule,
         IdentityDomainModule,
         ContextModule,
@@ -47,7 +62,20 @@ import { SocialLoginApplication } from './social-login.application';
         SocialLoginApplication,
         AccountExportApplication,
         AccountDeletionApplication,
+        MembersApplication,
+        InvitesApplication,
+        MembersCleanupApplication,
         AccountDataRegistry,
+        AccountEmptinessService,
+        AccountClosureMailer,
+        InviteAcceptanceService,
+        MemberExitService,
+        AccountInvitesExporter,
+        MemberDepartureRegistry,
+        MembersLogService,
+        MembersMailerService,
+        MembersMetricsService,
+        MemberTemplates,
         IdentityAccountExporter,
         AccountDeletedTemplate,
         AccountProvisioningService,
@@ -72,6 +100,9 @@ import { SocialLoginApplication } from './social-login.application';
         SocialLoginApplication,
         AccountExportApplication,
         AccountDeletionApplication,
+        MembersApplication,
+        InvitesApplication,
+        MembersCleanupApplication,
         CurrentUserService,
         CompanyTimezoneService,
         JwtAuthGuard,

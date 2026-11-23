@@ -64,8 +64,14 @@ export class AuthController {
     })
     @ApiProblemResponse({
         status: 409,
-        description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)',
+        description:
+            'Email already belongs to an account that cannot be linked (identity.email_in_use). With an invite: the verified email is not the invited one (invites.email_mismatch) or the person already has an account with data or with other people (members.account_not_empty)',
         example: { type: 'identity.email_in_use', title: 'EmailInUseError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 410,
+        description: 'The invite does not exist, expired, was revoked or was already used (invites.invalid)',
+        example: { type: 'invites.invalid', title: 'InviteInvalidError', status: 410 }
     })
     @ApiProblemResponse({
         status: 429,
@@ -82,7 +88,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, req, res);
+        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, body.inviteToken, req, res);
     }
 
     @Post('facebook')
@@ -108,13 +114,19 @@ export class AuthController {
     })
     @ApiProblemResponse({
         status: 409,
-        description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)',
+        description:
+            'Email already belongs to an account that cannot be linked (identity.email_in_use). With an invite: the verified email is not the invited one (invites.email_mismatch) or the person already has an account with data or with other people (members.account_not_empty)',
         example: { type: 'identity.email_in_use', title: 'EmailInUseError', status: 409 }
     })
     @ApiProblemResponse({
         status: 422,
         description: 'Facebook account did not share an email (identity.email_not_provided)',
         example: { type: 'identity.email_not_provided', title: 'EmailNotProvidedError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 410,
+        description: 'The invite does not exist, expired, was revoked or was already used (invites.invalid)',
+        example: { type: 'invites.invalid', title: 'InviteInvalidError', status: 410 }
     })
     @ApiProblemResponse({
         status: 429,
@@ -136,7 +148,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, req, res);
+        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, body.inviteToken, req, res);
     }
 
     @Post('refresh')
@@ -214,14 +226,21 @@ export class AuthController {
         return this.profile.updatePreferences(body);
     }
 
-    private async signIn(provider: LoginProvider, credential: string, req: Request, res: Response): Promise<LoginResponse> {
-        const result: SocialLoginResult = await this.socialLogin.login(provider, credential, this.meta(req));
+    private async signIn(
+        provider: LoginProvider,
+        credential: string,
+        inviteToken: string | undefined,
+        req: Request,
+        res: Response
+    ): Promise<LoginResponse> {
+        const result: SocialLoginResult = await this.socialLogin.login(provider, credential, this.meta(req), inviteToken);
         this.refreshCookie.write(res, result.tokens.refreshToken);
         return {
             outcome: 'authenticated',
             accessToken: result.tokens.accessToken,
             user: result.tokens.user,
-            isNewAccount: result.isNewAccount
+            isNewAccount: result.isNewAccount,
+            joinedAccount: result.joinedAccount
         };
     }
 

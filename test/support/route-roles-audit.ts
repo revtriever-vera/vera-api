@@ -12,7 +12,11 @@ export interface RouteRole {
     readonly role: string | undefined;
 }
 
-export const VIEWER_WRITE_ALLOWLIST: readonly string[] = ['POST /portfolio/contributions/suggest', 'PATCH /auth/me/preferences'];
+export const VIEWER_WRITE_ALLOWLIST: readonly string[] = [
+    'POST /portfolio/contributions/suggest',
+    'PATCH /auth/me/preferences',
+    'POST /members/me/leave'
+];
 
 const READ_METHODS: readonly string[] = ['GET', 'HEAD'];
 
@@ -23,7 +27,10 @@ function guardsOf(target: Target): readonly unknown[] {
 }
 
 function join(prefix: string, path: string): string {
-    return `/${[prefix, path].map((part: string): string => part.replace(/^\/+|\/+$/g, '')).filter((part: string): boolean => part.length > 0).join('/')}`;
+    return `/${[prefix, path]
+        .map((part: string): string => part.replace(/^\/+|\/+$/g, ''))
+        .filter((part: string): boolean => part.length > 0)
+        .join('/')}`;
 }
 
 export function routesOf(controllers: readonly (new (...args: never[]) => unknown)[]): RouteRole[] {
@@ -46,8 +53,7 @@ export function routesOf(controllers: readonly (new (...args: never[]) => unknow
                     sessioned: guards.includes(JwtAuthGuard),
                     rolesGuarded: guards.includes(RolesGuard),
                     role: (Reflect.getMetadata(REQUIRED_ROLE_KEY, handler) ?? Reflect.getMetadata(REQUIRED_ROLE_KEY, controller)) as
-                        | string
-                        | undefined
+                        string | undefined
                 };
             })
             .filter((route: RouteRole | null): route is RouteRole => route !== null);

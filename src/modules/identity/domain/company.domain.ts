@@ -20,6 +20,10 @@ export class CompanyDomain {
         return this.companies.findById(id);
     }
 
+    public async lock(companyId: string): Promise<Company | null> {
+        return this.companies.lockById(companyId);
+    }
+
     public async eraseCompany(companyId: string): Promise<boolean> {
         return this.companies.hardDeleteById(companyId);
     }

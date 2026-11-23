@@ -4,9 +4,11 @@ import { ContextModule } from '../../../core/context/context.module';
 import { IdentityApplicationModule } from '../application/identity-application.module';
 import { AccountController } from './account.controller';
 import { AuthController } from './auth.controller';
+import { InvitesController } from './invites.controller';
+import { MembersController } from './members.controller';
 
 @Module({
     imports: [IdentityApplicationModule, ContextModule, ThrottleModule],
-    controllers: [AuthController, AccountController]
+    controllers: [AuthController, AccountController, MembersController, InvitesController]
 })
 export class IdentityHttpModule {}
