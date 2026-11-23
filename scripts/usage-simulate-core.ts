@@ -11,7 +11,6 @@ export interface SimulateOptions {
 }
 
 export interface SimulatedEntry {
-    readonly id: string;
     readonly feature: SimulateFeature;
     readonly referenceId: string;
     readonly costMicros: number;
@@ -53,7 +52,6 @@ export function optionsFrom(args: readonly string[]): SimulateOptions {
 export function simulatedEntryOf(options: SimulateOptions): SimulatedEntry {
     const reference: string = randomUUID();
     return {
-        id: randomUUID(),
         feature: options.feature,
         referenceId: `${SIMULATION_REFERENCE_PREFIX}${reference}`,
         costMicros: Math.round((options.capMicros * options.percent) / FULL_PERCENT)

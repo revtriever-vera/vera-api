@@ -3,8 +3,21 @@ import { usageStateOf } from './usage-state';
 
 const RESETS_AT: Date = new Date('2026-11-01T03:00:00.000Z');
 
-function stateOf(capMicros: number | null, ai: number, whatsapp: number = 0, warningBps: number = 8000): ReturnType<typeof usageStateOf> {
-    return usageStateOf({ period: '2026-10', resetsAt: RESETS_AT, capMicros, byFeatureMicros: { ai, whatsapp }, warningBps });
+function stateOf(
+    capMicros: number | null,
+    ai: number,
+    whatsapp: number = 0,
+    warningBps: number = 8000,
+    minRoomMicros: number = 0
+): ReturnType<typeof usageStateOf> {
+    return usageStateOf({
+        period: '2026-10',
+        resetsAt: RESETS_AT,
+        capMicros,
+        byFeatureMicros: { ai, whatsapp },
+        warningBps,
+        minRoomMicros
+    });
 }
 
 describe('usageStateOf', () => {
@@ -36,5 +49,16 @@ describe('usageStateOf', () => {
 
     it('respeita um limite de aviso configurado', () => {
         expect(stateOf(1_000_000, 500_000, 0, 5000).state).toBe('warning');
+    });
+
+    it('pausa quando o que resta é menor que o piso de uma chamada, antes de chegar em 100%', () => {
+        expect(stateOf(4_000_000, 3_979_999, 0, 8000, 20_000).state).toBe('warning');
+        expect(stateOf(4_000_000, 3_980_000, 0, 8000, 20_000)).toMatchObject({ state: 'paused', usedBps: 9950 });
+        expect(stateOf(4_000_000, 3_998_800, 0, 8000, 20_000).state).toBe('paused');
+    });
+
+    it('o piso nunca pausa antes da faixa de aviso, mesmo com teto menor que o piso', () => {
+        expect(stateOf(10_000, 0, 0, 8000, 20_000).state).toBe('ok');
+        expect(stateOf(10_000, 8_000, 0, 8000, 20_000).state).toBe('paused');
     });
 });

@@ -54,7 +54,8 @@ export class BillingCancellationService {
             await this.mailer.notify({
                 kind: NOTIFICATION_KINDS.canceled,
                 subjectId: subscription.id,
-                paidThrough: subscription.paidThrough ?? subscription.trialEndsAt
+                paidThroughDay: subscription.paidThrough,
+                paidThrough: subscription.trialEndsAt
             });
             return;
         }

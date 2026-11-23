@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { billingConfig } from '../config/billing.config';
 import { BillingDevPageNotFoundError } from '../domain/billing-engine.errors';
-import { FakeBillingEngineDriver } from '../drivers/fake-billing-engine.driver';
+import { FakeAdvanceAction, FakeBillingEngineDriver } from '../drivers/fake-billing-engine.driver';
 
 const CARD_PARAM: string = 'card';
 const CARD_SAVED: string = 'saved';
@@ -20,9 +20,9 @@ export class BillingDevApplication {
         private readonly fake: FakeBillingEngineDriver
     ) {}
 
-    public async saveTestCard(token: string): Promise<string> {
+    public async saveTestCard(token: string, last4?: string): Promise<string> {
         this.assertEnabled();
-        const returnUrl: string | null = await this.fake.saveTestCard(token);
+        const returnUrl: string | null = await this.fake.saveTestCard(token, last4);
         if (returnUrl === null) {
             throw new BillingDevPageNotFoundError();
         }
@@ -32,6 +32,13 @@ export class BillingDevApplication {
     public async payInvoice(invoiceId: string): Promise<void> {
         this.assertEnabled();
         if (!(await this.fake.payInvoice(invoiceId))) {
+            throw new BillingDevPageNotFoundError();
+        }
+    }
+
+    public async advance(subscriptionId: string, action: FakeAdvanceAction): Promise<void> {
+        this.assertEnabled();
+        if (!(await this.fake.advance(subscriptionId, action))) {
             throw new BillingDevPageNotFoundError();
         }
     }

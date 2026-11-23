@@ -4,9 +4,12 @@ import { CreateSubscriptionInput, EngineEvent, EngineSubscription } from '../dom
 import { FAKE_PRICE_CENTS, FAKE_TEST_CARD, FakeBillingEngineDriver } from './fake-billing-engine.driver';
 import { FakeEventDelivery } from './fake-event-delivery.service';
 
-function build(extra: NodeJS.ProcessEnv = {}): { driver: FakeBillingEngineDriver; delivered: EngineEvent[] } {
+function build(extra: NodeJS.ProcessEnv = {}, quoted: number | null = null): { driver: FakeBillingEngineDriver; delivered: EngineEvent[] } {
     const delivered: EngineEvent[] = [];
-    const delivery = { deliver: vi.fn().mockImplementation((event: EngineEvent) => Promise.resolve(void delivered.push(event))) };
+    const delivery = {
+        quote: vi.fn().mockResolvedValue(quoted),
+        deliver: vi.fn().mockImplementation((event: EngineEvent) => Promise.resolve(void delivered.push(event)))
+    };
     const config: BillingSettings = parseBillingConfig({ IS_LOCAL: 'true', ...extra });
     return { driver: new FakeBillingEngineDriver(config, delivery as unknown as FakeEventDelivery), delivered };
 }
@@ -45,7 +48,7 @@ describe('FakeBillingEngineDriver', () => {
 
         expect(b.customerId).toBe(a.customerId);
         expect(b.id).not.toBe(a.id);
-        expect(a.id).toBe('fake_sub_000001');
+        expect(a.id).toMatch(/^fake_[0-9a-z]+_sub_000001$/);
     });
 
     it('com Pix, emite a fatura na hora e o link de pagamento aponta para a página de dev', async () => {
@@ -248,5 +251,68 @@ describe('FakeBillingEngineDriver', () => {
         await driver.releaseFirstCharge(canceled.id);
 
         expect(delivered).toHaveLength(before);
+    });
+
+    it('trocar o cartão de uma assinatura já cobrada não emite nem paga outra fatura, e aceita o final', async () => {
+        const { driver, delivered } = build();
+        const subscription = await driver.createSubscription(input());
+        const first = await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back', 'key-1');
+        await driver.saveTestCard(first.captureUrl.split('/').at(-1) ?? '');
+        const second = await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back', 'key-2');
+        delivered.length = 0;
+
+        await driver.saveTestCard(second.captureUrl.split('/').at(-1) ?? '', '1111');
+
+        expect(typesOf(delivered)).toEqual(['subscription.card_saved']);
+        expect(await driver.savedCardOf(subscription.id)).toEqual({ brand: 'visa', last4: '1111' });
+        expect((await driver.invoicesWithStatus('issued', 1)).total).toBe(0);
+    });
+
+    it('ignora um final de cartão que não tem quatro dígitos', async () => {
+        const { driver } = build();
+        const subscription = await driver.createSubscription(input());
+        const session = await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back', 'key-1');
+
+        await driver.saveTestCard(session.captureUrl.split('/').at(-1) ?? '', 'abcd');
+
+        expect(await driver.savedCardOf(subscription.id)).toEqual(FAKE_TEST_CARD);
+    });
+
+    it('avança o tempo: próxima fatura do ciclo, vencimento e fim do teste', async () => {
+        const { driver, delivered } = build();
+        const subscription = await driver.createSubscription(input({ firstChargeDate: '2999-01-01' }));
+        const session = await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back', 'key-1');
+        await driver.saveTestCard(session.captureUrl.split('/').at(-1) ?? '');
+        expect(typesOf(delivered)).not.toContain('invoice.issued');
+
+        expect(await driver.advance(subscription.id, 'trial_end')).toBe(true);
+        expect(await driver.advance(subscription.id, 'next_invoice')).toBe(true);
+        expect(await driver.advance('desconhecida', 'overdue')).toBe(false);
+
+        expect(typesOf(delivered).filter((type: string): boolean => type === 'invoice.paid')).toHaveLength(2);
+    });
+
+    it('vence a fatura em aberto da assinatura Pix', async () => {
+        const { driver, delivered } = build();
+        const subscription = await driver.createSubscription(input({ paymentMethod: 'pix' }));
+
+        await driver.advance(subscription.id, 'overdue');
+
+        expect(typesOf(delivered)).toContain('invoice.overdue');
+        expect((await driver.invoicesWithStatus('overdue', 1)).total).toBe(1);
+    });
+
+    it('usa o preço respondido pelo endpoint de preço quando ele responde', async () => {
+        const { driver } = build({}, 990);
+        await driver.createSubscription(input({ paymentMethod: 'pix' }));
+
+        expect((await driver.invoicesWithStatus('issued', 1)).items[0]?.totalCents).toBe(990);
+    });
+
+    it('sem resposta do endpoint de preço, a fatura sai com o preço padrão do fake', async () => {
+        const { driver } = build();
+        await driver.createSubscription(input({ paymentMethod: 'pix' }));
+
+        expect((await driver.invoicesWithStatus('issued', 1)).items[0]?.totalCents).toBe(FAKE_PRICE_CENTS);
     });
 });

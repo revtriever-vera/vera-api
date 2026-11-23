@@ -19,7 +19,7 @@ export class PlanUsageContextAdapter extends UsageContextPort implements OnModul
     }
 
     public async capMicros(): Promise<number | null> {
-        return this.limits.capMicros();
+        return this.limits.capMicros(this.holder.configuredCapMicros());
     }
 
     public async timezone(): Promise<string> {

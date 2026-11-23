@@ -4,6 +4,7 @@ import { SendCategory } from '../usage.types';
 
 const DECIMAL_PATTERN: RegExp = /^\d+(\.\d+)?$/;
 const DEFAULT_CAP_MICROS: number = 4_000_000;
+const DEFAULT_MIN_ROOM_MICROS: number = 20_000;
 const DEFAULT_WARNING_BPS: number = 8000;
 const DEFAULT_USD_BRL_FALLBACK: string = '5.0000';
 
@@ -56,6 +57,7 @@ const priceTableEnvSchema = z
 
 const schema = z.object({
     PAID_USAGE_CAP_MICROS: z.coerce.number().int().min(0).default(DEFAULT_CAP_MICROS),
+    PAID_USAGE_MIN_ROOM_MICROS: z.coerce.number().int().min(0).default(DEFAULT_MIN_ROOM_MICROS),
     PAID_USAGE_WARNING_BPS: z.coerce.number().int().min(1).max(10_000).default(DEFAULT_WARNING_BPS),
     USAGE_USD_BRL_FALLBACK: z.string().regex(DECIMAL_PATTERN).default(DEFAULT_USD_BRL_FALLBACK),
     WHATSAPP_PRICE_TABLE: priceTableEnvSchema,

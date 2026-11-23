@@ -20,9 +20,12 @@ import {
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { FakeEventDelivery } from './fake-event-delivery.service';
 
+export type FakeAdvanceAction = 'next_invoice' | 'overdue' | 'trial_end';
+
 export const FAKE_PRICE_CENTS: number = 1490;
 export const FAKE_TEST_CARD: SavedCard = { brand: 'visa', last4: '4242' };
 
+const LAST4_PATTERN: RegExp = /^\d{4}$/;
 const HTTP_NOT_FOUND: number = 404;
 const CAPTURE_TTL_MS: number = 30 * 60 * 1000;
 const PAGE_SIZE: number = 50;
@@ -55,6 +58,7 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
     private readonly captures: Map<string, CaptureToken> = new Map<string, CaptureToken>();
     private readonly events: EngineEvent[] = [];
     private readonly captureSessions: Map<string, CardCaptureSession> = new Map<string, CardCaptureSession>();
+    private readonly boot: string = Date.now().toString(36);
     private sequence: number = 0;
 
     public constructor(
@@ -173,18 +177,36 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         return capture === undefined || capture.expiresAt < Date.now() ? null : capture;
     }
 
-    public async saveTestCard(token: string): Promise<string | null> {
+    public async saveTestCard(token: string, last4?: string): Promise<string | null> {
         const capture: CaptureToken | null = this.captureOf(token);
         if (capture === null) {
             return null;
         }
         this.captures.delete(token);
-        this.cards.set(capture.subscriptionId, FAKE_TEST_CARD);
-        await this.emit('subscription.card_saved', capture.subscriptionId, { brand: FAKE_TEST_CARD.brand, last4: FAKE_TEST_CARD.last4 });
-        if (!this.chargeIsFuture(this.subscriptionById(capture.subscriptionId))) {
+        const card: SavedCard = last4 !== undefined && LAST4_PATTERN.test(last4) ? { ...FAKE_TEST_CARD, last4 } : FAKE_TEST_CARD;
+        const firstCard: boolean = this.invoicesOf(capture.subscriptionId).length === 0;
+        this.cards.set(capture.subscriptionId, card);
+        await this.emit('subscription.card_saved', capture.subscriptionId, { brand: card.brand, last4: card.last4 });
+        if (firstCard && !this.chargeIsFuture(this.subscriptionById(capture.subscriptionId))) {
             await this.chargeAfterCard(capture.subscriptionId);
         }
         return capture.returnUrl;
+    }
+
+    public async advance(subscriptionId: string, action: FakeAdvanceAction): Promise<boolean> {
+        if (!this.subscriptions.has(subscriptionId)) {
+            return false;
+        }
+        if (action === 'trial_end') {
+            await this.releaseFirstCharge(subscriptionId);
+            return true;
+        }
+        if (action === 'overdue') {
+            await this.overdueLatest(subscriptionId);
+            return true;
+        }
+        await this.issueNextCycle(subscriptionId);
+        return true;
     }
 
     public async payInvoice(id: string): Promise<boolean> {
@@ -223,24 +245,55 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         return [...this.invoices.values()].filter((invoice: EngineInvoice): boolean => invoice.subscriptionId === subscriptionId);
     }
 
+    private async overdueLatest(subscriptionId: string): Promise<void> {
+        const open: EngineInvoice | undefined = this.invoicesOf(subscriptionId)
+            .reverse()
+            .find((invoice: EngineInvoice): boolean => invoice.status === 'issued');
+        if (open === undefined) {
+            return;
+        }
+        this.invoices.set(open.id, { ...open, status: 'overdue', overdueAt: new Date().toISOString() });
+        await this.emit('invoice.overdue', subscriptionId, { invoiceId: open.id });
+    }
+
+    private async issueNextCycle(subscriptionId: string): Promise<void> {
+        const previous: EngineInvoice | undefined = this.invoicesOf(subscriptionId).pop();
+        const start: Date = new Date(previous?.cycleEnd ?? dateOnly(new Date()));
+        const invoice: EngineInvoice = await this.issueInvoice(subscriptionId, start);
+        if (this.cards.has(subscriptionId) && this.subscriptionById(subscriptionId).paymentMethod === 'card') {
+            await this.payInvoice(invoice.id);
+        }
+    }
+
     private async chargeAfterCard(subscriptionId: string): Promise<void> {
         const invoice: EngineInvoice = await this.issueInvoice(subscriptionId);
         await this.payInvoice(invoice.id);
     }
 
-    private async issueInvoice(subscriptionId: string): Promise<EngineInvoice> {
+    private async quotedCents(subscriptionId: string, start: Date, end: Date): Promise<number> {
+        const quoted: number | null = await this.delivery.quote({
+            subscriptionId,
+            customerExternalRef: this.externalRefOf(subscriptionId),
+            cycle: this.invoicesOf(subscriptionId).length + 1,
+            periodStart: dateOnly(start),
+            periodEnd: dateOnly(end)
+        });
+        return quoted ?? FAKE_PRICE_CENTS;
+    }
+
+    private async issueInvoice(subscriptionId: string, start: Date = new Date()): Promise<EngineInvoice> {
         const subscription: EngineSubscription = this.subscriptionById(subscriptionId);
-        const now: Date = new Date();
+        const end: Date = new Date(start.getTime() + CYCLE_DAYS * MS_PER_DAY);
         const invoice: EngineInvoice = {
             id: this.nextId('inv'),
             subscriptionId,
             status: 'issued',
-            totalCents: FAKE_PRICE_CENTS,
+            totalCents: await this.quotedCents(subscriptionId, start, end),
             method: subscription.paymentMethod,
-            dueDate: dateOnly(now),
-            cycleStart: dateOnly(now),
-            cycleEnd: dateOnly(new Date(now.getTime() + CYCLE_DAYS * MS_PER_DAY)),
-            issuedAt: now.toISOString(),
+            dueDate: dateOnly(start),
+            cycleStart: dateOnly(start),
+            cycleEnd: dateOnly(end),
+            issuedAt: new Date().toISOString(),
             paidAt: null,
             overdueAt: null
         };
@@ -309,6 +362,6 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
 
     private nextId(prefix: string): string {
         this.sequence += 1;
-        return `fake_${prefix}_${String(this.sequence).padStart(6, '0')}`;
+        return `fake_${this.boot}_${prefix}_${String(this.sequence).padStart(6, '0')}`;
     }
 }
