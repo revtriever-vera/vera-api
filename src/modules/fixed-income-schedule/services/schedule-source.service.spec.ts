@@ -154,32 +154,33 @@ describe('ScheduleSourceService', () => {
         expect(doubles.getLatest).toHaveBeenCalledWith(['a1']);
     });
 
-    it('Prefixado não pede cotação e posição sem cotação fica sem valor de hoje', async () => {
+    it('Prefixado também é valorizado pela cotação do dia (o FGC usa o valor de hoje)', async () => {
         const doubles = build({
-            positions: [position('p1', 'a1'), position('p2', 'a2')],
+            positions: [position('p1', 'a1', '20'), position('p2', 'a2')],
             assets: [
                 asset('a1', { externalId: 'prefixado:2029-01-01', suggestedClassKey: 'rf_pre' }),
                 asset('a2', { suggestedClassKey: 'rf_ipca' })
-            ]
+            ],
+            prices: { a1: '812' }
         });
 
         const { treasuries } = await doubles.service.load(NOW);
 
         expect(treasuries.map((item) => [item.id, item.kind, item.valueTodayMinor])).toEqual([
-            ['p1', 'prefixado', null],
+            ['p1', 'prefixado', 1_624_000],
             ['p2', 'ipca', null]
         ]);
-        expect(doubles.getLatest).toHaveBeenCalledWith(['a2']);
+        expect(doubles.getLatest).toHaveBeenCalledWith(['a1', 'a2']);
     });
 
-    it('só prefixados não chamam o leitor de cotações', async () => {
+    it('prefixado sem cotação fica sem valor de hoje', async () => {
         const doubles = build({
             positions: [position('p1', 'a1')],
             assets: [asset('a1', { externalId: 'prefixado:2029-01-01', suggestedClassKey: 'rf_pre' })]
         });
 
-        await doubles.service.load(NOW);
+        const { treasuries } = await doubles.service.load(NOW);
 
-        expect(doubles.getLatest).not.toHaveBeenCalled();
+        expect(treasuries.map((item) => item.valueTodayMinor)).toEqual([null]);
     });
 });
