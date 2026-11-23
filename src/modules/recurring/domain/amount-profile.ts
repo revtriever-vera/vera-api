@@ -14,7 +14,7 @@ function spreadOf(values: readonly number[]): number {
     return Math.max(...values) - Math.min(...values);
 }
 
-function isSteady(values: readonly number[]): boolean {
+export function isSteady(values: readonly number[]): boolean {
     const tolerance: number = Math.max(FIXED_ABSOLUTE_TOLERANCE_MINOR, FIXED_RELATIVE_TOLERANCE * median(values));
     return spreadOf(values) <= tolerance;
 }

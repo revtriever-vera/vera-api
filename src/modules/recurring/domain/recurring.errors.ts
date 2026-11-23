@@ -71,3 +71,9 @@ export class RecurringCategoryKindError extends AppError {
         });
     }
 }
+
+export class AlertNotFoundError extends AppError {
+    public constructor(alertId: string) {
+        super({ code: 'recurring.alert_not_found', status: 404, detail: 'The recurring alert does not exist.', meta: { alertId } });
+    }
+}

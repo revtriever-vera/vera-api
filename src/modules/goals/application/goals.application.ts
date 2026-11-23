@@ -3,6 +3,7 @@ import { UsingTransaction } from '../../../core/database/using-transaction.decor
 import { ANY_HOLDER, HolderFilter } from '../../../shared/holder/holder-filter';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { MemberDirectoryService } from '../../identity/services/member-directory.service';
+import { ExpenseAverage, SpendingExpenseAverageService } from '../../spending-summary/services/spending-expense-average.service';
 import { PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
 import { firstOfMonth, planMonthsBetween } from '../domain/goal-calculator';
 import { GoalDomain, holdingKeyOf } from '../domain/goal.domain';
@@ -12,7 +13,8 @@ import {
     GoalHoldingOverallocatedError,
     GoalLimitReachedError,
     GoalNotFoundError,
-    GoalTargetDateInPastError
+    GoalTargetDateInPastError,
+    ReserveMonthsNotAllowedError
 } from '../domain/goals.errors';
 import {
     CreateGoalInput,
@@ -24,10 +26,22 @@ import {
     GoalPlan,
     MAX_GOALS_PER_COMPANY,
     NewGoalData,
+    ReserveBasis,
     UpdateGoalInput
 } from '../domain/goals.types';
+import { reserveBaseOf, ReserveReview, reviewReserve, suggestedReserveMinor } from '../domain/reserve-review';
 import { balanceOfLinks, HoldingIndex, indexHoldings, toGoalsList, toGoalView } from '../services/goal-view.mapper';
-import { GoalsList, GoalView } from '../validation/goals.schemas';
+import { EmergencySuggestion, GoalsList, GoalView } from '../validation/goals.schemas';
+
+function reserveOf(kind: string, months: number | undefined, targetMinor: number): ReserveBasis | null {
+    if (months === undefined) {
+        return null;
+    }
+    if (kind !== GOAL_KINDS.emergencyReserve) {
+        throw new ReserveMonthsNotAllowedError(kind);
+    }
+    return { months, baseMinor: reserveBaseOf(targetMinor, months) };
+}
 
 function newGoalOf(input: CreateGoalInput, holderUserId: string | null, balanceMinor: number, today: string): NewGoalData {
     const month: string = firstOfMonth(today);
@@ -39,7 +53,8 @@ function newGoalOf(input: CreateGoalInput, holderUserId: string | null, balanceM
         holderUserId,
         manualMinor: input.manualMinor ?? 0,
         plan: { startMonth: month, startMinor: balanceMinor, months: planMonthsBetween(month, input.targetDate) },
-        monthStart: { month, minor: balanceMinor }
+        monthStart: { month, minor: balanceMinor },
+        reserve: reserveOf(input.kind, input.reserveMonths, input.targetMinor)
     };
 }
 
@@ -52,25 +67,52 @@ function restartedPlanOf(current: Goal, input: UpdateGoalInput, holdings: Holdin
     };
 }
 
+function reviewOf(goal: Goal, average: ExpenseAverage | null): ReserveReview | null {
+    return goal.reserve === null || average === null ? null : reviewReserve(goal.reserve, average.averageMinor);
+}
+
+function reserveChangeOf(current: Goal, input: UpdateGoalInput, targetMinor: number): ReserveBasis | undefined {
+    if (input.reserveMonths !== undefined) {
+        return reserveOf(current.kind, input.reserveMonths, targetMinor) ?? undefined;
+    }
+    const retargeted: boolean = input.targetMinor !== undefined && input.targetMinor !== current.targetMinor;
+    return current.reserve !== null && retargeted
+        ? { months: current.reserve.months, baseMinor: reserveBaseOf(targetMinor, current.reserve.months) }
+        : undefined;
+}
+
 @Injectable()
 export class GoalsApplication {
     public constructor(
         private readonly goals: GoalDomain,
         private readonly snapshots: PortfolioSnapshotService,
         private readonly members: MemberDirectoryService,
-        private readonly timezones: CompanyTimezoneService
+        private readonly timezones: CompanyTimezoneService,
+        private readonly spending: SpendingExpenseAverageService
     ) {}
 
     public async list(filter: HolderFilter): Promise<GoalsList> {
         const today: string = await this.timezones.todayInCompany();
         const holdings: HoldingIndex = await this.holdingIndex();
         const goals: Goal[] = await this.goals.list(filter);
-        return toGoalsList(goals.map((goal: Goal): GoalView => toGoalView(goal, holdings, today)));
+        const average: ExpenseAverage | null = await this.averageFor(goals);
+        return toGoalsList(goals.map((goal: Goal): GoalView => toGoalView(goal, holdings, today, reviewOf(goal, average))));
+    }
+
+    public async emergencySuggestion(months: number): Promise<EmergencySuggestion> {
+        const average: ExpenseAverage = await this.spending.trailing();
+        return {
+            months,
+            averageMinor: average.averageMinor,
+            averageMonths: [...average.months],
+            suggestedMinor: suggestedReserveMinor(average.averageMinor, months)
+        };
     }
 
     public async get(id: string): Promise<GoalView> {
         const today: string = await this.timezones.todayInCompany();
-        return toGoalView(await this.require(id), await this.holdingIndex(), today);
+        const goal: Goal = await this.require(id);
+        return toGoalView(goal, await this.holdingIndex(), today, reviewOf(goal, await this.averageFor([goal])));
     }
 
     @UsingTransaction()
@@ -85,7 +127,7 @@ export class GoalsApplication {
         await this.assertLinks(input.holdings, holdings, null);
         const balanceMinor: number = balanceOfLinks(input.manualMinor ?? 0, input.holdings, holdings);
         const created: Goal = await this.goals.create(newGoalOf(input, holderUserId, balanceMinor, today), input.holdings);
-        return toGoalView(created, holdings, today);
+        return toGoalView(created, holdings, today, reviewOf(created, await this.averageFor([created])));
     }
 
     @UsingTransaction()
@@ -102,7 +144,7 @@ export class GoalsApplication {
         if (updated === null) {
             throw new GoalNotFoundError(id);
         }
-        return toGoalView(updated, holdings, today);
+        return toGoalView(updated, holdings, today, reviewOf(updated, await this.averageFor([updated])));
     }
 
     @UsingTransaction()
@@ -119,6 +161,10 @@ export class GoalsApplication {
             throw new GoalNotFoundError(id);
         }
         return goal;
+    }
+
+    private async averageFor(goals: readonly Goal[]): Promise<ExpenseAverage | null> {
+        return goals.some((goal: Goal): boolean => goal.reserve !== null) ? this.spending.trailing() : null;
     }
 
     private async holdingIndex(): Promise<HoldingIndex> {
@@ -182,7 +228,8 @@ export class GoalsApplication {
             targetDate: input.targetDate,
             holderUserId,
             manualMinor: input.manualMinor,
-            plan: planChanged ? restartedPlanOf(current, input, holdings, today) : undefined
+            plan: planChanged ? restartedPlanOf(current, input, holdings, today) : undefined,
+            reserve: reserveChangeOf(current, input, targetMinor)
         };
     }
 

@@ -431,6 +431,8 @@ export interface Goals {
     planMonths: number;
     planStartMinor: Int8;
     planStartMonth: Timestamp;
+    reserveBaseMinor: Int8 | null;
+    reserveMonths: number | null;
     targetDate: Timestamp;
     targetMinor: Int8;
     updatedAt: Generated<Timestamp>;
@@ -622,6 +624,20 @@ export interface QuoteFetchFailures {
     reason: string;
     resolvedAt: Timestamp | null;
     stage: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface RecurringAlerts {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    data: Generated<Json>;
+    deletedAt: Timestamp | null;
+    fingerprint: string;
+    id: string;
+    kind: string;
+    occurredOn: Timestamp;
+    seenAt: Timestamp | null;
+    seriesId: string;
     updatedAt: Generated<Timestamp>;
 }
 
@@ -973,6 +989,7 @@ export interface DB {
     PremiumEndedNotifications: PremiumEndedNotifications;
     ProviderUsage: ProviderUsage;
     QuoteFetchFailures: QuoteFetchFailures;
+    RecurringAlerts: RecurringAlerts;
     RecurringCharges: RecurringCharges;
     RecurringSeries: RecurringSeries;
     RecurringSuppressions: RecurringSuppressions;

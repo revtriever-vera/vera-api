@@ -20,6 +20,8 @@ type GoalFields = Pick<
     | 'planMonths'
     | 'monthStartMonth'
     | 'monthStartMinor'
+    | 'reserveMonths'
+    | 'reserveBaseMinor'
 >;
 
 @Injectable()

@@ -5,6 +5,7 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
 import { TransactionsApplicationModule } from '../../transactions/application/transactions-application.module';
 import { SpendingSummaryDomainModule } from '../domain/spending-summary-domain.module';
+import { SpendingExpenseAverageService } from '../services/spending-expense-average.service';
 import { SpendingSettingsAccountExporter } from '../services/spending-settings-account.exporter';
 import { SpendingSettingsReaderService } from '../services/spending-settings-reader.service';
 import { SpendingSummaryLogService } from '../services/spending-summary-log.service';
@@ -27,10 +28,11 @@ import { SummaryApplication } from './summary.application';
         SettingsApplication,
         SpendingSummaryService,
         SpendingSettingsReaderService,
+        SpendingExpenseAverageService,
         SpendingSettingsAccountExporter,
         SpendingSummaryLogService,
         SpendingSummaryMetricsService
     ],
-    exports: [SummaryApplication, SettingsApplication, SpendingSummaryService, SpendingSettingsReaderService]
+    exports: [SummaryApplication, SettingsApplication, SpendingSummaryService, SpendingSettingsReaderService, SpendingExpenseAverageService]
 })
 export class SpendingSummaryApplicationModule {}

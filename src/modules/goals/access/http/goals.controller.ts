@@ -10,6 +10,10 @@ import { GoalsApplication } from '../../application/goals.application';
 import {
     CreateGoalDto,
     createGoalSchema,
+    EmergencySuggestion,
+    EmergencySuggestionQueryDto,
+    emergencySuggestionQuerySchema,
+    emergencySuggestionSchema,
     GoalIdParamsDto,
     goalsListSchema,
     GoalsList,
@@ -89,6 +93,25 @@ export class GoalsController {
     })
     public async create(@Body() body: CreateGoalDto): Promise<GoalView> {
         return this.goals.create(body);
+    }
+
+    @Get('emergency-suggestion')
+    @RequiresRole('viewer')
+    @Header('Cache-Control', NO_STORE)
+    @ApiOperation({
+        summary: 'Suggest the emergency reserve from the spending average',
+        description:
+            'Returns months times the monthly average of the spending (expense categories, fixed and flexible, plus what has no category; ' +
+            'transfers, card bills and investments stay out) of the up to 3 closed months before the current one, only months with ' +
+            'transactions. `months` is 3, 6 (default) or 12. Without imported spending `averageMinor` and `suggestedMinor` are null and ' +
+            'the person types the monthly spending. The target of a goal never changes alone: see `reserve` in the goal.'
+    })
+    @ApiZodQuery(emergencySuggestionQuerySchema)
+    @ApiZodResponse({ status: 200, description: 'Average and suggested reserve', schema: emergencySuggestionSchema })
+    @ApiProblemResponse({ status: 400, description: INVALID, example: INVALID_EXAMPLE })
+    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED, example: UNAUTHORIZED_EXAMPLE })
+    public async emergencySuggestion(@Query() query: EmergencySuggestionQueryDto): Promise<EmergencySuggestion> {
+        return this.goals.emergencySuggestion(query.months);
     }
 
     @Get(':id')
