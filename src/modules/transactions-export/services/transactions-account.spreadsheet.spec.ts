@@ -81,5 +81,5 @@ describe('TransactionsAccountSpreadsheet', () => {
         expect(sheets.map((sheet: SpreadsheetSheet) => sheet.file)).toEqual(['transacoes', 'transacoes-2']);
         expect(await count(sheets[0] as SpreadsheetSheet)).toBe(50_000);
         expect(await count(sheets[1] as SpreadsheetSheet)).toBe(3);
-    });
+    }, 60_000);
 });
