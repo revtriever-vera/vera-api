@@ -35,6 +35,24 @@ export interface AccountDeletionLog {
     requestedAt: Timestamp;
 }
 
+export interface AccountInvites {
+    acceptedAt: Timestamp | null;
+    acceptedUserId: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    email: string;
+    expiresAt: Timestamp;
+    id: string;
+    invitedByUserId: string | null;
+    lastSentAt: Timestamp;
+    revokedAt: Timestamp | null;
+    role: string;
+    sendCount: Generated<number>;
+    tokenHash: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AssetClassAssignments {
     classId: string;
     companyId: string;
@@ -431,6 +449,8 @@ export interface Users {
     id: string;
     locale: string | null;
     name: string;
+    removedAt: Timestamp | null;
+    removedByUserId: string | null;
     role: Generated<string>;
     termsAcceptedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
@@ -438,6 +458,7 @@ export interface Users {
 
 export interface DB {
     AccountDeletionLog: AccountDeletionLog;
+    AccountInvites: AccountInvites;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
     AssetQuotes: AssetQuotes;

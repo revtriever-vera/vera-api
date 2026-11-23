@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ConnectionsApplication, ConnectionsOverview } from '../../application/connections.application';
 import { ItemResultView } from '../../domain/bank-connections.types';
 import {
@@ -51,7 +53,7 @@ function perCompany(subject: RateLimitSubject): string | null {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/connections')
 export class ConnectionsController {
     public constructor(private readonly connections: ConnectionsApplication) {}
@@ -89,6 +91,7 @@ export class ConnectionsController {
     }
 
     @Post()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @Header('Cache-Control', NO_STORE)
     @RateLimit({ key: 'pluggy-connections-connect', limit: CONNECT_ATTEMPTS, windowSeconds: TEN_MINUTES_SECONDS, identify: perCompany })
@@ -144,6 +147,7 @@ export class ConnectionsController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.NO_CONTENT)
     @Header('Cache-Control', NO_STORE)
     @ApiOperation({

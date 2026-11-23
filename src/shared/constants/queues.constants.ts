@@ -3,7 +3,8 @@ export const QUEUES = {
     catalog: 'vera-catalog',
     fixedIncome: 'vera-fixed-income',
     marketData: 'vera-market-data',
-    bankConnections: 'vera-bank-connections'
+    bankConnections: 'vera-bank-connections',
+    identity: 'vera-identity'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -18,7 +19,8 @@ export const MESSAGE_TYPES = {
     marketDataPtaxRequested: 'market-data.ptax.requested',
     marketDataQuoteOndemandRequested: 'market-data.quote.ondemand.requested',
     bankConnectionsSyncDailyRequested: 'bank-connections.sync.daily.requested',
-    bankConnectionsSyncRequested: 'bank-connections.sync.requested'
+    bankConnectionsSyncRequested: 'bank-connections.sync.requested',
+    identityMembersCleanupRequested: 'identity.members.cleanup.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

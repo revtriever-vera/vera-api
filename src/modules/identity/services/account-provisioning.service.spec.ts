@@ -8,6 +8,7 @@ import { CompanyDomain } from '../domain/company.domain';
 import { AccountClosedError, EmailInUseError, EmailNotProvidedError } from '../domain/identity.errors';
 import { AuthIdentity, SocialIdentity, User } from '../domain/identity.types';
 import { UserDomain } from '../domain/user.domain';
+import { InviteAcceptanceService } from './invite-acceptance.service';
 import { AccountProvisioningService, ProvisionResult } from './account-provisioning.service';
 import { IdentityLogService } from './identity-log.service';
 
@@ -28,6 +29,8 @@ function makeUser(overrides: Partial<User> = {}): User {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        removedAt: null,
+        removedByUserId: null,
         ...overrides
     };
 }
@@ -62,6 +65,7 @@ function uniqueViolation(constraint: string): Error {
 }
 
 interface Harness {
+    readonly acceptInvite: ReturnType<typeof vi.fn>;
     readonly service: AccountProvisioningService;
     readonly createCompany: ReturnType<typeof vi.fn>;
     readonly createOwner: ReturnType<typeof vi.fn>;
@@ -83,6 +87,7 @@ function build(): Harness {
     const findIdentity: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(null);
     const link: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(makeIdentityRow());
     const touchLogin: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
+    const acceptInvite: ReturnType<typeof vi.fn> = vi.fn();
     const logs: Record<string, ReturnType<typeof vi.fn>> = {
         companyProvisioned: vi.fn(),
         identityLinked: vi.fn(),
@@ -92,9 +97,10 @@ function build(): Harness {
         { create: createCompany } as unknown as CompanyDomain,
         { createOwner, findByEmailAcrossTenants: findByEmail, findById: findUserById } as unknown as UserDomain,
         { findByProviderSubjectAcrossTenants: findIdentity, link, touchLogin } as unknown as AuthIdentityDomain,
+        { accept: acceptInvite } as unknown as InviteAcceptanceService,
         logs as unknown as IdentityLogService
     );
-    return { service, createCompany, createOwner, findByEmail, findUserById, findIdentity, link, touchLogin, logs };
+    return { service, acceptInvite, createCompany, createOwner, findByEmail, findUserById, findIdentity, link, touchLogin, logs };
 }
 
 function run<T>(fn: () => Promise<T>): Promise<T> {

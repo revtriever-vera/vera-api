@@ -16,7 +16,9 @@ const USER: User = {
     termsAcceptedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
-    deletedAt: null
+    deletedAt: null,
+    removedAt: null,
+    removedByUserId: null
 };
 
 describe('CurrentUserService', () => {

@@ -4,6 +4,7 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodQuery } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PortfolioExportApplication } from '../../application/portfolio-export.application';
 import { ExportFile } from '../../domain/export.types';
 import { PortfolioExportQueryDto, portfolioExportQuerySchema } from '../../validation/portfolio-export.schemas';
@@ -16,7 +17,7 @@ const FILE_SCHEMA: Readonly<Record<string, string>> = { type: 'string', format: 
 
 @ApiTags('portfolio-export')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('portfolio')
 export class PortfolioExportController {
     public constructor(private readonly exports: PortfolioExportApplication) {}

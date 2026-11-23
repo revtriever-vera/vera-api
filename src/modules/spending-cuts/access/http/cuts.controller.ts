@@ -4,6 +4,7 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { CutsApplication } from '../../application/cuts.application';
 import { CutsResult } from '../../domain/spending-cuts.types';
 import { CutsQueryDto, cutsQuerySchema, cutsResponseSchema } from '../../validation/spending-cuts.schemas';
@@ -28,7 +29,7 @@ const CUTS_DESCRIPTION: string =
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/cuts')
 export class CutsController {
     public constructor(private readonly cuts: CutsApplication) {}

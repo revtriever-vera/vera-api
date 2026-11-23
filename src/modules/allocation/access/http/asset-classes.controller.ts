@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiParamOp
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { AssetClassApplication } from '../../application/asset-class.application';
 import { AssetClassView } from '../../domain/allocation.types';
 import {
@@ -24,7 +26,7 @@ const CLASS_ID_PARAM: ApiParamOptions = { name: 'id', format: 'uuid', descriptio
 
 @ApiTags('allocation')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('allocation/classes')
 export class AssetClassesController {
     public constructor(private readonly classes: AssetClassApplication) {}
@@ -47,6 +49,7 @@ export class AssetClassesController {
     }
 
     @Post()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({
         summary: 'Create an asset class',
@@ -80,6 +83,7 @@ export class AssetClassesController {
     }
 
     @Patch(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Rename or recolor an asset class',
         description:
@@ -119,6 +123,7 @@ export class AssetClassesController {
     }
 
     @Post(':id/merge')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Merge an asset class into another',
@@ -154,6 +159,7 @@ export class AssetClassesController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({
         summary: 'Delete an empty asset class',

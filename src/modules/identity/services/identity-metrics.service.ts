@@ -6,6 +6,7 @@ const REFRESH_TOTAL: string = 'vera_auth_refresh_total';
 const LOGINS_TOTAL: string = 'vera_auth_logins_total';
 const EXPORTS_TOTAL: string = 'vera_account_exports_total';
 const DELETIONS_TOTAL: string = 'vera_account_deletions_total';
+const AUTHZ_DENIED_TOTAL: string = 'vera_authz_denied_total';
 const PROVIDER_LATENCY: string = 'vera_auth_provider_latency_seconds';
 
 @Injectable()
@@ -30,5 +31,9 @@ export class IdentityMetricsService {
 
     public accountDeletion(outcome: AccountDeletionOutcome): void {
         this.metrics.count(DELETIONS_TOTAL, { outcome });
+    }
+
+    public authzDenied(required: string): void {
+        this.metrics.count(AUTHZ_DENIED_TOTAL, { required });
     }
 }

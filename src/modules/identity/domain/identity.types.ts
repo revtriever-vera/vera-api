@@ -1,5 +1,12 @@
 import { Insertable, Selectable } from 'kysely';
-import { AccountDeletionLog, AuthIdentities, Companies, Sessions, Users } from '../../../core/database/generated/database.types';
+import {
+    AccountDeletionLog,
+    AccountInvites,
+    AuthIdentities,
+    Companies,
+    Sessions,
+    Users
+} from '../../../core/database/generated/database.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 
 export type Company = Selectable<Companies>;
@@ -13,13 +20,22 @@ export type NewUser = Insertable<Users>;
 export type NewSession = Insertable<Sessions>;
 export type NewAuthIdentity = Insertable<AuthIdentities>;
 export type NewAccountDeletionRecord = Insertable<AccountDeletionLog>;
+export type AccountInvite = Selectable<AccountInvites>;
+export type NewAccountInvite = Insertable<AccountInvites>;
 
 export const USER_ROLES = {
     owner: 'owner',
-    member: 'member'
+    editor: 'editor',
+    viewer: 'viewer'
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
+export const ROLE_RANK: Readonly<Record<UserRole, number>> = {
+    viewer: 1,
+    editor: 2,
+    owner: 3
+};
 
 export const LOGIN_PROVIDERS = {
     google: 'google',
@@ -40,6 +56,7 @@ export const LOGIN_OUTCOMES = {
     success: 'success',
     newAccount: 'new_account',
     linked: 'linked',
+    joined: 'joined',
     failed: 'failed'
 } as const;
 
@@ -84,3 +101,22 @@ export const ACCOUNT_EXPORT_OUTCOMES = {
 } as const;
 
 export type AccountExportOutcome = (typeof ACCOUNT_EXPORT_OUTCOMES)[keyof typeof ACCOUNT_EXPORT_OUTCOMES];
+
+export const INVITE_OUTCOMES = {
+    sent: 'sent',
+    accepted: 'accepted',
+    expired: 'expired',
+    revoked: 'revoked',
+    mismatch: 'mismatch',
+    notEmpty: 'not_empty'
+} as const;
+
+export type InviteOutcome = (typeof INVITE_OUTCOMES)[keyof typeof INVITE_OUTCOMES];
+
+export const MEMBER_CHANGE_KINDS = {
+    roleChanged: 'role_changed',
+    removed: 'removed',
+    left: 'left'
+} as const;
+
+export type MemberChangeKind = (typeof MEMBER_CHANGE_KINDS)[keyof typeof MEMBER_CHANGE_KINDS];

@@ -336,7 +336,7 @@ describe('identity account deletion and export', () => {
         expect(body.account.company.name).toBe('Empresa export-a');
         expect(body.account.identities).toEqual([{ provider: 'google', createdAt: expect.any(String), lastLoginAt: expect.any(String) }]);
         expect(body.account.sessions).toHaveLength(2);
-        expect(body.sections).toEqual({ notes: { owner: a.company.id, items: ['item-of-this-company'] } });
+        expect(body.sections).toEqual({ invites: [], notes: { owner: a.company.id, items: ['item-of-this-company'] } });
         expect(text).not.toContain('tokenHash');
         expect(text).not.toContain('subject');
         expect(text).not.toContain(b.user.email);

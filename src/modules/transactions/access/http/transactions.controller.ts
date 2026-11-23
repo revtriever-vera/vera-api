@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiParamOptions, ApiTags } from 
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { TransactionListApplication, TransactionListView } from '../../application/transaction-list.application';
 import { RecategorizedView, TransactionRecategorizeApplication } from '../../application/transaction-recategorize.application';
 import {
@@ -47,7 +49,7 @@ const TRANSACTION_EXAMPLE: Record<string, unknown> = {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/transactions')
 export class TransactionsController {
     public constructor(
@@ -96,6 +98,7 @@ export class TransactionsController {
     }
 
     @Patch(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Recategorize a transaction',
         description:

@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ClassTargetsApplication } from '../../application/class-targets.application';
 import { AssetClassView, AssetTargetsView } from '../../domain/allocation.types';
 import {
@@ -23,7 +25,8 @@ const MUST_SUM: string =
 
 @ApiTags('allocation')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('editor')
 @Controller('allocation/targets')
 export class ClassTargetsController {
     public constructor(private readonly targets: ClassTargetsApplication) {}

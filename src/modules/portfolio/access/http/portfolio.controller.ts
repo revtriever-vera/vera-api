@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PortfolioViewApplication } from '../../application/portfolio-view.application';
 import {
     ClassDetailResponse,
@@ -19,7 +20,7 @@ const NOT_FOUND: string = 'The class does not exist in this company (allocation.
 
 @ApiTags('portfolio')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('portfolio')
 export class PortfolioController {
     public constructor(private readonly portfolio: PortfolioViewApplication) {}

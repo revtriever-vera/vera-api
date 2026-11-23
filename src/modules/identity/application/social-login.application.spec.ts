@@ -49,8 +49,8 @@ describe('SocialLoginApplication', () => {
 
         const result = await application.login('google', 'credential', { ip: '203.0.113.1' });
 
-        expect(result).toEqual({ tokens: TOKENS, isNewAccount: false });
-        expect(resolve).toHaveBeenCalledWith(IDENTITY, 'en');
+        expect(result).toEqual({ tokens: TOKENS, isNewAccount: false, joinedAccount: false });
+        expect(resolve).toHaveBeenCalledWith(IDENTITY, 'en', undefined);
         expect(enrich).toHaveBeenCalledWith({ companyId: 'company-1', userId: 'user-1' });
         expect(issue).toHaveBeenCalledWith(USER, { ip: '203.0.113.1' }, 'google');
         expect(metrics['login']).toHaveBeenCalledWith('google', 'success');
@@ -62,6 +62,17 @@ describe('SocialLoginApplication', () => {
 
         expect((await application.login('google', 'credential', {})).isNewAccount).toBe(true);
         expect(metrics['login']).toHaveBeenCalledWith('google', 'new_account');
+    });
+
+    it('repassa o token do convite e marca joinedAccount quando a pessoa entrou numa conta', async () => {
+        const { application, resolve, metrics } = build({ outcome: 'joined' });
+
+        const result = await application.login('google', 'credential', {}, 'invite-token-aaaaaaaaaaaa');
+
+        expect(result.joinedAccount).toBe(true);
+        expect(result.isNewAccount).toBe(false);
+        expect(resolve).toHaveBeenCalledWith(IDENTITY, 'en', 'invite-token-aaaaaaaaaaaa');
+        expect(metrics['login']).toHaveBeenCalledWith('google', 'joined');
     });
 
     it('provedor desligado responde 503 sem tocar em nada', async () => {

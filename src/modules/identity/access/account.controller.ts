@@ -6,6 +6,8 @@ import { ApiZodBody, ApiZodResponse } from '../../../core/http/api-zod.decorator
 import { AccountDeletionApplication } from '../application/account-deletion.application';
 import { AccountExportApplication, AccountExportFile } from '../application/account-export.application';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
+import { RequiresRole } from '../services/requires-role.decorator';
+import { RolesGuard } from '../services/roles.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import { accountExportSchema, DeleteAccountDto, deleteAccountSchema } from '../validation/account.schemas';
 
@@ -13,7 +15,8 @@ const DATE_LENGTH: number = 10;
 
 @ApiTags('account')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('owner')
 @Controller('account')
 export class AccountController {
     public constructor(
@@ -68,8 +71,8 @@ export class AccountController {
     })
     @ApiProblemResponse({
         status: 403,
-        description: 'Only the owner can delete the company (identity.forbidden)',
-        example: { type: 'identity.forbidden', title: 'ForbiddenError', status: 403 }
+        description: 'Only the owner can delete the company (members.forbidden_role)',
+        example: { type: 'members.forbidden_role', title: 'RoleForbiddenError', status: 403 }
     })
     @ApiProblemResponse({
         status: 422,
