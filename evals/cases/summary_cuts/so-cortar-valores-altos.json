@@ -23,7 +23,7 @@
   "expect": {
     "mustCite": ["R$ 9.800"],
     "mustMention": ["não fecha"],
-    "mustNotMention": [],
+    "mustNotMention": ["média"],
     "sentences": {
       "min": 3,
       "max": 4
@@ -31,7 +31,7 @@
   },
   "reference": [
     "Para guardar 35% da renda, faltam **R$ 9.800** por mês.",
-    "Voltar à média em [[cat:shopping]] libera R$ 1.400, mas só cortar gastos flexíveis não fecha a conta.",
+    "Baixar ao limite sugerido em [[cat:shopping]] libera R$ 1.400, mas só cortar gastos flexíveis não fecha a conta.",
     "Ainda faltaria dinheiro mesmo depois dos cortes sugeridos."
   ]
 }

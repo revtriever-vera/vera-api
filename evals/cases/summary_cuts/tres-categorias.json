@@ -41,7 +41,7 @@
   "expect": {
     "mustCite": ["R$ 2.100"],
     "mustMention": [],
-    "mustNotMention": [],
+    "mustNotMention": ["média"],
     "sentences": {
       "min": 3,
       "max": 4
@@ -49,7 +49,7 @@
   },
   "reference": [
     "Para guardar 20% da renda, faltam **R$ 2.100** por mês.",
-    "O caminho mais leve é voltar à sua própria média onde o gasto subiu: [[cat:eating_out]] (de R$ 2.100 para R$ 1.500) e [[cat:subscriptions]] (de R$ 700 para R$ 400).",
+    "O caminho mais leve é baixar ao limite sugerido: [[cat:eating_out]] (de R$ 2.100 para R$ 1.500) e [[cat:subscriptions]] (de R$ 700 para R$ 400).",
     "Se for escolher uma só, comece por [[cat:eating_out]]: cortar **R$ 600** é a maior parte dos R$ 2.100 que faltam."
   ]
 }

@@ -23,7 +23,7 @@
   "expect": {
     "mustCite": ["R$ 600"],
     "mustMention": [],
-    "mustNotMention": [],
+    "mustNotMention": ["média"],
     "sentences": {
       "min": 3,
       "max": 4
@@ -31,7 +31,7 @@
   },
   "reference": [
     "Para guardar 20% da renda, faltam **R$ 600** por mês.",
-    "O caminho mais leve é voltar à sua própria média onde o gasto subiu: [[cat:shopping]] (de R$ 1.900 para R$ 1.200).",
+    "O caminho mais leve é baixar ao limite sugerido: [[cat:shopping]] (de R$ 1.900 para R$ 1.200).",
     "Se for escolher uma só, comece por [[cat:shopping]]: cortar **R$ 700** é a maior parte dos R$ 600 que faltam."
   ]
 }

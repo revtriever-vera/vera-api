@@ -380,7 +380,7 @@ describe('paid usage (self_hosted, teto 0)', () => {
     });
 });
 
-describe('paid usage (self_hosted, com teto)', () => {
+describe('paid usage (self_hosted, mesmo com PAID_USAGE_CAP_MICROS)', () => {
     let harness: AllocationHarness;
 
     beforeAll(async () => {
@@ -395,14 +395,16 @@ describe('paid usage (self_hosted, com teto)', () => {
         await harness.stop();
     });
 
-    it('mostra o valor absoluto do teto só aqui e pausa ao chegar nele', async () => {
+    it('a auto-hospedada não tem cota: o gasto passa do valor da variável e o estado segue ok', async () => {
         const account = await harness.signUp('capped');
 
-        await harness.inCompany(account.company.id, async () =>
-            harness.app.get(PaidUsageMeter, { strict: false }).record(entry({ costMicros: 2_000_000 }))
-        );
+        await harness.inCompany(account.company.id, async () => {
+            const meter: PaidUsageMeter = harness.app.get(PaidUsageMeter, { strict: false });
+            await meter.record(entry({ costMicros: 5_000_000 }));
+            await meter.assertRoom({ feature: 'ai', task: 'summary', estimateMicros: 5_000_000 });
+        });
 
         const usage = await harness.call<UsageBody>(account.token, 'GET', '/billing/usage');
-        expect(usage.body).toMatchObject({ state: 'paused', usedBps: 10000, capMicros: 2_000_000 });
+        expect(usage.body).toMatchObject({ state: 'ok', usedBps: 0, capMicros: null });
     });
 });

@@ -38,6 +38,15 @@ describe('IntegrationCredentialsService', () => {
         expect(find).not.toHaveBeenCalled();
     });
 
+    it('hosted com chave e sem LLM_MODEL usa o modelo padrão do código, nunca desliga em silêncio', () => {
+        const config = parseIntegrationCredentialsConfig({ AI_GATEWAY_API_KEY: 'gw-key', LLM_MODEL: '' });
+        const withId = parseIntegrationCredentialsConfig({ AI_GATEWAY_API_KEY: 'gw-key', LLM_MODEL_ID: 'vendor/outro' });
+
+        expect(new InstanceCredentialsService(config).of('llm', 'gateway')).toMatchObject({ model: 'meta/muse-spark-1.3-contributor' });
+        expect(new InstanceCredentialsService(withId).of('llm', 'gateway')).toMatchObject({ model: 'vendor/outro' });
+        expect(new InstanceCredentialsService(config).of('llm', 'openai_compatible')).toBeNull();
+    });
+
     it('self_hosted com linha usa a linha', async () => {
         const { service } = build('self_hosted', true, true);
 

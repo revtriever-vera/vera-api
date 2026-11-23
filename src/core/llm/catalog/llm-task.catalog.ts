@@ -22,7 +22,7 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 30_000,
         maxRetries: 2,
         evalThreshold: 0.8,
-        promptVersion: 'v2'
+        promptVersion: 'v3'
     },
     {
         task: LLM_TASKS.summaryPortfolio,

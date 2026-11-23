@@ -32,7 +32,7 @@
   "expect": {
     "mustCite": ["R$ 1.400"],
     "mustMention": [],
-    "mustNotMention": [],
+    "mustNotMention": ["média"],
     "sentences": {
       "min": 3,
       "max": 4
@@ -40,7 +40,7 @@
   },
   "reference": [
     "Para guardar 25% da renda, faltam **R$ 1.400** por mês.",
-    "O caminho mais leve é voltar à sua própria média onde o gasto subiu: [[cat:eating_out]] (de R$ 1.300 para R$ 900) e [[cat:leisure]] (de R$ 800 para R$ 600).",
+    "O caminho mais leve é baixar ao limite sugerido: [[cat:eating_out]] (de R$ 1.300 para R$ 900) e [[cat:leisure]] (de R$ 800 para R$ 600).",
     "Se for escolher uma só, comece por [[cat:eating_out]]: cortar **R$ 400** é a maior parte dos R$ 1.400 que faltam."
   ]
 }

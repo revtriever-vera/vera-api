@@ -6,8 +6,7 @@ import { DeploymentMode } from '../domain/plans.types';
 const schema = z
     .object({
         IS_LOCAL: isLocalSchema,
-        DEPLOYMENT_MODE: z.enum(['hosted', 'self_hosted']).optional(),
-        PAID_USAGE_CAP_MICROS: z.coerce.number().int().min(0).default(0)
+        DEPLOYMENT_MODE: z.enum(['hosted', 'self_hosted']).optional()
     })
     .superRefine((value, context: z.RefinementCtx) => {
         if (!value.IS_LOCAL && value.DEPLOYMENT_MODE === undefined) {
@@ -19,13 +18,11 @@ const schema = z
         }
     })
     .transform((value): PlansConfig => ({
-        DEPLOYMENT_MODE: value.DEPLOYMENT_MODE ?? 'hosted',
-        PAID_USAGE_CAP_MICROS: value.PAID_USAGE_CAP_MICROS
+        DEPLOYMENT_MODE: value.DEPLOYMENT_MODE ?? 'hosted'
     }));
 
 export interface PlansConfig {
     readonly DEPLOYMENT_MODE: DeploymentMode;
-    readonly PAID_USAGE_CAP_MICROS: number;
 }
 
 export const plansConfig = registerAs('plans', (): PlansConfig => schema.parse(process.env));

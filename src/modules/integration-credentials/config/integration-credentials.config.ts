@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
+import { DEFAULT_MODEL_ID } from '../../../core/llm/config/llm.config';
 import { stripTrailing } from '../../../shared/utils/strip-trailing';
 
 function blankAsUndefined(value: unknown): unknown {
@@ -25,6 +26,7 @@ const schema = z.object({
     LLM_BASE_URL: optionalUrl,
     LLM_API_KEY: optionalText,
     LLM_MODEL: optionalText,
+    LLM_MODEL_ID: z.preprocess(blankAsUndefined, z.string().trim().default(DEFAULT_MODEL_ID)),
     WHATSAPP_ACCESS_TOKEN: optionalText,
     WHATSAPP_PHONE_NUMBER_ID: optionalText,
     WHATSAPP_VERIFY_TOKEN: optionalText,
@@ -44,6 +46,7 @@ export interface IntegrationCredentialsSettings {
     readonly LLM_BASE_URL?: string;
     readonly LLM_API_KEY?: string;
     readonly LLM_MODEL?: string;
+    readonly LLM_MODEL_ID: string;
     readonly WHATSAPP_ACCESS_TOKEN?: string;
     readonly WHATSAPP_PHONE_NUMBER_ID?: string;
     readonly WHATSAPP_VERIFY_TOKEN?: string;

@@ -21,13 +21,14 @@ export class InstanceCredentialsService {
     }
 
     private llm(provider: LlmProvider): IntegrationCredentialsByKind['llm'] | null {
-        const { LLM_MODEL: model } = this.config;
-        if (model === undefined) {
-            return null;
-        }
         if (provider === 'gateway') {
             const apiKey: string | undefined = this.config.AI_GATEWAY_API_KEY;
+            const model: string = this.config.LLM_MODEL ?? this.config.LLM_MODEL_ID;
             return apiKey === undefined ? null : { kind: 'llm', baseUrl: this.config.AI_GATEWAY_BASE_URL, apiKey, model, provider };
+        }
+        const model: string | undefined = this.config.LLM_MODEL;
+        if (model === undefined) {
+            return null;
         }
         const { LLM_BASE_URL: baseUrl, LLM_API_KEY: apiKey } = this.config;
         return baseUrl === undefined || apiKey === undefined ? null : { kind: 'llm', baseUrl, apiKey, model, provider };

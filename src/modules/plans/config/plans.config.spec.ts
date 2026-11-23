@@ -20,11 +20,10 @@ describe('plansConfig', () => {
         expect(plansConfig().DEPLOYMENT_MODE).toBe('hosted');
     });
 
-    it('aceita self_hosted com teto', () => {
+    it('aceita self_hosted', () => {
         vi.stubEnv('IS_LOCAL', 'false');
         vi.stubEnv('DEPLOYMENT_MODE', 'self_hosted');
-        vi.stubEnv('PAID_USAGE_CAP_MICROS', '2000000');
 
-        expect(plansConfig()).toEqual({ DEPLOYMENT_MODE: 'self_hosted', PAID_USAGE_CAP_MICROS: 2000000 });
+        expect(plansConfig()).toEqual({ DEPLOYMENT_MODE: 'self_hosted' });
     });
 });
