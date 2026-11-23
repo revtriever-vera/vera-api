@@ -4,6 +4,7 @@ import { ObservabilityModule } from '../../../core/observability/observability.m
 import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
 import { TransactionsApplicationModule } from '../../transactions/application/transactions-application.module';
+import { TransactionsAccountSpreadsheet } from '../services/transactions-account.spreadsheet';
 import { TransactionsExportLogService } from '../services/transactions-export-log.service';
 import { TransactionsExportMetricsService } from '../services/transactions-export-metrics.service';
 import { TransactionsExportApplication } from './transactions-export.application';
@@ -16,7 +17,12 @@ import { TransactionsExportApplication } from './transactions-export.application
         SpendingCategoriesApplicationModule,
         IdentityApplicationModule
     ],
-    providers: [TransactionsExportApplication, TransactionsExportLogService, TransactionsExportMetricsService],
+    providers: [
+        TransactionsExportApplication,
+        TransactionsAccountSpreadsheet,
+        TransactionsExportLogService,
+        TransactionsExportMetricsService
+    ],
     exports: [TransactionsExportApplication]
 })
 export class TransactionsExportApplicationModule {}

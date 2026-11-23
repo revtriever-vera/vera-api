@@ -20,6 +20,8 @@ import { MembersLogService } from '../services/members-log.service';
 import { MembersMailerService } from '../services/members-mailer.service';
 import { MembersMetricsService } from '../services/members-metrics.service';
 import { AccountDataRegistry } from '../services/account-data.registry';
+import { AccountExportBuilder } from '../services/account-export.builder';
+import { AccountSpreadsheetRegistry } from '../services/account-spreadsheet.registry';
 import { AccountProvisioningService } from '../services/account-provisioning.service';
 import { CompanyTimezoneService } from '../services/company-timezone.service';
 import { CurrentUserService } from '../services/current-user.service';
@@ -40,6 +42,7 @@ import { AccountDeletedTemplate } from '../templates/account-deleted.template';
 import { MemberTemplates } from '../templates/member.templates';
 import { AccountDeletionApplication } from './account-deletion.application';
 import { AccountExportApplication } from './account-export.application';
+import { AccountSpreadsheetExportApplication } from './account-spreadsheet-export.application';
 import { InvitesApplication } from './invites.application';
 import { MembersApplication } from './members.application';
 import { MembersCleanupApplication } from './members-cleanup.application';
@@ -63,11 +66,14 @@ import { SocialLoginApplication } from './social-login.application';
         SessionApplication,
         SocialLoginApplication,
         AccountExportApplication,
+        AccountSpreadsheetExportApplication,
         AccountDeletionApplication,
         MembersApplication,
         InvitesApplication,
         MembersCleanupApplication,
         AccountDataRegistry,
+        AccountSpreadsheetRegistry,
+        AccountExportBuilder,
         AccountEmptinessService,
         AccountClosureMailer,
         InviteAcceptanceService,
@@ -103,6 +109,7 @@ import { SocialLoginApplication } from './social-login.application';
         SessionApplication,
         SocialLoginApplication,
         AccountExportApplication,
+        AccountSpreadsheetExportApplication,
         AccountDeletionApplication,
         MembersApplication,
         InvitesApplication,

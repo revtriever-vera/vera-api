@@ -13,8 +13,7 @@ const DRAFT = {
     currency: 'BRL' as const,
     appliedMinor: 500_000,
     appliedAt: '2025-01-06',
-    maturityDate: '2027-01-06',
-    issuerId: null
+    maturityDate: '2027-01-06'
 };
 
 function row(overrides: Partial<FixedIncomeTitleRow> = {}): FixedIncomeTitleRow {
