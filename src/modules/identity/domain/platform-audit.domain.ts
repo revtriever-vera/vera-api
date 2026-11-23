@@ -20,4 +20,8 @@ export class PlatformAuditDomain {
     public async listRecent(limit: number): Promise<PlatformAuditEntry[]> {
         return this.entries.listRecent(limit);
     }
+
+    public async listOfTarget(targetCompanyId: string, action: PlatformAuditAction, limit: number): Promise<PlatformAuditEntry[]> {
+        return this.entries.listOfTarget(targetCompanyId, action, limit);
+    }
 }

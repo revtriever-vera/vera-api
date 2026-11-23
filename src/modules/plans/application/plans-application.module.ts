@@ -19,6 +19,7 @@ import { SubscriptionSummaryRegistry } from '../services/subscription-summary.re
 import { PlanContractService } from '../services/plan-contract.service';
 import { PlanGateService } from '../services/plan-gate.service';
 import { PlanLimitService } from '../services/plan-limit.service';
+import { PlatformPlanReaderService } from '../services/platform-plan-reader.service';
 import { PlanResolverService } from '../services/plan-resolver.service';
 import { PlansLogService } from '../services/plans-log.service';
 import { PlansMetricsService } from '../services/plans-metrics.service';
@@ -73,6 +74,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         UsageAccountEraser,
         LlmCallsAccountEraser,
         PlanResolverService,
+        PlatformPlanReaderService,
         PlanLimitService,
         FeatureStateService,
         PlanGateService,
@@ -90,6 +92,7 @@ import { PremiumEndedRetryApplication } from './premium-ended-retry.application'
         PlanGateService,
         PlanContractService,
         PlanLimitService,
+        PlatformPlanReaderService,
         BillingOfferRegistry,
         PremiumGuard
     ]

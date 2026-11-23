@@ -30,6 +30,18 @@ export class AccountDataRegistry {
         return sections;
     }
 
+    public async exportSelected(companyId: string, areas: readonly string[]): Promise<Record<string, unknown>> {
+        const wanted: Set<string> = new Set(areas);
+        const selected: AccountDataExporterPort[] = this.exporters().filter((exporter: AccountDataExporterPort): boolean =>
+            wanted.has(exporter.area)
+        );
+        const sections: Record<string, unknown> = {};
+        for (const exporter of selected) {
+            sections[exporter.area] = await this.exportOne(exporter, companyId);
+        }
+        return sections;
+    }
+
     public async eraseAll(companyId: string): Promise<ErasedArea[]> {
         const erased: ErasedArea[] = [];
         for (const eraser of this.erasers()) {

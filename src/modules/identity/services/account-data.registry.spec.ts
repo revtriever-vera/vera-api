@@ -51,6 +51,16 @@ describe('AccountDataRegistry', () => {
         await expect(registry.eraseAll('company-1')).resolves.toEqual([{ area: 'assets', erased: 1 }]);
     });
 
+    it('exporta só as áreas pedidas, na ordem de registro', async () => {
+        const { registry } = build([
+            new FakeExporter('goals', { a: 1 }),
+            new FakeExporter('whatsapp', { b: 2 }),
+            new FakeExporter('usage', [])
+        ]);
+
+        await expect(registry.exportSelected('company-1', ['usage', 'goals'])).resolves.toEqual({ goals: { a: 1 }, usage: [] });
+    });
+
     it('funciona com zero portas registradas', async () => {
         const { registry } = build([{}]);
 

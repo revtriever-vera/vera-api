@@ -103,4 +103,26 @@ export class CompanyProductsRepository extends BareTenantRepository<'CompanyProd
             .limit(limit)
             .execute();
     }
+
+    public async listOpenOfCompaniesAcrossTenants(productId: string, companyIds: readonly string[]): Promise<CompanyProduct[]> {
+        if (companyIds.length === 0) {
+            return [];
+        }
+        return this.selectSkipConstraint()
+            .selectAll()
+            .where('productId', '=', productId)
+            .where('endsAt', 'is', null)
+            .where('companyId', 'in', companyIds)
+            .execute();
+    }
+
+    public async countOpenAcrossTenants(productId: string, trialsOnly: boolean): Promise<number> {
+        const row: { total: string | number | bigint } | undefined = await this.selectSkipConstraint()
+            .select((eb) => eb.fn.countAll().as('total'))
+            .where('productId', '=', productId)
+            .where('endsAt', 'is', null)
+            .$if(trialsOnly, (query) => query.where('source', 'in', [TRIAL_SOURCE, CARD_TRIAL_SOURCE]))
+            .executeTakeFirst();
+        return Number(row?.total ?? 0);
+    }
 }

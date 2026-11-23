@@ -40,6 +40,14 @@ export class PlanDomain {
         return this.contracts.findOpen(productId);
     }
 
+    public async openLinesOfCompanies(productId: string, companyIds: readonly string[]): Promise<CompanyProduct[]> {
+        return this.contracts.listOpenOfCompaniesAcrossTenants(productId, companyIds);
+    }
+
+    public async countOpenLines(productId: string, trialsOnly: boolean): Promise<number> {
+        return this.contracts.countOpenAcrossTenants(productId, trialsOnly);
+    }
+
     public async hasAnyLineOf(productId: string): Promise<boolean> {
         return this.contracts.hasAny(productId);
     }
