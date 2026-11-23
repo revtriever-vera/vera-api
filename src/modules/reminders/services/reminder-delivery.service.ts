@@ -35,6 +35,7 @@ const SEND_TASK: string = 'reminder';
 const WINDOW_CLOSED_CODE: string = 'whatsapp.window_closed';
 const TEMPLATE_UNAVAILABLE_CODE: string = 'whatsapp.template_unavailable';
 const PROVIDER_DISABLED_CODE: string = 'whatsapp.provider_disabled';
+const PRICE_UNAVAILABLE_CODE: string = 'usage.price_unavailable';
 const MONTH_START_DAY: number = 1;
 
 function languageOf(locale: AppLocale): TemplateLanguage {
@@ -143,6 +144,9 @@ export class ReminderDeliveryService {
         }
         if (code === PROVIDER_DISABLED_CODE) {
             return { kind: 'unreached', reason: UNREACHED_REASONS.providerDisabled };
+        }
+        if (code === PRICE_UNAVAILABLE_CODE) {
+            return { kind: 'unreached', reason: UNREACHED_REASONS.sendFailed };
         }
         throw error;
     }
