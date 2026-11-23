@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { HmacPort } from '../../../core/crypto/hmac.port';
+import { publicApiUrl } from '../../../shared/utils/public-api-url';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { noticesConfig } from '../config/notices.config';
 import { InvalidUnsubscribeTokenError } from '../domain/notices.errors';
@@ -14,7 +15,6 @@ export interface UnsubscribeSubject {
 
 const SEPARATOR: string = '.';
 const TYPE_PATTERN: RegExp = /^[a-z][a-z0-9_]{0,63}$/;
-const API_PREFIX: string = '/api';
 
 function isSubjectParts(parts: string[]): parts is [string, string, string] {
     return parts.length === 3 && IdUtil.isId(parts[0] ?? '') && IdUtil.isId(parts[1] ?? '') && TYPE_PATTERN.test(parts[2] ?? '');
@@ -35,7 +35,7 @@ export class UnsubscribeLinkService {
     }
 
     public urlFor(subject: UnsubscribeSubject): string {
-        return `${this.config.PUBLIC_API_URL}${API_PREFIX}/notifications/unsubscribe/${this.tokenFor(subject)}`;
+        return publicApiUrl(this.config.PUBLIC_API_URL, `notifications/unsubscribe/${this.tokenFor(subject)}`);
     }
 
     public pageUrlOf(token: string): string {

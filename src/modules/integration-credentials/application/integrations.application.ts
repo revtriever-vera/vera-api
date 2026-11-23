@@ -16,6 +16,7 @@ import {
     SealedIntegration
 } from '../domain/integration.types';
 import { toIntegrationItem } from '../domain/integration.mapper';
+import { publicApiUrl } from '../../../shared/utils/public-api-url';
 import { IntegrationRemovedRegistry } from '../services/integration-removed.registry';
 import { IntegrationTesterService } from '../services/integration-tester.service';
 import { IntegrationVaultService } from '../services/integration-vault.service';
@@ -23,8 +24,8 @@ import { IntegrationsLogService } from '../services/integrations-log.service';
 import { IntegrationsMetricsService } from '../services/integrations-metrics.service';
 import { SaveGoogleBody, SaveLlmBody, SaveWhatsAppBody } from '../validation/integrations.schemas';
 
-const GOOGLE_CALLBACK_PATH: string = '/api/google/callback';
-const WHATSAPP_WEBHOOK_PATH: string = '/api/whatsapp/webhook';
+const GOOGLE_CALLBACK_PATH: string = '/google/callback';
+const WHATSAPP_WEBHOOK_PATH: string = '/whatsapp/webhook';
 
 @Injectable()
 export class IntegrationsApplication {
@@ -44,8 +45,8 @@ export class IntegrationsApplication {
         const rows: IntegrationCredential[] = await this.credentials.list();
         return {
             items: INTEGRATION_KINDS.map((kind: IntegrationKind): IntegrationItem => toIntegrationItem(kind, rows)),
-            webhookUrl: `${this.config.PUBLIC_API_URL}${WHATSAPP_WEBHOOK_PATH}`,
-            googleRedirectUri: `${this.config.PUBLIC_API_URL}${GOOGLE_CALLBACK_PATH}`
+            webhookUrl: publicApiUrl(this.config.PUBLIC_API_URL, WHATSAPP_WEBHOOK_PATH),
+            googleRedirectUri: publicApiUrl(this.config.PUBLIC_API_URL, GOOGLE_CALLBACK_PATH)
         };
     }
 

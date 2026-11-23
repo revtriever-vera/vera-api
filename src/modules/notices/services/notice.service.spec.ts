@@ -29,7 +29,7 @@ function setup(options: { disabled?: string[]; claimed?: (string | null)[]; enqu
         find: vi.fn().mockImplementation((id: string) => Promise.resolve([ANA, BOB].find((person) => person.userId === id) ?? null))
     };
     const logs = { sent: vi.fn(), released: vi.fn() };
-    const links = { urlFor: vi.fn().mockReturnValue('https://api.vera.example/api/notifications/unsubscribe/tok') };
+    const links = { urlFor: vi.fn().mockReturnValue('https://api.vera.example/notifications/unsubscribe/tok') };
     const preferences = { disabledUserIds: vi.fn().mockResolvedValue(new Set(options.disabled ?? [])) };
     const context = {
         get: vi.fn().mockReturnValue({ requestId: 'r' }),
@@ -58,9 +58,9 @@ describe('NoticeService', () => {
         expect(mailer.enqueue).toHaveBeenNthCalledWith(1, {
             template: 'goal-behind',
             locale: 'pt-BR',
-            props: { goal: 'Reserva', firstName: 'Ana', unsubscribeUrl: 'https://api.vera.example/api/notifications/unsubscribe/tok' },
+            props: { goal: 'Reserva', firstName: 'Ana', unsubscribeUrl: 'https://api.vera.example/notifications/unsubscribe/tok' },
             to: { email: 'ana@example.com', name: 'Ana' },
-            unsubscribeUrl: 'https://api.vera.example/api/notifications/unsubscribe/tok',
+            unsubscribeUrl: 'https://api.vera.example/notifications/unsubscribe/tok',
             reference: 'goal_behind-n1'
         });
         expect(mailer.enqueue.mock.calls[1]?.[0]).toMatchObject({ locale: 'en', reference: 'goal_behind-n2' });

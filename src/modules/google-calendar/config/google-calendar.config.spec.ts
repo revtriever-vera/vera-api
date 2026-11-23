@@ -23,8 +23,8 @@ describe('parseGoogleCalendarConfig', () => {
     it('os redirects saem da URL pública', () => {
         const config = parseGoogleCalendarConfig({ PUBLIC_API_URL: 'https://vera.example.com/' });
 
-        expect(config.hostedRedirectUri).toBe('https://vera.example.com/api/calendar/google/callback');
-        expect(config.selfHostedRedirectUri).toBe('https://vera.example.com/api/google/callback');
+        expect(config.hostedRedirectUri).toBe('https://vera.example.com/calendar/google/callback');
+        expect(config.selfHostedRedirectUri).toBe('https://vera.example.com/google/callback');
     });
 
     it('aceita o redirect da hospedada configurado e trata vazio como ausente', () => {
