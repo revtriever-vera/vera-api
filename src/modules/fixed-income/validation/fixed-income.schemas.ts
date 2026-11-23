@@ -114,7 +114,9 @@ export const titleIssuerSchema = z.object({
     name: z.string().describe('Issuer name'),
     groupId: z.string().describe('Slug of the conglomerate or group the issuer belongs to today'),
     groupName: z.string().describe('Name of the conglomerate or group'),
-    kind: z.enum(['bank', 'company', 'sovereign']).describe('`bank`, `company` or `sovereign`'),
+    kind: z
+        .enum(['bank', 'company', 'sovereign', 'other'])
+        .describe('`bank`, `company`, `sovereign` or `other` (the "Outro emissor" option)'),
     fgcAssociated: z.boolean().describe('Whether the issuer is associated to the FGC')
 });
 

@@ -29,7 +29,9 @@ const ITEM_EXAMPLE: AssetItem = {
     suggestedClassKey: 'acoes_eua',
     dollarExposure: true,
     quantityDecimals: 0,
-    maturityDate: null
+    maturityDate: null,
+    sector: null,
+    issuerGroupId: null
 };
 
 @ApiTags('catalog')
