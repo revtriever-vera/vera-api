@@ -59,7 +59,7 @@ export function findMirrorIds(transactions: readonly DetectorTransaction[]): Rea
     return mirrored;
 }
 
-const REFUND_PREFIX: RegExp = /^(?:(?:ESTORNO|EST|CRED|CREDITO|DEVOLUCAO|DEV|REEMBOLSO)\s+)(?:(?:DE|DA|DO)\s+)?/;
+const REFUND_PREFIX: RegExp = /^(?:(?:ESTORNO|CRED|CREDITO|DEVOLUCAO|REEMBOLSO)\s+)(?:(?:DE|DA|DO)\s+)?/;
 
 function withoutRefundPrefix(key: string): string {
     let current: string = key;

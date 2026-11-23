@@ -31,10 +31,6 @@ export function orderedByStart(bands: readonly (readonly Charge[])[]): readonly 
     );
 }
 
-/**
- * A price step: the later band starts after the earlier one stopped, in the same account, one
- * cadence interval later. Bands that charge in the same period (two plans) are never a step.
- */
 export function isPriceStep(earlier: readonly Charge[], later: readonly Charge[]): boolean {
     const account: string | null = accountOf(earlier);
     const sizeOk: boolean = earlier.length >= MIN_BAND_CHARGES && later.length >= MIN_BAND_CHARGES;
