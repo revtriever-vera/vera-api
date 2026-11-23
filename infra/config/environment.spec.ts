@@ -94,4 +94,37 @@ describe('fromEnvironment', () => {
         expect(fromEnvironment('dev', fakeEnvironment()).imagePullAccounts).toEqual([]);
         expect(() => fromEnvironment('dev', fakeEnvironment({ IMAGE_PULL_ACCOUNTS: 'abc' }))).toThrow('IMAGE_PULL_ACCOUNTS inválida');
     });
+    describe('motor de cobrança', () => {
+        it('usa o fake por padrão e não exige nada da Revtriever', () => {
+            const config = fromEnvironment('prod', fakeEnvironment());
+
+            expect(config.billing).toEqual({ driver: 'fake', apiUrl: null, planId: null, gatewayConnectionId: null });
+        });
+
+        it('lê o driver revtriever e as variáveis, ignorando as em branco', () => {
+            const config = fromEnvironment(
+                'prod',
+                fakeEnvironment({
+                    BILLING_ENGINE_DRIVER: 'revtriever',
+                    REVTRIEVER_PLAN_ID: 'plan-x',
+                    REVTRIEVER_API_URL: 'https://api.example.test',
+                    REVTRIEVER_GATEWAY_CONNECTION_ID: '  '
+                })
+            );
+
+            expect(config.billing).toEqual({
+                driver: 'revtriever',
+                apiUrl: 'https://api.example.test',
+                planId: 'plan-x',
+                gatewayConnectionId: null
+            });
+        });
+
+        it('recusa driver desconhecido e revtriever sem plano', () => {
+            expect(() => fromEnvironment('prod', fakeEnvironment({ BILLING_ENGINE_DRIVER: 'asaas' }))).toThrow(
+                'BILLING_ENGINE_DRIVER inválida'
+            );
+            expect(() => fromEnvironment('prod', fakeEnvironment({ BILLING_ENGINE_DRIVER: 'revtriever' }))).toThrow('REVTRIEVER_PLAN_ID');
+        });
+    });
 });

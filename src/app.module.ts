@@ -16,6 +16,7 @@ import { QueueModule } from './core/queue/queue.module';
 import { UsageModule } from './core/usage/usage.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { BankConnectionsModule } from './modules/bank-connections/bank-connections.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { ConcentrationModule } from './modules/concentration/concentration.module';
 import { ContributionModule } from './modules/contribution/contribution.module';
@@ -86,7 +87,8 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         TransactionsExportModule,
         StatementImportModule,
         BankConnectionsModule,
-        PlansModule
+        PlansModule,
+        BillingModule
     ],
     providers: [
         { provide: APP_PIPE, useClass: ZodValidationPipe },

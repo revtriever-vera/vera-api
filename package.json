@@ -34,6 +34,7 @@
     "usage:simulate": "tsx scripts/usage-simulate.ts",
     "qa:statement-fixture": "tsx scripts/qa-statement-fixture.ts",
     "secrets:reseal": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/secrets-reseal.js",
+    "billing:provision": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/billing-provision.js",
     "catalog:seed": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/catalog-seed.js",
     "cdk": "cdk"
   },
