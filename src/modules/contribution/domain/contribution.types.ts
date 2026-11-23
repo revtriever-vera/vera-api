@@ -50,3 +50,26 @@ export interface ContributionSuggestion {
     readonly warnings: ContributionWarning[];
     readonly classes: ClassSuggestion[];
 }
+
+export type GoalKindKey = 'emergency_reserve' | 'travel' | 'home_down_payment' | 'other';
+
+export interface GoalSuggestion {
+    readonly goalId: string;
+    readonly kind: GoalKindKey;
+    readonly name: string;
+    readonly targetDate: string;
+    readonly amountMinor: number;
+    readonly destination: {
+        readonly kind: 'position' | 'fixed_income';
+        readonly id: string;
+        readonly symbol: string;
+        readonly name: string;
+        readonly typeGroup: string;
+        readonly hint: 'new_or_reinforce' | null;
+    };
+}
+
+export interface PrioritizedSuggestion extends ContributionSuggestion {
+    readonly goalsAmountMinor: number;
+    readonly goals: GoalSuggestion[];
+}

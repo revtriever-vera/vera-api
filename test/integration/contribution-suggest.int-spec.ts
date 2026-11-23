@@ -27,6 +27,8 @@ interface SuggestBody {
     readonly totalAfterMinor: number;
     readonly warnings: string[];
     readonly classes: ClassBody[];
+    readonly goalsAmountMinor: number;
+    readonly goals: { readonly goalId: string; readonly amountMinor: number; readonly destination: { readonly symbol: string } }[];
 }
 
 interface ProblemBody {
@@ -227,5 +229,45 @@ describe('contribution suggest', () => {
 
         expect(response.status).toBe(422);
         expect(response.body.type).toBe('contribution.targets_not_set');
+    });
+
+    it('começa pelo objetivo atrasado, respeita o interruptor e não vaza para outra empresa', async () => {
+        const owner: Account = await harness.signUp('goals-first');
+        const other: Account = await harness.signUp('goals-other');
+        const position = await harness.call<{ id: string }>(owner.token, 'POST', '/positions', {
+            assetId: assetIds['ITUB4'],
+            quantity: '100'
+        });
+        const targetDate: string = new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+        const goal = await harness.call<{ id: string }>(owner.token, 'POST', '/goals', {
+            kind: 'travel',
+            name: 'Viagem',
+            targetMinor: 1_000_000,
+            targetDate,
+            holdings: [{ kind: 'position', holdingId: position.body.id, shareBps: 10_000 }]
+        });
+        expect(goal.status).toBe(201);
+        await harness.pg.query(
+            `UPDATE "Goals" SET "planStartMonth" = date_trunc('month', now() - interval '6 months'), "planStartMinor" = 0, "planMonths" = 12 WHERE id = $1`,
+            [goal.body.id]
+        );
+
+        const first: SuggestBody = await suggest(owner, 500_000);
+        const off = await harness.call<SuggestBody>(owner.token, 'POST', '/portfolio/contributions/suggest', {
+            amountMinor: 500_000,
+            prioritizeGoals: false
+        });
+        const isolated: SuggestBody = await suggest(other, 500_000);
+
+        expect(first.goals).toHaveLength(1);
+        expect(first.goals[0]?.destination.symbol).toBe('ITUB4');
+        expect(first.goalsAmountMinor).toBeGreaterThan(0);
+        expect(first.goals[0]?.amountMinor).toBe(first.goalsAmountMinor);
+        expect(sum(first.classes.map((item: ClassBody) => item.amountMinor))).toBe(500_000 - first.goalsAmountMinor);
+        expect(first.totalAfterMinor).toBe(first.totalBeforeMinor + 500_000);
+        expect(off.body.goals).toEqual([]);
+        expect(off.body.goalsAmountMinor).toBe(0);
+        expect(sum(off.body.classes.map((item: ClassBody) => item.amountMinor))).toBe(500_000);
+        expect(isolated.goals).toEqual([]);
     });
 });
