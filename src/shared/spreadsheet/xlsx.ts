@@ -44,20 +44,14 @@ function formatOf(column: XlsxColumn | undefined): string | undefined {
     return column.numFmt ?? (column.type === 'date' ? DEFAULT_DATE_FORMAT : undefined);
 }
 
-export class XlsxSheetBuilder {
-    private readonly chunks: Buffer[] = [];
-    private readonly workbook: stream.xlsx.WorkbookWriter;
+export class XlsxSheetWriter {
     private readonly sheet: Worksheet;
 
-    public constructor(private readonly spec: XlsxSheetSpec) {
-        const sink: Writable = new Writable({
-            write: (chunk: Buffer, _encoding: BufferEncoding, done: () => void): void => {
-                this.chunks.push(chunk);
-                done();
-            }
-        });
-        this.workbook = new stream.xlsx.WorkbookWriter({ stream: sink, useStyles: true });
-        this.sheet = this.workbook.addWorksheet(spec.name, { views: [{ state: 'frozen', ySplit: 1 }] });
+    public constructor(
+        private readonly spec: XlsxSheetSpec,
+        workbook: stream.xlsx.WorkbookWriter
+    ) {
+        this.sheet = workbook.addWorksheet(spec.name, { views: [{ state: 'frozen', ySplit: 1 }] });
         this.sheet.columns = spec.columns.map((column: XlsxColumn): Partial<Column> => ({ header: column.header, width: column.width }));
         const header: Row = this.sheet.getRow(1);
         header.font = { bold: true };
@@ -79,10 +73,50 @@ export class XlsxSheetBuilder {
         row.commit();
     }
 
-    public async finish(): Promise<Buffer> {
+    public commit(): void {
         this.sheet.commit();
+    }
+}
+
+export class XlsxWorkbookBuilder {
+    private readonly chunks: Buffer[] = [];
+    private readonly workbook: stream.xlsx.WorkbookWriter;
+
+    public constructor() {
+        const sink: Writable = new Writable({
+            write: (chunk: Buffer, _encoding: BufferEncoding, done: () => void): void => {
+                this.chunks.push(chunk);
+                done();
+            }
+        });
+        this.workbook = new stream.xlsx.WorkbookWriter({ stream: sink, useStyles: true });
+    }
+
+    public sheet(spec: XlsxSheetSpec): XlsxSheetWriter {
+        return new XlsxSheetWriter(spec, this.workbook);
+    }
+
+    public async finish(): Promise<Buffer> {
         await this.workbook.commit();
         return Buffer.concat(this.chunks);
+    }
+}
+
+export class XlsxSheetBuilder {
+    private readonly book: XlsxWorkbookBuilder = new XlsxWorkbookBuilder();
+    private readonly writer: XlsxSheetWriter;
+
+    public constructor(spec: XlsxSheetSpec) {
+        this.writer = this.book.sheet(spec);
+    }
+
+    public append(cells: readonly XlsxCell[]): void {
+        this.writer.append(cells);
+    }
+
+    public async finish(): Promise<Buffer> {
+        this.writer.commit();
+        return this.book.finish();
     }
 }
 
