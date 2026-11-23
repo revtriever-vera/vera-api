@@ -101,11 +101,49 @@ describe('CloudWhatsAppDriver', () => {
             language: 'en',
             category: 'UTILITY',
             body: 'Hi {{1}}',
-            examples: ['x']
+            examples: ['x'],
+            quickReplies: []
         });
 
         expect(result).toEqual({ remoteId: 'remote-1' });
         expect(lastCall(fetchMock).body).toMatchObject({ category: 'UTILITY', allow_category_change: false });
+    });
+
+    it('submete os botões de resposta rápida e envia o payload de cada um', async () => {
+        const fetchMock = stubFetch(reply(200, { id: 'remote-2' }), reply(200, { messages: [{ id: 'wamid.1' }] }));
+
+        await driver.submitTemplate(CHANNEL, {
+            name: 'vera_lembrete_v2',
+            language: 'pt_BR',
+            category: 'UTILITY',
+            body: 'Lembrete {{1}}',
+            examples: ['x'],
+            quickReplies: ['Feito', 'Adiar 1h', 'Amanhã']
+        });
+        await driver.sendTemplate(CHANNEL, '1', {
+            name: 'vera_lembrete_v2',
+            language: 'pt_BR',
+            variables: ['pagar'],
+            buttonPayloads: ['rem:done:abc12345', 'rem:snooze1h:abc12345', 'rem:tomorrow:abc12345']
+        });
+
+        const submitted = lastCall(fetchMock, 0).body['components'] as { type: string; buttons?: { text: string }[] }[];
+        expect(submitted[1]).toEqual({
+            type: 'BUTTONS',
+            buttons: [
+                { type: 'QUICK_REPLY', text: 'Feito' },
+                { type: 'QUICK_REPLY', text: 'Adiar 1h' },
+                { type: 'QUICK_REPLY', text: 'Amanhã' }
+            ]
+        });
+        const sent = (lastCall(fetchMock, 1).body['template'] as { components: Record<string, unknown>[] }).components;
+        expect(sent).toHaveLength(4);
+        expect(sent[3]).toEqual({
+            type: 'button',
+            sub_type: 'quick_reply',
+            index: '2',
+            parameters: [{ type: 'payload', payload: 'rem:tomorrow:abc12345' }]
+        });
     });
 
     it('lê a qualidade do número e trata a nota desconhecida', async () => {

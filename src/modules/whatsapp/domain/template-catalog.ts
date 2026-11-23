@@ -8,14 +8,16 @@ type CatalogEntry = {
     readonly version: number;
     readonly bodies: Readonly<Record<TemplateLanguage, string>>;
     readonly examples: Readonly<Record<TemplateLanguage, readonly string[]>>;
+    readonly quickReplies: Readonly<Record<TemplateLanguage, readonly string[]>>;
 };
 
 export const TEMPLATE_CATALOG: readonly CatalogEntry[] = [
     {
         key: REMINDER_TEMPLATE_KEY,
-        version: 1,
+        version: 2,
         bodies: { pt_BR: 'Lembrete da Vera: {{1}}', en: 'Vera reminder: {{1}}' },
-        examples: { pt_BR: ['Pagar a fatura do cartao'], en: ['Pay the card bill'] }
+        examples: { pt_BR: ['Pagar a fatura do cartao'], en: ['Pay the card bill'] },
+        quickReplies: { pt_BR: ['Feito', 'Adiar 1h', 'Amanhã'], en: ['Done', 'Snooze 1h', 'Tomorrow'] }
     }
 ];
 
@@ -34,7 +36,8 @@ export function catalogDefinitions(): TemplateDefinition[] {
             language,
             category: 'UTILITY',
             body: entry.bodies[language],
-            examples: entry.examples[language]
+            examples: entry.examples[language],
+            quickReplies: entry.quickReplies[language]
         }))
     );
 }

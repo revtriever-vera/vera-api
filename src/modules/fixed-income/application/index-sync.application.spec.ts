@@ -18,7 +18,7 @@ function build(lastDates: Record<string, string | null>, fetchImpl?: () => Promi
             savePoints
         } as unknown as IndexSeriesDomain,
         { source: 'mock', fetch },
-        { publish },
+        { publish, remove: vi.fn() },
         logs as unknown as FixedIncomeLogService,
         metrics as unknown as FixedIncomeMetricsService
     );

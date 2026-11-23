@@ -18,7 +18,9 @@ export const VIEWER_WRITE_ALLOWLIST: readonly string[] = [
     'PATCH /auth/me/preferences',
     'POST /members/me/leave',
     'POST /whatsapp/link/code',
-    'DELETE /whatsapp/link'
+    'DELETE /whatsapp/link',
+    'DELETE /reminders/:id',
+    'DELETE /calendar/connection'
 ];
 
 const READ_METHODS: readonly string[] = ['GET', 'HEAD'];

@@ -11,7 +11,11 @@ export const sendRequestedSchema = z.object({ messageId: z.string().uuid() });
 
 export const outboundPayloadSchema = z.union([
     z.object({
-        template: z.object({ language: z.enum(['pt_BR', 'en']), variables: z.array(z.string()) })
+        template: z.object({
+            language: z.enum(['pt_BR', 'en']),
+            variables: z.array(z.string()),
+            buttonPayloads: z.array(z.string()).optional()
+        })
     }),
     z.object({ choices: z.array(z.object({ id: z.string(), title: z.string() })) })
 ]);

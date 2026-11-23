@@ -4,6 +4,7 @@ import { WhatsAppMessageDomain } from '../domain/whatsapp-message.domain';
 import { WhatsAppMessage, WhatsAppChannel } from '../domain/whatsapp.types';
 import { WhatsAppCloudPort, WhatsAppGraphError } from '../ports/whatsapp-cloud.port';
 import { MockOutbox } from '../services/mock-outbox.service';
+import { OutboundFailureRegistry } from '../services/outbound-failure.registry';
 import { WhatsAppChannelService } from '../services/whatsapp-channel.service';
 import { WhatsAppMetricsService } from '../services/whatsapp-metrics.service';
 import { WhatsAppWindowService } from '../services/whatsapp-window.service';
@@ -78,6 +79,7 @@ function build(options: {
         port as unknown as WhatsAppCloudPort,
         new MockOutbox(),
         { message: vi.fn() } as unknown as WhatsAppMetricsService,
+        { notify: vi.fn().mockResolvedValue(undefined) } as unknown as OutboundFailureRegistry,
         { WHATSAPP_ALLOWED_RECIPIENTS: options.allowed ?? ['*'] } as never
     );
     return { application, messages, health, port };

@@ -54,6 +54,21 @@ export class BullQueuePublisher extends QueuePublisherPort implements BeforeAppl
         await this.database.afterCommit(async () => this.enqueue(queue, type, envelope, options));
     }
 
+    public async remove(queue: QueueName, jobId: string): Promise<void> {
+        await this.database.afterCommit(async () => this.dropWaiting(queue, jobId));
+    }
+
+    private async dropWaiting(queue: QueueName, jobId: string): Promise<void> {
+        try {
+            const job: Job | undefined = await this.queueFor(queue).getJob(jobId);
+            if (job !== undefined && ((await job.isDelayed()) || (await job.isWaiting()))) {
+                await job.remove();
+            }
+        } catch (error: unknown) {
+            this.logs.enqueueFailed(queue, 'job.remove', error);
+        }
+    }
+
     private async enqueue(queue: QueueName, type: string, envelope: QueueEnvelope, options?: PublishOptions): Promise<void> {
         try {
             const target: Queue = this.queueFor(queue);

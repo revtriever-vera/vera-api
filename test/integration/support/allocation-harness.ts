@@ -112,6 +112,11 @@ export class AllocationHarness {
         return { status: response.status, contentType: response.headers.get('content-type'), text: await response.text() };
     }
 
+    public async callRedirect(path: string): Promise<{ readonly status: number; readonly location: string | null }> {
+        const response: Response = await fetch(`${this.origin}${path}`, { redirect: 'manual' });
+        return { status: response.status, location: response.headers.get('location') };
+    }
+
     public async callRaw(token: string | null, path: string): Promise<RawResponse> {
         const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {};
         const response: Response = await fetch(`${this.origin}${path}`, { headers });

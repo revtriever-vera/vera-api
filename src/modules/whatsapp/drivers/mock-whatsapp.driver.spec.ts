@@ -41,14 +41,16 @@ describe('MockWhatsAppDriver', () => {
             language: 'pt_BR',
             category: 'UTILITY',
             body: 'Lembrete {{1}}',
-            examples: ['x']
+            examples: ['x'],
+            quickReplies: []
         });
         await driver.submitTemplate(CHANNEL, {
             name: 'promo',
             language: 'pt_BR',
             category: 'UTILITY',
             body: 'Grande OFERTA {{1}}',
-            examples: ['x']
+            examples: ['x'],
+            quickReplies: []
         });
 
         const listed = await driver.listTemplates(CHANNEL);

@@ -8,6 +8,7 @@ import { MESSAGE_KINDS, SentMessage, WhatsAppChannel, WhatsAppMessage } from '..
 import { WhatsAppCloudPort, WhatsAppGraphError } from '../ports/whatsapp-cloud.port';
 import { isRetryable } from '../domain/graph-error.mapper';
 import { MockOutbox, MockSentMessage } from '../services/mock-outbox.service';
+import { OutboundFailureRegistry } from '../services/outbound-failure.registry';
 import { WhatsAppChannelService } from '../services/whatsapp-channel.service';
 import { WhatsAppMetricsService } from '../services/whatsapp-metrics.service';
 import { WhatsAppWindowService } from '../services/whatsapp-window.service';
@@ -23,6 +24,7 @@ export class SendApplication {
         private readonly port: WhatsAppCloudPort,
         private readonly outbox: MockOutbox,
         private readonly metrics: WhatsAppMetricsService,
+        private readonly failures: OutboundFailureRegistry,
         @Inject(whatsappConfig.KEY) private readonly config: ConfigType<typeof whatsappConfig>
     ) {}
 
@@ -84,13 +86,14 @@ export class SendApplication {
     private async end(message: WhatsAppMessage, status: 'failed' | 'blocked', errorCode: string): Promise<void> {
         await this.messages.markEnded(message.id, status, errorCode);
         this.metrics.message('out', message.kind, status);
+        await this.failures.notify({ messageId: message.id, kind: message.kind, errorCode });
     }
 
     private async dispatch(message: WhatsAppMessage, channel: WhatsAppChannel): Promise<SentMessage> {
         const payload: ReturnType<typeof outboundPayloadSchema.safeParse> = outboundPayloadSchema.safeParse(message.payload);
         if (message.kind === MESSAGE_KINDS.template && payload.success && 'template' in payload.data) {
-            const { language, variables } = payload.data.template;
-            return this.port.sendTemplate(channel, message.peer, { name: message.templateName ?? '', language, variables });
+            const { language, variables, buttonPayloads } = payload.data.template;
+            return this.port.sendTemplate(channel, message.peer, { name: message.templateName ?? '', language, variables, buttonPayloads });
         }
         if (message.kind === MESSAGE_KINDS.interactive && payload.success && 'choices' in payload.data) {
             return this.port.sendInteractive(channel, message.peer, { body: message.body ?? '', choices: payload.data.choices });

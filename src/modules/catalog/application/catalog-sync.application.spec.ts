@@ -55,7 +55,7 @@ function rig(options: { fetchAll?: () => Promise<readonly SourceAsset[]>; previo
             lastSucceededFetched: vi.fn().mockResolvedValue(options.previous === undefined ? null : options.previous)
         } as unknown as CatalogSyncRunDomain,
         registry,
-        { publish },
+        { publish, remove: vi.fn() },
         {
             syncFinished: vi.fn(),
             syncSuspicious: suspicious,

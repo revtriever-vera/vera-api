@@ -72,6 +72,7 @@ export type TemplateSend = {
     readonly name: string;
     readonly language: TemplateLanguage;
     readonly variables: readonly string[];
+    readonly buttonPayloads?: readonly string[];
 };
 
 export type TemplateDefinition = {
@@ -80,6 +81,7 @@ export type TemplateDefinition = {
     readonly category: 'UTILITY';
     readonly body: string;
     readonly examples: readonly string[];
+    readonly quickReplies: readonly string[];
 };
 
 export type RemoteTemplateStatus = 'APPROVED' | 'PENDING' | 'IN_APPEAL' | 'REJECTED' | 'PAUSED' | 'DISABLED';
@@ -134,7 +136,13 @@ export type StatusReceivedPayload = { readonly eventId: string; readonly wamid: 
 export type SendRequestedPayload = { readonly messageId: string };
 
 export type OutboundPayload =
-    | { readonly template: { readonly language: TemplateLanguage; readonly variables: readonly string[] } }
+    | {
+          readonly template: {
+              readonly language: TemplateLanguage;
+              readonly variables: readonly string[];
+              readonly buttonPayloads?: readonly string[];
+          };
+      }
     | { readonly choices: readonly InteractiveChoice[] };
 
 export const SEND_ATTEMPTS: number = 3;

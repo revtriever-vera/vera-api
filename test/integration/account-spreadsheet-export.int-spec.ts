@@ -112,7 +112,15 @@ describe('account spreadsheet export', () => {
         expect(response.headers.get('content-type')).toBe('application/zip');
         expect(response.headers.get('content-disposition')).toMatch(/^attachment; filename="vera-meus-dados-\d{4}-\d{2}-\d{2}\.zip"$/);
         const zip: JSZip = await zipOf(response);
-        expect(Object.keys(zip.files).sort()).toEqual(['carteira.xlsx', 'dados.json', 'metas.xlsx', 'regras.xlsx', 'transacoes.xlsx']);
+        expect(Object.keys(zip.files).sort()).toEqual([
+            'agenda.xlsx',
+            'carteira.xlsx',
+            'dados.json',
+            'lembretes.xlsx',
+            'metas.xlsx',
+            'regras.xlsx',
+            'transacoes.xlsx'
+        ]);
         const transactions: string[] = textsOf((await sheetsOf(zip, 'transacoes.xlsx'))[0] as Worksheet);
         expect(transactions).toContain('compra aaa');
         expect(transactions).toContain("'=salario aaa");

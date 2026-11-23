@@ -402,6 +402,10 @@ export class RecordingPublisher extends QueuePublisherPort {
         this.published.push({ queue, type, payload, options });
         return Promise.resolve();
     }
+
+    public remove(): Promise<void> {
+        return Promise.resolve();
+    }
 }
 
 export interface AccountSummary {

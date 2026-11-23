@@ -59,7 +59,12 @@ export class PendingActionService {
             await this.actions.resolve(action.id, PENDING_RESOLUTIONS.expired, now);
             return texts.expiredConfirmation;
         }
-        return tap === 'no' ? texts.canceled : this.execute(linkId, resolved, locale);
+        return tap === 'no' ? this.canceledText(action, locale) : this.execute(linkId, resolved, locale);
+    }
+
+    private canceledText(action: PendingAction, locale: AppLocale): string {
+        const executor: PendingActionExecutorPort | null = this.registry.executorFor(action.kind as PendingKind);
+        return executor?.canceledText(locale) ?? chatTextsFor(locale).canceled;
     }
 
     private async execute(linkId: string, action: PendingAction, locale: AppLocale): Promise<string> {
@@ -69,8 +74,7 @@ export class PendingActionService {
             return texts.unavailable;
         }
         try {
-            await executor.execute(action.payload as JsonObject);
-            return texts.done;
+            return (await executor.execute(action.payload as JsonObject)) ?? texts.done;
         } catch {
             this.logs.actionFailed(action.kind, linkId);
             return texts.unavailable;

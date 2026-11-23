@@ -99,9 +99,14 @@ describe('portfolio export', () => {
             true
         );
         expect(lines.some((line: string) => line.startsWith('LCI Banco;') && line.includes(';CDB;;;;'))).toBe(true);
-        expect(lines.some((line: string) => line.startsWith('BTC;') && line.includes(';0,45;') && line.endsWith('CoinGecko;Conta toda'))).toBe(true);
         expect(
-            lines.some((line: string) => line.startsWith('TESOURO-SELIC-2029;') && line.endsWith(';3,2;51840,00;Preço oficial do Tesouro;Conta toda'))
+            lines.some((line: string) => line.startsWith('BTC;') && line.includes(';0,45;') && line.endsWith('CoinGecko;Conta toda'))
+        ).toBe(true);
+        expect(
+            lines.some(
+                (line: string) =>
+                    line.startsWith('TESOURO-SELIC-2029;') && line.endsWith(';3,2;51840,00;Preço oficial do Tesouro;Conta toda')
+            )
         ).toBe(true);
         const cdb: string = lines.find((line: string) => line.startsWith('CDB Banco;')) as string;
         expect(cdb.split(';')[6]).toBe('');

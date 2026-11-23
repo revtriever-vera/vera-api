@@ -14,6 +14,19 @@ const priceEntrySchema = z.object({
     source: z.string().min(1)
 });
 
+/**
+ * Valores públicos da Meta para o Brasil (USD por mensagem entregue, vigentes desde 2025-07-01).
+ * Fonte: developers.facebook.com/docs/whatsapp/pricing (rate card Brazil). Confira no painel da Meta.
+ */
+const META_PRICING_DATE: string = '2025-07-01';
+const META_PRICING_SOURCE: string =
+    'Meta WhatsApp Business Platform pricing, rate card Brazil (developers.facebook.com/docs/whatsapp/pricing)';
+const DEFAULT_PRICE_TABLE: SendPriceTable = {
+    utility: { currency: 'USD', amount: '0.0068', date: META_PRICING_DATE, source: META_PRICING_SOURCE },
+    marketing: { currency: 'USD', amount: '0.0625', date: META_PRICING_DATE, source: META_PRICING_SOURCE },
+    authentication: { currency: 'USD', amount: '0.0315', date: META_PRICING_DATE, source: META_PRICING_SOURCE }
+};
+
 const priceTableSchema = z
     .object({
         authentication: priceEntrySchema.optional(),
@@ -32,7 +45,7 @@ const priceTableEnvSchema = z
         try {
             const parsed = priceTableSchema.safeParse(JSON.parse(raw));
             if (parsed.success) {
-                return parsed.data;
+                return { ...DEFAULT_PRICE_TABLE, ...parsed.data };
             }
             context.addIssue({ code: z.ZodIssueCode.custom, message: 'WHATSAPP_PRICE_TABLE fora do formato esperado' });
         } catch {

@@ -24,6 +24,7 @@ export interface PublishOptions {
 
 export abstract class QueuePublisherPort {
     public abstract publish(queue: QueueName, type: string, payload: unknown, options?: PublishOptions): Promise<void>;
+    public abstract remove(queue: QueueName, jobId: string): Promise<void>;
 }
 
 export interface RunningJob {
