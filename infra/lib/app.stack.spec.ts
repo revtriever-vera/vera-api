@@ -125,6 +125,25 @@ describe('a task do serviço', () => {
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('REVTRIEVER_API_KEY');
     });
 
+    it('agenda no mock por padrão: o segredo do Google não é pedido ao SSM e a task sobe sem ele', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+
+        expect(api.Environment).toContainEqual({ Name: 'GOOGLE_CALENDAR_DRIVER', Value: 'mock' });
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('GOOGLE_CLIENT_SECRET');
+    });
+
+    it('com o driver google, entrega o segredo do Google pelo SSM, nunca em texto', () => {
+        const api: ContainerResource = container(
+            taskContainers(appTemplate('prod', { calendar: { driver: 'google' } }), 'vera-api-prod'),
+            'api'
+        );
+
+        expect(api.Environment).toContainEqual({ Name: 'GOOGLE_CALENDAR_DRIVER', Value: 'google' });
+        expect((api.Environment ?? []).map((entry): string => entry.Name)).not.toContain('GOOGLE_CLIENT_SECRET');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('GOOGLE_CLIENT_SECRET');
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/google-client-secret');
+    });
+
     it('com o driver revtriever, entrega a chave pelo SSM e o plano pelo ambiente', () => {
         const billing = { driver: 'revtriever', apiUrl: 'https://api.example.test', planId: 'plan-x', gatewayConnectionId: null } as const;
         const api: ContainerResource = container(taskContainers(appTemplate('prod', { billing }), 'vera-api-prod'), 'api');

@@ -102,6 +102,15 @@ describe('fromEnvironment', () => {
         expect(fromEnvironment('dev', fakeEnvironment()).imagePullAccounts).toEqual([]);
         expect(() => fromEnvironment('dev', fakeEnvironment({ IMAGE_PULL_ACCOUNTS: 'abc' }))).toThrow('IMAGE_PULL_ACCOUNTS inválida');
     });
+    describe('agenda do Google', () => {
+        it('usa o mock por padrão, lê google e recusa driver desconhecido', () => {
+            expect(fromEnvironment('prod', fakeEnvironment()).calendar).toEqual({ driver: 'mock' });
+            expect(fromEnvironment('prod', fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'google' })).calendar).toEqual({ driver: 'google' });
+            expect(() => fromEnvironment('prod', fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'outlook' }))).toThrow(
+                'GOOGLE_CALENDAR_DRIVER inválida'
+            );
+        });
+    });
     describe('motor de cobrança', () => {
         it('usa o fake por padrão e não exige nada da Revtriever', () => {
             const config = fromEnvironment('prod', fakeEnvironment());
