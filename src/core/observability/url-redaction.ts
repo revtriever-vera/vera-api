@@ -1,4 +1,9 @@
-const SECRET_PATH_SEGMENTS: readonly RegExp[] = [/^(\/webhooks\/[^/?]+\/)[^/?]+/];
+const SECRET_PATH_SEGMENTS: readonly RegExp[] = [
+    /^(\/webhooks\/[^/?]+\/)[^/?]+/,
+    /^(\/invites\/)[^/?]+/,
+    /^(\/billing\/_dev\/capture\/)[^/?]+/,
+    /(\/tokens?\/)[^/?]+/
+];
 
 const SECRET_QUERY_PARAMS: ReadonlySet<string> = new Set(['hub.verify_token']);
 
