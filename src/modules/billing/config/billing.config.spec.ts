@@ -69,4 +69,32 @@ describe('parseBillingConfig', () => {
             FAKE_BILLING_PUBLIC_URL: 'http://localhost:3333'
         });
     });
+
+    it('o segredo de dev do webhook do fake só existe no local', () => {
+        expect(parseBillingConfig({ IS_LOCAL: 'true' }).FAKE_BILLING_WEBHOOK_SECRET).toBe('vera-dev-billing-webhook-secret');
+        expect(
+            parseBillingConfig({ IS_LOCAL: 'true', FAKE_BILLING_WEBHOOK_SECRET: 'outro-segredo-de-teste' }).FAKE_BILLING_WEBHOOK_SECRET
+        ).toBe('outro-segredo-de-teste');
+    });
+
+    it('fora do local, o fake sem URL de webhook não precisa de segredo e não ganha o de dev', () => {
+        const settings = parseBillingConfig({ IS_LOCAL: 'false', DEPLOYMENT_MODE: 'hosted', BILLING_ENGINE_DRIVER: 'fake' });
+
+        expect(settings.FAKE_BILLING_WEBHOOK_SECRET).toBeNull();
+    });
+
+    it('fora do local, o fake com URL de webhook exige segredo próprio de ao menos 16 caracteres', () => {
+        const base: NodeJS.ProcessEnv = {
+            IS_LOCAL: 'false',
+            DEPLOYMENT_MODE: 'hosted',
+            BILLING_ENGINE_DRIVER: 'fake',
+            FAKE_BILLING_WEBHOOK_URL: 'https://api.example.test/hook'
+        };
+
+        expect(() => parseBillingConfig(base)).toThrow('FAKE_BILLING_WEBHOOK_SECRET');
+        expect(() => parseBillingConfig({ ...base, FAKE_BILLING_WEBHOOK_SECRET: 'curto' })).toThrow();
+        expect(parseBillingConfig({ ...base, FAKE_BILLING_WEBHOOK_SECRET: 'segredo-com-16-ou-mais' }).FAKE_BILLING_WEBHOOK_SECRET).toBe(
+            'segredo-com-16-ou-mais'
+        );
+    });
 });

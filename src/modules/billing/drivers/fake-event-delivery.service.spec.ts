@@ -30,6 +30,20 @@ describe('FakeEventDelivery', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    it('com URL mas sem segredo (fora do local) não entrega nada', async () => {
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+
+        const config = {
+            ...parseBillingConfig({ IS_LOCAL: 'true', FAKE_BILLING_WEBHOOK_URL: 'http://localhost:3333/hook' }),
+            FAKE_BILLING_WEBHOOK_SECRET: null
+        };
+
+        await new FakeEventDelivery(config, {} as BillingLogService).deliver(EVENT);
+
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('assina "t.corpo" com HMAC-SHA256 no formato t=<unix>,v1=<hex>', async () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-12-01T00:00:00Z'));

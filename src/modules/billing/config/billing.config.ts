@@ -10,6 +10,7 @@ const MAX_RETRIES_CEILING: number = 5;
 const DEFAULT_API_URL: string = 'https://api.revtriever.com';
 const DEFAULT_PUBLIC_URL: string = 'http://localhost:3333';
 const DEV_WEBHOOK_SECRET: string = 'vera-dev-billing-webhook-secret';
+const MIN_SECRET_LENGTH: number = 16;
 
 function blankAsUndefined(value: unknown): unknown {
     return typeof value === 'string' && value.trim().length === 0 ? undefined : value;
@@ -35,7 +36,7 @@ const schema = z.object({
     FAKE_BILLING_FORCE_FAILURE: z.preprocess(blankAsUndefined, z.enum(['true', 'false']).default('false')),
     FAKE_BILLING_WEBHOOK_URL: optionalText(),
     FAKE_BILLING_PUBLIC_URL: z.preprocess(blankAsUndefined, z.string().trim().url().default(DEFAULT_PUBLIC_URL)),
-    FAKE_BILLING_WEBHOOK_SECRET: z.preprocess(blankAsUndefined, z.string().trim().min(16).default(DEV_WEBHOOK_SECRET)),
+    FAKE_BILLING_WEBHOOK_SECRET: z.preprocess(blankAsUndefined, z.string().trim().min(MIN_SECRET_LENGTH).optional()),
     BILLING_PRICE_ENDPOINT_URL: optionalText(),
     BILLING_PRICE_CEILING_CENTS: z.preprocess(blankAsUndefined, z.coerce.number().int().positive().optional())
 });
@@ -52,7 +53,7 @@ export interface BillingSettings {
     readonly FAKE_BILLING_FORCE_FAILURE: boolean;
     readonly FAKE_BILLING_WEBHOOK_URL: string | null;
     readonly FAKE_BILLING_PUBLIC_URL: string;
-    readonly FAKE_BILLING_WEBHOOK_SECRET: string;
+    readonly FAKE_BILLING_WEBHOOK_SECRET: string | null;
     readonly BILLING_PRICE_ENDPOINT_URL: string | null;
     readonly BILLING_PRICE_CEILING_CENTS: number | null;
 }
@@ -83,6 +84,21 @@ function assertRevtrieverConfigured(parsed: Parsed): void {
     }
 }
 
+function webhookSecretOf(parsed: Parsed, driver: BillingEngine): string | null {
+    if (parsed.FAKE_BILLING_WEBHOOK_SECRET !== undefined) {
+        return parsed.FAKE_BILLING_WEBHOOK_SECRET;
+    }
+    if (parsed.IS_LOCAL) {
+        return DEV_WEBHOOK_SECRET;
+    }
+    if (driver === 'fake' && parsed.FAKE_BILLING_WEBHOOK_URL !== undefined) {
+        throw new Error(
+            `FAKE_BILLING_WEBHOOK_SECRET é obrigatório (mínimo ${String(MIN_SECRET_LENGTH)} caracteres) fora do local com FAKE_BILLING_WEBHOOK_URL`
+        );
+    }
+    return null;
+}
+
 export function parseBillingConfig(env: NodeJS.ProcessEnv): BillingSettings {
     const parsed: Parsed = schema.parse(env);
     const driver: BillingEngine = driverOf(parsed);
@@ -101,7 +117,7 @@ export function parseBillingConfig(env: NodeJS.ProcessEnv): BillingSettings {
         FAKE_BILLING_FORCE_FAILURE: parsed.FAKE_BILLING_FORCE_FAILURE === 'true',
         FAKE_BILLING_WEBHOOK_URL: parsed.FAKE_BILLING_WEBHOOK_URL ?? null,
         FAKE_BILLING_PUBLIC_URL: stripTrailing(parsed.FAKE_BILLING_PUBLIC_URL, '/'),
-        FAKE_BILLING_WEBHOOK_SECRET: parsed.FAKE_BILLING_WEBHOOK_SECRET,
+        FAKE_BILLING_WEBHOOK_SECRET: webhookSecretOf(parsed, driver),
         BILLING_PRICE_ENDPOINT_URL: parsed.BILLING_PRICE_ENDPOINT_URL ?? null,
         BILLING_PRICE_CEILING_CENTS: parsed.BILLING_PRICE_CEILING_CENTS ?? null
     };

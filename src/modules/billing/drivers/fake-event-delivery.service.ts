@@ -25,7 +25,8 @@ export class FakeEventDelivery {
 
     public async deliver(event: EngineEvent): Promise<void> {
         const url: string | null = this.config.FAKE_BILLING_WEBHOOK_URL;
-        if (url === null) {
+        const secret: string | null = this.config.FAKE_BILLING_WEBHOOK_SECRET;
+        if (url === null || secret === null) {
             return;
         }
         const body: string = JSON.stringify(event);
@@ -35,7 +36,7 @@ export class FakeEventDelivery {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
-                    [SIGNATURE_HEADER]: signatureOf(this.config.FAKE_BILLING_WEBHOOK_SECRET, timestamp, body)
+                    [SIGNATURE_HEADER]: signatureOf(secret, timestamp, body)
                 },
                 body,
                 signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS)
