@@ -9,6 +9,8 @@ import {
     ProviderDisabledError,
     ProviderUnavailableError,
     ReusedRefreshTokenError,
+    RoleForbiddenError,
+    RouteRoleMissingError,
     UnauthorizedError
 } from './identity.errors';
 
@@ -34,5 +36,10 @@ describe('identity errors', () => {
         expect(new ProviderUnavailableError('facebook')).toMatchObject({ code: 'identity.provider_unavailable', status: 502 });
         expect(new EmailNotProvidedError('facebook')).toMatchObject({ code: 'identity.email_not_provided', status: 422 });
         expect(new EmailInUseError()).toMatchObject({ code: 'identity.email_in_use', status: 409 });
+    });
+
+    it('expõe os códigos de papel insuficiente e de rota sem papel', () => {
+        expect(new RoleForbiddenError('editor')).toMatchObject({ code: 'members.forbidden_role', status: 403, meta: { required: 'editor' } });
+        expect(new RouteRoleMissingError('POST /x')).toMatchObject({ code: 'core.route_role_missing', status: 500 });
     });
 });

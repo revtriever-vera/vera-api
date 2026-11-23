@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiParamOp
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PositionApplication } from '../../application/position.application';
 import { PositionView } from '../../domain/positions.types';
 import {
@@ -21,12 +23,13 @@ const POSITION_ID_PARAM: ApiParamOptions = { name: 'id', format: 'uuid', descrip
 
 @ApiTags('positions')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('positions')
 export class PositionsController {
     public constructor(private readonly positions: PositionApplication) {}
 
     @Post()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({
         summary: 'Add an asset to the portfolio',
@@ -88,6 +91,7 @@ export class PositionsController {
     }
 
     @Patch(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Edit the quantity or the average price of a position',
         description:
@@ -121,6 +125,7 @@ export class PositionsController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({
         summary: 'Remove a position',

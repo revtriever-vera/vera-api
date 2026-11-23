@@ -4,7 +4,7 @@ import { TransactionalContext } from '../../../core/database/using-transaction.d
 import { TooManyAttemptsError, ThrottleService } from '../../../core/throttle/throttle.service';
 import { AccountDeletionLogDomain } from '../domain/account-deletion-log.domain';
 import { CompanyDomain } from '../domain/company.domain';
-import { AccountClosedError, AccountErasureFailedError, ConfirmationMismatchError, ForbiddenError } from '../domain/identity.errors';
+import { AccountClosedError, AccountErasureFailedError, ConfirmationMismatchError, RoleForbiddenError } from '../domain/identity.errors';
 import { Company, User } from '../domain/identity.types';
 import { AccountDataRegistry } from '../services/account-data.registry';
 import { CurrentUserService } from '../services/current-user.service';
@@ -131,9 +131,9 @@ describe('AccountDeletionApplication', () => {
     });
 
     it('member responde 403 sem efeito algum', async () => {
-        const doubles: Doubles = build({ user: { ...USER, role: 'member' } });
+        const doubles: Doubles = build({ user: { ...USER, role: 'editor' } });
 
-        await expect(doubles.application.delete('pessoa.teste@example.test')).rejects.toBeInstanceOf(ForbiddenError);
+        await expect(doubles.application.delete('pessoa.teste@example.test')).rejects.toBeInstanceOf(RoleForbiddenError);
 
         expect(doubles.order).toEqual([]);
     });

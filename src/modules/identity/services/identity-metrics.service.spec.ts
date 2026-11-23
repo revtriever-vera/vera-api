@@ -33,4 +33,12 @@ describe('IdentityMetricsService', () => {
         expect(count).toHaveBeenCalledWith('vera_account_exports_total', { outcome: 'failed' });
         expect(count).toHaveBeenCalledWith('vera_account_deletions_total', { outcome: 'erasure_failed' });
     });
+
+    it('conta a recusa por papel exigido, sem rótulo pessoal', () => {
+        const count: ReturnType<typeof vi.fn> = vi.fn();
+
+        new IdentityMetricsService({ count } as unknown as MetricsService).authzDenied('editor');
+
+        expect(count).toHaveBeenCalledWith('vera_authz_denied_total', { required: 'editor' });
+    });
 });

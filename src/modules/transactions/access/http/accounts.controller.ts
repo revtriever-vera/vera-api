@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiParamOp
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { AccountApplication } from '../../application/account.application';
 import { AccountView } from '../../domain/transactions.types';
 import {
@@ -36,7 +38,7 @@ const ACCOUNT_EXAMPLE: Record<string, unknown> = {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/accounts')
 export class AccountsController {
     public constructor(private readonly accounts: AccountApplication) {}
@@ -53,6 +55,7 @@ export class AccountsController {
     }
 
     @Patch(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Rename a financial account',
         description: 'Works for accounts from a bank connection and for accounts from files.'
@@ -68,6 +71,7 @@ export class AccountsController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({
         summary: 'Delete an account created from files',

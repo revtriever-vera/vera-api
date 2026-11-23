@@ -9,6 +9,7 @@ import { AppErrorFilter } from '../../../../core/http/app-error.filter';
 import { LogService } from '../../../../core/observability/log.service';
 import { RateLimitGuard } from '../../../../core/throttle/rate-limit.guard';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ImportCommitApplication } from '../../application/import-commit.application';
 import { ImportListApplication } from '../../application/import-list.application';
 import { ImportPreviewApplication } from '../../application/import-preview.application';
@@ -35,6 +36,8 @@ beforeAll(async () => {
         ]
     })
         .overrideGuard(JwtAuthGuard)
+        .useValue({ canActivate: () => true })
+        .overrideGuard(RolesGuard)
         .useValue({ canActivate: () => true })
         .overrideGuard(RateLimitGuard)
         .useValue({ canActivate: () => true })

@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { SettingsApplication } from '../../application/settings.application';
 import { SpendingSettingsView } from '../../domain/spending-summary.types';
 import { spendingSettingsSchema, UpdateSpendingSettingsDto, updateSpendingSettingsSchema } from '../../validation/spending-summary.schemas';
@@ -11,7 +13,7 @@ const UNAUTHORIZED_EXAMPLE: Record<string, unknown> = { type: 'identity.unauthor
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/settings')
 export class SettingsController {
     public constructor(private readonly settings: SettingsApplication) {}
@@ -33,6 +35,7 @@ export class SettingsController {
     }
 
     @Put()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Change the spending settings',

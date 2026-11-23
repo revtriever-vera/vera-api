@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { SummaryApplication } from '../../application/summary.application';
 import { MonthlySummary } from '../../domain/spending-summary.types';
 import { monthlySummarySchema, SummaryQueryDto, summaryQuerySchema } from '../../validation/spending-summary.schemas';
@@ -25,7 +26,7 @@ const SUMMARY_DESCRIPTION: string =
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/summary')
 export class SummaryController {
     public constructor(private readonly summary: SummaryApplication) {}
