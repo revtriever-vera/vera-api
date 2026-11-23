@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Header, HttpCode, HttpStatus, Param, Patch, Post, Redirect, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit } from '../../../../core/throttle/rate-limit.decorator';
@@ -108,6 +108,7 @@ export class NotificationsController {
         windowSeconds: WINDOW_SECONDS,
         identify: (subject) => subject.ip
     })
+    @ApiParam({ name: 'token', description: 'Opaque unsubscribe token from the e-mail link' })
     @ApiOperation({
         summary: 'Stop an e-mail notice in one click',
         description:

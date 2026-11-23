@@ -1,5 +1,5 @@
 import { Controller, Delete, Get, Header, HttpCode, HttpStatus, Param, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
@@ -60,6 +60,7 @@ export class RemindersController {
             'Cancels the reminder and its pending notices. Any role, including viewer, can delete their own reminders. ' +
             'A reminder that does not exist or belongs to someone else answers 404.'
     })
+    @ApiParam({ name: 'id', format: 'uuid', description: 'Reminder id' })
     @ApiNoContentResponse({ description: 'Deleted' })
     @ApiProblemResponse({
         status: 401,
