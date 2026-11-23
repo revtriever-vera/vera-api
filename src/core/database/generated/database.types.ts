@@ -208,6 +208,43 @@ export interface BankSyncRuns {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface CalendarConnections {
+    companyId: string;
+    connectedAt: Timestamp;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    disconnectedAt: Timestamp | null;
+    googleEmail: string;
+    id: string;
+    provider: string;
+    refreshTokenSealed: string | null;
+    scopes: Generated<string[]>;
+    sealerDriver: string | null;
+    status: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
+export interface CalendarEventsCreated {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    googleEventId: string;
+    id: string;
+    proposalId: string;
+    userId: string;
+}
+
+export interface CalendarOAuthStates {
+    codeVerifier: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    expiresAt: Timestamp;
+    nonce: string;
+    updatedAt: Generated<Timestamp>;
+    usedAt: Timestamp | null;
+    userId: string;
+}
+
 export interface CatalogSyncRuns {
     delisted: Generated<number>;
     errorCode: string | null;
@@ -782,6 +819,9 @@ export interface DB {
     BankConnectionAccounts: BankConnectionAccounts;
     BankConnections: BankConnections;
     BankSyncRuns: BankSyncRuns;
+    CalendarConnections: CalendarConnections;
+    CalendarEventsCreated: CalendarEventsCreated;
+    CalendarOAuthStates: CalendarOAuthStates;
     CatalogSyncRuns: CatalogSyncRuns;
     CategoryRules: CategoryRules;
     Companies: Companies;

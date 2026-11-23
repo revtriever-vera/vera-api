@@ -113,6 +113,7 @@ describe('account spreadsheet export', () => {
         expect(response.headers.get('content-disposition')).toMatch(/^attachment; filename="vera-meus-dados-\d{4}-\d{2}-\d{2}\.zip"$/);
         const zip: JSZip = await zipOf(response);
         expect(Object.keys(zip.files).sort()).toEqual([
+            'agenda.xlsx',
             'carteira.xlsx',
             'dados.json',
             'lembretes.xlsx',

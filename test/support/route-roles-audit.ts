@@ -19,7 +19,8 @@ export const VIEWER_WRITE_ALLOWLIST: readonly string[] = [
     'POST /members/me/leave',
     'POST /whatsapp/link/code',
     'DELETE /whatsapp/link',
-    'DELETE /reminders/:id'
+    'DELETE /reminders/:id',
+    'DELETE /calendar/connection'
 ];
 
 const READ_METHODS: readonly string[] = ['GET', 'HEAD'];
