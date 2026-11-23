@@ -41,6 +41,11 @@ export class SessionsRepository extends TenantRepository<'Sessions'> {
         return rows.length;
     }
 
+    public async revokeAllForUser(userId: string): Promise<number> {
+        const rows: Session[] = await this.updateManyRows({ userId, revokedAt: null }, { revokedAt: new Date() });
+        return rows.length;
+    }
+
     public async findActive(userId: string, now: Date): Promise<Session[]> {
         return this.findMany(
             { userId, revokedAt: null, expiresAt: { '>': now } },

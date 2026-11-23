@@ -10,6 +10,7 @@ import { AuthIdentity, Company, LOGIN_OUTCOMES, LoginOutcome, SocialIdentity, Us
 import { nameFromEmail } from '../domain/name-from-email.util';
 import { UserDomain } from '../domain/user.domain';
 import { IdentityLogService } from './identity-log.service';
+import { InviteAcceptanceService } from './invite-acceptance.service';
 
 const USERS_EMAIL_UNIQUE_CONSTRAINT: string = 'Users_email_unique';
 const IDENTITY_UNIQUE_CONSTRAINT: string = 'AuthIdentities_provider_subject_unique';
@@ -25,21 +26,25 @@ export class AccountProvisioningService {
         private readonly companyDomain: CompanyDomain,
         private readonly userDomain: UserDomain,
         private readonly identityDomain: AuthIdentityDomain,
+        private readonly acceptance: InviteAcceptanceService,
         private readonly logs: IdentityLogService
     ) {}
 
-    public async resolve(identity: SocialIdentity, locale: AppLocale): Promise<ProvisionResult> {
+    public async resolve(identity: SocialIdentity, locale: AppLocale, inviteToken?: string): Promise<ProvisionResult> {
         try {
-            return await this.resolveOnce(identity, locale);
+            return await this.resolveOnce(identity, locale, inviteToken);
         } catch (error: unknown) {
             if (!this.lostRace(error)) {
                 throw error;
             }
-            return this.resolveOnce(identity, locale);
+            return this.resolveOnce(identity, locale, inviteToken);
         }
     }
 
-    private async resolveOnce(identity: SocialIdentity, locale: AppLocale): Promise<ProvisionResult> {
+    private async resolveOnce(identity: SocialIdentity, locale: AppLocale, inviteToken?: string): Promise<ProvisionResult> {
+        if (inviteToken !== undefined) {
+            return this.acceptance.accept(identity, inviteToken);
+        }
         const known: AuthIdentity | null = await this.identityDomain.findByProviderSubjectAcrossTenants(
             identity.provider,
             identity.subject

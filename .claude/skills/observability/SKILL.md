@@ -107,6 +107,8 @@ table — same rule as renaming one.
 | `identifier`                  | Covers                                                                         | Distinctive `meta` keys                                                   |
 | ----------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | `identity-auth`               | Social login (Google, Facebook), session lifecycle                             | `userId`                                                                  |
+| `members-authz`               | A request refused for insufficient role (info, no personal data)               | `route`, `required`, `role`                                               |
+| `route-role-missing`          | A write route reached the roles guard without `@RequiresRole` (error)          | `route`                                                                   |
 | `auth-refresh-reuse`          | Refresh token reuse — family revoked                                           | `familyId`, `revokedSessions`, `userId`                                   |
 | `identity-company-onboarding` | Company creation (first login → company)                                       | `companyId`, `ownerUserId`                                                |
 | `onboarding-step`             | Wizard step completed/skipped, activation gate                                 | `companyId`, `step`                                                       |

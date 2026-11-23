@@ -3,13 +3,16 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../core/http/api-problem.decorator';
 import { ApiZodResponse } from '../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../identity/services/roles.guard';
 import { OnboardingSampleApplication } from '../application/onboarding-sample.application';
 import { OnboardingStateView } from '../application/onboarding-state.view';
 import { onboardingStateSchema } from '../validation/onboarding.schema';
 
 @ApiTags('onboarding')
 @Controller('onboarding/sample')
-@UseGuards(JwtAuthGuard)
+@RequiresRole('editor')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class OnboardingSampleController {
     public constructor(private readonly sample: OnboardingSampleApplication) {}

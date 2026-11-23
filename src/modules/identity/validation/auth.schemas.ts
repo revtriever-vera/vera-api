@@ -7,7 +7,7 @@ export const authUserSchema = z.object({
     id: z.string().uuid().describe('User id'),
     name: z.string().describe('User display name'),
     email: z.string().describe('User email'),
-    role: z.nativeEnum(USER_ROLES).describe('`owner` runs the company; `member` is reserved for invited teammates'),
+    role: z.nativeEnum(USER_ROLES).describe('`owner` runs the company, `editor` changes its data, `viewer` only reads'),
     companyId: z.string().uuid().describe('Company the user belongs to')
 });
 
@@ -19,16 +19,23 @@ export const sessionResponseSchema = z.object({
 
 export const loginResponseSchema = sessionResponseSchema.extend({
     outcome: z.literal('authenticated').describe('The provider credential was verified and a session was issued'),
-    isNewAccount: z.boolean().describe('True when this login created the company and the user')
+    isNewAccount: z.boolean().describe('True when this login created the company and the user'),
+    joinedAccount: z.boolean().describe('True when this login entered an account through an invite (no company was created)')
 });
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
-export const googleLoginSchema = z.object({ idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)') }).strict();
+const inviteTokenSchema = z.string().min(20).max(200).optional().describe('Token of the invite link, to enter the account that invited');
+
+export const googleLoginSchema = z
+    .object({ idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)'), inviteToken: inviteTokenSchema })
+    .strict();
 
 export class GoogleLoginDto extends createZodDto(googleLoginSchema) {}
 
-export const facebookLoginSchema = z.object({ accessToken: z.string().min(20).describe('Facebook JS SDK user access token') }).strict();
+export const facebookLoginSchema = z
+    .object({ accessToken: z.string().min(20).describe('Facebook JS SDK user access token'), inviteToken: inviteTokenSchema })
+    .strict();
 
 export class FacebookLoginDto extends createZodDto(facebookLoginSchema) {}
 
@@ -39,7 +46,7 @@ export const meResponseSchema = z.object({
     companyId: z.string().uuid().describe('Tenant of the current session'),
     name: z.string().describe('User display name'),
     email: z.string().describe('User email'),
-    role: z.nativeEnum(USER_ROLES).describe('Role inside the company'),
+    role: z.nativeEnum(USER_ROLES).describe('Role inside the company: `owner`, `editor` or `viewer`'),
     locale: z.enum(APP_LOCALES).describe('Effective locale: the personal preference when set, otherwise the company locale'),
     preferredLocale: z.enum(APP_LOCALES).nullable().describe('Personal locale preference; null follows the company locale'),
     loginProvider: z.nativeEnum(LOGIN_PROVIDERS).describe('Provider the current session signed in with'),

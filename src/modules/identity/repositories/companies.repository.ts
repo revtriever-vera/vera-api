@@ -18,6 +18,16 @@ export class CompaniesRepository extends GlobalRepository<'Companies'> {
         return this.createRow({ id: IdUtil.newId(), ...data });
     }
 
+    public async lockById(id: string): Promise<Company | null> {
+        const row: Company | undefined = await this.selectSkipConstraint()
+            .selectAll()
+            .where('id', '=', id)
+            .where('deletedAt', 'is', null)
+            .forNoKeyUpdate()
+            .executeTakeFirst();
+        return row ?? null;
+    }
+
     public async hardDeleteById(id: string): Promise<boolean> {
         return (await this.hardDeleteWhere({ id }, HARD_DELETE_BATCH)) > 0;
     }

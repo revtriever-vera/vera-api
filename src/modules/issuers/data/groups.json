@@ -40,6 +40,10 @@
     "name": "Banrisul"
   },
   {
+    "id": "basa",
+    "name": "Banco da Amazônia"
+  },
+  {
     "id": "bmg",
     "name": "Banco BMG"
   },
@@ -176,6 +180,14 @@
     "name": "Neoenergia"
   },
   {
+    "id": "neon",
+    "name": "Neon"
+  },
+  {
+    "id": "nu-pagamentos",
+    "name": "Nubank"
+  },
+  {
     "id": "nvidia",
     "name": "NVIDIA"
   },
@@ -184,12 +196,20 @@
     "name": "Banco Original"
   },
   {
+    "id": "outro",
+    "name": "Sem grupo"
+  },
+  {
     "id": "pagseguro",
     "name": "PagBank"
   },
   {
     "id": "petrobras",
     "name": "Petrobras"
+  },
+  {
+    "id": "picpay",
+    "name": "PicPay"
   },
   {
     "id": "prio",

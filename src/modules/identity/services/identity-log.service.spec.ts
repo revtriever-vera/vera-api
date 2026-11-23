@@ -92,4 +92,18 @@ describe('IdentityLogService', () => {
             { message: 'account erasure area failed', identifier: 'identity-account', meta: { area: 'spending', errorName: 'string' } }
         ]);
     });
+
+    it('registra a recusa por papel sem dado pessoal e a rota sem papel como erro', () => {
+        const { logs, info, error } = build();
+
+        logs.roleDenied('POST /positions', 'editor', 'viewer');
+        logs.routeRoleMissing('POST /x');
+
+        expect(info.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            { message: 'role denied', identifier: 'members-authz', meta: { route: 'POST /positions', required: 'editor', role: 'viewer' } }
+        ]);
+        expect(error.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+            { message: 'write route without required role', identifier: 'route-role-missing', meta: { route: 'POST /x' } }
+        ]);
+    });
 });

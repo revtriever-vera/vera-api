@@ -21,7 +21,7 @@ Ordenado por `id`, sem repetição.
 }
 ```
 
-- `kind`: `bank` emite CDB, LCI, LCA e LC; `company` emite debênture, CRI e CRA; `sovereign` é o Tesouro Nacional e o Tesouro dos EUA (as duas entradas `tesouro-nacional` e `tesouro-eua` são obrigatórias, cada uma no grupo de mesmo id).
+- `kind`: `other` é só a entrada `outro` ("Outro emissor (sem cobertura calculada)"): serve a qualquer tipo de título, `fgcAssociated: false`, grupo próprio "Sem grupo" que a cobertura nunca soma; não é "sem emissor". `bank` emite CDB, LCI, LCA e LC; `company` emite debênture, CRI e CRA; `sovereign` é o Tesouro Nacional e o Tesouro dos EUA (as duas entradas `tesouro-nacional` e `tesouro-eua` são obrigatórias, cada uma no grupo de mesmo id).
 - `groupId`: conglomerado prudencial (banco) ou grupo econômico (empresa). Aponta para `groups.json`.
 - `fgcAssociated`: a instituição é associada ao FGC. A cobertura (card #90) lê este campo.
 - `status` e `mergedInto`: uma instituição nunca é apagada. Quando é incorporada, vira `status: "retired"` com `mergedInto` apontando para quem ficou; os títulos antigos continuam válidos e passam a contar no grupo atual (`IssuerDirectoryService.resolve` segue a cadeia). `mergedInto` só vale em `retired`, aponta para um id que existe e não pode formar ciclo.
@@ -39,9 +39,10 @@ Todos os ids já publicados, ordenados. O spec exige que cada id conhecido conti
 
 A lista nasce da relação de conglomerados prudenciais do Banco Central (IF.data) cruzada com a lista de instituições associadas ao FGC (site do FGC). Revisão à mão a cada trimestre; anote aqui a data de cada revisão e o que mudou.
 
-| Lote         | Data       | Conteúdo                                                                                   | Conferência                                                                    |
-| ------------ | ---------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| 1 (primeira) | 2026-11-22 | Bancos que emitem CDB, LCI, LCA e LC para pessoa física; emissores frequentes de debênture | Montado de conhecimento público; a conferir contra as duas fontes (ver abaixo) |
+| Lote         | Data       | Conteúdo                                                                                                                                                                              | Conferência                                                                                                                                                                                                    |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 (primeira) | 2026-11-22 | Bancos que emitem CDB, LCI, LCA e LC para pessoa física; emissores frequentes de debênture                                                                                            | Montado de conhecimento público; a conferir contra as duas fontes (ver abaixo)                                                                                                                                 |
+| 2 (IF.data)  | 2026-11-22 | Alias do BNB; `banco-pagbank` passa a ser o banco do grupo (Banco PagSeguro); entram Nu Financeira, PicPay Bank, Neon Financeira, Banco da Amazônia e Banco Alfa (conglomerado Safra) | Nomes e conglomerados conferidos contra o cadastro do IF.data (BCB, data-base 06/2026, Instituições Individuais › Resumo). A lista de associadas do FGC não foi conferida: só existe num painel sem exportação |
 
 O arquivo de terceiros não é copiado para o repositório. O lote 1 ainda precisa da conferência contra as duas fontes antes de ser tratado como revisado: rode o script abaixo e corrija por PR o que ele apontar.
 

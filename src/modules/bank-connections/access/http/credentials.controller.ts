@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { CredentialsApplication } from '../../application/credentials.application';
 import { CredentialsView } from '../../domain/bank-connections.types';
 import {
@@ -44,7 +46,8 @@ function perCompany(subject: RateLimitSubject): string | null {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('owner')
 @Controller('spending/connections/credentials')
 export class CredentialsController {
     public constructor(private readonly credentials: CredentialsApplication) {}

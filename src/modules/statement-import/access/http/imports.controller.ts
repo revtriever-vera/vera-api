@@ -18,6 +18,8 @@ import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decor
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { Page } from '../../../../shared/pagination/pagination.types';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ImportCommitApplication } from '../../application/import-commit.application';
 import { ImportListApplication } from '../../application/import-list.application';
 import { ImportPreviewApplication } from '../../application/import-preview.application';
@@ -106,7 +108,7 @@ function requireFile(file: UploadedStatement | undefined): UploadedStatement {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/imports')
 export class ImportsController {
     public constructor(
@@ -116,6 +118,7 @@ export class ImportsController {
     ) {}
 
     @Post('preview')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @RateLimit({ key: 'statement-preview', limit: PREVIEWS_PER_HOUR, windowSeconds: ONE_HOUR_SECONDS, identify: companyOf })
     @UseInterceptors(StatementUploadInterceptor)
@@ -151,6 +154,7 @@ export class ImportsController {
     }
 
     @Post()
+    @RequiresRole('editor')
     @RateLimit({ key: 'statement-import', limit: IMPORTS_PER_HOUR, windowSeconds: ONE_HOUR_SECONDS, identify: companyOf })
     @UseInterceptors(StatementUploadInterceptor)
     @ApiOperation({
@@ -208,6 +212,7 @@ export class ImportsController {
     }
 
     @Delete(':id')
+    @RequiresRole('editor')
     @ApiOperation({
         summary: 'Undo an import',
         description:

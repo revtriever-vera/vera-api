@@ -20,7 +20,9 @@ const USER: User = {
     termsAcceptedAt: AT,
     createdAt: AT,
     updatedAt: AT,
-    deletedAt: null
+    deletedAt: null,
+    removedAt: null,
+    removedByUserId: null
 };
 
 const COMPANY: Company = {

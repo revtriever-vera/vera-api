@@ -5,7 +5,8 @@ export const COMMAND_KEYS = {
     marketDataQuotesSweep: 'market-data-quotes-sweep-command',
     marketDataReferenceDaily: 'market-data-reference-daily-command',
     marketDataPtaxAfternoon: 'market-data-ptax-afternoon-command',
-    bankConnectionsSyncDaily: 'bank-connections-sync-daily-command'
+    bankConnectionsSyncDaily: 'bank-connections-sync-daily-command',
+    identityMembersCleanup: 'identity-members-cleanup-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];

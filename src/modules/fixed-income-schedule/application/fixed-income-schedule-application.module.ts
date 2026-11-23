@@ -21,6 +21,6 @@ import { RealRatesApplication } from './real-rates.application';
         MarketDataApplicationModule
     ],
     providers: [MaturitiesApplication, RealRatesApplication, ScheduleSourceService, ScheduleLogService, ScheduleMetricsService],
-    exports: [MaturitiesApplication, RealRatesApplication]
+    exports: [MaturitiesApplication, RealRatesApplication, ScheduleSourceService]
 })
 export class FixedIncomeScheduleApplicationModule {}
