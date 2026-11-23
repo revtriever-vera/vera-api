@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { IssuerSearchApplication } from '../../application/issuer-search.application';
 import { ISSUER_SEARCH_LIMIT_PER_MINUTE, ISSUER_SEARCH_WINDOW_SECONDS } from '../../domain/issuer.types';
 import {
@@ -15,7 +17,8 @@ import {
 
 @ApiTags('issuers')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('viewer')
 @Controller('issuers')
 export class IssuersController {
     public constructor(private readonly search: IssuerSearchApplication) {}
