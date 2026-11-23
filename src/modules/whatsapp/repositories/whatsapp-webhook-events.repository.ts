@@ -31,6 +31,10 @@ export class WhatsAppWebhookEventsRepository extends BareGlobalRepository<'Whats
         return rows.length > 0;
     }
 
+    public async rememberChannel(id: string, channelKey: string): Promise<void> {
+        await this.updateManyRows({ id, status: WEBHOOK_EVENT_STATUSES.received }, { channelKey });
+    }
+
     public async lastReceivedAt(): Promise<Date | null> {
         const row: { last: Date | null } | undefined = await this.selectSkipConstraint()
             .select((eb) => eb.fn.max('receivedAt').as('last'))

@@ -68,12 +68,15 @@ export class ReminderFireApplication {
 
     private async outcomeOf(reminder: Reminder, occurrence: ReminderOccurrence, now: Date): Promise<DeliveryOutcome> {
         const state: string = await this.gate.stateOf('whatsapp');
-        if (state !== GATE_AVAILABLE) {
+        if (state !== GATE_AVAILABLE && state !== GATE_PAUSED) {
             return { kind: 'missed', reason: this.reasonOf(state) };
         }
         const contact: LinkContact | null = reminder.linkId === null ? null : await this.links.contactOf(reminder.linkId);
         if (contact === null) {
             return { kind: 'unreached', reason: UNREACHED_REASONS.noLink };
+        }
+        if (state === GATE_PAUSED) {
+            return this.delivery.deliverWithoutCost(reminder, contact, now);
         }
         return this.delivery.deliver(reminder, occurrence, contact, now);
     }

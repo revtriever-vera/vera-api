@@ -62,6 +62,17 @@ export class ReminderDeliveryService {
         return this.deliverTemplate(reminder, occurrence, contact, now);
     }
 
+    /** Cota esgotada: só o que não custa sai (texto com a janela aberta); o template vira `missed` por pausa. */
+    public async deliverWithoutCost(reminder: Reminder, contact: LinkContact, now: Date): Promise<DeliveryOutcome> {
+        if (await this.window.isOpen(contact.peer, now)) {
+            const text: DeliveryOutcome | null = await this.deliverText(reminder, contact);
+            if (text !== null) {
+                return text;
+            }
+        }
+        return { kind: 'missed', reason: MISS_REASONS.paused };
+    }
+
     public async deliverTemplate(
         reminder: Reminder,
         occurrence: ReminderOccurrence,

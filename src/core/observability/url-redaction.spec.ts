@@ -27,6 +27,26 @@ describe('redação de segredo na URL', () => {
         expect(logged).not.toContain('SEGREDO');
     });
 
+    it('esconde code e state do callback do Google Agenda, na URL e na query', () => {
+        const url: string = '/calendar/google/callback?code=4/0AbCd&state=estado.cifrado&scope=calendar';
+
+        expect(redactUrl(url)).toBe('/calendar/google/callback?code=<oculto>&state=<oculto>&scope=calendar');
+        const logged: string = JSON.stringify(
+            redactRequest({ url, query: { code: '4/0AbCd', state: 'estado.cifrado', scope: 'calendar' } })
+        );
+        expect(logged).not.toContain('4/0AbCd');
+        expect(logged).not.toContain('estado.cifrado');
+        expect(logged).toContain('calendar');
+    });
+
+    it('esconde também no callback da instalação auto-hospedada', () => {
+        expect(redactUrl('/google/callback?code=abc&state=xyz')).toBe('/google/callback?code=<oculto>&state=<oculto>');
+    });
+
+    it('não esconde code e state de outras rotas', () => {
+        expect(redactUrl('/transactions?code=abc&state=open')).toBe('/transactions?code=abc&state=open');
+    });
+
     it('não mexe em rota sem segredo', () => {
         expect(redactUrl('/team/members/019fda2b-a34e-7798')).toBe('/team/members/019fda2b-a34e-7798');
     });

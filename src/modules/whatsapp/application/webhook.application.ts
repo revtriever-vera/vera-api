@@ -159,6 +159,7 @@ export class WebhookApplication {
             this.logs.bodyInvalid(key);
             return;
         }
+        await this.events.rememberChannel(event.id, key);
         await this.fanOut(event.id, body);
         await this.close(event, WEBHOOK_EVENT_STATUSES.processed, key);
     }

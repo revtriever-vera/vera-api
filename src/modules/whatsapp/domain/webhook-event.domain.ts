@@ -23,6 +23,11 @@ export class WebhookEventDomain {
         return this.events.findById(id);
     }
 
+    /** Grava o canal antes de publicar os jobs: o job de mensagem lê o canal do evento e roda antes do `finish`. */
+    public async rememberChannel(id: string, channelKey: string): Promise<void> {
+        await this.events.rememberChannel(id, channelKey);
+    }
+
     public async finish(id: string, status: WebhookEventStatus, channelKey: string | null): Promise<boolean> {
         return this.events.finish(id, status, channelKey);
     }

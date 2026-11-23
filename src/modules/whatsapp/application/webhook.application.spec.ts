@@ -53,12 +53,14 @@ function eventOf(rawBody: string, signature: string | null, status: string = 're
 function build(options: { event?: WebhookEvent | null; hosted?: boolean; channel?: WhatsAppChannel | null }): {
     application: WebhookApplication;
     finish: ReturnType<typeof vi.fn>;
+    rememberChannel: ReturnType<typeof vi.fn>;
     publish: ReturnType<typeof vi.fn>;
     store: ReturnType<typeof vi.fn>;
     processTenant: ReturnType<typeof vi.fn>;
     processHosted: ReturnType<typeof vi.fn>;
 } {
     const finish: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(true);
+    const rememberChannel: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const store: ReturnType<typeof vi.fn> = vi.fn();
     const publish: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const processTenant: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(true);
@@ -73,7 +75,7 @@ function build(options: { event?: WebhookEvent | null; hosted?: boolean; channel
         keyOf: (value: WhatsAppChannel): string => (value.companyId === null ? 'hosted' : value.phoneNumberId)
     };
     const application: WebhookApplication = new WebhookApplication(
-        { find: vi.fn().mockResolvedValue(options.event ?? null), finish, store } as unknown as WebhookEventDomain,
+        { find: vi.fn().mockResolvedValue(options.event ?? null), finish, rememberChannel, store } as unknown as WebhookEventDomain,
         channels as unknown as WhatsAppChannelService,
         signer,
         new WebhookBodyService(),
@@ -88,7 +90,7 @@ function build(options: { event?: WebhookEvent | null; hosted?: boolean; channel
         } as unknown as WhatsAppLogService,
         { webhook: vi.fn(), message: vi.fn() } as unknown as WhatsAppMetricsService
     );
-    return { application, finish, publish, store, processTenant, processHosted };
+    return { application, finish, rememberChannel, publish, store, processTenant, processHosted };
 }
 
 describe('WebhookApplication.verify', () => {
@@ -149,6 +151,16 @@ describe('WebhookApplication.processEvent', () => {
             jobId: 'wa-inbound-w1'
         });
         expect(finish).toHaveBeenCalledWith('0192b6c0-0000-7000-8000-000000000001', 'processed', 'phone-1');
+    });
+
+    it('grava o canal no evento antes de publicar, porque o job de mensagem lê o canal dele', async () => {
+        const raw: string = rawOf();
+        const { application, rememberChannel, publish } = build({ event: eventOf(raw, signer.sign(raw, SECRET)) });
+
+        await application.processEvent('0192b6c0-0000-7000-8000-000000000001');
+
+        expect(rememberChannel).toHaveBeenCalledWith('0192b6c0-0000-7000-8000-000000000001', 'phone-1');
+        expect(rememberChannel.mock.invocationCallOrder[0]).toBeLessThan(publish.mock.invocationCallOrder[0] ?? 0);
     });
 
     it('rejeitado: assinatura errada encerra o evento sem retry e sem publicar', async () => {

@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PaidFeature } from '../domain/plans.types';
+import { FEATURE_STATES, PaidFeature } from '../domain/plans.types';
 import { PlanGateService } from './plan-gate.service';
-import { REQUIRED_FEATURE_KEY } from './requires-feature.decorator';
+import { ALLOW_PAUSED_KEY, REQUIRED_FEATURE_KEY } from './requires-feature.decorator';
 
 @Injectable()
 export class PremiumGuard implements CanActivate {
@@ -20,7 +20,19 @@ export class PremiumGuard implements CanActivate {
         if (feature === undefined) {
             return true;
         }
+        if (this.allowsPaused(executionContext) && (await this.gate.stateOf(feature)) === FEATURE_STATES.paused) {
+            return true;
+        }
         await this.gate.assert(feature);
         return true;
+    }
+
+    private allowsPaused(executionContext: ExecutionContext): boolean {
+        return (
+            this.reflector.getAllAndOverride<boolean | undefined>(ALLOW_PAUSED_KEY, [
+                executionContext.getHandler(),
+                executionContext.getClass()
+            ]) === true
+        );
     }
 }
