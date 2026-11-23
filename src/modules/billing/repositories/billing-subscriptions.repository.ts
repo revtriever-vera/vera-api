@@ -115,6 +115,10 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
         await this.updateRow(current.id, { paidThrough: furthest, firstPaidAt: current.firstPaidAt ?? paidAt, updatedAt: new Date() });
     }
 
+    public async carryPaidPeriod(id: string, paidThrough: Date): Promise<void> {
+        await this.updateRow(id, { paidThrough, updatedAt: new Date() });
+    }
+
     public async markTrialStarted(id: string, at: Date): Promise<boolean> {
         const rows: BillingSubscription[] = await this.updateManyRows({ id, trialStartedAt: null }, { trialStartedAt: at, updatedAt: at });
         return rows.length > 0;

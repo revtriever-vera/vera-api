@@ -6,9 +6,13 @@ import { billingConfig } from '../config/billing.config';
 import { BillingEngineRejectedError, NoSubscriptionError } from '../domain/billing-engine.errors';
 import { CardCaptureSession, EngineSubscription, SavedCard } from '../domain/billing-engine.types';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
-import { BillingSubscription, MAX_CHARGE_DAY } from '../domain/billing.types';
+import { BillingSubscription, MAX_CHARGE_DAY, RevtrieverEvent } from '../domain/billing.types';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { BillingMetricsService } from './billing-metrics.service';
+import { RevtrieverEventIngestService } from './revtriever-event-ingest.service';
+import { RevtrieverEventDomain } from '../domain/revtriever-event.domain';
+
+const LINK_REPLAY_BATCH: number = 100;
 
 function chargeDayOf(firstChargeDate: string): number {
     return Math.min(Number(firstChargeDate.slice(8, 10)), MAX_CHARGE_DAY);
@@ -22,7 +26,9 @@ export class BillingProvisioningService {
         private readonly subscriptions: BillingSubscriptionDomain,
         private readonly owners: OwnerRecipientsService,
         private readonly timezone: CompanyTimezoneService,
-        private readonly metrics: BillingMetricsService
+        private readonly metrics: BillingMetricsService,
+        private readonly events: RevtrieverEventDomain,
+        private readonly ingestion: RevtrieverEventIngestService
     ) {}
 
     public async todayInCompany(): Promise<string> {
@@ -38,7 +44,15 @@ export class BillingProvisioningService {
             engineCustomerId: created.customerId,
             chargeDay: chargeDayOf(firstChargeDate)
         });
+        await this.reprocessWaitingEvents(created.id);
         return active ?? (await this.subscriptions.findById(row.id)) ?? row;
+    }
+
+    private async reprocessWaitingEvents(engineSubscriptionId: string): Promise<void> {
+        const waiting: RevtrieverEvent[] = await this.events.listReceivedOfSubscription(engineSubscriptionId, LINK_REPLAY_BATCH);
+        for (const event of waiting) {
+            await this.ingestion.publish(event, true);
+        }
     }
 
     public async captureSession(subscription: BillingSubscription, idempotencyKey: string): Promise<CardCaptureSession> {
@@ -52,13 +66,21 @@ export class BillingProvisioningService {
         );
     }
 
-    public async inheritCard(subscription: BillingSubscription): Promise<void> {
-        if (subscription.engineSubscriptionId === null) {
-            return;
+    public async inheritPaidPeriod(subscription: BillingSubscription, previous: BillingSubscription): Promise<void> {
+        if (previous.paidThrough !== null) {
+            await this.subscriptions.carryPaidPeriod(subscription.id, previous.paidThrough);
         }
-        const card: SavedCard | null = await this.engine.savedCardOf(subscription.engineSubscriptionId);
+    }
+
+    public async inheritCard(subscription: BillingSubscription, previous: BillingSubscription | null = null): Promise<void> {
+        const card: SavedCard | null =
+            subscription.engineSubscriptionId === null ? null : await this.engine.savedCardOf(subscription.engineSubscriptionId);
         if (card !== null) {
             await this.subscriptions.saveCard(subscription.id, card.brand, card.last4);
+            return;
+        }
+        if (previous?.cardLast4 !== null && previous?.cardLast4 !== undefined && subscription.cardLast4 === null) {
+            await this.subscriptions.saveCard(subscription.id, previous.cardBrand, previous.cardLast4);
         }
     }
 

@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+// eslint-disable-next-line local/repository-escape -- filtro por campo do payload jsonb
+import { sql } from 'kysely';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareGlobalRepository } from '../../../core/database/repositories/bare-global.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
@@ -49,5 +51,17 @@ export class RevtrieverEventsRepository extends BareGlobalRepository<'Revtriever
             { type, receivedAt: { '>=': since } },
             { limit: RECENT_EVENTS_LIMIT, orderBy: [{ property: 'receivedAt', direction: 'desc' }] }
         );
+    }
+
+    public async listReceivedOfSubscription(engineSubscriptionId: string, limit: number): Promise<RevtrieverEvent[]> {
+        // eslint-disable-next-line local/repository-escape -- filtro por campo dentro do payload jsonb: o base só filtra por colunas
+        return this.database.executor
+            .selectFrom('RevtrieverEvents')
+            .selectAll()
+            .where('status', '=', EVENT_STATUSES.received)
+            .where(sql<boolean>`payload -> 'data' ->> 'subscriptionId' = ${engineSubscriptionId}`)
+            .orderBy('receivedAt', 'asc')
+            .limit(limit)
+            .execute();
     }
 }

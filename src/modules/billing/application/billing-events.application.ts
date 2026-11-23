@@ -53,6 +53,9 @@ export class BillingEventsApplication {
             return;
         }
         const outcome: ProcessOutcome = await this.processor.process(row);
+        if (outcome.status === EVENT_STATUSES.received) {
+            return;
+        }
         await this.events.finish(row.id, outcome.status, outcome.error);
         this.metrics.event(eventTypeLabel(row.type), outcome.status);
         if (outcome.status === EVENT_STATUSES.ignored) {

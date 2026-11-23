@@ -12,6 +12,7 @@ import {
     BillingSubscription,
     CHARGE_FAILED_LOOKBACK_DAYS,
     EVENT_STATUSES,
+    EVENT_UNLINKED_HOURS,
     EVENT_TYPES,
     EventRowStatus,
     INVOICE_STATUSES,
@@ -87,7 +88,7 @@ export class RevtrieverEventProcessor {
             engineSubscriptionId
         );
         if (subscription === null) {
-            return { status: EVENT_STATUSES.ignored, error: null };
+            return { status: this.isStillWaitingForLink(row) ? EVENT_STATUSES.received : EVENT_STATUSES.ignored, error: null };
         }
         const ref: string | null = customerRefOf(event.data);
         if (ref !== null && ref !== subscription.companyId) {
@@ -96,6 +97,10 @@ export class RevtrieverEventProcessor {
         }
         await this.apply(subscription.companyId, subscription, event);
         return { status: EVENT_STATUSES.processed, error: null };
+    }
+
+    private isStillWaitingForLink(row: RevtrieverEvent): boolean {
+        return row.receivedAt > DateUtil.subtractHours(new Date(), EVENT_UNLINKED_HOURS);
     }
 
     @AsCompany()
