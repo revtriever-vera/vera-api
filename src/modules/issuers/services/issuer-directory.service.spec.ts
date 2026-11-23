@@ -55,6 +55,19 @@ describe('curated issuer data', () => {
         }
     });
 
+    it('keeps the IF.data conferences: BNB alias, PagBank bank and the added issuers', () => {
+        const byId: Map<string, IssuerRecord> = new Map(
+            institutions.map((entry: IssuerRecord): [string, IssuerRecord] => [entry.id, entry])
+        );
+
+        expect(byId.get('banco-bnb')?.aliases).toContain('Banco do Nordeste do Brasil');
+        expect(byId.get('banco-pagbank')?.name).toBe('Banco PagBank');
+        expect(byId.get('banco-alfa')?.groupId).toBe(byId.get('banco-safra')?.groupId);
+        for (const id of ['nu-financeira', 'picpay-bank', 'neon-financeira', 'banco-da-amazonia']) {
+            expect(byId.get(id)?.fgcAssociated).toBe(true);
+        }
+    });
+
     it('lists the banks as FGC associated and the others as not associated', () => {
         const wrong: string[] = institutions
             .filter((entry: IssuerRecord) => entry.fgcAssociated !== (entry.kind === 'bank'))

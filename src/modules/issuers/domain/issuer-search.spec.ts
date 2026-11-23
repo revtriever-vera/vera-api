@@ -6,7 +6,8 @@ const GROUPS: ReadonlyMap<string, IssuerGroup> = new Map([
     ['inter-co', { id: 'inter-co', name: 'Inter&Co' }],
     ['btg-pactual', { id: 'btg-pactual', name: 'BTG Pactual' }],
     ['itau-unibanco', { id: 'itau-unibanco', name: 'Itaú Unibanco' }],
-    ['petrobras', { id: 'petrobras', name: 'Petrobras' }]
+    ['petrobras', { id: 'petrobras', name: 'Petrobras' }],
+    ['outro', { id: 'outro', name: 'Sem grupo' }]
 ]);
 
 function record(id: string, name: string, groupId: string, overrides: Partial<IssuerRecord> = {}): IssuerRecord {
@@ -77,5 +78,20 @@ describe('searchIssuers', () => {
         const found: string[] = searchIssuers(records, GROUPS, 'xp', null, 20).map((entry: IssuerRecord) => entry.id);
 
         expect(found).toEqual(['xp', 'xp-investimentos', 'a-xp']);
+    });
+});
+
+describe('the other issuer option', () => {
+    const withOther: IssuerRecord[] = [
+        record('outro', 'Outro emissor (sem cobertura calculada)', 'outro', { kind: 'other', fgcAssociated: false }),
+        ...RECORDS
+    ];
+    const names = (kind: 'bank' | 'company' | null): string[] =>
+        searchIssuers(withOther, GROUPS, '', kind, 20).map((entry: IssuerRecord): string => entry.id);
+
+    it('comes last and shows up under every kind filter', () => {
+        expect(names(null).at(-1)).toBe('outro');
+        expect(names('bank').at(-1)).toBe('outro');
+        expect(names('company')).toEqual(['petrobras', 'outro']);
     });
 });

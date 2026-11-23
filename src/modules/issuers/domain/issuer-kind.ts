@@ -16,6 +16,9 @@ function acceptedInUsd(issuer: Issuer): boolean {
 }
 
 export function issuerFitsTitle(issuer: Issuer, titleKind: string, currency: string): boolean {
+    if (issuer.kind === ISSUER_KINDS.other) {
+        return true;
+    }
     if (currency === USD_CURRENCY && acceptedInUsd(issuer)) {
         return true;
     }
