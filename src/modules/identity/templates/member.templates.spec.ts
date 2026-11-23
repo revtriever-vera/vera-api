@@ -27,6 +27,10 @@ describe('MemberTemplates', () => {
         expect(ptBr.text).toContain('7 dias');
         expect(en.subject).toBe('Marcos invited you to their account on Vera');
         expect(en.text).toContain('Editor role');
+        expect(ptBr.text).toContain('conta do Google neste e-mail');
+        expect(ptBr.text).not.toContain('Facebook');
+        expect(en.text).toContain('Google account for this e-mail');
+        expect(en.text).not.toContain('Facebook');
     });
 
     it('escapa o nome no HTML', () => {
