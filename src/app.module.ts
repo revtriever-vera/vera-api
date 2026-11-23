@@ -15,6 +15,7 @@ import { ObservabilityModule } from './core/observability/observability.module';
 import { LlmModule } from './core/llm/llm.module';
 import { QueueModule } from './core/queue/queue.module';
 import { UsageModule } from './core/usage/usage.module';
+import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { BankConnectionsModule } from './modules/bank-connections/bank-connections.module';
 import { BillingModule } from './modules/billing/billing.module';
@@ -72,6 +73,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         IdentityModule,
         IntegrationCredentialsModule,
         AllocationModule,
+        AiAssistantModule,
         OnboardingModule,
         CatalogModule,
         IssuersModule,

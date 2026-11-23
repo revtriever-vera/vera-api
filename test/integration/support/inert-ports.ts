@@ -1,4 +1,6 @@
 import { TestingModuleBuilder } from '@nestjs/testing';
+import { AiConsentEraser } from '../../../src/modules/ai-assistant/services/ai-consent.eraser';
+import { AiConsentExporter } from '../../../src/modules/ai-assistant/services/ai-consent.exporter';
 import { FixedIncomeSampleApplication } from '../../../src/modules/fixed-income/application/fixed-income-sample.application';
 import { FixedIncomeAccountExporter } from '../../../src/modules/fixed-income/services/fixed-income-account.exporter';
 import { AllocationAccountExporter } from '../../../src/modules/allocation/services/allocation-account.exporter';
@@ -38,6 +40,10 @@ function withoutPortfolioPorts(builder: TestingModuleBuilder): TestingModuleBuil
 
 function withoutSpendingPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
     return builder
+        .overrideProvider(AiConsentEraser)
+        .useValue({})
+        .overrideProvider(AiConsentExporter)
+        .useValue({})
         .overrideProvider(SpendingCategoriesAccountExporter)
         .useValue({})
         .overrideProvider(BankConnectionsExporter)

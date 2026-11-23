@@ -53,6 +53,20 @@ export interface AccountInvites {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AiConsents {
+    acceptedByUserId: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    grantedAt: Timestamp;
+    id: string;
+    noticeVersion: number;
+    revokedAt: Timestamp | null;
+    revokedByUserId: string | null;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AssetClassAssignments {
     classId: string;
     companyId: string;
@@ -608,6 +622,7 @@ export interface Users {
 export interface DB {
     AccountDeletionLog: AccountDeletionLog;
     AccountInvites: AccountInvites;
+    AiConsents: AiConsents;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
     AssetQuotes: AssetQuotes;

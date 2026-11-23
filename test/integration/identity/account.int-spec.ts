@@ -217,6 +217,7 @@ describe('identity account deletion and export', () => {
         expect(trail[0]?.areas).toEqual([
             { area: 'integration_credentials', erased: expect.any(Number) },
             { area: 'usage', erased: expect.any(Number) },
+            { area: 'llm-calls', erased: expect.any(Number) },
             { area: 'stable', erased: expect.any(Number) },
             { area: 'flaky', erased: expect.any(Number) }
         ]);
