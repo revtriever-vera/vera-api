@@ -4,6 +4,7 @@ export const QUEUES = {
     fixedIncome: 'vera-fixed-income',
     marketData: 'vera-market-data',
     bankConnections: 'vera-bank-connections',
+    plans: 'vera-plans',
     identity: 'vera-identity'
 } as const;
 
@@ -20,6 +21,8 @@ export const MESSAGE_TYPES = {
     marketDataQuoteOndemandRequested: 'market-data.quote.ondemand.requested',
     bankConnectionsSyncDailyRequested: 'bank-connections.sync.daily.requested',
     bankConnectionsSyncRequested: 'bank-connections.sync.requested',
+    plansPremiumEndedSweepRequested: 'plans.premium-ended.sweep.requested',
+    plansPremiumEndedRetryRequested: 'plans.premium-ended.retry.requested',
     identityMembersCleanupRequested: 'identity.members.cleanup.requested'
 } as const;
 

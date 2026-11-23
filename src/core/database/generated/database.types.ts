@@ -213,6 +213,40 @@ export interface Companies {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface CompanyCapabilities {
+    capability: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    granted: boolean;
+    id: string;
+    origin: string;
+}
+
+export interface CompanyProductLimits {
+    companyId: string;
+    endsAt: Timestamp | null;
+    id: string;
+    policy: string;
+    productId: string;
+    quantity: Int8;
+    startsAt: Generated<Timestamp>;
+    unit: string;
+}
+
+export interface CompanyProducts {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    endReason: string | null;
+    endsAt: Timestamp | null;
+    id: string;
+    priceCents: Int8;
+    productId: string;
+    source: string;
+    startsAt: Timestamp;
+    subscriptionId: string | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface ExchangeRates {
     brlPerUnit: Numeric;
     createdAt: Generated<Timestamp>;
@@ -257,6 +291,42 @@ export interface FixedIncomeTitles {
     rateBps: number;
     taxRegime: string;
     updatedAt: Generated<Timestamp>;
+}
+
+export interface GlobalPlanCapabilities {
+    capability: string;
+    planId: string;
+}
+
+export interface GlobalPlanProducts {
+    planId: string;
+    priceCents: Int8;
+    productId: string;
+}
+
+export interface GlobalPlans {
+    createdAt: Generated<Timestamp>;
+    displayName: string;
+    id: Generated<string>;
+    key: string;
+}
+
+export interface GlobalProductLimits {
+    endsAt: Timestamp | null;
+    id: Generated<string>;
+    policy: string;
+    productId: string;
+    quantity: Int8;
+    startsAt: Generated<Timestamp>;
+    unit: string;
+}
+
+export interface GlobalProducts {
+    createdAt: Generated<Timestamp>;
+    displayName: string;
+    id: Generated<string>;
+    key: string;
+    kind: string;
 }
 
 export interface IndexSeriesPoints {
@@ -317,6 +387,18 @@ export interface Positions {
     id: string;
     isSample: Generated<boolean>;
     quantity: Numeric;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface PremiumEndedNotifications {
+    attempts: Generated<number>;
+    companyId: string;
+    contractEndsAt: Timestamp;
+    createdAt: Generated<Timestamp>;
+    handler: string;
+    id: string;
+    lastError: string | null;
+    status: string;
     updatedAt: Generated<Timestamp>;
 }
 
@@ -470,14 +552,23 @@ export interface DB {
     CatalogSyncRuns: CatalogSyncRuns;
     CategoryRules: CategoryRules;
     Companies: Companies;
+    CompanyCapabilities: CompanyCapabilities;
+    CompanyProductLimits: CompanyProductLimits;
+    CompanyProducts: CompanyProducts;
     ExchangeRates: ExchangeRates;
     FinancialAccounts: FinancialAccounts;
     FixedIncomeTitles: FixedIncomeTitles;
+    GlobalPlanCapabilities: GlobalPlanCapabilities;
+    GlobalPlanProducts: GlobalPlanProducts;
+    GlobalPlans: GlobalPlans;
+    GlobalProductLimits: GlobalProductLimits;
+    GlobalProducts: GlobalProducts;
     IndexSeriesPoints: IndexSeriesPoints;
     OnboardingStates: OnboardingStates;
     PluggyCredentials: PluggyCredentials;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;
+    PremiumEndedNotifications: PremiumEndedNotifications;
     ProviderUsage: ProviderUsage;
     QuoteFetchFailures: QuoteFetchFailures;
     Sessions: Sessions;
