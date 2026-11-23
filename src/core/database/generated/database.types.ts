@@ -652,6 +652,17 @@ export interface RecurringCharges {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface RecurringNoticePrefs {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    enabled: boolean;
+    id: string;
+    seriesId: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface RecurringSeries {
     accountId: string;
     cadence: string;
@@ -1031,6 +1042,7 @@ export interface DB {
     QuoteFetchFailures: QuoteFetchFailures;
     RecurringAlerts: RecurringAlerts;
     RecurringCharges: RecurringCharges;
+    RecurringNoticePrefs: RecurringNoticePrefs;
     RecurringSeries: RecurringSeries;
     RecurringSuppressions: RecurringSuppressions;
     ReminderOccurrences: ReminderOccurrences;

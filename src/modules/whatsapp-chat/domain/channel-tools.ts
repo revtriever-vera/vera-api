@@ -4,6 +4,7 @@ export const WHATSAPP_CHANNEL_TOOLS: ReadonlySet<string> = new Set([
     'spending_month_summary',
     'spending_by_category',
     'spending_cuts',
+    'recurring_overview',
     'list_categories',
     'portfolio_overview',
     'contribution_suggestion',
