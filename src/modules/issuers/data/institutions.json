@@ -30,6 +30,16 @@
     "aliases": ["Agibank", "Agi"]
   },
   {
+    "id": "banco-alfa",
+    "name": "Banco Alfa",
+    "groupId": "safra",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Alfa"]
+  },
+  {
     "id": "banco-banrisul",
     "name": "Banrisul",
     "groupId": "banrisul",
@@ -57,7 +67,7 @@
     "fgcAssociated": true,
     "status": "active",
     "mergedInto": null,
-    "aliases": ["BNB"]
+    "aliases": ["BNB", "Banco do Nordeste do Brasil"]
   },
   {
     "id": "banco-brb",
@@ -88,6 +98,16 @@
     "status": "active",
     "mergedInto": null,
     "aliases": ["BV", "Votorantim", "Banco Votorantim"]
+  },
+  {
+    "id": "banco-da-amazonia",
+    "name": "Banco da Amazônia",
+    "groupId": "basa",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Basa", "Banco da Amazonia"]
   },
   {
     "id": "banco-daycoval",
@@ -161,13 +181,13 @@
   },
   {
     "id": "banco-pagbank",
-    "name": "PagBank",
+    "name": "Banco PagBank",
     "groupId": "pagseguro",
     "kind": "bank",
     "fgcAssociated": true,
     "status": "active",
     "mergedInto": null,
-    "aliases": ["PagSeguro", "Banco PagSeguro"]
+    "aliases": ["PagBank", "PagSeguro", "Banco PagSeguro"]
   },
   {
     "id": "banco-pan",
@@ -390,6 +410,36 @@
     "aliases": []
   },
   {
+    "id": "neon-financeira",
+    "name": "Neon Financeira",
+    "groupId": "neon",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Neon"]
+  },
+  {
+    "id": "nu-financeira",
+    "name": "Nu Financeira",
+    "groupId": "nu-pagamentos",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Nubank", "Nu"]
+  },
+  {
+    "id": "outro",
+    "name": "Outro emissor (sem cobertura calculada)",
+    "groupId": "outro",
+    "kind": "other",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Outro", "Outros"]
+  },
+  {
     "id": "petrobras",
     "name": "Petrobras",
     "groupId": "petrobras",
@@ -398,6 +448,16 @@
     "status": "active",
     "mergedInto": null,
     "aliases": ["Petróleo Brasileiro"]
+  },
+  {
+    "id": "picpay-bank",
+    "name": "PicPay Bank",
+    "groupId": "picpay",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["PicPay"]
   },
   {
     "id": "raizen",

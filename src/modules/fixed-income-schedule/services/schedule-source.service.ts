@@ -15,6 +15,7 @@ const USD: string = 'USD';
 const BRL: string = 'BRL';
 const NO_VALUE_NEEDED: ReadonlySet<TreasuryKind> = new Set<TreasuryKind>(['prefixado']);
 
+export type { ScheduleTreasury };
 export type TitlesInputs = Pick<ScheduleInputs, 'today' | 'series' | 'titles'>;
 
 interface TreasuryHolding {
@@ -83,7 +84,7 @@ export class ScheduleSourceService {
         };
     }
 
-    private async loadTreasuries(): Promise<ScheduleTreasury[]> {
+    public async loadTreasuries(): Promise<ScheduleTreasury[]> {
         const positions: readonly Position[] = await this.positions.listForCompany();
         if (positions.length === 0) {
             return [];

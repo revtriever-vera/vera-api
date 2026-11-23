@@ -27,6 +27,13 @@ describe('issuerKindOfTitle', () => {
 });
 
 describe('issuerFitsTitle', () => {
+    it.each(['cdb', 'debenture', 'cri'])('the "other" issuer fits %s in any currency', (titleKind) => {
+        const other: Issuer = issuer('outro', 'other');
+
+        expect(issuerFitsTitle(other, titleKind, 'BRL')).toBe(true);
+        expect(issuerFitsTitle(other, titleKind, 'USD')).toBe(true);
+    });
+
     it.each(['cdb', 'lci', 'lca', 'lc'])('in BRL, %s takes a bank and refuses a company or a sovereign', (titleKind) => {
         expect(issuerFitsTitle(BANK, titleKind, 'BRL')).toBe(true);
         expect(issuerFitsTitle(COMPANY, titleKind, 'BRL')).toBe(false);

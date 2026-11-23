@@ -1,4 +1,4 @@
-import { ISSUER_STATUSES, IssuerGroup, IssuerKind, IssuerRecord } from './issuer.types';
+import { ISSUER_KINDS, ISSUER_STATUSES, IssuerGroup, IssuerKind, IssuerRecord } from './issuer.types';
 
 const DIACRITICS: RegExp = /\p{Diacritic}/gu;
 
@@ -45,7 +45,11 @@ function groupRankOf(groupName: string, text: string): number {
 }
 
 function byRelevance(left: Ranked, right: Ranked): number {
-    return left.rank - right.rank || left.record.name.localeCompare(right.record.name, 'pt-BR');
+    return (
+        left.rank - right.rank ||
+        Number(left.record.kind === ISSUER_KINDS.other) - Number(right.record.kind === ISSUER_KINDS.other) ||
+        left.record.name.localeCompare(right.record.name, 'pt-BR')
+    );
 }
 
 export function searchIssuers(
@@ -58,7 +62,8 @@ export function searchIssuers(
     const text: string = normalizeSearchText(query);
     const candidates: IssuerRecord[] = [...records].filter(
         (record: IssuerRecord): boolean =>
-            (kind === null || record.kind === kind) && (text !== '' || record.status === ISSUER_STATUSES.active)
+            (kind === null || record.kind === kind || record.kind === ISSUER_KINDS.other) &&
+            (text !== '' || record.status === ISSUER_STATUSES.active)
     );
     const ranked: Ranked[] = candidates.map((record: IssuerRecord): Ranked => rankRecord(record, text, groups));
     return ranked

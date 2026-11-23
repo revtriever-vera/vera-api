@@ -12,7 +12,9 @@ export const issuerSearchQuerySchema = z.object({
     kind: z
         .enum([ISSUER_KINDS.bank, ISSUER_KINDS.company])
         .optional()
-        .describe('`bank` for CDB, LCI, LCA and LC issuers; `company` for debenture, CRI and CRA issuers; omitted searches every kind')
+        .describe(
+            '`bank` for CDB, LCI, LCA and LC issuers; `company` for debenture, CRI and CRA issuers; `outro` (any kind, outside the FGC) comes last in every search; omitted searches every kind'
+        )
 });
 
 export class IssuerSearchQueryDto extends createZodDto(issuerSearchQuerySchema) {}
@@ -24,7 +26,7 @@ export const issuerItemSchema = z.object({
     name: z.string().describe('Institution name'),
     groupId: z.string().describe('Slug of the prudential conglomerate or business group the institution belongs to'),
     groupName: z.string().describe('Name of the conglomerate or group, after following any incorporation'),
-    kind: z.nativeEnum(ISSUER_KINDS).describe('`bank`, `company` or `sovereign`'),
+    kind: z.nativeEnum(ISSUER_KINDS).describe('`bank`, `company`, `sovereign` or `other` (the "Outro emissor" option)'),
     fgcAssociated: z.boolean().describe('Whether the institution is associated to the FGC'),
     status: z.nativeEnum(ISSUER_STATUSES).describe('`retired` institutions only show up when the search matches the name exactly')
 });
