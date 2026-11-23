@@ -50,6 +50,26 @@ export class WhatsAppMessageDomain {
         });
     }
 
+    public async findInbound(wamid: string): Promise<WhatsAppMessage | null> {
+        return this.messages.findInboundByWamid(wamid);
+    }
+
+    public async createdAtOf(wamid: string): Promise<Date | null> {
+        return this.messages.createdAtOfExternal(wamid);
+    }
+
+    public async textsOfPeer(
+        peer: string,
+        window: { readonly since: Date; readonly before: Date },
+        limit: number
+    ): Promise<WhatsAppMessage[]> {
+        return this.messages.textsOfPeer(peer, window, limit);
+    }
+
+    public async inboundTextsSince(peer: string, since: Date): Promise<WhatsAppMessage[]> {
+        return this.messages.inboundTextsSince(peer, since);
+    }
+
     public async discardInbound(wamid: string): Promise<void> {
         await this.messages.discardInbound(wamid);
     }

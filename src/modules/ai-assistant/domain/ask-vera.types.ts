@@ -27,6 +27,7 @@ export interface AskVeraInput {
     readonly history: readonly AskVeraTurn[];
     readonly locale: AppLocale;
     readonly messageId: string;
+    readonly allowedTools: ReadonlySet<string>;
 }
 
 export interface AskVeraProposal {

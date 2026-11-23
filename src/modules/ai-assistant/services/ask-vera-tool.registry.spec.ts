@@ -35,7 +35,9 @@ describe('AskVeraToolRegistry', () => {
             { getProviders: () => [...tools.map((instance) => ({ instance })), { instance: {} }] } as never,
             { allows: (feature: PaidFeature) => Promise.resolve(feature === 'whatsapp') } as never
         );
-        expect((await registry.available()).map((tool) => tool.name)).toEqual(['a_read', 'reminder_create']);
+        const allowed: ReadonlySet<string> = new Set(['a_read', 'reminder_create', 'calendar_list_events']);
+        expect((await registry.available(allowed)).map((tool) => tool.name)).toEqual(['a_read', 'reminder_create']);
+        expect((await registry.available(new Set(['reminder_create']))).map((tool) => tool.name)).toEqual(['reminder_create']);
         expect(registry.all().map((tool) => tool.name)).toEqual(['a_read', 'calendar_list_events', 'reminder_create']);
     });
 });

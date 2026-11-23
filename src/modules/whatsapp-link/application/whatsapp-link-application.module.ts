@@ -10,6 +10,7 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { WhatsAppApplicationModule } from '../../whatsapp/application/whatsapp-application.module';
 import { whatsappLinkConfig } from '../config/whatsapp-link.config';
 import { WhatsAppLinkDomainModule } from '../domain/whatsapp-link-domain.module';
+import { LinkCommandMatcher } from '../services/link-command-matcher.service';
 import { LinkBinder } from '../services/link-binder.service';
 import { LinkCodeIssuer } from '../services/link-code-issuer.service';
 import { LinkConversationService } from '../services/link-conversation.service';
@@ -48,6 +49,7 @@ import { UnlinkApplication } from './unlink.application';
         UnlinkApplication,
         LinkResolverService,
         LinkUnlinkService,
+        LinkCommandMatcher,
         LinkBinder,
         LinkCodeIssuer,
         LinkConversationService,
@@ -62,6 +64,14 @@ import { UnlinkApplication } from './unlink.application';
         WhatsAppLinkAccountEraser,
         WhatsAppLinkAccountExporter
     ],
-    exports: [LinkCodeApplication, LinkInboundApplication, UnlinkApplication, LinkResolverService]
+    exports: [
+        LinkCodeApplication,
+        LinkInboundApplication,
+        UnlinkApplication,
+        LinkResolverService,
+        LinkUnlinkService,
+        LinkCommandMatcher,
+        PhoneVault
+    ]
 })
 export class WhatsAppLinkApplicationModule {}
