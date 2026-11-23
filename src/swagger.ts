@@ -12,7 +12,11 @@ export function setupSwagger(app: INestApplication, config: AppConfig): void {
         })
     );
 
-    const document: OpenAPIObject = SwaggerModule.createDocument(
+    SwaggerModule.setup('docs', app, buildOpenApiDocument(app));
+}
+
+export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
+    return SwaggerModule.createDocument(
         app,
         new DocumentBuilder()
             .setTitle('Vera API')
@@ -24,5 +28,4 @@ export function setupSwagger(app: INestApplication, config: AppConfig): void {
             .addBearerAuth()
             .build()
     );
-    SwaggerModule.setup('docs', app, document);
 }

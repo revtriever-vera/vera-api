@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
+import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { PositionDomain } from '../domain/position.domain';
 import { toPositionView } from '../domain/position.mapper';
@@ -36,28 +37,26 @@ export class PositionApplication {
         private readonly catalog: AssetCatalogService,
         private readonly assignments: ClassAssignmentService,
         private readonly resolver: ClassResolverService,
+        private readonly members: MemberDirectoryService,
         private readonly logs: PositionsLogService,
         private readonly metrics: PositionsMetricsService
     ) {}
 
     @UsingTransaction()
     public async create(input: CreatePositionInput): Promise<PositionView> {
-        const asset: Asset = await this.catalog.requireById(input.assetId);
-        if (asset.status !== ACTIVE_ASSET_STATUS) {
-            throw new AssetNotAvailableError(asset.id);
-        }
+        const asset: Asset = await this.activeAsset(input.assetId);
         this.assertQuantity(input.quantity, asset);
+        const holderUserId: string | null = await this.holderOf(input.holderUserId);
         const classId: string = await this.classIdFor(asset, input.classId);
-        if ((await this.positions.countAll()) >= MAX_POSITIONS_PER_COMPANY) {
-            throw new PositionLimitReachedError(MAX_POSITIONS_PER_COMPANY);
-        }
+        await this.assertRoom();
         const created: Position | null = await this.positions.createIfAbsent({
             assetId: asset.id,
             quantity: input.quantity,
-            averagePrice: input.averagePrice ?? null
+            averagePrice: input.averagePrice ?? null,
+            holderUserId
         });
         if (created === null) {
-            throw await this.duplicateOf(asset.id);
+            throw await this.duplicateOf(asset.id, holderUserId);
         }
         await this.assignments.assign(POSITION_SUBJECT_TYPE, created.id, classId);
         this.recordWrite(POSITION_ACTIONS.created, created);
@@ -74,7 +73,8 @@ export class PositionApplication {
         if (input.quantity !== undefined) {
             this.assertQuantity(input.quantity, await this.catalog.requireById(current.assetId));
         }
-        const patch: PositionPatch = { quantity: input.quantity, averagePrice: input.averagePrice };
+        const holderUserId: string | null | undefined = await this.newHolderOf(current, input.holderUserId);
+        const patch: PositionPatch = { quantity: input.quantity, averagePrice: input.averagePrice, holderUserId };
         const updated: Position = (await this.positions.update(id, patch)) ?? (await this.require(id));
         this.recordWrite(POSITION_ACTIONS.updated, updated);
         return toPositionView(updated, await this.assignments.requireClassId(POSITION_SUBJECT_TYPE, updated.id));
@@ -86,6 +86,20 @@ export class PositionApplication {
         await this.positions.remove(position.id);
         await this.assignments.release(POSITION_SUBJECT_TYPE, position.id);
         this.recordWrite(POSITION_ACTIONS.removed, position);
+    }
+
+    private async activeAsset(assetId: string): Promise<Asset> {
+        const asset: Asset = await this.catalog.requireById(assetId);
+        if (asset.status !== ACTIVE_ASSET_STATUS) {
+            throw new AssetNotAvailableError(asset.id);
+        }
+        return asset;
+    }
+
+    private async assertRoom(): Promise<void> {
+        if ((await this.positions.countAll()) >= MAX_POSITIONS_PER_COMPANY) {
+            throw new PositionLimitReachedError(MAX_POSITIONS_PER_COMPANY);
+        }
     }
 
     private async require(id: string): Promise<Position> {
@@ -112,8 +126,28 @@ export class PositionApplication {
         return (await this.resolver.resolveBySystemKey(asset.suggestedClassKey)).id;
     }
 
-    private async duplicateOf(assetId: string): Promise<AssetAlreadyInPortfolioError> {
-        const existing: Position | null = await this.positions.findByAsset(assetId);
+    private async holderOf(requested: string | null | undefined): Promise<string | null> {
+        if (requested === undefined || requested === null) {
+            return null;
+        }
+        return (await this.members.requireActive(requested)).userId;
+    }
+
+    private async newHolderOf(current: Position, requested: string | null | undefined): Promise<string | null | undefined> {
+        if (requested === undefined || requested === current.holderUserId) {
+            return undefined;
+        }
+        const holderUserId: string | null = await this.holderOf(requested);
+        const existing: Position | null = await this.positions.findByAssetAndHolder(current.assetId, holderUserId);
+        if (existing !== null) {
+            this.logs.duplicate(current.assetId, existing.id);
+            throw new AssetAlreadyInPortfolioError(existing.id);
+        }
+        return holderUserId;
+    }
+
+    private async duplicateOf(assetId: string, holderUserId: string | null): Promise<AssetAlreadyInPortfolioError> {
+        const existing: Position | null = await this.positions.findByAssetAndHolder(assetId, holderUserId);
         if (existing === null) {
             throw new Error(`Positions conflict without a live row for asset "${assetId}"`);
         }

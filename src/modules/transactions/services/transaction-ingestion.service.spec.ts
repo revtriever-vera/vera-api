@@ -7,6 +7,7 @@ import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { FinancialAccount, IncomingTransaction, NewTransaction, Transaction } from '../domain/transactions.types';
 import { TransactionIngestionService } from './transaction-ingestion.service';
+import { TransactionsChangedService } from './transactions-changed.service';
 import { TransactionsLogService } from './transactions-log.service';
 import { TransactionsMetricsService } from './transactions-metrics.service';
 
@@ -20,6 +21,7 @@ interface Built {
     readonly ingested: ReturnType<typeof vi.fn>;
     readonly metricsIngested: ReturnType<typeof vi.fn>;
     readonly sha256Hex: ReturnType<typeof vi.fn>;
+    readonly notify: ReturnType<typeof vi.fn>;
 }
 
 interface Overrides {
@@ -60,6 +62,7 @@ function build(account: FinancialAccount, overrides: Overrides = {}): Built {
     const ingested: ReturnType<typeof vi.fn> = vi.fn();
     const metricsIngested: ReturnType<typeof vi.fn> = vi.fn();
     const sha256Hex: ReturnType<typeof vi.fn> = vi.fn().mockReturnValue(KEY);
+    const notify: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const service: TransactionIngestionService = new TransactionIngestionService(
         { require: vi.fn().mockResolvedValue(account), lock } as unknown as FinancialAccountDomain,
         domain as unknown as TransactionDomain,
@@ -67,9 +70,10 @@ function build(account: FinancialAccount, overrides: Overrides = {}): Built {
         { normalize: (text: string): string => text.toUpperCase() },
         { sha256Hex },
         { ingested } as unknown as TransactionsLogService,
-        { ingested: metricsIngested } as unknown as TransactionsMetricsService
+        { ingested: metricsIngested } as unknown as TransactionsMetricsService,
+        { notify } as unknown as TransactionsChangedService
     );
-    return { service, domain, categorize, lock, ingested, metricsIngested, sha256Hex };
+    return { service, domain, categorize, lock, ingested, metricsIngested, sha256Hex, notify };
 }
 
 function insertedRows(built: Built): NewTransaction[] {
@@ -101,6 +105,7 @@ describe('TransactionIngestionService', () => {
         ]);
         expect(built.ingested).toHaveBeenCalled();
         expect(built.metricsIngested).toHaveBeenCalledWith('pluggy', result);
+        expect(built.notify).toHaveBeenCalledTimes(1);
     });
 
     it('reingestão sem mudança dá unchanged e não escreve nada', async () => {
@@ -112,6 +117,7 @@ describe('TransactionIngestionService', () => {
         expect(result).toMatchObject({ unchanged: 1, inserted: 0 });
         expect(built.domain['patch']).not.toHaveBeenCalled();
         expect(built.categorize).toHaveBeenCalledWith([]);
+        expect(built.notify).not.toHaveBeenCalled();
     });
 
     it('mudança de descrição recategoriza quando a origem não é o usuário', async () => {

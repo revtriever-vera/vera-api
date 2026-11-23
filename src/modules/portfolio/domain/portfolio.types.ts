@@ -57,6 +57,7 @@ export interface SourcePosition {
     readonly assetId: string;
     readonly quantity: string;
     readonly isSample: boolean;
+    readonly holderUserId: string | null;
 }
 
 export interface SourceAsset {
@@ -68,6 +69,9 @@ export interface SourceAsset {
     readonly currency: string;
     readonly quantityDecimals: number;
     readonly dollarExposure: boolean;
+    readonly assetKind: string;
+    readonly sector: string | null;
+    readonly issuerGroupId: string | null;
 }
 
 export interface SourceQuote {
@@ -82,6 +86,9 @@ export interface SourceQuote {
 export interface SourceTitle {
     readonly id: string;
     readonly name: string;
+    readonly titleKind: string;
+    readonly issuerId: string | null;
+    readonly issuerGroupId: string | null;
     readonly indexDataMissing: boolean;
     readonly valueMinor: number;
     readonly currency: string;
@@ -90,6 +97,7 @@ export interface SourceTitle {
     readonly source: string;
     readonly asOf: string;
     readonly isSample: boolean;
+    readonly holderUserId: string | null;
 }
 
 export interface SourceClass {
@@ -147,6 +155,11 @@ export interface Holding {
     readonly valueSource: ValueSource;
     readonly priceDate: string | null;
     readonly dollarExposure: boolean;
+    readonly assetKind: string | null;
+    readonly sector: string | null;
+    readonly issuerGroupId: string | null;
+    readonly issuerId: string | null;
+    readonly titleKind: string | null;
     readonly missingQuote: boolean;
     readonly stale: boolean;
     readonly estimated: boolean;
@@ -155,6 +168,7 @@ export interface Holding {
     readonly indexDataMissing: boolean;
     readonly isZeroQuantity: boolean;
     readonly isSample: boolean;
+    readonly holderUserId: string | null;
     readonly storedTargetInClassBps: number;
     readonly effectiveTargetInClassBps: number;
 }

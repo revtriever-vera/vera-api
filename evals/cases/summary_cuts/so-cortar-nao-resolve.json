@@ -1,0 +1,46 @@
+{
+  "id": "so-cortar-nao-resolve",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:eating_out": "Delivery e restaurantes",
+    "cat:leisure": "Lazer"
+  },
+  "context": {
+    "meta_economia_pct": "30%",
+    "falta_por_mes": "R$ 4.200",
+    "status": "so_cortar_nao_resolve",
+    "categorias_flexiveis": [
+      {
+        "chave": "eating_out",
+        "rotulo_padrao": "Delivery e restaurantes",
+        "atual": "R$ 1.300",
+        "media_3m": "R$ 900",
+        "cortar": "R$ 400",
+        "limite_sugerido": "R$ 900"
+      },
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Lazer",
+        "atual": "R$ 800",
+        "media_3m": "R$ 600",
+        "cortar": "R$ 200",
+        "limite_sugerido": "R$ 600"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 4.200"],
+    "mustMention": ["não fecha"],
+    "mustNotMention": ["média"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Para guardar 30% da renda, faltam **R$ 4.200** por mês.",
+    "Baixar ao limite sugerido em [[cat:eating_out]] libera R$ 400, mas só cortar gastos flexíveis não fecha a conta.",
+    "Ainda faltaria dinheiro mesmo depois dos cortes sugeridos."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": "cannot-close-by-cutting",
+  "task": "summary_cuts",
+  "locale": "en",
+  "labels": {
+    "cat:eating_out": "Delivery and restaurants",
+    "cat:leisure": "Leisure"
+  },
+  "context": {
+    "meta_economia_pct": "30%",
+    "falta_por_mes": "R$4,200",
+    "status": "so_cortar_nao_resolve",
+    "categorias_flexiveis": [
+      {
+        "chave": "eating_out",
+        "rotulo_padrao": "Delivery and restaurants",
+        "atual": "R$1,300",
+        "media_3m": "R$900",
+        "cortar": "R$400",
+        "limite_sugerido": "R$900"
+      },
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Leisure",
+        "atual": "R$800",
+        "media_3m": "R$600",
+        "cortar": "R$200",
+        "limite_sugerido": "R$600"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$4,200"],
+    "mustMention": ["does not close"],
+    "mustNotMention": ["average"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "To save 30% of income, **R$4,200** per month is missing.",
+    "Bringing spending down to the suggested limit in [[cat:eating_out]] frees R$400, but cutting flexible spending alone does not close the gap.",
+    "Money would still be missing even after the suggested cuts."
+  ]
+}

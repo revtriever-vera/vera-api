@@ -1,0 +1,46 @@
+{
+  "id": "referencia-prototipo",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:eating_out": "Delivery e restaurantes",
+    "cat:leisure": "Lazer"
+  },
+  "context": {
+    "meta_economia_pct": "25%",
+    "falta_por_mes": "R$ 1.400",
+    "status": "possivel",
+    "categorias_flexiveis": [
+      {
+        "chave": "eating_out",
+        "rotulo_padrao": "Delivery e restaurantes",
+        "atual": "R$ 1.300",
+        "media_3m": "R$ 900",
+        "cortar": "R$ 400",
+        "limite_sugerido": "R$ 900"
+      },
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Lazer",
+        "atual": "R$ 800",
+        "media_3m": "R$ 600",
+        "cortar": "R$ 200",
+        "limite_sugerido": "R$ 600"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 1.400"],
+    "mustMention": [],
+    "mustNotMention": ["média"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Para guardar 25% da renda, faltam **R$ 1.400** por mês.",
+    "O caminho mais leve é baixar ao limite sugerido: [[cat:eating_out]] (de R$ 1.300 para R$ 900) e [[cat:leisure]] (de R$ 800 para R$ 600).",
+    "Se for escolher uma só, comece por [[cat:eating_out]]: cortar **R$ 400** é a maior parte dos R$ 1.400 que faltam."
+  ]
+}

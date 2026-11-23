@@ -21,4 +21,9 @@ describe('CompanyTimezoneService', () => {
         expect(await service('company-1', null).todayInCompany(LATE_NIGHT_UTC)).toBe('2026-03-09');
         expect(await service(undefined, null).todayInCompany(LATE_NIGHT_UTC)).toBe('2026-03-09');
     });
+
+    it('returns the timezone of the company, with the Brazil fallback', async () => {
+        expect(await service('company-1', 'Asia/Tokyo').timezoneOfCompany()).toBe('Asia/Tokyo');
+        expect(await service('company-1', null).timezoneOfCompany()).toBe('America/Sao_Paulo');
+    });
 });

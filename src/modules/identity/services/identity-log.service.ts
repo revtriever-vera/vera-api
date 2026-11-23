@@ -5,7 +5,10 @@ import { LoginProvider } from '../domain/identity.types';
 const AUTH: string = 'identity-auth';
 const PROVISIONING: string = 'identity-provisioning';
 const ACCOUNT: string = 'identity-account';
+const ACCOUNT_EXPORT: string = 'account-export';
 const REFRESH_REUSE: string = 'auth-refresh-reuse';
+const MEMBERS_AUTHZ: string = 'members-authz';
+const ROUTE_ROLE_MISSING: string = 'route-role-missing';
 
 @Injectable()
 export class IdentityLogService {
@@ -51,6 +54,18 @@ export class IdentityLogService {
         this.logService.info({ message: 'account export requested', identifier: ACCOUNT, meta: { areas } });
     }
 
+    public spreadsheetsExported(sheets: number, rows: number, ms: number): void {
+        this.logService.info({ message: 'spreadsheets exported', identifier: ACCOUNT_EXPORT, meta: { sheets, rows, ms } });
+    }
+
+    public spreadsheetsFailed(error: unknown): void {
+        this.logService.error({
+            message: 'spreadsheets export failed',
+            identifier: ACCOUNT_EXPORT,
+            meta: { errorName: error instanceof Error ? error.name : typeof error }
+        });
+    }
+
     public deletionStarted(): void {
         this.logService.info({ message: 'account deletion started', identifier: ACCOUNT });
     }
@@ -69,5 +84,13 @@ export class IdentityLogService {
 
     public accountDeleted(areas: readonly string[]): void {
         this.logService.info({ message: 'account deleted', identifier: ACCOUNT, meta: { areas } });
+    }
+
+    public roleDenied(route: string, required: string, role: string): void {
+        this.logService.info({ message: 'role denied', identifier: MEMBERS_AUTHZ, meta: { route, required, role } });
+    }
+
+    public routeRoleMissing(route: string): void {
+        this.logService.error({ message: 'write route without required role', identifier: ROUTE_ROLE_MISSING, meta: { route } });
     }
 }

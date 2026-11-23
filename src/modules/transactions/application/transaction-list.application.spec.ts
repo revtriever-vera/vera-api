@@ -3,17 +3,23 @@ import { makeFinancialAccount, makeTransaction } from '../../../../test/support/
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
+import { TransactionViewService } from '../services/transaction-view.service';
+import { TransactionsRecurringService } from '../services/transactions-recurring.service';
 import { TransactionListApplication } from './transaction-list.application';
 
-function build(): { application: TransactionListApplication; domain: Record<string, ReturnType<typeof vi.fn>> } {
+function build(marked: readonly string[] = []): {
+    application: TransactionListApplication;
+    domain: Record<string, ReturnType<typeof vi.fn>>;
+} {
     const domain: Record<string, ReturnType<typeof vi.fn>> = {
-        listPage: vi.fn().mockResolvedValue([makeTransaction({ accountId: 'a1' }), makeTransaction({ accountId: 'a1' })]),
+        listPage: vi
+            .fn()
+            .mockResolvedValue([makeTransaction({ id: 't1', accountId: 'a1' }), makeTransaction({ id: 't2', accountId: 'a1' })]),
         totals: vi.fn().mockResolvedValue({ inMinor: 0, outMinor: -10000, count: 5 }),
         countUncategorizedOutgoing: vi.fn().mockResolvedValue(7)
     };
     const application: TransactionListApplication = new TransactionListApplication(
         domain as unknown as TransactionDomain,
-        { findByIds: vi.fn().mockResolvedValue([makeFinancialAccount({ id: 'a1', name: 'Itaú' })]) } as unknown as FinancialAccountDomain,
         { todayInCompany: vi.fn().mockResolvedValue('2026-10-11') } as unknown as CompanyTimezoneService,
         {
             normalize: (text: string): string =>
@@ -21,12 +27,29 @@ function build(): { application: TransactionListApplication; domain: Record<stri
                     .toUpperCase()
                     .replace(/\d{4,}/g, '')
                     .trim()
-        }
+        },
+        new TransactionViewService(
+            {
+                findByIds: vi.fn().mockResolvedValue([makeFinancialAccount({ id: 'a1', name: 'Itaú' })])
+            } as unknown as FinancialAccountDomain,
+            { markedIn: vi.fn().mockResolvedValue(new Set<string>(marked)) } as unknown as TransactionsRecurringService
+        )
     );
     return { application, domain };
 }
 
 describe('TransactionListApplication', () => {
+    it('marca como recorrente só a transação de série confirmada, apontada pela porta', async () => {
+        const { application } = build(['t2']);
+
+        const view = await application.list({ page: 1, pageSize: 50 });
+
+        expect(view.data.map((item) => [item.id, item.accountName, item.isRecurring])).toEqual([
+            ['t1', 'Itaú', false],
+            ['t2', 'Itaú', true]
+        ]);
+    });
+
     it('sem período lista o mês corrente da company', async () => {
         const { application, domain } = build();
 

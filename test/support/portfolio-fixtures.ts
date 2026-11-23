@@ -1,4 +1,5 @@
 import {
+    PortfolioSnapshot,
     PortfolioSourceData,
     SourceAsset,
     SourceAssignment,
@@ -8,6 +9,7 @@ import {
     SourceRate,
     SourceTitle
 } from '../../src/modules/portfolio/domain/portfolio.types';
+import { buildSnapshot } from '../../src/modules/portfolio/domain/portfolio-snapshot';
 
 export const PTAX_RATE: SourceRate = { brlPerUnit: '5.42', date: '2026-10-09', source: 'bcb-ptax' };
 
@@ -235,6 +237,20 @@ export interface PrototypeOverrides {
     readonly withoutQuotes?: readonly string[];
 }
 
+const ETF_SYMBOLS: ReadonlySet<string> = new Set<string>(['IVVB11', 'VOO', 'VNQ']);
+const KIND_BY_TYPE_GROUP: Readonly<Record<string, string>> = {
+    tesouro: 'treasury',
+    acoes_br: 'stock',
+    fii: 'fii',
+    acoes_eua: 'stock',
+    reits: 'reit',
+    cripto: 'crypto'
+};
+
+function kindOf(seed: PositionSeed): string {
+    return ETF_SYMBOLS.has(seed.symbol) ? 'etf' : (KIND_BY_TYPE_GROUP[seed.typeGroup] ?? 'stock');
+}
+
 function assetsOf(): SourceAsset[] {
     return POSITION_SEEDS.map((seed: PositionSeed): SourceAsset => ({
         id: `asset-${seed.symbol}`,
@@ -244,7 +260,10 @@ function assetsOf(): SourceAsset[] {
         typeGroup: seed.typeGroup,
         currency: seed.currency,
         quantityDecimals: 0,
-        dollarExposure: seed.dollarExposure ?? false
+        dollarExposure: seed.dollarExposure ?? false,
+        assetKind: kindOf(seed),
+        sector: null,
+        issuerGroupId: null
     }));
 }
 
@@ -253,7 +272,8 @@ function positionsOf(): SourcePosition[] {
         id: `position-${seed.symbol}`,
         assetId: `asset-${seed.symbol}`,
         quantity: seed.quantity,
-        isSample: false
+        isSample: false,
+        holderUserId: null
     }));
 }
 
@@ -272,6 +292,9 @@ function titlesOf(): SourceTitle[] {
     return TITLE_SEEDS.map((seed: TitleSeed): SourceTitle => ({
         id: `title-${seed.name}`,
         name: seed.name,
+        titleKind: 'cdb',
+        issuerId: null,
+        issuerGroupId: null,
         indexDataMissing: false,
         valueMinor: seed.valueMinor,
         currency: seed.currency,
@@ -279,7 +302,8 @@ function titlesOf(): SourceTitle[] {
         matured: false,
         source: seed.source,
         asOf: '2026-10-11',
-        isSample: false
+        isSample: false,
+        holderUserId: null
     }));
 }
 
@@ -312,4 +336,8 @@ export function makePrototypeSource(overrides: PrototypeOverrides = {}): Portfol
         assignments: assignmentsOf(),
         usdRate: overrides.usdRate === undefined ? PTAX_RATE : overrides.usdRate
     };
+}
+
+export function makePrototypeSnapshot(overrides: PrototypeOverrides = {}): PortfolioSnapshot {
+    return buildSnapshot(makePrototypeSource(overrides));
 }

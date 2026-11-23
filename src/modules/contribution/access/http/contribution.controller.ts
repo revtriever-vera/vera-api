@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ContributionSuggestionApplication } from '../../application/contribution-suggestion.application';
 import { SuggestRequestDto, SuggestResponse, suggestRequestSchema, suggestResponseSchema } from '../../validation/contribution.schemas';
 
@@ -12,12 +14,13 @@ const ONE_MINUTE_SECONDS: number = 60;
 
 @ApiTags('portfolio')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('portfolio/contributions')
 export class ContributionController {
     public constructor(private readonly suggestions: ContributionSuggestionApplication) {}
 
     @Post('suggest')
+    @RequiresRole('viewer')
     @HttpCode(HttpStatus.OK)
     @RateLimit({
         key: 'contribution-suggest',
@@ -33,7 +36,9 @@ export class ContributionController {
             'does not cover everything the money is split in proportion to what is missing, and any surplus follows the targets. ' +
             'Amounts are integers in the minor unit of the base currency and add up exactly to the contribution on both layers. ' +
             'Matured fixed income titles receive nothing. Nothing is stored. The result approximates the target; it is not an ' +
-            'individual investment recommendation.'
+            'individual investment recommendation. With prioritizeGoals (default true), goals that are behind or overdue and have a linked ' +
+            'holding receive first, nearest date first, up to what is missing for the plan (never below the monthly amount), and the rest ' +
+            'follows the rules above over the portfolio already counting that money.'
     })
     @ApiZodBody(suggestRequestSchema)
     @ApiZodResponse({ status: 200, description: 'The suggestion on both layers', schema: suggestResponseSchema })
@@ -58,6 +63,6 @@ export class ContributionController {
         example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
     })
     public async suggest(@Body() body: SuggestRequestDto): Promise<SuggestResponse> {
-        return this.suggestions.suggest(body.amountMinor);
+        return this.suggestions.suggest(body.amountMinor, body.prioritizeGoals);
     }
 }

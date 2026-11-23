@@ -5,6 +5,7 @@ import { ApiZodQuery } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { ExportFile } from '../../../../shared/spreadsheet/spreadsheet.types';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { TransactionsExportApplication } from '../../application/transactions-export.application';
 import { TransactionsExportQueryDto, transactionsExportBaseSchema } from '../../validation/transactions-export.schemas';
 
@@ -16,7 +17,7 @@ const FILE_SCHEMA: Readonly<Record<string, string>> = { type: 'string', format: 
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/transactions')
 export class TransactionsExportController {
     public constructor(private readonly exports: TransactionsExportApplication) {}

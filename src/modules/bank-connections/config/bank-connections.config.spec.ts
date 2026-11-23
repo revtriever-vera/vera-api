@@ -17,7 +17,7 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_SYNC_SPACING_MS: 2000,
             PLUGGY_INITIAL_HISTORY_DAYS: 365,
             PLUGGY_SHIFT_INSTALLMENT_DATES: false,
-            PLUGGY_MOCK_ALLOWED: true,
+            PLUGGY_ENABLED: true,
             MOCK_PLUGGY_FORCE_401: false,
             MOCK_PLUGGY_REVOKED_ITEMS: []
         });
@@ -66,16 +66,20 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_SYNC_SPACING_MS: 0,
             PLUGGY_INITIAL_HISTORY_DAYS: 90,
             PLUGGY_SHIFT_INSTALLMENT_DATES: true,
-            PLUGGY_MOCK_ALLOWED: false,
+            PLUGGY_ENABLED: true,
             MOCK_PLUGGY_FORCE_401: true,
             MOCK_PLUGGY_REVOKED_ITEMS: ['aaa', 'bbb']
         });
     });
 
-    it('exige o driver explícito fora do ambiente local', () => {
-        expect(() => parseBankConnectionsConfig({})).toThrow('PLUGGY_DRIVER');
-        expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'false' })).toThrow('PLUGGY_DRIVER');
-        expect(parseBankConnectionsConfig({ PLUGGY_DRIVER: 'mock' }).PLUGGY_DRIVER).toBe('mock');
+    it('fora do local o mock nunca é aceito: sem driver ou com mock a Pluggy fica desligada e o boot segue', () => {
+        for (const env of [{}, { IS_LOCAL: 'false' }, { PLUGGY_DRIVER: 'mock' }, { IS_LOCAL: 'false', PLUGGY_DRIVER: 'mock' }]) {
+            const settings = parseBankConnectionsConfig(env);
+
+            expect(settings.PLUGGY_DRIVER).toBe('live');
+            expect(settings.PLUGGY_ENABLED).toBe(false);
+        }
+        expect(parseBankConnectionsConfig({ PLUGGY_DRIVER: 'live' }).PLUGGY_ENABLED).toBe(true);
     });
 
     it('recusa driver, url, timeout e caminho inválidos', () => {

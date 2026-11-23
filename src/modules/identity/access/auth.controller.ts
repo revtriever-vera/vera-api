@@ -8,9 +8,11 @@ import { RateLimit } from '../../../core/throttle/rate-limit.decorator';
 import { ProfileApplication, SessionProfile } from '../application/profile.application';
 import { SessionApplication } from '../application/session.application';
 import { SocialLoginApplication, SocialLoginResult } from '../application/social-login.application';
-import { LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
+import { LOGIN_AUDIENCES, LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
 import { AuthTokens, RequestMeta } from '../ports/session-issuer.port';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
+import { RequiresRole } from '../services/requires-role.decorator';
+import { RolesGuard } from '../services/roles.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import {
     FacebookLoginDto,
@@ -25,6 +27,7 @@ import {
     UpdatePreferencesDto,
     updatePreferencesSchema
 } from '../validation/auth.schemas';
+import { GoogleLoginResponse, googleLoginResponseSchema } from '../validation/totp.schemas';
 
 const SOCIAL_LOGIN_LIMIT: number = 30;
 const SOCIAL_LOGIN_WINDOW_SECONDS: number = 15 * 60;
@@ -51,10 +54,16 @@ export class AuthController {
         summary: 'Sign in (or sign up) with a Google ID token',
         description:
             'Verifies the ID token against Google, then signs the person in. A person never seen before gets a company and an ' +
-            'owner user in the same call. Sets the rt_refresh cookie.'
+            'owner user in the same call. Sets the rt_refresh cookie. With audience `admin` no session is issued: the answer is ' +
+            'a `totp_required` challenge (authenticator already active) or a `totp_enrollment_required` setup token, and the session ' +
+            'only comes from the /auth/totp endpoints.'
     })
     @ApiZodBody(googleLoginSchema)
-    @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
+    @ApiZodResponse({
+        status: 200,
+        description: 'Session issued (refresh cookie set), or the second-factor step for audience `admin`',
+        schema: googleLoginResponseSchema
+    })
     @ApiProblemResponse({
         status: 401,
         description: 'Invalid Google token (identity.invalid_google_token)',
@@ -62,8 +71,25 @@ export class AuthController {
     })
     @ApiProblemResponse({
         status: 409,
-        description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)',
+        description:
+            'Email already belongs to an account that cannot be linked (identity.email_in_use). With an invite: the verified email is not the invited one (invites.email_mismatch) or the person already has an account with data or with other people (members.account_not_empty)',
         example: { type: 'identity.email_in_use', title: 'EmailInUseError', status: 409 }
+    })
+    @ApiProblemResponse({
+        status: 410,
+        description: 'The invite does not exist, expired, was revoked or was already used (invites.invalid)',
+        example: { type: 'invites.invalid', title: 'InviteInvalidError', status: 410 }
+    })
+    @ApiProblemResponse({
+        status: 403,
+        description:
+            'Audience `admin` with a person outside the platform company (identity.platform_only), or the app audience with a person of the platform company (identity.admin_audience_required)',
+        example: { type: 'identity.platform_only', title: 'PlatformOnlyError', status: 403 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'Audience `admin` in a self-hosted deployment (identity.platform_disabled)',
+        example: { type: 'identity.platform_disabled', title: 'PlatformDisabledError', status: 404 }
     })
     @ApiProblemResponse({
         status: 429,
@@ -79,8 +105,11 @@ export class AuthController {
         @Body() body: GoogleLoginDto,
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
-    ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, req, res);
+    ): Promise<GoogleLoginResponse> {
+        if (body.audience === LOGIN_AUDIENCES.admin) {
+            return this.socialLogin.loginAdmin(body.idToken, this.meta(req));
+        }
+        return this.signIn(LOGIN_PROVIDERS.google, body.idToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }
 
     @Post('facebook')
@@ -106,13 +135,19 @@ export class AuthController {
     })
     @ApiProblemResponse({
         status: 409,
-        description: 'Email already belongs to an account that cannot be linked (identity.email_in_use)',
+        description:
+            'Email already belongs to an account that cannot be linked (identity.email_in_use). With an invite: the verified email is not the invited one (invites.email_mismatch) or the person already has an account with data or with other people (members.account_not_empty)',
         example: { type: 'identity.email_in_use', title: 'EmailInUseError', status: 409 }
     })
     @ApiProblemResponse({
         status: 422,
         description: 'Facebook account did not share an email (identity.email_not_provided)',
         example: { type: 'identity.email_not_provided', title: 'EmailNotProvidedError', status: 422 }
+    })
+    @ApiProblemResponse({
+        status: 410,
+        description: 'The invite does not exist, expired, was revoked or was already used (invites.invalid)',
+        example: { type: 'invites.invalid', title: 'InviteInvalidError', status: 410 }
     })
     @ApiProblemResponse({
         status: 429,
@@ -134,7 +169,7 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ): Promise<LoginResponse> {
-        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, req, res);
+        return this.signIn(LOGIN_PROVIDERS.facebook, body.accessToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }
 
     @Post('refresh')
@@ -170,7 +205,7 @@ export class AuthController {
     }
 
     @Get('me')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Current session identity',
@@ -187,7 +222,8 @@ export class AuthController {
     }
 
     @Patch('me/preferences')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RequiresRole('viewer')
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Save the preferences of the signed-in person',
@@ -211,14 +247,25 @@ export class AuthController {
         return this.profile.updatePreferences(body);
     }
 
-    private async signIn(provider: LoginProvider, credential: string, req: Request, res: Response): Promise<LoginResponse> {
-        const result: SocialLoginResult = await this.socialLogin.login(provider, credential, this.meta(req));
+    private async signIn(
+        provider: LoginProvider,
+        credential: string,
+        tokens: { readonly invite: string | undefined; readonly offer: string | undefined },
+        req: Request,
+        res: Response
+    ): Promise<LoginResponse> {
+        return this.respond(await this.socialLogin.login(provider, credential, this.meta(req), tokens.invite, tokens.offer), res);
+    }
+
+    private respond(result: SocialLoginResult, res: Response): LoginResponse {
         this.refreshCookie.write(res, result.tokens.refreshToken);
         return {
             outcome: 'authenticated',
             accessToken: result.tokens.accessToken,
             user: result.tokens.user,
-            isNewAccount: result.isNewAccount
+            isNewAccount: result.isNewAccount,
+            joinedAccount: result.joinedAccount,
+            offer: result.offer
         };
     }
 

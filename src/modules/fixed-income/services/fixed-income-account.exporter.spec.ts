@@ -5,7 +5,7 @@ import { FixedIncomeAccountExporter } from './fixed-income-account.exporter';
 
 describe('FixedIncomeAccountExporter', () => {
     it('exporta só os títulos reais, na seção fixed_income, sem campos internos', async () => {
-        const listReal = vi.fn().mockResolvedValue([makeTitle({ id: 'a' })]);
+        const listReal = vi.fn().mockResolvedValue([makeTitle({ id: 'a', issuerId: 'banco-inter' })]);
         const exporter = new FixedIncomeAccountExporter({ listReal } as unknown as FixedIncomeTitleDomain);
 
         const exported = await exporter.exportAll();
@@ -16,6 +16,8 @@ describe('FixedIncomeAccountExporter', () => {
                 id: 'a',
                 kind: 'cdb',
                 name: 'CDB Banco Exemplo',
+                issuerId: 'banco-inter',
+                holderUserId: null,
                 indexer: 'cdi_percent',
                 rateBps: 11000,
                 currency: 'BRL',

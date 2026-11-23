@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { holderQuerySchema } from '../../../shared/holder/holder-filter';
 
 const baseCurrencySchema = z
     .enum(['BRL', 'USD'])
@@ -23,6 +24,16 @@ const VALUE_SOURCE_VALUES = [
     'curve_pre',
     'curve_ipca'
 ] as const;
+
+export const holderSchema = z
+    .object({
+        userId: z.string().uuid().describe('Id of the person who holds it'),
+        name: z.string().describe('Name of the person. Untrusted text')
+    })
+    .nullable()
+    .describe('Holder of the holding; null is the whole account ("Conta toda")');
+
+export const portfolioHolderQuerySchema = z.object({ holder: holderQuerySchema });
 
 export const holdingSchema = z.object({
     kind: z
@@ -50,11 +61,23 @@ export const holdingSchema = z.object({
     valueSource: z.enum(VALUE_SOURCE_VALUES).describe('Where the value comes from: the quote provider or the fixed income curve'),
     priceDate: z.string().nullable().describe('Date of the quote, or the valuation date of the title (YYYY-MM-DD)'),
     dollarExposure: z.boolean().describe('True when the holding is quoted in USD or its asset has exposure to the dollar'),
+    sector: z
+        .string()
+        .nullable()
+        .describe('Sector key from the curated profile of the asset; null for fixed income or an asset without profile'),
+    issuerGroupId: z
+        .string()
+        .nullable()
+        .describe(
+            'Slug of the issuer group: the asset group from the curated profile, or the conglomerate of the title issuer; null when unknown'
+        ),
+    issuerId: z.string().nullable().describe('Slug of the issuer of a fixed income title; null for positions and titles without issuer'),
     missingQuote: z.boolean().describe('No quote yet for an asset with quantity: value is 0 and a fetch was requested'),
     stale: z.boolean().describe('The quote is older than the freshness window of its market'),
     estimated: z.boolean().describe('Fixed income valuation uses projected index days'),
     matured: z.boolean().describe('The fixed income title has matured'),
-    missingRate: z.boolean().describe('The exchange rate needed to convert to the base currency is missing: value is 0')
+    missingRate: z.boolean().describe('The exchange rate needed to convert to the base currency is missing: value is 0'),
+    holder: holderSchema
 });
 
 export const holdingsResponseSchema = z.object({
@@ -135,7 +158,8 @@ export const classDetailAssetSchema = z.object({
     gapMinor: minorSchema('Target value minus current value inside the class, in minor units'),
     isZeroQuantity: z.boolean().describe('The position exists with quantity zero'),
     missingQuote: z.boolean().describe('No quote yet for the asset'),
-    stale: z.boolean().describe('The quote is old')
+    stale: z.boolean().describe('The quote is old'),
+    holder: holderSchema
 });
 
 export const classDetailResponseSchema = z.object({
@@ -155,4 +179,5 @@ export type HoldingsResponse = z.infer<typeof holdingsResponseSchema>;
 export type OverviewResponse = z.infer<typeof overviewResponseSchema>;
 export type ClassDetailResponse = z.infer<typeof classDetailResponseSchema>;
 
+export class PortfolioHolderQueryDto extends createZodDto(portfolioHolderQuerySchema) {}
 export class ClassIdParamsDto extends createZodDto(classIdParamsSchema) {}

@@ -10,6 +10,8 @@ describe('fixed income title mapper', () => {
             companyId: 'c',
             kind: 'lci',
             name: 'LCI',
+            issuerId: 'banco-inter',
+            holderUserId: null,
             indexer: 'prefixed',
             rateBps: 1150,
             currency: 'BRL',
@@ -28,26 +30,38 @@ describe('fixed income title mapper', () => {
             appliedAt: '2025-03-09',
             maturityDate: '2027-12-31',
             kind: 'lci',
+            issuerId: 'banco-inter',
             taxRegime: 'exempt'
         });
     });
 
     it('monta a view com a classe e a valorização', () => {
-        const view = toFixedIncomeTitleView(makeTitle(), 'class-1', {
-            asOf: '2025-02-01',
-            valueMinor: 1,
-            currency: 'BRL',
-            accruedBps: 0,
-            matured: false,
-            estimated: false,
-            status: 'ok',
-            source: 'curve_cdi',
-            taxRegime: 'regressive',
-            taxEstimatedMinor: 0,
-            netEstimatedMinor: 1
-        });
+        const view = toFixedIncomeTitleView(
+            makeTitle(),
+            'class-1',
+            {
+                asOf: '2025-02-01',
+                valueMinor: 1,
+                currency: 'BRL',
+                accruedBps: 0,
+                matured: false,
+                estimated: false,
+                status: 'ok',
+                source: 'curve_cdi',
+                taxRegime: 'regressive',
+                taxEstimatedMinor: 0,
+                netEstimatedMinor: 1
+            },
+            null
+        );
 
-        expect(view).toMatchObject({ id: 'title-1', classId: 'class-1', createdAt: '2025-01-06T12:00:00.000Z' });
+        expect(view).toMatchObject({
+            id: 'title-1',
+            classId: 'class-1',
+            createdAt: '2025-01-06T12:00:00.000Z',
+            issuer: null,
+            needsIssuer: true
+        });
         expect(view.valuation.valueMinor).toBe(1);
     });
 });

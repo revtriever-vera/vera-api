@@ -1,0 +1,37 @@
+{
+  "id": "so-cortar-valores-altos",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:shopping": "Compras"
+  },
+  "context": {
+    "meta_economia_pct": "35%",
+    "falta_por_mes": "R$ 9.800",
+    "status": "so_cortar_nao_resolve",
+    "categorias_flexiveis": [
+      {
+        "chave": "shopping",
+        "rotulo_padrao": "Compras",
+        "atual": "R$ 4.200",
+        "media_3m": "R$ 2.800",
+        "cortar": "R$ 1.400",
+        "limite_sugerido": "R$ 2.800"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 9.800"],
+    "mustMention": ["não fecha"],
+    "mustNotMention": ["média"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Para guardar 35% da renda, faltam **R$ 9.800** por mês.",
+    "Baixar ao limite sugerido em [[cat:shopping]] libera R$ 1.400, mas só cortar gastos flexíveis não fecha a conta.",
+    "Ainda faltaria dinheiro mesmo depois dos cortes sugeridos."
+  ]
+}

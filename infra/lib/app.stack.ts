@@ -25,7 +25,7 @@ import { SqsSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { IStringParameter, StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
-import { EnvironmentConfig, MailpitEnvironmentConfig } from '../config/environment';
+import { BillingEnvironmentConfig, EnvironmentConfig, MailpitEnvironmentConfig } from '../config/environment';
 import { APP_PORT, MAILPIT_SMTP_PORT, MAILPIT_UI_PORT } from '../config/ports';
 import { secretsKeyAlias } from './data.stack';
 import { OffHoursSchedule } from './off-hours-schedule';
@@ -43,6 +43,10 @@ const MAILPIT_MAX_MESSAGES: number = 500;
 const MAIL_FEEDBACK_VISIBILITY_SECONDS: number = 90;
 const MAIL_FEEDBACK_MAX_RECEIVES: number = 5;
 const MAIL_FEEDBACK_DLQ_RETENTION_DAYS: number = 14;
+const REVTRIEVER_API_KEY_PARAMETER: string = '/vera/revtriever-api-key';
+const REVTRIEVER_WEBHOOK_TOKEN_PARAMETER: string = '/vera/revtriever-webhook-token';
+const REVTRIEVER_WEBHOOK_SECRETS_PARAMETER: string = '/vera/revtriever-webhook-secrets';
+const GOOGLE_CLIENT_SECRET_PARAMETER: string = '/vera/google-client-secret';
 const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     DATABASE_URL: '/vera/database-url',
     CRYPTO_KEY_HEX: '/vera/crypto-key-hex',
@@ -56,7 +60,8 @@ const SECRET_PARAMETERS: Readonly<Record<string, string>> = {
     FINNHUB_API_KEY: '/vera/finnhub-api-key',
     TWELVEDATA_API_KEY: '/vera/twelvedata-api-key',
     ALPHAVANTAGE_API_KEY: '/vera/alphavantage-api-key',
-    COINGECKO_API_KEY: '/vera/coingecko-api-key'
+    COINGECKO_API_KEY: '/vera/coingecko-api-key',
+    AI_GATEWAY_API_KEY: '/vera/ai-gateway-api-key'
 };
 const OTLP_PROTOCOL: string = 'http/protobuf';
 const TUNNEL_TOKEN_PARAMETER: string = '/vera/tunnel-token';
@@ -330,11 +335,37 @@ export class AppStack extends Stack {
             LOG_LEVEL: 'info',
             DOCS_ENABLED: 'true',
             QUEUES_DASHBOARD_ENABLED: 'true',
-            PLUGGY_DRIVER: 'mock',
             APP_VERSION: props.imageTag,
             COOKIE_SECURE: 'true',
+            DEPLOYMENT_MODE: 'hosted',
+            ...this.billingEnvironment(props.config.billing),
+            LLM_DRIVER: 'live',
+            LLM_MODEL: props.config.llm.model,
+            LLM_PRICE_TABLE: props.config.llm.priceTable,
+            APP_URL: `https://${props.config.appHost}`,
+            ...this.calendarEnvironment(props),
             CORS_ORIGINS: `https://${props.config.appHost}`
         };
+    }
+
+    private calendarEnvironment(props: AppStackProps): Record<string, string> {
+        const redirect: Record<string, string> = {
+            GOOGLE_CALENDAR_REDIRECT_URI: `https://${props.config.apiHost}/calendar/google/callback`
+        };
+        return props.config.calendar.driver === null ? redirect : { GOOGLE_CALENDAR_DRIVER: props.config.calendar.driver, ...redirect };
+    }
+
+    private billingEnvironment(billing: BillingEnvironmentConfig): Record<string, string> {
+        const entries: [string, string | null][] = [
+            ['BILLING_ENGINE_DRIVER', billing.driver],
+            ['REVTRIEVER_API_URL', billing.apiUrl],
+            ['REVTRIEVER_PLAN_ID', billing.planId],
+            ['REVTRIEVER_GATEWAY_CONNECTION_ID', billing.gatewayConnectionId]
+        ];
+        const present: [string, string][] = entries.filter(
+            (entry: [string, string | null]): entry is [string, string] => entry[1] !== null
+        );
+        return Object.fromEntries(present);
     }
 
     private infraEnvironment(props: AppStackProps): Record<string, string> {
@@ -385,6 +416,14 @@ export class AppStack extends Stack {
 
     private secrets(config: EnvironmentConfig, idPrefix: string = 'Secret'): Record<string, EcsSecret> {
         const parameters: Record<string, string> = { ...SECRET_PARAMETERS };
+        if (config.billing.driver === 'revtriever') {
+            parameters['REVTRIEVER_API_KEY'] = REVTRIEVER_API_KEY_PARAMETER;
+            parameters['REVTRIEVER_WEBHOOK_TOKEN'] = REVTRIEVER_WEBHOOK_TOKEN_PARAMETER;
+            parameters['REVTRIEVER_WEBHOOK_SECRETS'] = REVTRIEVER_WEBHOOK_SECRETS_PARAMETER;
+        }
+        if (config.calendar.driver === 'google') {
+            parameters['GOOGLE_CLIENT_SECRET'] = GOOGLE_CLIENT_SECRET_PARAMETER;
+        }
         if (config.otlpHeadersParameter !== null) {
             parameters['OTEL_EXPORTER_OTLP_HEADERS'] = config.otlpHeadersParameter;
         }

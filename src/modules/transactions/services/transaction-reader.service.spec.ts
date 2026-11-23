@@ -89,3 +89,43 @@ describe('TransactionReaderService.countForExport', () => {
         expect(totals).toHaveBeenCalledWith(FILTER);
     });
 });
+
+describe('TransactionReaderService para recorrências', () => {
+    it('pagina a janela por cursor e devolve só o que o detector precisa, sem consultar contas', async () => {
+        const full: Transaction[] = Array.from({ length: 1000 }, (_, index: number) => makeTransaction({ id: `id-${String(index)}` }));
+        const listAfter: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValueOnce(full)
+            .mockResolvedValueOnce([makeTransaction({ amountMinor: '-5590', categorySource: 'dictionary', installmentTotal: 3 })]);
+        const service: TransactionReaderService = new TransactionReaderService(
+            { listAfter } as unknown as TransactionDomain,
+            {} as unknown as FinancialAccountDomain
+        );
+
+        const pages = [];
+        for await (const page of service.pagesForRecurrence('2025-10-01', '2026-11-23')) {
+            pages.push(page);
+        }
+
+        expect(pages.map((page) => page.length)).toEqual([1000, 1]);
+        expect(listAfter).toHaveBeenNthCalledWith(1, { fromDate: '2025-10-01', toDate: '2026-11-23' }, null, 1000);
+        expect(listAfter).toHaveBeenNthCalledWith(
+            2,
+            { fromDate: '2025-10-01', toDate: '2026-11-23' },
+            { date: '2026-09-10', id: 'id-999' },
+            1000
+        );
+        expect(pages[1]?.[0]).toMatchObject({ amountMinor: -5590, categorySource: 'dictionary', installmentTotal: 3, isSample: false });
+    });
+
+    it('lê por ids com a mesma forma', async () => {
+        const listByIds: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue([makeTransaction({ id: 'x', counterpartyKey: 'cp-1' })]);
+        const service: TransactionReaderService = new TransactionReaderService(
+            { listByIds } as unknown as TransactionDomain,
+            {} as unknown as FinancialAccountDomain
+        );
+
+        await expect(service.findForRecurrence(['x'])).resolves.toMatchObject([{ id: 'x', counterpartyKey: 'cp-1' }]);
+        expect(listByIds).toHaveBeenCalledWith(['x']);
+    });
+});

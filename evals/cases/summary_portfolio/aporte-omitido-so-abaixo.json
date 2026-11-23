@@ -1,0 +1,53 @@
+{
+  "id": "aporte-omitido-so-abaixo",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:acoes_br": "Ações Brasil",
+    "cls:fii": "FIIs"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$ 72.000",
+    "exposicao_dolar_pct": "5%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "atual": "30%",
+        "meta": "40%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "atual": "40%",
+        "meta": "40%",
+        "situacao": "dentro"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "FIIs",
+        "atual": "30%",
+        "meta": "20%",
+        "situacao": "acima"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 72.000"],
+    "mustMention": [],
+    "mustNotMention": ["de aporte, a sugestão"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **R$ 72.000**, com 5% em dólar.",
+    "[[cls:rf_pos]] está abaixo da meta (30% contra 40%) e [[cls:fii]] está acima (30% contra 20%).",
+    "Não precisa vender; basta não aportar nelas por um tempo."
+  ]
+}

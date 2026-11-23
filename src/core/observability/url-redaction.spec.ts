@@ -10,6 +10,48 @@ describe('redação de segredo na URL', () => {
         expect(redactUrl('/webhooks/hubspot/segredo?tentativa=2')).toBe('/webhooks/hubspot/<oculto>?tentativa=2');
     });
 
+    it('esconde o token do convite, que é a credencial do link', () => {
+        expect(redactUrl('/invites/abc123SEGREDO')).toBe('/invites/<oculto>');
+        expect(redactUrl('/invites/abc123SEGREDO?x=1')).toBe('/invites/<oculto>?x=1');
+        expect(redactUrl('/notifications/unsubscribe/abc123SEGREDO.f00d')).toBe('/notifications/unsubscribe/<oculto>');
+    });
+
+    it('esconde o token da captura de cartão de dev e qualquer rota com /token/ no path', () => {
+        expect(redactUrl('/billing/_dev/capture/segredo')).toBe('/billing/_dev/capture/<oculto>');
+        expect(redactUrl('/qualquer/token/segredo/mais')).toBe('/qualquer/token/<oculto>/mais');
+    });
+
+    it('esconde o token do webhook da Revtriever, que e metade da autenticacao', () => {
+        expect(redactUrl('/billing/revtriever/events/segredo')).toBe('/billing/revtriever/events/<oculto>');
+        expect(redactUrl('/billing/revtriever/events/segredo?x=1')).toBe('/billing/revtriever/events/<oculto>?x=1');
+    });
+
+    it('tira o token do convite também da linha serializada do log', () => {
+        const logged: string = JSON.stringify(redactRequest({ url: '/invites/SEGREDO', params: { token: 'SEGREDO' } }));
+
+        expect(logged).not.toContain('SEGREDO');
+    });
+
+    it('esconde code e state do callback do Google Agenda, na URL e na query', () => {
+        const url: string = '/calendar/google/callback?code=4/0AbCd&state=estado.cifrado&scope=calendar';
+
+        expect(redactUrl(url)).toBe('/calendar/google/callback?code=<oculto>&state=<oculto>&scope=calendar');
+        const logged: string = JSON.stringify(
+            redactRequest({ url, query: { code: '4/0AbCd', state: 'estado.cifrado', scope: 'calendar' } })
+        );
+        expect(logged).not.toContain('4/0AbCd');
+        expect(logged).not.toContain('estado.cifrado');
+        expect(logged).toContain('calendar');
+    });
+
+    it('esconde também no callback da instalação auto-hospedada', () => {
+        expect(redactUrl('/google/callback?code=abc&state=xyz')).toBe('/google/callback?code=<oculto>&state=<oculto>');
+    });
+
+    it('não esconde code e state de outras rotas', () => {
+        expect(redactUrl('/transactions?code=abc&state=open')).toBe('/transactions?code=abc&state=open');
+    });
+
     it('não mexe em rota sem segredo', () => {
         expect(redactUrl('/team/members/019fda2b-a34e-7798')).toBe('/team/members/019fda2b-a34e-7798');
     });

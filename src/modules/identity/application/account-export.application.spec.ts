@@ -3,6 +3,7 @@ import { AlsAppContext } from '../../../core/context/als-app-context';
 import { TooManyAttemptsError } from '../../../core/throttle/throttle.service';
 import { ThrottleService } from '../../../core/throttle/throttle.service';
 import { AccountExportFailedError, UnauthorizedError } from '../domain/identity.errors';
+import { AccountExportBuilder } from '../services/account-export.builder';
 import { AccountDataRegistry } from '../services/account-data.registry';
 import { IdentityAccountExport, IdentityAccountExporter } from '../services/identity-account.exporter';
 import { IdentityLogService } from '../services/identity-log.service';
@@ -38,8 +39,10 @@ function build(sections: () => Promise<Record<string, unknown>> = async () => Pr
     const context: AlsAppContext = new AlsAppContext();
     const application: AccountExportApplication = new AccountExportApplication(
         { assertAllowed } as unknown as ThrottleService,
-        { export: vi.fn().mockResolvedValue(ACCOUNT) } as unknown as IdentityAccountExporter,
-        { exportSections: vi.fn().mockImplementation(sections) } as unknown as AccountDataRegistry,
+        new AccountExportBuilder(
+            { export: vi.fn().mockResolvedValue(ACCOUNT) } as unknown as IdentityAccountExporter,
+            { exportSections: vi.fn().mockImplementation(sections) } as unknown as AccountDataRegistry
+        ),
         { exportRequested } as unknown as IdentityLogService,
         { accountExport } as unknown as IdentityMetricsService,
         context

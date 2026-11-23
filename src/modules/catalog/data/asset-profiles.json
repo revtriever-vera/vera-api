@@ -1,0 +1,542 @@
+[
+  {
+    "market": "B3",
+    "symbol": "AAPL34",
+    "sector": "tecnologia",
+    "issuerGroupId": "apple"
+  },
+  {
+    "market": "B3",
+    "symbol": "ABEV3",
+    "sector": "consumo",
+    "issuerGroupId": "ambev"
+  },
+  {
+    "market": "B3",
+    "symbol": "AMZO34",
+    "sector": "varejo",
+    "issuerGroupId": "amazon"
+  },
+  {
+    "market": "B3",
+    "symbol": "B3SA3",
+    "sector": "financeiro",
+    "issuerGroupId": "b3"
+  },
+  {
+    "market": "B3",
+    "symbol": "BBAS3",
+    "sector": "financeiro",
+    "issuerGroupId": "banco-do-brasil"
+  },
+  {
+    "market": "B3",
+    "symbol": "BBDC4",
+    "sector": "financeiro",
+    "issuerGroupId": "bradesco"
+  },
+  {
+    "market": "B3",
+    "symbol": "BBSE3",
+    "sector": "financeiro",
+    "issuerGroupId": "banco-do-brasil"
+  },
+  {
+    "market": "B3",
+    "symbol": "BOVA11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "BOVV11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "BTLG11",
+    "sector": "imobiliario_logistica",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "COCA34",
+    "sector": "consumo",
+    "issuerGroupId": "coca-cola"
+  },
+  {
+    "market": "B3",
+    "symbol": "DIVO11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "EGIE3",
+    "sector": "energia_eletrica",
+    "issuerGroupId": "engie-brasil"
+  },
+  {
+    "market": "B3",
+    "symbol": "ETHE11",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "EURP11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "GOGL34",
+    "sector": "tecnologia",
+    "issuerGroupId": "alphabet"
+  },
+  {
+    "market": "B3",
+    "symbol": "GOLD11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "HASH11",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "HGLG11",
+    "sector": "imobiliario_logistica",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "IMAB11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "IRFM11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "ITSA4",
+    "sector": "financeiro",
+    "issuerGroupId": "itau-unibanco"
+  },
+  {
+    "market": "B3",
+    "symbol": "ITUB4",
+    "sector": "financeiro",
+    "issuerGroupId": "itau-unibanco"
+  },
+  {
+    "market": "B3",
+    "symbol": "IVVB11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "JNJB34",
+    "sector": "saude",
+    "issuerGroupId": "johnson-johnson"
+  },
+  {
+    "market": "B3",
+    "symbol": "KNCR11",
+    "sector": "imobiliario_recebiveis",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "KNRI11",
+    "sector": "imobiliario_hibrido",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "LFTS11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "LREN3",
+    "sector": "varejo",
+    "issuerGroupId": "lojas-renner"
+  },
+  {
+    "market": "B3",
+    "symbol": "MSFT34",
+    "sector": "tecnologia",
+    "issuerGroupId": "microsoft"
+  },
+  {
+    "market": "B3",
+    "symbol": "MXRF11",
+    "sector": "imobiliario_recebiveis",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "NASD11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "NVDC34",
+    "sector": "tecnologia",
+    "issuerGroupId": "nvidia"
+  },
+  {
+    "market": "B3",
+    "symbol": "PETR4",
+    "sector": "petroleo_gas",
+    "issuerGroupId": "petrobras"
+  },
+  {
+    "market": "B3",
+    "symbol": "PRIO3",
+    "sector": "petroleo_gas",
+    "issuerGroupId": "prio"
+  },
+  {
+    "market": "B3",
+    "symbol": "PVBI11",
+    "sector": "imobiliario_lajes",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "QBTC11",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "RENT3",
+    "sector": "bens_industriais",
+    "issuerGroupId": "localiza"
+  },
+  {
+    "market": "B3",
+    "symbol": "SMAL11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "SPXI11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "SUZB3",
+    "sector": "papel_celulose",
+    "issuerGroupId": "suzano"
+  },
+  {
+    "market": "B3",
+    "symbol": "TAEE11",
+    "sector": "energia_eletrica",
+    "issuerGroupId": "taesa"
+  },
+  {
+    "market": "B3",
+    "symbol": "TGAR11",
+    "sector": "imobiliario_hibrido",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "TSLA34",
+    "sector": "consumo",
+    "issuerGroupId": "tesla"
+  },
+  {
+    "market": "B3",
+    "symbol": "VALE3",
+    "sector": "mineracao_siderurgia",
+    "issuerGroupId": "vale"
+  },
+  {
+    "market": "B3",
+    "symbol": "VISC11",
+    "sector": "imobiliario_shoppings",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "WEGE3",
+    "sector": "bens_industriais",
+    "issuerGroupId": "weg"
+  },
+  {
+    "market": "B3",
+    "symbol": "XINA11",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "XPLG11",
+    "sector": "imobiliario_logistica",
+    "issuerGroupId": null
+  },
+  {
+    "market": "B3",
+    "symbol": "XPML11",
+    "sector": "imobiliario_shoppings",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "ADA",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "AVAX",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "BNB",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "BTC",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "DOGE",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "DOT",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "ETH",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "LINK",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "LTC",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "SOL",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "TRX",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "USDC",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "USDT",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "CRYPTO",
+    "symbol": "XRP",
+    "sector": "cripto",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "AAPL",
+    "sector": "tecnologia",
+    "issuerGroupId": "apple"
+  },
+  {
+    "market": "US",
+    "symbol": "AMT",
+    "sector": "imobiliario_hibrido",
+    "issuerGroupId": "american-tower"
+  },
+  {
+    "market": "US",
+    "symbol": "AMZN",
+    "sector": "varejo",
+    "issuerGroupId": "amazon"
+  },
+  {
+    "market": "US",
+    "symbol": "EQIX",
+    "sector": "imobiliario_hibrido",
+    "issuerGroupId": "equinix"
+  },
+  {
+    "market": "US",
+    "symbol": "GOOGL",
+    "sector": "tecnologia",
+    "issuerGroupId": "alphabet"
+  },
+  {
+    "market": "US",
+    "symbol": "IVV",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "IYR",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "JNJ",
+    "sector": "saude",
+    "issuerGroupId": "johnson-johnson"
+  },
+  {
+    "market": "US",
+    "symbol": "JPM",
+    "sector": "financeiro",
+    "issuerGroupId": "jpmorgan"
+  },
+  {
+    "market": "US",
+    "symbol": "KO",
+    "sector": "consumo",
+    "issuerGroupId": "coca-cola"
+  },
+  {
+    "market": "US",
+    "symbol": "META",
+    "sector": "tecnologia",
+    "issuerGroupId": "meta"
+  },
+  {
+    "market": "US",
+    "symbol": "MSFT",
+    "sector": "tecnologia",
+    "issuerGroupId": "microsoft"
+  },
+  {
+    "market": "US",
+    "symbol": "NVDA",
+    "sector": "tecnologia",
+    "issuerGroupId": "nvidia"
+  },
+  {
+    "market": "US",
+    "symbol": "O",
+    "sector": "imobiliario_shoppings",
+    "issuerGroupId": "realty-income"
+  },
+  {
+    "market": "US",
+    "symbol": "PLD",
+    "sector": "imobiliario_logistica",
+    "issuerGroupId": "prologis"
+  },
+  {
+    "market": "US",
+    "symbol": "PSA",
+    "sector": "imobiliario_hibrido",
+    "issuerGroupId": "public-storage"
+  },
+  {
+    "market": "US",
+    "symbol": "QQQ",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "SCHD",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "SCHH",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "SPG",
+    "sector": "imobiliario_shoppings",
+    "issuerGroupId": "simon-property"
+  },
+  {
+    "market": "US",
+    "symbol": "SPY",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "TSLA",
+    "sector": "consumo",
+    "issuerGroupId": "tesla"
+  },
+  {
+    "market": "US",
+    "symbol": "VNQ",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "VOO",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "VTI",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  },
+  {
+    "market": "US",
+    "symbol": "XLRE",
+    "sector": "etf_indice",
+    "issuerGroupId": null
+  }
+]

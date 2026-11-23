@@ -1,5 +1,6 @@
 import { Insertable, Selectable } from 'kysely';
 import { FixedIncomeTitles, IndexSeriesPoints } from '../../../core/database/generated/database.types';
+import type { IssuerKind } from '../../issuers/services/issuer-directory.service';
 import { Currency, FixedIncomeValuation, Indexer, TAX_REGIMES, TaxRegime } from './curve/curve.types';
 
 export type FixedIncomeTitleRow = Selectable<FixedIncomeTitles>;
@@ -75,6 +76,8 @@ export interface TitleTerms {
 export interface FixedIncomeTitle extends TitleTerms {
     readonly id: string;
     readonly name: string;
+    readonly issuerId: string | null;
+    readonly holderUserId: string | null;
     readonly taxRegime: TaxRegime;
     readonly isSample: boolean;
     readonly createdAt: Date;
@@ -84,6 +87,15 @@ export interface FixedIncomeTitle extends TitleTerms {
 export interface ValuedTitle {
     readonly title: FixedIncomeTitle;
     readonly valuation: FixedIncomeValuation;
+}
+
+export interface TitleIssuerView {
+    readonly id: string;
+    readonly name: string;
+    readonly groupId: string;
+    readonly groupName: string;
+    readonly kind: IssuerKind;
+    readonly fgcAssociated: boolean;
 }
 
 export interface FixedIncomeTitleView {
@@ -97,6 +109,9 @@ export interface FixedIncomeTitleView {
     readonly appliedAt: string;
     readonly maturityDate: string;
     readonly classId: string;
+    readonly holderUserId: string | null;
+    readonly issuer: TitleIssuerView | null;
+    readonly needsIssuer: boolean;
     readonly createdAt: string;
     readonly updatedAt: string;
     readonly valuation: FixedIncomeValuation;

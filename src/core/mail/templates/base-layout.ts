@@ -79,6 +79,12 @@ function footerOf(unsubscribe: string, automatic: string): string {
     </td></tr>`;
 }
 
+/** Rodapé da parte text/plain: a mesma frase de e-mail automático e o link de descadastro do HTML. */
+export function textFooter(locale: AppLocale, unsubscribeUrl?: string): string {
+    const copy: FooterCopy = FOOTER_COPY[locale];
+    return unsubscribeUrl ? `\n\n${copy.automatic}\n${copy.unsubscribe}: ${unsubscribeUrl}` : `\n\n${copy.automatic}`;
+}
+
 export function baseLayout(input: BaseLayoutInput): string {
     const locale: AppLocale = input.locale ?? DEFAULT_LOCALE;
     const copy: FooterCopy = FOOTER_COPY[locale];

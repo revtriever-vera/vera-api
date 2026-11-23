@@ -70,4 +70,22 @@ describe('DateUtil', () => {
         expect(DateUtil.isSameCalendarDay(null, '2026-01-01')).toBe(false);
         expect(DateUtil.isSameCalendarDay('not-a-date', '2026-01-01')).toBe(false);
     });
+
+    it('startOfNextMonthIn returns 00:00 of day 1 of the next month in the zone', () => {
+        expect(DateUtil.startOfNextMonthIn('America/Sao_Paulo', new Date('2026-10-15T12:00:00Z')).toISOString()).toBe(
+            '2026-11-01T03:00:00.000Z'
+        );
+        expect(DateUtil.startOfNextMonthIn('America/Sao_Paulo', new Date('2026-12-31T12:00:00Z')).toISOString()).toBe(
+            '2027-01-01T03:00:00.000Z'
+        );
+        expect(DateUtil.startOfNextMonthIn('UTC', new Date('2026-02-28T23:59:59Z')).toISOString()).toBe('2026-03-01T00:00:00.000Z');
+    });
+
+    it('daysLeftUntil rounds up and never goes below zero', () => {
+        const now: Date = new Date('2026-11-10T12:00:00Z');
+        expect(DateUtil.daysLeftUntil(new Date('2026-11-13T12:00:00Z'), now)).toBe(3);
+        expect(DateUtil.daysLeftUntil(new Date('2026-11-13T00:00:00Z'), now)).toBe(3);
+        expect(DateUtil.daysLeftUntil(new Date('2026-11-10T12:00:01Z'), now)).toBe(1);
+        expect(DateUtil.daysLeftUntil(new Date('2026-11-09T12:00:00Z'), now)).toBe(0);
+    });
 });

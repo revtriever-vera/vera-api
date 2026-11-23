@@ -21,6 +21,8 @@ function makeUser(overrides: Partial<User> = {}): User {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        removedAt: null,
+        removedByUserId: null,
         ...overrides
     };
 }
@@ -30,9 +32,11 @@ const COMPANY: Company = {
     name: 'Ana',
     locale: 'pt-BR',
     timezone: 'America/Sao_Paulo',
+    isPlatform: false,
     createdAt: new Date(),
     updatedAt: new Date(),
-    deletedAt: null
+    deletedAt: null,
+    trialStartedAt: null
 };
 
 const SESSION: Session = {

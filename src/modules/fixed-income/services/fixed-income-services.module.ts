@@ -2,13 +2,22 @@ import { Module } from '@nestjs/common';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { FixedIncomeDomainModule } from '../domain/fixed-income-domain.module';
 import { FixedIncomeAccountExporter } from './fixed-income-account.exporter';
+import { FixedIncomeHolderDepartureHandler } from './holder-departure.handler';
 import { FixedIncomeLogService } from './fixed-income-log.service';
 import { FixedIncomeMetricsService } from './fixed-income-metrics.service';
+import { IndexSeriesReaderService } from './index-series-reader.service';
 import { FixedIncomeValuationService } from './fixed-income-valuation.service';
 
 @Module({
     imports: [FixedIncomeDomainModule, ObservabilityModule],
-    providers: [FixedIncomeAccountExporter, FixedIncomeLogService, FixedIncomeMetricsService, FixedIncomeValuationService],
-    exports: [FixedIncomeLogService, FixedIncomeMetricsService, FixedIncomeValuationService]
+    providers: [
+        FixedIncomeAccountExporter,
+        FixedIncomeHolderDepartureHandler,
+        FixedIncomeLogService,
+        FixedIncomeMetricsService,
+        FixedIncomeValuationService,
+        IndexSeriesReaderService
+    ],
+    exports: [FixedIncomeLogService, FixedIncomeMetricsService, FixedIncomeValuationService, IndexSeriesReaderService]
 })
 export class FixedIncomeServicesModule {}

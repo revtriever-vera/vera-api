@@ -4,6 +4,7 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { AssetSearchApplication } from '../../application/asset-search.application';
 import {
     AssetItem,
@@ -28,12 +29,14 @@ const ITEM_EXAMPLE: AssetItem = {
     suggestedClassKey: 'acoes_eua',
     dollarExposure: true,
     quantityDecimals: 0,
-    maturityDate: null
+    maturityDate: null,
+    sector: null,
+    issuerGroupId: null
 };
 
 @ApiTags('catalog')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('catalog')
 export class CatalogController {
     public constructor(private readonly search: AssetSearchApplication) {}

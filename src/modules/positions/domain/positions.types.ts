@@ -26,6 +26,7 @@ export interface PositionView {
     readonly quantity: string;
     readonly averagePrice: string | null;
     readonly classId: string;
+    readonly holderUserId: string | null;
     readonly createdAt: string;
     readonly updatedAt: string;
 }
@@ -35,9 +36,11 @@ export interface CreatePositionInput {
     readonly quantity: string;
     readonly averagePrice?: string | null;
     readonly classId?: string;
+    readonly holderUserId?: string | null;
 }
 
 export interface UpdatePositionInput {
     readonly quantity?: string;
     readonly averagePrice?: string | null;
+    readonly holderUserId?: string | null;
 }

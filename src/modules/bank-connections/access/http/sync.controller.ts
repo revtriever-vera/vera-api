@@ -4,6 +4,8 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ManualSyncApplication } from '../../application/manual-sync.application';
 import { ConnectionIdParamsDto, syncAllQueuedSchema, syncQueuedSchema } from '../../validation/bank-connections.schemas';
 
@@ -27,12 +29,13 @@ function perCompanyAndConnection(subject: RateLimitSubject): string | null {
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/connections')
 export class SyncController {
     public constructor(private readonly sync: ManualSyncApplication) {}
 
     @Post('sync')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.ACCEPTED)
     @Header('Cache-Control', NO_STORE)
     @RateLimit({ key: 'pluggy-sync-all', limit: SYNC_ALL_ATTEMPTS, windowSeconds: TEN_MINUTES_SECONDS, identify: perCompany })
@@ -65,6 +68,7 @@ export class SyncController {
     }
 
     @Post(':id/sync')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.ACCEPTED)
     @Header('Cache-Control', NO_STORE)
     @RateLimit({ key: 'pluggy-sync-one', limit: SYNC_ONE_ATTEMPTS, windowSeconds: TEN_MINUTES_SECONDS, identify: perCompanyAndConnection })

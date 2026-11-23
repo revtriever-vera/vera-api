@@ -34,10 +34,11 @@ describe('portfolio export', () => {
         await harness.stop();
     });
 
-    async function createTitle(account: Account, name: string): Promise<void> {
+    async function createTitle(account: Account, name: string, issuerId?: string): Promise<void> {
         const response = await harness.call(account.token, 'POST', '/fixed-income/titles', {
             kind: 'cdb',
             name,
+            issuerId,
             indexer: 'cdi_percent',
             rateBps: 11000,
             appliedMinor: 10_000_000,
@@ -50,7 +51,7 @@ describe('portfolio export', () => {
     async function prototypeAccount(label: string): Promise<Account> {
         const account: Account = await harness.signUp(label);
         await addPrototypePositions(harness, account, assetIds);
-        await createTitle(account, 'CDB Banco');
+        await createTitle(account, 'CDB Banco', 'banco-pan');
         await createTitle(account, 'LCI Banco');
         await createTitle(account, '=1+1');
         return account;
@@ -64,7 +65,7 @@ describe('portfolio export', () => {
         await harness.pg.query(`UPDATE "Users" SET "locale" = 'en' WHERE "id" = $1`, [account.user.id]);
         const issuer: SessionIssuerPort = harness.app.get(SessionIssuerPort, { strict: false });
         const tokens: AuthTokens = await harness.inCompany(account.company.id, async () =>
-            issuer.issueForNewLogin({ ...account.user, locale: 'en' }, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin({ ...account.user, locale: 'en' }, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google', 'app')
         );
         return tokens.accessToken;
     }
@@ -91,16 +92,25 @@ describe('portfolio export', () => {
         const text: string = response.bytes.toString('utf8');
         expect(text.startsWith(BOM)).toBe(true);
         const lines: string[] = linesOf(response);
-        expect(lines[0]).toBe(`${BOM}Ativo;Nome;Classe;Quantidade;Valor (BRL);Fonte do valor`);
+        expect(lines[0]).toBe(`${BOM}Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular`);
         expect(lines).toHaveLength(20);
-        expect(lines).toContain('ITUB4;ITUB4;Ações Brasil;2000;75600,00;B3 via brapi');
-        expect(lines.some((line: string) => line.startsWith('BTC;') && line.includes(';0,45;') && line.endsWith('CoinGecko'))).toBe(true);
+        expect(lines).toContain('ITUB4;ITUB4;Ações Brasil;;;;2000;75600,00;B3 via brapi;Conta toda');
+        expect(lines.some((line: string) => line.startsWith('CDB Banco;CDB Banco;') && line.includes(';CDB;Banco Pan;BTG Pactual;;'))).toBe(
+            true
+        );
+        expect(lines.some((line: string) => line.startsWith('LCI Banco;') && line.includes(';CDB;;;;'))).toBe(true);
         expect(
-            lines.some((line: string) => line.startsWith('TESOURO-SELIC-2029;') && line.endsWith(';3,2;51840,00;Preço oficial do Tesouro'))
+            lines.some((line: string) => line.startsWith('BTC;') && line.includes(';0,45;') && line.endsWith('CoinGecko;Conta toda'))
+        ).toBe(true);
+        expect(
+            lines.some(
+                (line: string) =>
+                    line.startsWith('TESOURO-SELIC-2029;') && line.endsWith(';3,2;51840,00;Preço oficial do Tesouro;Conta toda')
+            )
         ).toBe(true);
         const cdb: string = lines.find((line: string) => line.startsWith('CDB Banco;')) as string;
-        expect(cdb.split(';')[3]).toBe('');
-        expect(cdb.endsWith('Curva do CDI (BC)')).toBe(true);
+        expect(cdb.split(';')[6]).toBe('');
+        expect(cdb.endsWith('Curva do CDI (BC);Conta toda')).toBe(true);
     });
 
     it('bate com a lista de holdings: mesma ordem e mesmos valores, sem id interno', async () => {
@@ -114,7 +124,7 @@ describe('portfolio export', () => {
         const lines: string[] = linesOf(await download(account, 'csv')).slice(1);
 
         expect(lines.map((line: string) => line.split(';')[0])).toEqual(holdings.body.data.map((item) => item.symbol.replace(/^=/, "'=")));
-        expect(lines.map((line: string) => Math.round(Number((line.split(';')[4] as string).replace(',', '.')) * 100))).toEqual(
+        expect(lines.map((line: string) => Math.round(Number((line.split(';')[7] as string).replace(',', '.')) * 100))).toEqual(
             holdings.body.data.map((item) => item.valueMinor)
         );
         const everything: string = lines.join('\n');
@@ -135,19 +145,34 @@ describe('portfolio export', () => {
         const sheet: Worksheet = await sheetOf(response);
         expect(sheet.name).toBe('Carteira');
         expect(sheet.rowCount).toBe(20);
-        expect(sheet.getRow(1).values).toEqual([undefined, 'Ativo', 'Nome', 'Classe', 'Quantidade', 'Valor (BRL)', 'Fonte do valor']);
+        expect(sheet.getRow(1).values).toEqual([
+            undefined,
+            'Ativo',
+            'Nome',
+            'Classe',
+            'Tipo',
+            'Emissor',
+            'Conglomerado',
+            'Quantidade',
+            'Valor (BRL)',
+            'Fonte do valor',
+            'Titular'
+        ]);
         const rows: Row[] = sheet.getRows(2, 19) ?? [];
         const itub = rows.find((row: Row) => row.getCell(1).value === 'ITUB4');
-        expect(itub?.getCell(4).value).toBe(2000);
-        expect(itub?.getCell(5).value).toBe(75_600);
-        expect(itub?.getCell(5).numFmt).toBe('"R$" #,##0.00');
-        expect(itub?.getCell(6).value).toBe('B3 via brapi');
+        expect(itub?.getCell(7).value).toBe(2000);
+        expect(itub?.getCell(8).value).toBe(75_600);
+        expect(itub?.getCell(8).numFmt).toBe('"R$" #,##0.00');
+        expect(itub?.getCell(9).value).toBe('B3 via brapi');
+        expect(itub?.getCell(5).value).toBeNull();
+        const bank = rows.find((row: Row) => row.getCell(1).value === 'CDB Banco');
+        expect([bank?.getCell(4).value, bank?.getCell(5).value, bank?.getCell(6).value]).toEqual(['CDB', 'Banco Pan', 'BTG Pactual']);
         const btc = rows.find((row: Row) => row.getCell(1).value === 'BTC');
-        expect(btc?.getCell(4).value).toBe(0.45);
+        expect(btc?.getCell(7).value).toBe(0.45);
         const formula = rows.find((row: Row) => row.getCell(2).value === "'=1+1");
         expect(formula?.getCell(1).value).toBe("'=1+1");
-        expect(formula?.getCell(4).value).toBeNull();
-        expect(typeof formula?.getCell(5).value).toBe('number');
+        expect(formula?.getCell(7).value).toBeNull();
+        expect(typeof formula?.getCell(8).value).toBe('number');
     });
 
     it('devolve só o cabeçalho para uma carteira vazia', async () => {
@@ -157,7 +182,7 @@ describe('portfolio export', () => {
         const xlsx: RawResponse = await download(account, 'xlsx');
 
         expect(csv.status).toBe(200);
-        expect(linesOf(csv)).toEqual([`${BOM}Ativo;Nome;Classe;Quantidade;Valor (BRL);Fonte do valor`]);
+        expect(linesOf(csv)).toEqual([`${BOM}Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular`]);
         expect(xlsx.status).toBe(200);
         expect((await sheetOf(xlsx)).rowCount).toBe(1);
     });
@@ -169,8 +194,8 @@ describe('portfolio export', () => {
         const response: RawResponse = await harness.callRaw(token, `${EXPORT_PATH}?format=csv`);
 
         const lines: string[] = linesOf(response);
-        expect(lines[0]).toBe(`${BOM}Asset,Name,Class,Quantity,Value (BRL),Value source`);
-        expect(lines).toContain('ITUB4,ITUB4,Brazilian stocks,2000,75600.00,B3 via brapi');
+        expect(lines[0]).toBe(`${BOM}Asset,Name,Class,Type,Issuer,Group,Quantity,Value (BRL),Value source,Holder`);
+        expect(lines).toContain('ITUB4,ITUB4,Brazilian stocks,,,,2000,75600.00,B3 via brapi,Whole account');
         expect(lines.some((line: string) => line.startsWith('BTC,') && line.includes(',0.45,'))).toBe(true);
     });
 

@@ -1,12 +1,14 @@
 import { DateUtil } from '../../../shared/utils/date.util';
 import { Currency, FixedIncomeValuation, Indexer, TaxRegime } from './curve/curve.types';
-import { FixedIncomeTitle, FixedIncomeTitleRow, FixedIncomeTitleView, TitleKind } from './fixed-income.types';
+import { FixedIncomeTitle, FixedIncomeTitleRow, FixedIncomeTitleView, TitleIssuerView, TitleKind } from './fixed-income.types';
 
 export function toFixedIncomeTitle(row: FixedIncomeTitleRow): FixedIncomeTitle {
     return {
         id: row.id,
         kind: row.kind as TitleKind,
         name: row.name,
+        issuerId: row.issuerId,
+        holderUserId: row.holderUserId,
         indexer: row.indexer as Indexer,
         rateBps: row.rateBps,
         currency: row.currency as Currency,
@@ -20,7 +22,12 @@ export function toFixedIncomeTitle(row: FixedIncomeTitleRow): FixedIncomeTitle {
     };
 }
 
-export function toFixedIncomeTitleView(title: FixedIncomeTitle, classId: string, valuation: FixedIncomeValuation): FixedIncomeTitleView {
+export function toFixedIncomeTitleView(
+    title: FixedIncomeTitle,
+    classId: string,
+    valuation: FixedIncomeValuation,
+    issuer: TitleIssuerView | null
+): FixedIncomeTitleView {
     return {
         id: title.id,
         kind: title.kind,
@@ -32,6 +39,9 @@ export function toFixedIncomeTitleView(title: FixedIncomeTitle, classId: string,
         appliedAt: title.appliedAt,
         maturityDate: title.maturityDate,
         classId,
+        holderUserId: title.holderUserId,
+        issuer,
+        needsIssuer: issuer === null,
         createdAt: title.createdAt.toISOString(),
         updatedAt: title.updatedAt.toISOString(),
         valuation

@@ -17,8 +17,20 @@ export class ThrottleService {
     public constructor(private readonly throttles: ThrottleDomain) {}
 
     public async assertAllowed(key: string, limit: number, windowSeconds: number): Promise<void> {
-        if ((await this.throttles.registerAttempt(key, windowSeconds)) > limit) {
+        if (!(await this.isAllowed(key, limit, windowSeconds))) {
             throw new TooManyAttemptsError();
         }
+    }
+
+    public async forget(key: string): Promise<void> {
+        await this.throttles.forget(key);
+    }
+
+    public async countAttempt(key: string, windowSeconds: number): Promise<number> {
+        return this.throttles.registerAttempt(key, windowSeconds);
+    }
+
+    public async isAllowed(key: string, limit: number, windowSeconds: number): Promise<boolean> {
+        return (await this.throttles.registerAttempt(key, windowSeconds)) <= limit;
     }
 }

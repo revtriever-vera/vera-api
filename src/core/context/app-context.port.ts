@@ -5,6 +5,7 @@ export interface AppContextData {
     readonly companyId?: string;
     readonly userId?: string;
     readonly sessionId?: string;
+    readonly platform?: boolean;
     readonly locale: AppLocale;
 }
 

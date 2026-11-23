@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { CurveSeries, FixedIncomeValuation, VALUATION_STATUSES } from '../domain/curve/curve.types';
 import { valueTitle } from '../domain/curve/value-title';
@@ -24,8 +25,8 @@ export class FixedIncomeValuationService {
         return DateUtil.localDateIn(DateUtil.BRAZIL_TIMEZONE, asOf);
     }
 
-    public async valueAll(asOf: Date): Promise<ReadonlyArray<ValuedTitle>> {
-        const titles: FixedIncomeTitle[] = await this.titles.listAll();
+    public async valueAll(asOf: Date, filter: HolderFilter): Promise<ReadonlyArray<ValuedTitle>> {
+        const titles: FixedIncomeTitle[] = await this.titles.listByHolder(filter);
         return this.valueMany(titles, asOf);
     }
 

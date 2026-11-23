@@ -44,4 +44,15 @@ describe('setupSwagger', () => {
         expect(state.createDocumentCalls).toHaveLength(1);
         expect(state.setupCalls[0]?.[0]).toBe('docs');
     });
+
+    it('builds the same document without registering any route (used by openapi:dump)', async () => {
+        const { buildOpenApiDocument } = await import('./swagger');
+        const { app, use } = fakeApp();
+        const before: number = state.createDocumentCalls.length;
+
+        buildOpenApiDocument(app);
+
+        expect(state.createDocumentCalls).toHaveLength(before + 1);
+        expect(use).not.toHaveBeenCalled();
+    });
 });

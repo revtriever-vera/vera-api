@@ -5,6 +5,10 @@ import { ThrottlesRepository } from '../repositories/throttles.repository';
 export class ThrottleDomain {
     public constructor(private readonly throttles: ThrottlesRepository) {}
 
+    public async forget(key: string): Promise<void> {
+        await this.throttles.forget(key);
+    }
+
     public async registerAttempt(key: string, windowSeconds: number): Promise<number> {
         return this.throttles.registerAttempt(key, windowSeconds);
     }

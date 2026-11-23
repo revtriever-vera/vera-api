@@ -18,9 +18,25 @@ export class AccountDataRegistry {
         return this.exporters().map((exporter: AccountDataExporterPort): string => exporter.area);
     }
 
+    public eraseAreas(): string[] {
+        return this.erasers().map((eraser: AccountDataEraserPort): string => eraser.area);
+    }
+
     public async exportSections(companyId: string): Promise<Record<string, unknown>> {
         const sections: Record<string, unknown> = {};
         for (const exporter of this.exporters()) {
+            sections[exporter.area] = await this.exportOne(exporter, companyId);
+        }
+        return sections;
+    }
+
+    public async exportSelected(companyId: string, areas: readonly string[]): Promise<Record<string, unknown>> {
+        const wanted: Set<string> = new Set(areas);
+        const selected: AccountDataExporterPort[] = this.exporters().filter((exporter: AccountDataExporterPort): boolean =>
+            wanted.has(exporter.area)
+        );
+        const sections: Record<string, unknown> = {};
+        for (const exporter of selected) {
             sections[exporter.area] = await this.exportOne(exporter, companyId);
         }
         return sections;

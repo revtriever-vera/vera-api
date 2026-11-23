@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { decimalStringOf } from '../../../shared/utils/decimal.util';
-import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
+import { Asset, AssetCatalogService, AssetProfile } from '../../catalog/services/asset-catalog.service';
+import { IssuerDirectoryService, ResolvedIssuer } from '../../issuers/services/issuer-directory.service';
 import { FixedIncomeValuationService, ValuedTitle } from '../../fixed-income/services/fixed-income-valuation.service';
 import { ExchangeRateReaderService, StoredRate } from '../../market-data/services/exchange-rate-reader.service';
 import { QuoteReaderService, StoredQuote } from '../../market-data/services/quote-reader.service';
@@ -32,17 +34,18 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
         private readonly catalog: AssetCatalogService,
         private readonly quotes: QuoteReaderService,
         private readonly rates: ExchangeRateReaderService,
-        private readonly classInputs: PortfolioClassInputsService
+        private readonly classInputs: PortfolioClassInputsService,
+        private readonly issuers: IssuerDirectoryService
     ) {
         super();
     }
 
-    public async load(): Promise<PortfolioSourceData> {
+    public async load(filter: HolderFilter): Promise<PortfolioSourceData> {
         const now: Date = new Date();
         const [positions, titles, classInputs, usdRate]: [readonly Position[], readonly ValuedTitle[], ClassInputs, StoredRate | null] =
             await Promise.all([
-                this.positions.listForCompany(),
-                this.fixedIncome.valueAll(now),
+                this.positions.listForCompany(filter),
+                this.fixedIncome.valueAll(now, filter),
                 this.classInputs.load(),
                 this.rates.latest(USD_CURRENCY, now)
             ]);
@@ -78,10 +81,17 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
     }
 
     private positionOf(position: Position): SourcePosition {
-        return { id: position.id, assetId: position.assetId, quantity: decimalStringOf(position.quantity), isSample: position.isSample };
+        return {
+            id: position.id,
+            assetId: position.assetId,
+            quantity: decimalStringOf(position.quantity),
+            isSample: position.isSample,
+            holderUserId: position.holderUserId
+        };
     }
 
     private assetOf(asset: Asset): SourceAsset {
+        const profile: AssetProfile = this.catalog.profileOf(asset);
         return {
             id: asset.id,
             symbol: asset.symbol,
@@ -90,14 +100,22 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
             typeGroup: asset.typeGroup,
             currency: asset.currency,
             quantityDecimals: asset.quantityDecimals,
-            dollarExposure: asset.dollarExposure
+            dollarExposure: asset.dollarExposure,
+            assetKind: asset.kind,
+            sector: profile.sector,
+            issuerGroupId: profile.issuerGroupId
         };
     }
 
     private titleOf(entry: ValuedTitle): SourceTitle {
+        const issuerId: string | null = entry.title.issuerId;
+        const issuer: ResolvedIssuer | null = issuerId === null ? null : this.issuers.resolve(issuerId);
         return {
             id: entry.title.id,
             name: entry.title.name,
+            titleKind: entry.title.kind,
+            issuerId,
+            issuerGroupId: issuer?.groupId ?? null,
             indexDataMissing: entry.valuation.status === INDEX_DATA_MISSING_STATUS,
             valueMinor: entry.valuation.valueMinor,
             currency: entry.valuation.currency,
@@ -105,7 +123,8 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
             matured: entry.valuation.matured,
             source: entry.valuation.source,
             asOf: entry.valuation.asOf,
-            isSample: entry.title.isSample
+            isSample: entry.title.isSample,
+            holderUserId: entry.title.holderUserId
         };
     }
 

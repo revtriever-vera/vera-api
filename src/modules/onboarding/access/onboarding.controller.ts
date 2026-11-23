@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../core/http/api-problem.decorator';
 import { ApiZodResponse } from '../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../identity/services/roles.guard';
 import { OnboardingStateApplication } from '../application/onboarding-state.application';
 import { OnboardingStateView } from '../application/onboarding-state.view';
 import { OnboardingSummaryApplication } from '../application/onboarding-summary.application';
@@ -11,7 +13,7 @@ import { onboardingStateSchema, onboardingSummarySchema } from '../validation/on
 
 @ApiTags('onboarding')
 @Controller('onboarding')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class OnboardingController {
     public constructor(
@@ -50,6 +52,7 @@ export class OnboardingController {
     }
 
     @Post('start')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Leave the welcome screen', description: 'Idempotent.' })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
@@ -68,6 +71,7 @@ export class OnboardingController {
     }
 
     @Post('steps/:step/complete')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Mark a step as done',
@@ -94,6 +98,7 @@ export class OnboardingController {
     }
 
     @Post('steps/:step/skip')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Skip a step',
@@ -120,6 +125,7 @@ export class OnboardingController {
     }
 
     @Post('finish')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Go to the dashboard', description: 'Closes the onboarding for good. Idempotent.' })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })
@@ -138,6 +144,7 @@ export class OnboardingController {
     }
 
     @Post('dismiss')
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Skip the whole setup', description: 'Closes the onboarding for good. Idempotent.' })
     @ApiZodResponse({ status: 200, description: 'Updated onboarding state', schema: onboardingStateSchema })

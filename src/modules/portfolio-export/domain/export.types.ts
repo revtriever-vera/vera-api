@@ -7,20 +7,27 @@ export interface ExportRow {
     readonly symbol: string;
     readonly name: string;
     readonly className: string;
+    readonly titleKindLabel: string;
+    readonly issuerName: string;
+    readonly groupName: string;
     readonly quantity: string | null;
     readonly quantityDecimals: number | null;
     readonly valueMinor: number;
     readonly valueSourceLabel: string;
+    readonly holderLabel: string;
 }
 
 export interface ExportHoldingInput {
     readonly symbol: string;
     readonly name: string;
     readonly classId: string | null;
+    readonly titleKind: string | null;
+    readonly issuerId: string | null;
     readonly quantity: string | null;
     readonly quantityDecimals: number | null;
     readonly valueMinor: number;
     readonly valueSource: string;
+    readonly holderUserId: string | null;
 }
 
 export interface ExportClassInput {
@@ -28,8 +35,15 @@ export interface ExportClassInput {
     readonly displayName: string;
 }
 
+export interface ExportIssuerInput {
+    readonly name: string;
+    readonly groupName: string;
+}
+
 export interface ExportSnapshotInput {
     readonly baseCurrency: string;
+    readonly issuers: ReadonlyMap<string, ExportIssuerInput>;
+    readonly holders: ReadonlyMap<string, string>;
     readonly holdings: readonly ExportHoldingInput[];
     readonly classes: readonly ExportClassInput[];
 }

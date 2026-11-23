@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { AssetProfile, profileOf } from '../domain/asset-profiles';
 import { AssetDomain } from '../domain/asset.domain';
 import { AssetNotFoundError } from '../domain/catalog.errors';
 import { Asset, CatalogMarket } from '../domain/catalog.types';
 
-export type { Asset };
+export type { Asset, AssetProfile };
 
 @Injectable()
 export class AssetCatalogService {
@@ -27,5 +28,9 @@ export class AssetCatalogService {
 
     public async findByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         return this.assets.findByMarketAndExternalId(market, externalId);
+    }
+
+    public profileOf(asset: Pick<Asset, 'market' | 'symbol'>): AssetProfile {
+        return profileOf(asset.market, asset.symbol);
     }
 }

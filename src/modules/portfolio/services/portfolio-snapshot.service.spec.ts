@@ -1,3 +1,4 @@
+import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { describe, expect, it, vi } from 'vitest';
 import { makePrototypeSource } from '../../../../test/support/portfolio-fixtures';
 import { PortfolioSourceData } from '../domain/portfolio.types';
@@ -26,7 +27,7 @@ describe('PortfolioSnapshotService', () => {
     it('builds the snapshot and logs only counts, never values or names', async () => {
         const { service, logs, metrics } = setup(makePrototypeSource({ withoutQuotes: ['PETR4'] }));
 
-        const snapshot = await service.build();
+        const snapshot = await service.build(ANY_HOLDER);
 
         expect(snapshot.totalMinor).toBeGreaterThan(0);
         expect(logs.snapshot).toHaveBeenCalledWith({
@@ -45,7 +46,7 @@ describe('PortfolioSnapshotService', () => {
         const source: PortfolioSourceData = makePrototypeSource();
         const { service, logs } = setup({ ...source, assignments: source.assignments.filter((item) => item.subjectId !== 'position-VOO') });
 
-        await service.build();
+        await service.build(ANY_HOLDER);
 
         expect(logs.orphanHolding).toHaveBeenCalledExactlyOnceWith('position', 'position-VOO');
     });

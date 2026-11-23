@@ -1,3 +1,4 @@
+import { ANY_HOLDER } from '../../src/shared/holder/holder-filter';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { DecimalUtil } from '../../src/shared/utils/decimal.util';
@@ -34,6 +35,8 @@ interface TitleBody {
     readonly appliedAt: string;
     readonly maturityDate: string;
     readonly classId: string;
+    readonly issuer: { readonly id: string; readonly name: string; readonly groupId: string; readonly groupName: string } | null;
+    readonly needsIssuer: boolean;
     readonly valuation: ValuationBody;
 }
 
@@ -228,8 +231,8 @@ describe('fixed income titles', () => {
         expect(read.body.type).toBe('fixed_income.title_not_found');
         const ownerStill = await harness.call<TitleBody>(owner.token, 'GET', `/fixed-income/titles/${title.id}`);
         expect(ownerStill.body.rateBps).toBe(11000);
-        const valuedForOwner = await harness.inCompany(owner.company.id, async () => valuation.valueAll(new Date()));
-        const valuedForStranger = await harness.inCompany(stranger.company.id, async () => valuation.valueAll(new Date()));
+        const valuedForOwner = await harness.inCompany(owner.company.id, async () => valuation.valueAll(new Date(), ANY_HOLDER));
+        const valuedForStranger = await harness.inCompany(stranger.company.id, async () => valuation.valueAll(new Date(), ANY_HOLDER));
         expect(valuedForOwner.map((entry) => entry.title.id)).toContain(title.id);
         expect(valuedForStranger).toEqual([]);
         await expect(harness.inCompany(stranger.company.id, async () => valuation.valueOne(title.id, new Date()))).rejects.toMatchObject({
@@ -246,7 +249,7 @@ describe('fixed income titles', () => {
         expect(first.id).not.toBe(second.id);
         expect(await countTitles(account)).toBe(2);
         const valuation: FixedIncomeValuationService = harness.app.get(FixedIncomeValuationService, { strict: false });
-        const valued = await harness.inCompany(account.company.id, async () => valuation.valueAll(new Date()));
+        const valued = await harness.inCompany(account.company.id, async () => valuation.valueAll(new Date(), ANY_HOLDER));
         expect(valued).toHaveLength(2);
     });
 
@@ -345,5 +348,101 @@ describe('fixed income titles', () => {
         expect(created.valuation.status).toBe('ok');
         const again = await harness.call<TitleBody>(account.token, 'GET', `/fixed-income/titles/${created.id}`);
         expect(again.body.valuation.valueMinor).toBe(created.valuation.valueMinor);
+    });
+
+    it('emissor: grava, devolve com o conglomerado e aceita título sem emissor como cadastro incompleto', async () => {
+        const account: Account = await harness.signUp('issuer');
+
+        const withIssuer: TitleBody = await createTitle(account, { issuerId: 'banco-pan' });
+        const without: TitleBody = await createTitle(account);
+
+        expect(withIssuer).toMatchObject({
+            needsIssuer: false,
+            issuer: { id: 'banco-pan', name: 'Banco Pan', groupId: 'btg-pactual', groupName: 'BTG Pactual' }
+        });
+        expect(without).toMatchObject({ needsIssuer: true, issuer: null });
+        const read = await harness.call<TitleBody>(account.token, 'GET', `/fixed-income/titles/${withIssuer.id}`);
+        expect(read.body.issuer?.id).toBe('banco-pan');
+    });
+
+    it('emissor desconhecido ou de tipo errado é 422 e não grava', async () => {
+        const account: Account = await harness.signUp('issuer-422');
+
+        const unknown = await harness.call<ProblemBody>(
+            account.token,
+            'POST',
+            '/fixed-income/titles',
+            cdbBody({ issuerId: 'banco-fantasma' })
+        );
+        const mismatch = await harness.call<ProblemBody>(
+            account.token,
+            'POST',
+            '/fixed-income/titles',
+            cdbBody({ kind: 'lci', issuerId: 'petrobras' })
+        );
+        const invalid = await harness.call<ProblemBody>(
+            account.token,
+            'POST',
+            '/fixed-income/titles',
+            cdbBody({ issuerId: 'Banco Inter' })
+        );
+
+        expect(unknown.status).toBe(422);
+        expect(unknown.body.type).toBe('fixed_income.unknown_issuer');
+        expect(mismatch.status).toBe(422);
+        expect(mismatch.body.type).toBe('fixed_income.issuer_kind_mismatch');
+        expect(invalid.status).toBe(400);
+        expect(await countTitles(account)).toBe(0);
+    });
+
+    it('emissor: PATCH troca, null remove e a troca de tipo revalida o emissor guardado', async () => {
+        const account: Account = await harness.signUp('issuer-patch');
+        const created: TitleBody = await createTitle(account, { issuerId: 'banco-inter' });
+
+        const changed = await harness.call<TitleBody>(account.token, 'PATCH', `/fixed-income/titles/${created.id}`, {
+            issuerId: 'bradesco'
+        });
+        const mismatch = await harness.call<ProblemBody>(account.token, 'PATCH', `/fixed-income/titles/${created.id}`, {
+            kind: 'debenture'
+        });
+        const removed = await harness.call<TitleBody>(account.token, 'PATCH', `/fixed-income/titles/${created.id}`, { issuerId: null });
+
+        expect(changed.body.issuer?.id).toBe('bradesco');
+        expect(mismatch.status).toBe(422);
+        expect(mismatch.body.type).toBe('fixed_income.issuer_kind_mismatch');
+        expect(removed.body).toMatchObject({ issuer: null, needsIssuer: true });
+    });
+
+    it('título antigo sem emissor continua valorizado e listado nas posições', async () => {
+        const account: Account = await harness.signUp('issuer-legacy');
+        const created: TitleBody = await createTitle(account);
+
+        const holdings = await harness.call<{
+            data: Array<{ id: string; issuerId: string | null; issuerGroupId: string | null; valueMinor: number }>;
+        }>(account.token, 'GET', '/portfolio/holdings');
+
+        const entry = holdings.body.data.find((item) => item.id === created.id);
+        expect(entry).toMatchObject({ issuerId: null, issuerGroupId: null, valueMinor: created.valuation.valueMinor });
+    });
+
+    it('emissor aparece nas posições com o grupo atual e não vaza entre companies', async () => {
+        const companyA: Account = await harness.signUp('issuer-iso-a');
+        const companyB: Account = await harness.signUp('issuer-iso-b');
+        const created: TitleBody = await createTitle(companyA, { issuerId: 'banco-pan' });
+
+        const holdingsA = await harness.call<{ data: Array<{ id: string; issuerId: string | null; issuerGroupId: string | null }> }>(
+            companyA.token,
+            'GET',
+            '/portfolio/holdings'
+        );
+        const holdingsB = await harness.call<{ data: Array<{ id: string }> }>(companyB.token, 'GET', '/portfolio/holdings');
+        const readByB = await harness.call<ProblemBody>(companyB.token, 'GET', `/fixed-income/titles/${created.id}`);
+
+        expect(holdingsA.body.data.find((item) => item.id === created.id)).toMatchObject({
+            issuerId: 'banco-pan',
+            issuerGroupId: 'btg-pactual'
+        });
+        expect(holdingsB.body.data).toEqual([]);
+        expect(readByB.status).toBe(404);
     });
 });

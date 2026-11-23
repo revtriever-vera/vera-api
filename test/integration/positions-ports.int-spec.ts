@@ -84,6 +84,7 @@ describe('positions ports', () => {
                 quantity: '10',
                 averagePrice: null,
                 classId: expect.any(String),
+                holderUserId: null,
                 createdAt: expect.any(String)
             }
         ]);

@@ -4,6 +4,7 @@ export const FAKE_ACCOUNT_DEV: string = '000000000001';
 export const FAKE_ACCOUNT_PROD: string = '000000000002';
 export const FAKE_ACCOUNT_OTHER: string = '000000000003';
 export const FAKE_DOMAIN: string = 'vera.example.test';
+export const FAKE_LLM_PRICE_TABLE: string = JSON.stringify({ 'vendor/model-a': { input: 0.1, output: 0.2, cacheRead: 0.002 } });
 
 export const FAKE_SHARED: SharedInfrastructureConfig = {
     vpcId: 'vpc-00000000',
@@ -24,6 +25,7 @@ export function fakeEnvironment(overrides: NodeJS.ProcessEnv = {}): NodeJS.Proce
         SHARED_INFRA_DEV: JSON.stringify(FAKE_SHARED),
         SHARED_INFRA_PROD: JSON.stringify(FAKE_SHARED),
         VERA_DOMAIN: FAKE_DOMAIN,
+        LLM_PRICE_TABLE: FAKE_LLM_PRICE_TABLE,
         ...overrides
     };
 }

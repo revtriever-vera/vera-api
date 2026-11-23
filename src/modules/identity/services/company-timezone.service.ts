@@ -12,8 +12,12 @@ export class CompanyTimezoneService {
     ) {}
 
     public async todayInCompany(now: Date = new Date()): Promise<string> {
+        return DateUtil.localDateIn(await this.timezoneOfCompany(), now);
+    }
+
+    public async timezoneOfCompany(): Promise<string> {
         const companyId: string | undefined = this.context.get().companyId;
         const company: Company | null = companyId === undefined ? null : await this.companies.findById(companyId);
-        return DateUtil.localDateIn(company?.timezone ?? DateUtil.BRAZIL_TIMEZONE, now);
+        return company?.timezone ?? DateUtil.BRAZIL_TIMEZONE;
     }
 }

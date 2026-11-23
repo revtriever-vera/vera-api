@@ -28,6 +28,16 @@ const suggestionSchema = z.object({
     limitMinor: z.number().int()
 });
 
+const objectivesSchema = z.object({
+    monthlyNeededMinor: z.number().int().describe('Sum of the monthly amount of the goals not yet done (`GET /goals` totals), BRL cents'),
+    behindCount: z.number().int().describe('Goals `behind` or `overdue`'),
+    asGoalBps: z
+        .number()
+        .int()
+        .nullable()
+        .describe('`monthlyNeededMinor` as basis points of the income of `month`, rounded up and capped at 9000; null when the income is 0')
+});
+
 export const cutsResponseSchema = z.object({
     month: z.string(),
     limitMonth: z.string(),
@@ -45,7 +55,8 @@ export const cutsResponseSchema = z.object({
     categoriesWithCut: z.number().int(),
     uncategorizedMinor: z.number().int(),
     averageMonths: z.number().int(),
-    suggestions: z.array(suggestionSchema)
+    suggestions: z.array(suggestionSchema),
+    objectives: objectivesSchema
 });
 
 export class CutsQueryDto extends createZodDto(cutsQuerySchema) {}

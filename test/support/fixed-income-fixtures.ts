@@ -36,6 +36,8 @@ export function makeTitle(overrides: Partial<FixedIncomeTitle> = {}): FixedIncom
         id: 'title-1',
         kind: 'cdb',
         name: 'CDB Banco Exemplo',
+        issuerId: null,
+        holderUserId: null,
         indexer: 'cdi_percent',
         rateBps: 11000,
         currency: 'BRL',

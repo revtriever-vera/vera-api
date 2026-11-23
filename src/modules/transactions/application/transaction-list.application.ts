@@ -3,17 +3,9 @@ import { Page } from '../../../shared/pagination/pagination.types';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { DescriptionNormalizerService } from '../../spending-categories/services/description-normalizer.service';
 import { firstDayOf, lastDayOf, monthOf } from '../domain/calendar';
-import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
-import { toTransactionView } from '../domain/transaction.mapper';
-import {
-    Direction,
-    FinancialAccount,
-    Transaction,
-    TransactionFilter,
-    TransactionTotals,
-    TransactionView
-} from '../domain/transactions.types';
+import { Direction, TransactionFilter, TransactionTotals, TransactionView } from '../domain/transactions.types';
+import { TransactionViewService } from '../services/transaction-view.service';
 
 export interface ListPayload {
     readonly month?: string;
@@ -36,9 +28,9 @@ export interface TransactionListView extends Page<TransactionView> {
 export class TransactionListApplication {
     public constructor(
         private readonly transactions: TransactionDomain,
-        private readonly accounts: FinancialAccountDomain,
         private readonly timezone: CompanyTimezoneService,
-        private readonly normalizer: DescriptionNormalizerService
+        private readonly normalizer: DescriptionNormalizerService,
+        private readonly views: TransactionViewService
     ) {}
 
     public async list(payload: ListPayload): Promise<TransactionListView> {
@@ -48,7 +40,7 @@ export class TransactionListApplication {
             this.transactions.totals(filter)
         ]);
         return {
-            data: await this.toViews(rows),
+            data: await this.views.of(rows),
             pagination: {
                 page: payload.page,
                 pageSize: payload.pageSize,
@@ -80,14 +72,5 @@ export class TransactionListApplication {
     private searchOf(text: string): string {
         const normalized: string = this.normalizer.normalize(text);
         return normalized.length > 0 ? normalized : text.trim();
-    }
-
-    private async toViews(rows: readonly Transaction[]): Promise<TransactionView[]> {
-        const ids: string[] = [...new Set<string>(rows.map((row: Transaction): string => row.accountId))];
-        const accounts: FinancialAccount[] = ids.length === 0 ? [] : await this.accounts.findByIds(ids);
-        const names: Map<string, string> = new Map<string, string>(
-            accounts.map((account: FinancialAccount): [string, string] => [account.id, account.name])
-        );
-        return rows.map((row: Transaction): TransactionView => toTransactionView(row, names.get(row.accountId) ?? ''));
     }
 }

@@ -1,3 +1,4 @@
+import { ANY_HOLDER } from '../../src/shared/holder/holder-filter';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { IndexSyncApplication } from '../../src/modules/fixed-income/application/index-sync.application';
@@ -137,6 +138,9 @@ describe('portfolio holdings', () => {
             valueSource: 'brapi',
             priceDate: TODAY,
             dollarExposure: false,
+            sector: 'financeiro',
+            issuerGroupId: 'itau-unibanco',
+            issuerId: null,
             missingQuote: false,
             stale: false
         });
@@ -224,10 +228,10 @@ describe('portfolio holdings', () => {
         const acoesBr: ClassBody = await classOf(account, 'acoes_br');
         await seedManyPositions(harness.pg, account.company.id, acoesBr.id);
         const service: PortfolioSnapshotService = harness.app.get(PortfolioSnapshotService, { strict: false });
-        await harness.inCompany(account.company.id, async () => service.build());
+        await harness.inCompany(account.company.id, async () => service.build(ANY_HOLDER));
         const spy = vi.spyOn(Client.prototype as unknown as { query: (...args: unknown[]) => unknown }, 'query');
 
-        const snapshot = await harness.inCompany(account.company.id, async () => service.build());
+        const snapshot = await harness.inCompany(account.company.id, async () => service.build(ANY_HOLDER));
 
         const used: number = spy.mock.calls.length;
         expect(snapshot.holdings).toHaveLength(MANY_POSITIONS);

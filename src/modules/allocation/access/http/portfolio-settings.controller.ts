@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PortfolioSettingsApplication } from '../../application/portfolio-settings.application';
 import { PortfolioSettingsView } from '../../domain/allocation.types';
 import {
@@ -15,7 +17,7 @@ const UNAUTHORIZED: string = 'Missing or invalid access token (identity.unauthor
 
 @ApiTags('allocation')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('allocation/settings')
 export class AllocationSettingsController {
     public constructor(private readonly settings: PortfolioSettingsApplication) {}
@@ -37,6 +39,7 @@ export class AllocationSettingsController {
     }
 
     @Put()
+    @RequiresRole('editor')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Change the portfolio settings',

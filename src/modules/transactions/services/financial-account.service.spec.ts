@@ -6,12 +6,14 @@ import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionImportDomain } from '../domain/transaction-import.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { FinancialAccountService } from './financial-account.service';
+import { TransactionsChangedService } from './transactions-changed.service';
 
 function build(): {
     service: FinancialAccountService;
     accounts: Record<string, ReturnType<typeof vi.fn>>;
     transactions: Record<string, ReturnType<typeof vi.fn>>;
     imports: Record<string, ReturnType<typeof vi.fn>>;
+    notify: ReturnType<typeof vi.fn>;
 } {
     const accounts: Record<string, ReturnType<typeof vi.fn>> = {
         upsertProvider: vi.fn().mockResolvedValue(makeFinancialAccount({ id: 'p' })),
@@ -29,12 +31,14 @@ function build(): {
     };
     const transactions: Record<string, ReturnType<typeof vi.fn>> = { removeByAccounts: vi.fn().mockResolvedValue(4) };
     const imports: Record<string, ReturnType<typeof vi.fn>> = { removeByAccounts: vi.fn().mockResolvedValue(undefined) };
+    const notify: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const service: FinancialAccountService = new FinancialAccountService(
         accounts as unknown as FinancialAccountDomain,
         transactions as unknown as TransactionDomain,
-        imports as unknown as TransactionImportDomain
+        imports as unknown as TransactionImportDomain,
+        { notify } as unknown as TransactionsChangedService
     );
-    return { service, accounts, transactions, imports };
+    return { service, accounts, transactions, imports, notify };
 }
 
 beforeEach(() => {
@@ -62,10 +66,11 @@ describe('FinancialAccountService', () => {
     });
 
     it('removeProviderAccounts apaga transações, lotes e só as contas da Pluggy', async () => {
-        const { service, accounts, transactions, imports } = build();
+        const { service, accounts, transactions, imports, notify } = build();
 
         const removed: number = await service.removeProviderAccounts(['p', 'f']);
 
+        expect(notify).toHaveBeenCalledTimes(1);
         expect(removed).toBe(1);
         expect(transactions['removeByAccounts']).toHaveBeenCalledWith(['p']);
         expect(imports['removeByAccounts']).toHaveBeenCalledWith(['p']);

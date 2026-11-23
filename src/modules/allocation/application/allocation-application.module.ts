@@ -3,6 +3,7 @@ import { ContextModule } from '../../../core/context/context.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { AllocationDomainModule } from '../domain/allocation-domain.module';
 import { AllocationAccountExporter } from '../services/allocation-account.exporter';
+import { AllocationAccountSpreadsheet } from '../services/allocation-account.spreadsheet';
 import { AllocationLogService } from '../services/allocation-log.service';
 import { AllocationMetricsService } from '../services/allocation-metrics.service';
 import { AllocationTargetSummary } from '../services/allocation-target.summary';
@@ -26,6 +27,7 @@ import { PortfolioSettingsApplication } from './portfolio-settings.application';
         AllocationLogService,
         AllocationMetricsService,
         AllocationAccountExporter,
+        AllocationAccountSpreadsheet,
         AllocationTargetSummary,
         ClassAssignmentService,
         ClassResolverService,

@@ -4,6 +4,8 @@ import { ContextModule } from '../../../core/context/context.module';
 import { QueueModule } from '../../../core/queue/queue.module';
 import { ThrottleModule } from '../../../core/throttle/throttle.module';
 import { AllocationApplicationModule } from '../../allocation/application/allocation-application.module';
+import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
+import { IssuersServicesModule } from '../../issuers/services/issuers-services.module';
 import { fixedIncomeConfig } from '../config/fixed-income.config';
 import { FixedIncomeDomainModule } from '../domain/fixed-income-domain.module';
 import { BcbSgsSeriesDriver } from '../drivers/bcb-sgs-series.driver';
@@ -22,6 +24,8 @@ import { IndexSyncApplication } from './index-sync.application';
         QueueModule,
         ThrottleModule,
         AllocationApplicationModule,
+        IdentityApplicationModule,
+        IssuersServicesModule,
         FixedIncomeDomainModule,
         FixedIncomeServicesModule
     ],

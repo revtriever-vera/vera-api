@@ -13,7 +13,8 @@ describe('toPositionView', () => {
             createdAt: new Date('2026-10-11T10:00:00.000Z'),
             updatedAt: new Date('2026-10-11T11:00:00.000Z'),
             deletedAt: null,
-            isSample: false
+            isSample: false,
+            holderUserId: 'ana'
         };
 
         expect(toPositionView(position, 'class-1')).toEqual({
@@ -22,6 +23,7 @@ describe('toPositionView', () => {
             quantity: '40',
             averagePrice: '545.5',
             classId: 'class-1',
+            holderUserId: 'ana',
             createdAt: '2026-10-11T10:00:00.000Z',
             updatedAt: '2026-10-11T11:00:00.000Z'
         });

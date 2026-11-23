@@ -20,7 +20,9 @@ const USER: User = {
     termsAcceptedAt: AT,
     createdAt: AT,
     updatedAt: AT,
-    deletedAt: null
+    deletedAt: null,
+    removedAt: null,
+    removedByUserId: null
 };
 
 const COMPANY: Company = {
@@ -28,9 +30,11 @@ const COMPANY: Company = {
     name: 'Empresa Teste',
     locale: 'pt-BR',
     timezone: 'America/Sao_Paulo',
+    isPlatform: false,
     createdAt: AT,
     updatedAt: AT,
-    deletedAt: null
+    deletedAt: null,
+    trialStartedAt: null
 };
 
 const IDENTITY: AuthIdentity = {

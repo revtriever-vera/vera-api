@@ -8,7 +8,18 @@ function cellsOf(row: ExportRow, table: ExportTable): string[] {
     const locale: AppLocale = table.locale;
     const quantity: string = row.quantity === null ? '' : localizedNumber(DecimalUtil.of(row.quantity).toFixed(), locale);
     const value: string = localizedNumber(decimalValueOf(row.valueMinor, table.baseCurrency), locale);
-    return [row.symbol, row.name, row.className, quantity, value, row.valueSourceLabel];
+    return [
+        row.symbol,
+        row.name,
+        row.className,
+        row.titleKindLabel,
+        row.issuerName,
+        row.groupName,
+        quantity,
+        value,
+        row.valueSourceLabel,
+        row.holderLabel
+    ];
 }
 
 export function writeCsv(table: ExportTable): string {

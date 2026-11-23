@@ -6,6 +6,8 @@ import { TransactionDomain } from '../domain/transaction.domain';
 import { AccountManagedByConnectionError } from '../domain/transactions.errors';
 import { CreateFileAccountInput, FinancialAccount, UpsertProviderAccountInput } from '../domain/transactions.types';
 
+import { TransactionsChangedService } from './transactions-changed.service';
+
 export type { CreateFileAccountInput, FinancialAccount, UpsertProviderAccountInput };
 
 @Injectable()
@@ -13,7 +15,8 @@ export class FinancialAccountService {
     public constructor(
         private readonly accounts: FinancialAccountDomain,
         private readonly transactions: TransactionDomain,
-        private readonly imports: TransactionImportDomain
+        private readonly imports: TransactionImportDomain,
+        private readonly changed: TransactionsChangedService
     ) {}
 
     public async upsertProviderAccount(input: UpsertProviderAccountInput): Promise<FinancialAccount> {
@@ -56,6 +59,10 @@ export class FinancialAccountService {
     private async purge(ids: readonly string[]): Promise<number> {
         await this.transactions.removeByAccounts(ids);
         await this.imports.removeByAccounts(ids);
-        return (await this.accounts.removeMany(ids)).length;
+        const removed: number = (await this.accounts.removeMany(ids)).length;
+        if (removed > 0) {
+            await this.changed.notify();
+        }
+        return removed;
     }
 }

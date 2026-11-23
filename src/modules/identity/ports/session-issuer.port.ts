@@ -1,4 +1,5 @@
-import { LoginProvider, User, UserRole } from '../domain/identity.types';
+import { LoginAudience, LoginProvider, User, UserRole } from '../domain/identity.types';
+import { SecondFactorProof } from '../domain/second-factor.proof';
 
 export type { LoginProvider } from '../domain/identity.types';
 
@@ -22,7 +23,8 @@ export interface AuthTokens {
 }
 
 export abstract class SessionIssuerPort {
-    public abstract issueForNewLogin(user: User, meta: RequestMeta, provider: LoginProvider): Promise<AuthTokens>;
+    public abstract issueForNewLogin(user: User, meta: RequestMeta, provider: LoginProvider, audience: LoginAudience): Promise<AuthTokens>;
+    public abstract issueForPlatform(user: User, meta: RequestMeta, provider: LoginProvider, proof: SecondFactorProof): Promise<AuthTokens>;
     public abstract refresh(rawRefreshToken: string, meta: RequestMeta): Promise<AuthTokens>;
     public abstract logout(rawRefreshToken: string): Promise<void>;
 }

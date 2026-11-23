@@ -8,6 +8,7 @@ import { CompanyDomain } from '../domain/company.domain';
 import { AccountClosedError, EmailInUseError, EmailNotProvidedError } from '../domain/identity.errors';
 import { AuthIdentity, SocialIdentity, User } from '../domain/identity.types';
 import { UserDomain } from '../domain/user.domain';
+import { InviteAcceptanceService } from './invite-acceptance.service';
 import { AccountProvisioningService, ProvisionResult } from './account-provisioning.service';
 import { IdentityLogService } from './identity-log.service';
 
@@ -28,6 +29,8 @@ function makeUser(overrides: Partial<User> = {}): User {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        removedAt: null,
+        removedByUserId: null,
         ...overrides
     };
 }
@@ -62,6 +65,8 @@ function uniqueViolation(constraint: string): Error {
 }
 
 interface Harness {
+    readonly findCompany: ReturnType<typeof vi.fn>;
+    readonly acceptInvite: ReturnType<typeof vi.fn>;
     readonly service: AccountProvisioningService;
     readonly createCompany: ReturnType<typeof vi.fn>;
     readonly createOwner: ReturnType<typeof vi.fn>;
@@ -83,18 +88,33 @@ function build(): Harness {
     const findIdentity: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(null);
     const link: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(makeIdentityRow());
     const touchLogin: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
+    const findCompany: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({ id: 'company-1', isPlatform: false });
+    const acceptInvite: ReturnType<typeof vi.fn> = vi.fn();
     const logs: Record<string, ReturnType<typeof vi.fn>> = {
         companyProvisioned: vi.fn(),
         identityLinked: vi.fn(),
         emailNotProvided: vi.fn()
     };
     const service: AccountProvisioningService = new AccountProvisioningService(
-        { create: createCompany } as unknown as CompanyDomain,
+        { create: createCompany, findById: findCompany } as unknown as CompanyDomain,
         { createOwner, findByEmailAcrossTenants: findByEmail, findById: findUserById } as unknown as UserDomain,
         { findByProviderSubjectAcrossTenants: findIdentity, link, touchLogin } as unknown as AuthIdentityDomain,
+        { accept: acceptInvite } as unknown as InviteAcceptanceService,
         logs as unknown as IdentityLogService
     );
-    return { service, createCompany, createOwner, findByEmail, findUserById, findIdentity, link, touchLogin, logs };
+    return {
+        service,
+        findCompany,
+        acceptInvite,
+        createCompany,
+        createOwner,
+        findByEmail,
+        findUserById,
+        findIdentity,
+        link,
+        touchLogin,
+        logs
+    };
 }
 
 function run<T>(fn: () => Promise<T>): Promise<T> {
@@ -211,5 +231,63 @@ describe('AccountProvisioningService', () => {
 
         await expect(run(async () => harness.service.resolve(google(), 'pt-BR'))).rejects.toThrow('db down');
         expect(harness.createCompany).toHaveBeenCalledTimes(1);
+    });
+
+    describe('resolvePlatformUser', () => {
+        it('identidade conhecida da company de sistema entra e registra o login', async () => {
+            harness.findIdentity.mockResolvedValue(makeIdentityRow());
+            harness.findCompany.mockResolvedValue({ id: 'company-1', isPlatform: true });
+
+            const user: User | null = await run(async () => harness.service.resolvePlatformUser(google()));
+
+            expect(user?.id).toBe('user-1');
+            expect(harness.touchLogin).toHaveBeenCalledWith('identity-1');
+        });
+
+        it('identidade conhecida de uma company comum não entra', async () => {
+            harness.findIdentity.mockResolvedValue(makeIdentityRow());
+
+            expect(await run(async () => harness.service.resolvePlatformUser(google()))).toBeNull();
+            expect(harness.touchLogin).not.toHaveBeenCalled();
+        });
+
+        it('primeiro login do e-mail semeado liga a identidade ao usuário semeado, sem criar company', async () => {
+            harness.findByEmail.mockResolvedValue(makeUser({ companyId: 'company-sys' }));
+            harness.findCompany.mockResolvedValue({ id: 'company-sys', isPlatform: true });
+
+            const user: User | null = await run(async () => harness.service.resolvePlatformUser(google()));
+
+            expect(user?.companyId).toBe('company-sys');
+            expect(harness.link).toHaveBeenCalledTimes(1);
+            expect(harness.createCompany).not.toHaveBeenCalled();
+            expect(harness.logs['identityLinked']).toHaveBeenCalledWith('user-1', 'google');
+        });
+
+        it('e-mail de usuário comum, sem usuário ou sem verificação não liga nada e não cria company', async () => {
+            harness.findByEmail.mockResolvedValue(makeUser());
+            expect(await run(async () => harness.service.resolvePlatformUser(google()))).toBeNull();
+
+            harness.findByEmail.mockResolvedValue(null);
+            expect(await run(async () => harness.service.resolvePlatformUser(google()))).toBeNull();
+
+            harness.findByEmail.mockResolvedValue(makeUser({ emailVerifiedAt: null }));
+            harness.findCompany.mockResolvedValue({ id: 'company-1', isPlatform: true });
+            expect(await run(async () => harness.service.resolvePlatformUser(google()))).toBeNull();
+
+            expect(await run(async () => harness.service.resolvePlatformUser(google({ email: null })))).toBeNull();
+            expect(harness.link).not.toHaveBeenCalled();
+            expect(harness.createCompany).not.toHaveBeenCalled();
+        });
+
+        it('perde a corrida do vínculo e tenta de novo uma vez', async () => {
+            harness.findByEmail.mockResolvedValue(makeUser({ companyId: 'company-sys' }));
+            harness.findCompany.mockResolvedValue({ id: 'company-sys', isPlatform: true });
+            harness.link.mockRejectedValueOnce(uniqueViolation('AuthIdentities_provider_subject_unique'));
+
+            const user: User | null = await run(async () => harness.service.resolvePlatformUser(google()));
+
+            expect(user?.id).toBe('user-1');
+            expect(harness.link).toHaveBeenCalledTimes(2);
+        });
     });
 });

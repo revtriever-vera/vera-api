@@ -65,6 +65,7 @@ export class PositionsSampleDataService extends SampleDataPort {
             assetId: asset.id,
             quantity: sample.quantity,
             averagePrice: sample.averagePrice,
+            holderUserId: null,
             isSample: true
         });
         if (created === null) {

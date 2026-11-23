@@ -1,4 +1,6 @@
 import { TestingModuleBuilder } from '@nestjs/testing';
+import { AiConsentEraser } from '../../../src/modules/ai-assistant/services/ai-consent.eraser';
+import { AiConsentExporter } from '../../../src/modules/ai-assistant/services/ai-consent.exporter';
 import { FixedIncomeSampleApplication } from '../../../src/modules/fixed-income/application/fixed-income-sample.application';
 import { FixedIncomeAccountExporter } from '../../../src/modules/fixed-income/services/fixed-income-account.exporter';
 import { AllocationAccountExporter } from '../../../src/modules/allocation/services/allocation-account.exporter';
@@ -9,13 +11,24 @@ import { SpendingCategoriesAccountExporter } from '../../../src/modules/spending
 import { BankConnectionsExporter } from '../../../src/modules/bank-connections/services/bank-connections.exporter';
 import { PluggyCredentialsEraser } from '../../../src/modules/bank-connections/services/pluggy-credentials.eraser';
 import { BanksOnboardingSummary } from '../../../src/modules/bank-connections/services/banks-onboarding.summary';
+import { GoalsSampleDataService } from '../../../src/modules/goals/services/goals-sample-data.service';
+import { RecurringAccountExporter } from '../../../src/modules/recurring/services/recurring-account.exporter';
+import { RecurringSampleDataService } from '../../../src/modules/recurring/services/recurring-sample-data.service';
 import { SpendingSettingsAccountExporter } from '../../../src/modules/spending-summary/services/spending-settings-account.exporter';
 import { SpendingSampleDataService } from '../../../src/modules/transactions/services/spending-sample-data.service';
 import { TransactionsAccountExporter } from '../../../src/modules/transactions/services/transactions-account.exporter';
 import { PositionsSampleDataService } from '../../../src/modules/positions/services/positions-sample-data.service';
 
 export function withoutBusinessPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
-    return withoutSpendingPorts(withoutPortfolioPorts(builder));
+    return withoutGoalsPorts(withoutRecurringPorts(withoutSpendingPorts(withoutPortfolioPorts(builder))));
+}
+
+function withoutGoalsPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
+    return builder.overrideProvider(GoalsSampleDataService).useValue({});
+}
+
+function withoutRecurringPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
+    return builder.overrideProvider(RecurringAccountExporter).useValue({}).overrideProvider(RecurringSampleDataService).useValue({});
 }
 
 function withoutPortfolioPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
@@ -38,6 +51,10 @@ function withoutPortfolioPorts(builder: TestingModuleBuilder): TestingModuleBuil
 
 function withoutSpendingPorts(builder: TestingModuleBuilder): TestingModuleBuilder {
     return builder
+        .overrideProvider(AiConsentEraser)
+        .useValue({})
+        .overrideProvider(AiConsentExporter)
+        .useValue({})
         .overrideProvider(SpendingCategoriesAccountExporter)
         .useValue({})
         .overrideProvider(BankConnectionsExporter)

@@ -168,6 +168,13 @@ export class TransactionsRepository extends TenantRepository<'Transactions'> {
         return ordered.orderBy('date', 'asc').orderBy('id', 'asc').limit(size).execute();
     }
 
+    public async listByIds(ids: readonly string[]): Promise<Transaction[]> {
+        if (ids.length === 0) {
+            return [];
+        }
+        return this.scopedSelect().selectAll().where('id', 'in', ids).execute();
+    }
+
     public async totals(filter: TransactionFilter): Promise<TransactionTotals> {
         const row: { count: unknown; inMinor: unknown; outMinor: unknown } | undefined = await this.filtered(this.scopedSelect(), filter)
             .select((eb) => [

@@ -1,0 +1,37 @@
+{
+  "id": "falta-pequena",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:leisure": "Lazer"
+  },
+  "context": {
+    "meta_economia_pct": "15%",
+    "falta_por_mes": "R$ 250",
+    "status": "possivel",
+    "categorias_flexiveis": [
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Lazer",
+        "atual": "R$ 900",
+        "media_3m": "R$ 700",
+        "cortar": "R$ 200",
+        "limite_sugerido": "R$ 700"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 250"],
+    "mustMention": [],
+    "mustNotMention": ["média"],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Para guardar 15% da renda, faltam **R$ 250** por mês.",
+    "O caminho mais leve é baixar ao limite sugerido: [[cat:leisure]] (de R$ 900 para R$ 700).",
+    "Se for escolher uma só, comece por [[cat:leisure]]: cortar **R$ 200** é a maior parte dos R$ 250 que faltam."
+  ]
+}

@@ -3,7 +3,7 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { synthesize } from '../bin/vera';
 import { EnvironmentName } from '../config/environment';
-import { FAKE_DOMAIN, fakeConfig } from '../test/fixtures';
+import { FAKE_DOMAIN, FAKE_LLM_PRICE_TABLE, fakeConfig } from '../test/fixtures';
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -87,6 +87,18 @@ describe('a task do serviço', () => {
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/crypto-key-hex');
     });
 
+    it('liga o modelo ao vivo com a tabela de preço e entrega a chave do gateway pelo SSM', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+        const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
+
+        expect(api.Environment).toContainEqual({ Name: 'LLM_DRIVER', Value: 'live' });
+        expect(api.Environment).toContainEqual({ Name: 'LLM_MODEL', Value: 'meta/muse-spark-1.3-contributor' });
+        expect(api.Environment).toContainEqual({ Name: 'LLM_PRICE_TABLE', Value: FAKE_LLM_PRICE_TABLE });
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('AI_GATEWAY_API_KEY');
+        expect(plainNames).not.toContain('AI_GATEWAY_API_KEY');
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/ai-gateway-api-key');
+    });
+
     it('entrega JWT_SECRET pelo SSM e marca o cookie de sessão como seguro', () => {
         const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
         const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
@@ -104,6 +116,48 @@ describe('a task do serviço', () => {
         );
 
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('OTEL_EXPORTER_OTLP_HEADERS');
+    });
+
+    it('sem driver configurado não entra BILLING_ENGINE_DRIVER nem chave da Revtriever: a cobrança fica desligada', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+
+        expect((api.Environment ?? []).map((entry): string => entry.Name)).not.toContain('BILLING_ENGINE_DRIVER');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('REVTRIEVER_API_KEY');
+    });
+
+    it('sem driver da agenda não entra GOOGLE_CALENDAR_DRIVER nem o segredo do Google: a agenda fica desligada e a task sobe', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
+
+        expect((api.Environment ?? []).map((entry): string => entry.Name)).not.toContain('GOOGLE_CALENDAR_DRIVER');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('GOOGLE_CLIENT_SECRET');
+    });
+
+    it('com o driver google, entrega o segredo do Google pelo SSM, nunca em texto', () => {
+        const api: ContainerResource = container(
+            taskContainers(appTemplate('prod', { calendar: { driver: 'google' } }), 'vera-api-prod'),
+            'api'
+        );
+
+        expect(api.Environment).toContainEqual({ Name: 'GOOGLE_CALENDAR_DRIVER', Value: 'google' });
+        expect((api.Environment ?? []).map((entry): string => entry.Name)).not.toContain('GOOGLE_CLIENT_SECRET');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('GOOGLE_CLIENT_SECRET');
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/google-client-secret');
+    });
+
+    it('com o driver revtriever, entrega a chave pelo SSM e o plano pelo ambiente', () => {
+        const billing = { driver: 'revtriever', apiUrl: 'https://api.example.test', planId: 'plan-x', gatewayConnectionId: null } as const;
+        const api: ContainerResource = container(taskContainers(appTemplate('prod', { billing }), 'vera-api-prod'), 'api');
+        const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
+
+        expect(api.Environment).toContainEqual({ Name: 'BILLING_ENGINE_DRIVER', Value: 'revtriever' });
+        expect(api.Environment).toContainEqual({ Name: 'REVTRIEVER_PLAN_ID', Value: 'plan-x' });
+        expect(plainNames).not.toContain('REVTRIEVER_API_KEY');
+        expect(plainNames).not.toContain('REVTRIEVER_GATEWAY_CONNECTION_ID');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('REVTRIEVER_API_KEY');
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toEqual(
+            expect.arrayContaining(['REVTRIEVER_WEBHOOK_TOKEN', 'REVTRIEVER_WEBHOOK_SECRETS'])
+        );
+        expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/revtriever-api-key');
     });
 
     it('lê o token do túnel do SSM', () => {

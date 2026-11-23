@@ -4,8 +4,9 @@ import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator'
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { CutsApplication } from '../../application/cuts.application';
-import { CutsResult } from '../../domain/spending-cuts.types';
+import { CutsResponse } from '../../domain/spending-cuts.types';
 import { CutsQueryDto, cutsQuerySchema, cutsResponseSchema } from '../../validation/spending-cuts.schemas';
 
 const CUTS_PER_MINUTE: number = 120;
@@ -24,11 +25,14 @@ const CUTS_DESCRIPTION: string =
     '`uncategorizedMinor` lowers what was saved but is left out of the cuts. Status: `no_data` (no transactions, empty list), ' +
     '`no_income` (income 0, empty list), `goal_met` (gap 0, all cuts 0, `surplusMinor` = saved - goal), `cut_suggested` (gap within the ' +
     'flexible total) and `exceeds_flexible` (gap above the flexible total: every category is cut to zero and the goal requires ' +
-    'reviewing fixed spending or income). Sorted by cut descending, then spent descending, then category position.';
+    'reviewing fixed spending or income). Sorted by cut descending, then spent descending, then category position. ' +
+    '`objectives` tells what the goals ask for: `monthlyNeededMinor` and `behindCount` are the totals of `GET /goals`, `asGoalBps` is ' +
+    'that amount as basis points of the income of `month` (rounded up, capped at 9000, null without income); the client offers it as the ' +
+    'savings goal through `PUT /spending/settings`. It never changes the goal alone.';
 
 @ApiTags('spending')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('spending/cuts')
 export class CutsController {
     public constructor(private readonly cuts: CutsApplication) {}
@@ -58,7 +62,7 @@ export class CutsController {
         description: 'Malformed, earlier than 2000-01 or future month (summary.invalid_month)',
         example: { type: 'summary.invalid_month', title: 'InvalidSummaryMonthError', status: 422 }
     })
-    public async get(@Query() query: CutsQueryDto): Promise<CutsResult> {
+    public async get(@Query() query: CutsQueryDto): Promise<CutsResponse> {
         return this.cuts.get(query.month, query.goalBps);
     }
 }

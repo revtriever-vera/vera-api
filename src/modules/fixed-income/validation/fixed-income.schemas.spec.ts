@@ -17,6 +17,21 @@ const VALID_TERMS = {
 
 const VALID_CREATE = { ...VALID_TERMS, name: 'CDB Banco X' };
 
+describe('issuerId nos schemas', () => {
+    it('aceita um slug no cadastro e rejeita texto que não é slug', () => {
+        expect(createFixedIncomeTitleSchema.safeParse({ ...VALID_CREATE, issuerId: 'banco-inter' }).success).toBe(true);
+        for (const issuerId of ['Banco Inter', 'banco_inter', '', 'a'.repeat(81), null]) {
+            expect(createFixedIncomeTitleSchema.safeParse({ ...VALID_CREATE, issuerId }).success).toBe(false);
+        }
+    });
+
+    it('na edição aceita um slug ou null para remover', () => {
+        expect(updateFixedIncomeTitleSchema.safeParse({ issuerId: 'bradesco' }).success).toBe(true);
+        expect(updateFixedIncomeTitleSchema.safeParse({ issuerId: null }).success).toBe(true);
+        expect(updateFixedIncomeTitleSchema.safeParse({ issuerId: 'Bradesco S.A.' }).success).toBe(false);
+    });
+});
+
 describe('createFixedIncomeTitleSchema', () => {
     it('aceita um título válido e apara o nome', () => {
         const parsed = createFixedIncomeTitleSchema.safeParse({ ...VALID_CREATE, name: '  CDB Banco X  ' });

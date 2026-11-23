@@ -2,13 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
+import { HolderFilter, holderWhereOf } from '../../../shared/holder/holder-filter';
 import { Page } from '../../../shared/pagination/pagination.types';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { FixedIncomeTitleRow, MAX_TITLES_PER_COMPANY, NewFixedIncomeTitle } from '../domain/fixed-income.types';
 
 type TitleFields = Pick<
     NewFixedIncomeTitle,
-    'kind' | 'name' | 'indexer' | 'rateBps' | 'currency' | 'appliedMinor' | 'appliedAt' | 'maturityDate' | 'taxRegime'
+    | 'kind'
+    | 'name'
+    | 'issuerId'
+    | 'holderUserId'
+    | 'indexer'
+    | 'rateBps'
+    | 'currency'
+    | 'appliedMinor'
+    | 'appliedAt'
+    | 'maturityDate'
+    | 'taxRegime'
 >;
 
 const LIST_LIMIT: number = MAX_TITLES_PER_COMPANY + 50;
@@ -41,6 +52,14 @@ export class FixedIncomeTitlesRepository extends TenantRepository<'FixedIncomeTi
 
     public async listAll(): Promise<FixedIncomeTitleRow[]> {
         return this.findMany({}, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
+    }
+
+    public async listByHolder(filter: HolderFilter): Promise<FixedIncomeTitleRow[]> {
+        return this.findMany(holderWhereOf(filter), { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
+    }
+
+    public async clearHolder(userId: string): Promise<FixedIncomeTitleRow[]> {
+        return this.updateManyRows({ holderUserId: userId }, { holderUserId: null });
     }
 
     public async countActive(): Promise<number> {

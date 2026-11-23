@@ -56,14 +56,24 @@ function amountsOf(valued: ValuedAmount, currency: string): AmountFields {
     };
 }
 
-export function positionHolding(
-    position: SourcePosition,
-    asset: SourceAsset,
-    quote: SourceQuote | null,
-    context: ValuationContext
-): BareHolding {
-    const native: number = quote === null ? 0 : nativeValueOf(position.quantity, quote.price, asset.currency);
-    const valued: ValuedAmount = valueNative(native, asset.currency, context.baseCurrency, context.usdRate);
+type IdentityFields = Pick<
+    BareHolding,
+    | 'kind'
+    | 'id'
+    | 'assetId'
+    | 'symbol'
+    | 'name'
+    | 'market'
+    | 'typeGroup'
+    | 'quantity'
+    | 'quantityDecimals'
+    | 'dollarExposure'
+    | 'assetKind'
+    | 'sector'
+    | 'issuerGroupId'
+>;
+
+function identityOf(position: SourcePosition, asset: SourceAsset): IdentityFields {
     return {
         kind: HOLDING_KINDS.position,
         id: position.id,
@@ -75,9 +85,28 @@ export function positionHolding(
         quantity: position.quantity,
         quantityDecimals: asset.quantityDecimals,
         dollarExposure: asset.dollarExposure || asset.currency === USD_CURRENCY,
+        assetKind: asset.assetKind,
+        sector: asset.sector,
+        issuerGroupId: asset.issuerGroupId
+    };
+}
+
+export function positionHolding(
+    position: SourcePosition,
+    asset: SourceAsset,
+    quote: SourceQuote | null,
+    context: ValuationContext
+): BareHolding {
+    const native: number = quote === null ? 0 : nativeValueOf(position.quantity, quote.price, asset.currency);
+    const valued: ValuedAmount = valueNative(native, asset.currency, context.baseCurrency, context.usdRate);
+    return {
+        ...identityOf(position, asset),
+        issuerId: null,
+        titleKind: null,
         estimated: false,
         matured: false,
         indexDataMissing: false,
+        holderUserId: position.holderUserId,
         ...pricingOf(asset, quote),
         ...flagsOf(position, quote),
         ...amountsOf(valued, asset.currency)
@@ -117,6 +146,12 @@ export function titleHolding(title: SourceTitle, context: ValuationContext): Bar
         symbol: title.name,
         name: title.name,
         typeGroup: FIXED_INCOME_TYPE_GROUP,
+        assetKind: null,
+        sector: null,
+        issuerGroupId: title.issuerGroupId,
+        issuerId: title.issuerId,
+        titleKind: title.titleKind,
+        holderUserId: title.holderUserId,
         valueSource: VALUE_SOURCE_BY_PROVIDER[title.source] ?? VALUE_SOURCES.curveCdi,
         priceDate: title.asOf,
         ...NO_QUOTE_FIELDS,

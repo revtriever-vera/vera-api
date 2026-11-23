@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CLASS_KEYS } from '../domain/catalog.types';
+import { SECTORS } from '../domain/sectors.types';
 
 export const curatedEntrySchema = z
     .object({
@@ -39,3 +40,19 @@ export const seedAssetSchema = z
 export const seedAssetsSchema = z.array(seedAssetSchema);
 
 export type SeedAsset = z.infer<typeof seedAssetSchema>;
+
+export const assetProfileSchema = z
+    .object({
+        market: z.enum(['B3', 'US', 'CRYPTO']),
+        symbol: z.string().regex(/^[A-Z0-9.-]{1,12}$/),
+        sector: z.nativeEnum(SECTORS),
+        issuerGroupId: z
+            .string()
+            .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+            .nullable()
+    })
+    .strict();
+
+export const assetProfilesSchema = z.array(assetProfileSchema);
+
+export type AssetProfileEntry = z.infer<typeof assetProfileSchema>;

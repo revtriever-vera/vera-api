@@ -3,13 +3,16 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
+import { RequiresRole } from '../../../identity/services/requires-role.decorator';
+import { RolesGuard } from '../../../identity/services/roles.guard';
 import { ClassAssignmentApplication } from '../../application/class-assignment.application';
 import { ClassAssignmentView } from '../../domain/allocation.types';
 import { AssignmentParamsDto, classAssignmentViewSchema, ReassignDto, reassignSchema } from '../../validation/allocation-classes.schemas';
 
 @ApiTags('allocation')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequiresRole('editor')
 @Controller('allocation/assignments')
 export class ClassAssignmentsController {
     public constructor(private readonly assignments: ClassAssignmentApplication) {}

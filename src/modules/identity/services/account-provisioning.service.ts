@@ -10,6 +10,7 @@ import { AuthIdentity, Company, LOGIN_OUTCOMES, LoginOutcome, SocialIdentity, Us
 import { nameFromEmail } from '../domain/name-from-email.util';
 import { UserDomain } from '../domain/user.domain';
 import { IdentityLogService } from './identity-log.service';
+import { InviteAcceptanceService } from './invite-acceptance.service';
 
 const USERS_EMAIL_UNIQUE_CONSTRAINT: string = 'Users_email_unique';
 const IDENTITY_UNIQUE_CONSTRAINT: string = 'AuthIdentities_provider_subject_unique';
@@ -25,21 +26,25 @@ export class AccountProvisioningService {
         private readonly companyDomain: CompanyDomain,
         private readonly userDomain: UserDomain,
         private readonly identityDomain: AuthIdentityDomain,
+        private readonly acceptance: InviteAcceptanceService,
         private readonly logs: IdentityLogService
     ) {}
 
-    public async resolve(identity: SocialIdentity, locale: AppLocale): Promise<ProvisionResult> {
+    public async resolve(identity: SocialIdentity, locale: AppLocale, inviteToken?: string): Promise<ProvisionResult> {
         try {
-            return await this.resolveOnce(identity, locale);
+            return await this.resolveOnce(identity, locale, inviteToken);
         } catch (error: unknown) {
             if (!this.lostRace(error)) {
                 throw error;
             }
-            return this.resolveOnce(identity, locale);
+            return this.resolveOnce(identity, locale, inviteToken);
         }
     }
 
-    private async resolveOnce(identity: SocialIdentity, locale: AppLocale): Promise<ProvisionResult> {
+    private async resolveOnce(identity: SocialIdentity, locale: AppLocale, inviteToken?: string): Promise<ProvisionResult> {
+        if (inviteToken !== undefined) {
+            return this.acceptance.accept(identity, inviteToken);
+        }
         const known: AuthIdentity | null = await this.identityDomain.findByProviderSubjectAcrossTenants(
             identity.provider,
             identity.subject
@@ -57,6 +62,43 @@ export class AccountProvisioningService {
         }
         const user: User = await this.provision(identity, identity.email, locale);
         return { user, outcome: LOGIN_OUTCOMES.newAccount };
+    }
+
+    public async resolvePlatformUser(identity: SocialIdentity): Promise<User | null> {
+        try {
+            return await this.resolvePlatformOnce(identity);
+        } catch (error: unknown) {
+            if (!this.lostRace(error)) {
+                throw error;
+            }
+            return this.resolvePlatformOnce(identity);
+        }
+    }
+
+    private async resolvePlatformOnce(identity: SocialIdentity): Promise<User | null> {
+        const known: AuthIdentity | null = await this.identityDomain.findByProviderSubjectAcrossTenants(
+            identity.provider,
+            identity.subject
+        );
+        if (known) {
+            return (await this.isPlatformCompany(known.companyId)) ? this.signIn(known.companyId, known) : null;
+        }
+        const existing: User | null = identity.email === null ? null : await this.userDomain.findByEmailAcrossTenants(identity.email);
+        if (existing === null || !(await this.isVerifiedPlatformUser(existing))) {
+            return null;
+        }
+        await this.linkInCompany(existing.companyId, existing.id, identity);
+        this.logs.identityLinked(existing.id, identity.provider);
+        return existing;
+    }
+
+    private async isVerifiedPlatformUser(user: User): Promise<boolean> {
+        return user.emailVerifiedAt !== null && (await this.isPlatformCompany(user.companyId));
+    }
+
+    private async isPlatformCompany(companyId: string): Promise<boolean> {
+        const company: Company | null = await this.companyDomain.findById(companyId);
+        return company?.isPlatform === true;
     }
 
     private async linkToExisting(existing: User, identity: SocialIdentity): Promise<ProvisionResult> {

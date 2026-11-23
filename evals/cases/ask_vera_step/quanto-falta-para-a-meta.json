@@ -1,0 +1,35 @@
+{
+  "id": "quanto-falta-para-a-meta",
+  "task": "ask_vera_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "quanto falta para a minha meta de economia?",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "spending_cuts",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$ 1.400"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "reference": ["Faltam **R$ 1.400** por mês para a meta de 25%. O caminho mais leve é voltar à sua média em [[cat:eating_out]]."]
+}

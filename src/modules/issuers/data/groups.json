@@ -1,0 +1,298 @@
+[
+  {
+    "id": "abc-brasil",
+    "name": "Banco ABC Brasil"
+  },
+  {
+    "id": "agibank",
+    "name": "Banco Agibank"
+  },
+  {
+    "id": "alphabet",
+    "name": "Alphabet"
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon"
+  },
+  {
+    "id": "ambev",
+    "name": "Ambev"
+  },
+  {
+    "id": "american-tower",
+    "name": "American Tower"
+  },
+  {
+    "id": "apple",
+    "name": "Apple"
+  },
+  {
+    "id": "b3",
+    "name": "B3"
+  },
+  {
+    "id": "banco-do-brasil",
+    "name": "Banco do Brasil"
+  },
+  {
+    "id": "banrisul",
+    "name": "Banrisul"
+  },
+  {
+    "id": "basa",
+    "name": "Banco da Amazônia"
+  },
+  {
+    "id": "bmg",
+    "name": "Banco BMG"
+  },
+  {
+    "id": "bnb",
+    "name": "Banco do Nordeste"
+  },
+  {
+    "id": "bradesco",
+    "name": "Bradesco"
+  },
+  {
+    "id": "braskem",
+    "name": "Braskem"
+  },
+  {
+    "id": "brb",
+    "name": "BRB"
+  },
+  {
+    "id": "bs2",
+    "name": "Banco BS2"
+  },
+  {
+    "id": "btg-pactual",
+    "name": "BTG Pactual"
+  },
+  {
+    "id": "bv",
+    "name": "BV"
+  },
+  {
+    "id": "c6-bank",
+    "name": "C6 Bank"
+  },
+  {
+    "id": "caixa",
+    "name": "Caixa Econômica Federal"
+  },
+  {
+    "id": "ccr",
+    "name": "CCR"
+  },
+  {
+    "id": "cemig",
+    "name": "Cemig"
+  },
+  {
+    "id": "coca-cola",
+    "name": "Coca-Cola"
+  },
+  {
+    "id": "copel",
+    "name": "Copel"
+  },
+  {
+    "id": "cpfl-energia",
+    "name": "CPFL Energia"
+  },
+  {
+    "id": "daycoval",
+    "name": "Banco Daycoval"
+  },
+  {
+    "id": "digio",
+    "name": "Banco Digio"
+  },
+  {
+    "id": "eletrobras",
+    "name": "Eletrobras"
+  },
+  {
+    "id": "energisa",
+    "name": "Energisa"
+  },
+  {
+    "id": "engie-brasil",
+    "name": "Engie Brasil Energia"
+  },
+  {
+    "id": "equatorial",
+    "name": "Equatorial"
+  },
+  {
+    "id": "equinix",
+    "name": "Equinix"
+  },
+  {
+    "id": "genial",
+    "name": "Banco Genial"
+  },
+  {
+    "id": "inter-co",
+    "name": "Inter&Co"
+  },
+  {
+    "id": "itau-unibanco",
+    "name": "Itaú Unibanco"
+  },
+  {
+    "id": "johnson-johnson",
+    "name": "Johnson & Johnson"
+  },
+  {
+    "id": "jpmorgan",
+    "name": "JPMorgan Chase"
+  },
+  {
+    "id": "klabin",
+    "name": "Klabin"
+  },
+  {
+    "id": "localiza",
+    "name": "Localiza"
+  },
+  {
+    "id": "lojas-renner",
+    "name": "Lojas Renner"
+  },
+  {
+    "id": "mercantil",
+    "name": "Banco Mercantil do Brasil"
+  },
+  {
+    "id": "meta",
+    "name": "Meta"
+  },
+  {
+    "id": "microsoft",
+    "name": "Microsoft"
+  },
+  {
+    "id": "neoenergia",
+    "name": "Neoenergia"
+  },
+  {
+    "id": "neon",
+    "name": "Neon"
+  },
+  {
+    "id": "nu-pagamentos",
+    "name": "Nubank"
+  },
+  {
+    "id": "nvidia",
+    "name": "NVIDIA"
+  },
+  {
+    "id": "original",
+    "name": "Banco Original"
+  },
+  {
+    "id": "outro",
+    "name": "Sem grupo"
+  },
+  {
+    "id": "pagseguro",
+    "name": "PagBank"
+  },
+  {
+    "id": "petrobras",
+    "name": "Petrobras"
+  },
+  {
+    "id": "picpay",
+    "name": "PicPay"
+  },
+  {
+    "id": "prio",
+    "name": "PRIO"
+  },
+  {
+    "id": "prologis",
+    "name": "Prologis"
+  },
+  {
+    "id": "public-storage",
+    "name": "Public Storage"
+  },
+  {
+    "id": "raizen",
+    "name": "Raízen"
+  },
+  {
+    "id": "realty-income",
+    "name": "Realty Income"
+  },
+  {
+    "id": "rendimento",
+    "name": "Banco Rendimento"
+  },
+  {
+    "id": "rumo",
+    "name": "Rumo"
+  },
+  {
+    "id": "sabesp",
+    "name": "Sabesp"
+  },
+  {
+    "id": "safra",
+    "name": "Banco Safra"
+  },
+  {
+    "id": "santander",
+    "name": "Santander Brasil"
+  },
+  {
+    "id": "simon-property",
+    "name": "Simon Property Group"
+  },
+  {
+    "id": "sofisa",
+    "name": "Banco Sofisa"
+  },
+  {
+    "id": "suzano",
+    "name": "Suzano"
+  },
+  {
+    "id": "taesa",
+    "name": "Taesa"
+  },
+  {
+    "id": "tesla",
+    "name": "Tesla"
+  },
+  {
+    "id": "tesouro-eua",
+    "name": "Tesouro dos EUA"
+  },
+  {
+    "id": "tesouro-nacional",
+    "name": "Tesouro Nacional"
+  },
+  {
+    "id": "ultrapar",
+    "name": "Ultrapar"
+  },
+  {
+    "id": "vale",
+    "name": "Vale"
+  },
+  {
+    "id": "weg",
+    "name": "WEG"
+  },
+  {
+    "id": "xp",
+    "name": "XP"
+  }
+]

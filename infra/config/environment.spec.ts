@@ -34,9 +34,17 @@ describe('fromEnvironment', () => {
         ]);
     });
 
-    it.each(['AWS_ACCOUNT_ID_DEV', 'SHARED_INFRA_DEV', 'VERA_DOMAIN'])('falha nomeando %s quando ela falta', (variable: string) => {
-        expect(() => fromEnvironment('dev', fakeEnvironment({ [variable]: undefined }))).toThrow(`${variable} não definida`);
+    it('recusa LLM_PRICE_TABLE que não é um objeto JSON', () => {
+        expect(() => fromEnvironment('dev', fakeEnvironment({ LLM_PRICE_TABLE: '[1]' }))).toThrow('LLM_PRICE_TABLE inválida');
+        expect(() => fromEnvironment('dev', fakeEnvironment({ LLM_PRICE_TABLE: 'x' }))).toThrow('LLM_PRICE_TABLE inválida');
     });
+
+    it.each(['AWS_ACCOUNT_ID_DEV', 'SHARED_INFRA_DEV', 'VERA_DOMAIN', 'LLM_PRICE_TABLE'])(
+        'falha nomeando %s quando ela falta',
+        (variable: string) => {
+            expect(() => fromEnvironment('dev', fakeEnvironment({ [variable]: undefined }))).toThrow(`${variable} não definida`);
+        }
+    );
 
     it('trata variável vazia como ausente', () => {
         expect(() => fromEnvironment('prod', fakeEnvironment({ AWS_ACCOUNT_ID_PROD: '  ' }))).toThrow('AWS_ACCOUNT_ID_PROD não definida');
@@ -93,5 +101,58 @@ describe('fromEnvironment', () => {
         expect(config.imagePullAccounts).toEqual([FAKE_ACCOUNT_PROD, FAKE_ACCOUNT_OTHER]);
         expect(fromEnvironment('dev', fakeEnvironment()).imagePullAccounts).toEqual([]);
         expect(() => fromEnvironment('dev', fakeEnvironment({ IMAGE_PULL_ACCOUNTS: 'abc' }))).toThrow('IMAGE_PULL_ACCOUNTS inválida');
+    });
+    describe('agenda do Google', () => {
+        it('em branco desliga a agenda, lê google e recusa o mock e driver desconhecido', () => {
+            expect(fromEnvironment('prod', fakeEnvironment()).calendar).toEqual({ driver: null });
+            expect(fromEnvironment('prod', fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'google' })).calendar).toEqual({ driver: 'google' });
+            for (const environment of ['dev', 'prod'] as const) {
+                expect(() => fromEnvironment(environment, fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'mock' }))).toThrow(
+                    'mock não é aceito'
+                );
+            }
+            expect(() => fromEnvironment('prod', fakeEnvironment({ GOOGLE_CALENDAR_DRIVER: 'outlook' }))).toThrow(
+                'GOOGLE_CALENDAR_DRIVER inválida'
+            );
+        });
+    });
+    describe('motor de cobrança', () => {
+        it('sem driver a cobrança fica desligada e nada da Revtriever é exigido', () => {
+            const config = fromEnvironment('prod', fakeEnvironment());
+
+            expect(config.billing).toEqual({ driver: null, apiUrl: null, planId: null, gatewayConnectionId: null });
+        });
+
+        it('lê o driver revtriever e as variáveis, ignorando as em branco', () => {
+            const config = fromEnvironment(
+                'prod',
+                fakeEnvironment({
+                    BILLING_ENGINE_DRIVER: 'revtriever',
+                    REVTRIEVER_PLAN_ID: 'plan-x',
+                    REVTRIEVER_API_URL: 'https://api.example.test',
+                    REVTRIEVER_GATEWAY_CONNECTION_ID: '  '
+                })
+            );
+
+            expect(config.billing).toEqual({
+                driver: 'revtriever',
+                apiUrl: 'https://api.example.test',
+                planId: 'plan-x',
+                gatewayConnectionId: null
+            });
+        });
+
+        it('recusa o fake em ambiente hospedado', () => {
+            for (const environment of ['dev', 'prod'] as const) {
+                expect(() => fromEnvironment(environment, fakeEnvironment({ BILLING_ENGINE_DRIVER: 'fake' }))).toThrow('fake não é aceito');
+            }
+        });
+
+        it('recusa driver desconhecido e revtriever sem plano', () => {
+            expect(() => fromEnvironment('prod', fakeEnvironment({ BILLING_ENGINE_DRIVER: 'asaas' }))).toThrow(
+                'BILLING_ENGINE_DRIVER inválida'
+            );
+            expect(() => fromEnvironment('prod', fakeEnvironment({ BILLING_ENGINE_DRIVER: 'revtriever' }))).toThrow('REVTRIEVER_PLAN_ID');
+        });
     });
 });

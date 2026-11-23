@@ -2,9 +2,34 @@ import { Injectable } from '@nestjs/common';
 import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { ExportCursor, TransactionDomain } from '../domain/transaction.domain';
 import { toCategoryOrigin, toDateString, toSource } from '../domain/transaction.mapper';
-import { EXPORT_PAGE_SIZE, ExportTransaction, FinancialAccount, Transaction, TransactionFilter } from '../domain/transactions.types';
+import {
+    EXPORT_PAGE_SIZE,
+    ExportTransaction,
+    FinancialAccount,
+    RecurrenceTransaction,
+    Transaction,
+    TransactionFilter
+} from '../domain/transactions.types';
 
-export type { ExportTransaction, TransactionFilter };
+export type { ExportTransaction, RecurrenceTransaction, TransactionFilter };
+
+function toRecurrenceTransaction(row: Transaction): RecurrenceTransaction {
+    return {
+        id: row.id,
+        accountId: row.accountId,
+        date: toDateString(row.date),
+        amountMinor: Number(row.amountMinor),
+        currency: row.currency,
+        description: row.description,
+        normalizedDescription: row.normalizedDescription,
+        counterpartyName: row.counterpartyName,
+        counterpartyKey: row.counterpartyKey,
+        categoryId: row.categoryId,
+        categorySource: toCategoryOrigin(row.categorySource),
+        installmentTotal: row.installmentTotal,
+        isSample: row.isSample
+    };
+}
 
 @Injectable()
 export class TransactionReaderService {
@@ -21,6 +46,21 @@ export class TransactionReaderService {
             const cursor: ExportCursor | null = last === undefined ? null : { date: toDateString(last.date), id: last.id };
             rows = rows.length < EXPORT_PAGE_SIZE ? [] : await this.transactions.listAfter(filter, cursor, EXPORT_PAGE_SIZE);
         }
+    }
+
+    public async *pagesForRecurrence(fromDate: string, toDate: string): AsyncIterable<readonly RecurrenceTransaction[]> {
+        const filter: TransactionFilter = { fromDate, toDate };
+        let rows: Transaction[] = await this.transactions.listAfter(filter, null, EXPORT_PAGE_SIZE);
+        while (rows.length > 0) {
+            yield rows.map(toRecurrenceTransaction);
+            const last: Transaction | undefined = rows.at(-1);
+            const cursor: ExportCursor | null = last === undefined ? null : { date: toDateString(last.date), id: last.id };
+            rows = rows.length < EXPORT_PAGE_SIZE ? [] : await this.transactions.listAfter(filter, cursor, EXPORT_PAGE_SIZE);
+        }
+    }
+
+    public async findForRecurrence(ids: readonly string[]): Promise<RecurrenceTransaction[]> {
+        return (await this.transactions.listByIds(ids)).map(toRecurrenceTransaction);
     }
 
     public async countForExport(filter: TransactionFilter): Promise<number> {

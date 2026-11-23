@@ -101,12 +101,24 @@ export class EmailInUseError extends AppError {
     }
 }
 
-export class ForbiddenError extends AppError {
-    public constructor() {
+export class RoleForbiddenError extends AppError {
+    public constructor(required: string) {
         super({
-            code: 'identity.forbidden',
+            code: 'members.forbidden_role',
             status: 403,
-            detail: 'Only the owner of the company can perform this action.'
+            detail: `This action requires the ${required} role or higher.`,
+            meta: { required }
+        });
+    }
+}
+
+export class RouteRoleMissingError extends AppError {
+    public constructor(route: string) {
+        super({
+            code: 'core.route_role_missing',
+            status: 500,
+            detail: 'A write route reached the roles guard without a declared required role.',
+            meta: { route }
         });
     }
 }
@@ -141,6 +153,107 @@ export class AccountExportFailedError extends AppError {
             detail: `Exporting the data of area "${area}" failed; no partial file was produced.`,
             meta: { area },
             cause
+        });
+    }
+}
+
+export class PlatformOnlyError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_only',
+            status: 403,
+            detail: 'This area is restricted to the people of the platform company.'
+        });
+    }
+}
+
+export class PlatformDisabledError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_disabled',
+            status: 404,
+            detail: 'The platform admin does not exist in this deployment.'
+        });
+    }
+}
+
+export class AdminAudienceRequiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.admin_audience_required',
+            status: 403,
+            detail: 'People of the platform company sign in through the admin audience only.'
+        });
+    }
+}
+
+export class PlatformCompanyProtectedError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_company_protected',
+            status: 403,
+            detail: 'The platform company cannot be deleted.'
+        });
+    }
+}
+
+export class PlatformSeedRefusedError extends AppError {
+    public constructor(reason: string) {
+        super({
+            code: 'identity.platform_seed_refused',
+            status: 409,
+            detail: `The platform seed cannot run: ${reason}.`,
+            meta: { reason }
+        });
+    }
+}
+
+export class SecondFactorRequiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.second_factor_required',
+            status: 403,
+            detail: 'A platform session is only issued after the second factor.'
+        });
+    }
+}
+
+export class InvalidTotpTokenError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.invalid_totp_token',
+            status: 401,
+            detail: 'The challenge or enrollment token is missing, expired or not valid for this step.'
+        });
+    }
+}
+
+export class InvalidTotpCodeError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.invalid_totp_code',
+            status: 401,
+            detail: 'The authenticator code or the recovery code is not valid.'
+        });
+    }
+}
+
+export class TotpNotEnrolledError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.totp_not_enrolled',
+            status: 409,
+            detail: 'There is no authenticator waiting for activation or active for this person.'
+        });
+    }
+}
+
+export class TotpAlreadyActiveError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.totp_already_active',
+            status: 409,
+            detail: 'This person already has an active authenticator; it is only reset through the platform seed.'
         });
     }
 }

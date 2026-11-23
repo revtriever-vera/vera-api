@@ -15,8 +15,8 @@ describe('writeCsv', () => {
 
         expect(csv.startsWith('﻿')).toBe(true);
         expect(csv.split('\r\n')).toEqual([
-            '﻿Ativo;Nome;Classe;Quantidade;Valor (BRL);Fonte do valor',
-            'ITUB4;Itaú Unibanco;Ações Brasil;2000;75600,00;B3 via brapi',
+            '﻿Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular',
+            'ITUB4;Itaú Unibanco;Ações Brasil;;;;2000;75600,00;B3 via brapi;Conta toda',
             ''
         ]);
     });
@@ -32,8 +32,8 @@ describe('writeCsv', () => {
         const csv: string = csvOf([holdingOf({ quantity: '0.45', valueMinor: 123_456 })], 'en', 'USD');
 
         expect(csv.split('\r\n')).toEqual([
-            '﻿Asset,Name,Class,Quantity,Value (USD),Value source',
-            'ITUB4,Itaú Unibanco,Ações Brasil,0.45,1234.56,B3 via brapi',
+            '﻿Asset,Name,Class,Type,Issuer,Group,Quantity,Value (USD),Value source,Holder',
+            'ITUB4,Itaú Unibanco,Ações Brasil,,,,0.45,1234.56,B3 via brapi,Whole account',
             ''
         ]);
     });
@@ -69,7 +69,16 @@ describe('writeCsv', () => {
         expect(lines[1]).toContain(';0,45;');
         expect(lines[2]).toContain(';3,2;');
         expect(lines[3]).toContain(';0,00000001;');
-        expect(lines[4]).toContain('Ações Brasil;;75600,00');
+        expect(lines[4]).toContain('Ações Brasil;;;;;75600,00');
+    });
+
+    it('writes the title kind, the issuer and the conglomerate of a fixed income row', () => {
+        const csv: string = csvOf(
+            [holdingOf({ symbol: 'CDB Inter', quantity: null, titleKind: 'cdb', issuerId: 'banco-inter', valueMinor: 100_000 })],
+            'pt-BR'
+        );
+
+        expect(csv).toContain('Ações Brasil;CDB;Banco Inter;Inter&Co;;1000,00;');
     });
 
     it('keeps the apostrophe of neutralized text and the sign of negative numbers untouched', () => {
@@ -80,6 +89,9 @@ describe('writeCsv', () => {
     });
 
     it('writes only the header for an empty portfolio', () => {
-        expect(csvOf([], 'pt-BR').split('\r\n')).toEqual(['﻿Ativo;Nome;Classe;Quantidade;Valor (BRL);Fonte do valor', '']);
+        expect(csvOf([], 'pt-BR').split('\r\n')).toEqual([
+            '﻿Ativo;Nome;Classe;Tipo;Emissor;Conglomerado;Quantidade;Valor (BRL);Fonte do valor;Titular',
+            ''
+        ]);
     });
 });
