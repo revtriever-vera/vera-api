@@ -20,6 +20,8 @@ import { TransactionsChangedService } from '../services/transactions-changed.ser
 import { TransactionsLogService } from '../services/transactions-log.service';
 import { TransactionsMetricsService } from '../services/transactions-metrics.service';
 import { TransactionsRecategorizationDriver } from '../services/transactions-recategorization.driver';
+import { TransactionViewService } from '../services/transaction-view.service';
+import { TransactionsRecurringService } from '../services/transactions-recurring.service';
 import { AccountApplication } from './account.application';
 import { TransactionListApplication } from './transaction-list.application';
 import { TransactionRecategorizeApplication } from './transaction-recategorize.application';
@@ -42,6 +44,8 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         TransactionsMetricsService,
         TransactionsChangedService,
         TransactionsRecategorizationDriver,
+        TransactionsRecurringService,
+        TransactionViewService,
         TransactionIngestionService,
         FinancialAccountService,
         TransactionImportService,

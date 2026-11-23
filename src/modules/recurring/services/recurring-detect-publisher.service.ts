@@ -26,4 +26,10 @@ export class RecurringDetectPublisherService {
             delayMs: untilWindowEnd(now)
         });
     }
+
+    public async cancel(companyId: string, now: number = Date.now()): Promise<void> {
+        for (const at of [now, now + DETECT_WINDOW_MS]) {
+            await this.publisher.remove(QUEUES.recurring, detectJobId(companyId, at));
+        }
+    }
 }

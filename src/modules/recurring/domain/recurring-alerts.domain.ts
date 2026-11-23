@@ -25,6 +25,10 @@ export class RecurringAlertsDomain {
         return (await this.alerts.listAll()).map(toRecord);
     }
 
+    public async removeOfSeries(seriesIds: readonly string[]): Promise<void> {
+        await this.alerts.softDeleteBySeriesIds(seriesIds);
+    }
+
     public async sync(desired: readonly DesiredAlert[]): Promise<void> {
         const diff: ReturnType<typeof diffAlerts> = diffAlerts(await this.list(), desired);
         await this.alerts.softDeleteMany(diff.removeIds);

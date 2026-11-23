@@ -47,7 +47,7 @@ export function toDateString(value: Date): string {
     return DateUtil.onlyLocalDateString(value);
 }
 
-export function toTransactionView(row: Transaction, accountName: string): TransactionView {
+export function toTransactionView(row: Transaction, accountName: string, isRecurring: boolean): TransactionView {
     const hasInstallment: boolean = row.installmentNumber !== null && row.installmentTotal !== null;
     return {
         id: row.id,
@@ -63,7 +63,8 @@ export function toTransactionView(row: Transaction, accountName: string): Transa
         ruleId: row.ruleId,
         source: toSource(row.source),
         installment: hasInstallment ? { number: row.installmentNumber ?? 0, total: row.installmentTotal ?? 0 } : null,
-        isSample: row.isSample
+        isSample: row.isSample,
+        isRecurring
     };
 }
 

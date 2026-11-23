@@ -95,7 +95,8 @@ export const transactionViewSchema = z.object({
         .object({ number: z.number().int(), total: z.number().int() })
         .nullable()
         .describe('Installment of a purchase paid in parts; null otherwise'),
-    isSample: z.boolean().describe('True for example data created during onboarding')
+    isSample: z.boolean().describe('True for example data created during onboarding'),
+    isRecurring: z.boolean().describe('True when the transaction is a charge of a confirmed recurring series (subscription or bill)')
 });
 
 export const transactionTotalsSchema = z.object({
