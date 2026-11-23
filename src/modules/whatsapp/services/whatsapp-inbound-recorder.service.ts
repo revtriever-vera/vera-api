@@ -11,4 +11,9 @@ export class WhatsAppInboundRecorder {
     public async record(_companyId: string, message: InboundMessage, linkId: string | null = null): Promise<boolean> {
         return this.messages.recordInbound(message, linkId);
     }
+
+    @AsCompany()
+    public async discard(_companyId: string, wamid: string): Promise<void> {
+        await this.messages.discardInbound(wamid);
+    }
 }

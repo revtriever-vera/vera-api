@@ -65,6 +65,48 @@ export class WhatsAppMessagesRepository extends BareTenantRepository<'WhatsAppMe
         return row?.last ?? null;
     }
 
+    public async findInboundByWamid(wamid: string): Promise<WhatsAppMessage | null> {
+        return this.findOne({ externalId: wamid, direction: 'in' });
+    }
+
+    public async createdAtOfExternal(wamid: string): Promise<Date | null> {
+        const row: { createdAt: Date } | undefined = await this.selectScoped()
+            .select('createdAt')
+            .where('externalId', '=', wamid)
+            .executeTakeFirst();
+        return row?.createdAt ?? null;
+    }
+
+    public async textsOfPeer(
+        peer: string,
+        window: { readonly since: Date; readonly before: Date },
+        limit: number
+    ): Promise<WhatsAppMessage[]> {
+        const rows: WhatsAppMessage[] = await this.selectScoped()
+            .selectAll()
+            .where('peer', '=', peer)
+            .where('kind', '=', 'text')
+            .where('body', 'is not', null)
+            .where('createdAt', '>=', window.since)
+            .where('createdAt', '<', window.before)
+            .orderBy('createdAt', 'desc')
+            .limit(limit)
+            .execute();
+        return rows.reverse();
+    }
+
+    public async inboundTextsSince(peer: string, since: Date): Promise<WhatsAppMessage[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('peer', '=', peer)
+            .where('direction', '=', 'in')
+            .where('kind', '=', 'text')
+            .where('externalId', 'is not', null)
+            .where('createdAt', '>=', since)
+            .orderBy('createdAt', 'asc')
+            .execute();
+    }
+
     public async clearTextOf(linkId: string, peer: string): Promise<number> {
         const byLink: WhatsAppMessage[] = await this.updateManyRows({ linkId }, { body: null, payload: null, updatedAt: new Date() });
         const byPeer: WhatsAppMessage[] = await this.updateManyRows({ peer }, { body: null, payload: null, updatedAt: new Date() });

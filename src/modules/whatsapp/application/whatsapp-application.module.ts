@@ -19,6 +19,7 @@ import { WebhookBodyService } from '../services/webhook-body.service';
 import { WhatsAppAccountEraser } from '../services/whatsapp-account.eraser';
 import { WhatsAppAccountExporter } from '../services/whatsapp-account.exporter';
 import { WhatsAppConversationEraser } from '../services/whatsapp-conversation-eraser.service';
+import { WhatsAppConversationReader } from '../services/whatsapp-conversation-reader.service';
 import { WhatsAppDirectReply } from '../services/whatsapp-direct-reply.service';
 import { WhatsAppDisplayNumber } from '../services/whatsapp-display-number.service';
 import { WhatsAppAvailability } from '../services/whatsapp-availability';
@@ -58,6 +59,7 @@ import { WebhookApplication } from './webhook.application';
         WhatsAppEventProcessor,
         WhatsAppInboundRecorder,
         WhatsAppConversationEraser,
+        WhatsAppConversationReader,
         WhatsAppDirectReply,
         WhatsAppDisplayNumber,
         InboundDispatchRegistry,
@@ -90,6 +92,7 @@ import { WebhookApplication } from './webhook.application';
         WhatsAppWindowService,
         WhatsAppInboundRecorder,
         WhatsAppConversationEraser,
+        WhatsAppConversationReader,
         WhatsAppDirectReply,
         WhatsAppDisplayNumber
     ]

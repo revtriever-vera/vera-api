@@ -26,6 +26,15 @@ const HOSTED_ENV: Record<string, string> = {
     WHATSAPP_DISPLAY_NUMBER: '+55 11 4000-0000'
 };
 
+const ALL_TOOLS: ReadonlySet<string> = new Set([
+    'spending_month_summary',
+    'spending_by_category',
+    'spending_cuts',
+    'list_categories',
+    'portfolio_overview',
+    'contribution_suggestion'
+]);
+
 interface CallRow {
     readonly feature: string;
     readonly referenceId: string | null;
@@ -100,7 +109,9 @@ describe('AskVeraService', () => {
     }
 
     async function ask(owner: Account, text: string, messageId: string): Promise<AskVeraAnswer> {
-        return harness.inCompany(owner.company.id, async () => service.ask({ text, history: [], locale: 'pt-BR', messageId }));
+        return harness.inCompany(owner.company.id, async () =>
+            service.ask({ text, history: [], locale: 'pt-BR', messageId, allowedTools: ALL_TOOLS })
+        );
     }
 
     async function calls(owner: Account): Promise<CallRow[]> {

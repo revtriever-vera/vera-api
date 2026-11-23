@@ -700,6 +700,19 @@ export interface WhatsAppMessages {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface WhatsAppPendingActions {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    expiresAt: Timestamp;
+    id: string;
+    kind: string;
+    linkId: string;
+    payload: Json;
+    resolution: string | null;
+    resolvedAt: Timestamp | null;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface WhatsAppTemplateRegistrations {
     channelKey: string;
     createdAt: Generated<Timestamp>;
@@ -775,6 +788,7 @@ export interface DB {
     WhatsAppLinkCodes: WhatsAppLinkCodes;
     WhatsAppLinks: WhatsAppLinks;
     WhatsAppMessages: WhatsAppMessages;
+    WhatsAppPendingActions: WhatsAppPendingActions;
     WhatsAppTemplateRegistrations: WhatsAppTemplateRegistrations;
     WhatsAppWebhookEvents: WhatsAppWebhookEvents;
 }
