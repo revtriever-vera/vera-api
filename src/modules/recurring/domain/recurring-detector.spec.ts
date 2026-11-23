@@ -381,3 +381,83 @@ describe('profileAmounts', () => {
         expect(profileAmounts([10000, 11000, 12000, 9000])).toMatchObject({ mode: 'variable', typicalAmountMinor: 10667 });
     });
 });
+
+describe('detectRecurring aumento de preço acima de 20%', () => {
+    const MARCH_TO_SEPTEMBER: readonly string[] = [
+        '2026-03-05',
+        '2026-04-05',
+        '2026-05-05',
+        '2026-06-05',
+        '2026-07-05',
+        '2026-08-05',
+        '2026-09-05'
+    ];
+
+    it('exemplo do épico: 44,90 de março a setembro e 55,90 em outubro e novembro viram uma série só', () => {
+        const charges: DetectorTransaction[] = [
+            ...monthly(MARCH_TO_SEPTEMBER, 44.9, 'NETFLIX.COM', NETFLIX),
+            ...monthly(['2026-10-05', '2026-11-05'], 55.9, 'NETFLIX.COM', NETFLIX)
+        ];
+
+        const series: DetectedSeries = only(detectRecurring(charges));
+
+        expect(series).toMatchObject({
+            cadence: 'monthly',
+            valueMode: 'fixed',
+            typicalAmountMinor: 5590,
+            minAmountMinor: 4490,
+            maxAmountMinor: 5590,
+            firstDate: '2026-03-05',
+            lastDate: '2026-11-05'
+        });
+        expect(series.chargeIds).toHaveLength(9);
+    });
+
+    it('com três cobranças no valor novo também fica uma série só', () => {
+        const charges: DetectorTransaction[] = [
+            ...monthly(MARCH_TO_SEPTEMBER.slice(0, 5), 44.9, 'NETFLIX.COM', NETFLIX),
+            ...monthly(['2026-08-05', '2026-09-05', '2026-10-05'], 55.9, 'NETFLIX.COM', NETFLIX)
+        ];
+
+        const series: DetectedSeries = only(detectRecurring(charges));
+
+        expect(series.typicalAmountMinor).toBe(5590);
+        expect(series.chargeIds).toHaveLength(8);
+    });
+
+    it('dois planos que cobram no mesmo período seguem como duas séries', () => {
+        const dates: readonly string[] = ['2026-08-05', '2026-09-05', '2026-10-05'];
+        const found: readonly DetectedSeries[] = detectRecurring([
+            ...monthly(dates, 21.9, 'SPOTIFY', { dictionaryPattern: 'SPOTIFY' }),
+            ...monthly(dates, 34.9, 'SPOTIFY', { dictionaryPattern: 'SPOTIFY' })
+        ]);
+
+        expect(found).toHaveLength(2);
+    });
+});
+
+describe('detectRecurring estorno com prefixo', () => {
+    it('ESTORNO na descrição da entrada anula a saída sem counterpartyKey', () => {
+        const out: DetectorTransaction[] = monthly(['2026-08-08', '2026-09-08', '2026-10-08', '2026-11-08'], 29.9, 'REVISTA DIGITAL EXAME');
+        const refund: DetectorTransaction = tx('2026-11-13', 29.9, 'ESTORNO REVISTA DIGITAL EXAME');
+
+        const series: DetectedSeries = only(detectRecurring([...out, refund]));
+
+        expect(series.lastDate).toBe('2026-10-08');
+        expect(series.chargeIds).toHaveLength(3);
+    });
+});
+
+describe('detectRecurring Pix mensal para pessoa', () => {
+    it('Pix mensal sem categoria vira Conta (D6)', () => {
+        const charges: DetectorTransaction[] = monthly(['2026-09-10', '2026-10-10', '2026-11-10'], 1800, 'PIX ENVIADO MARIA SOUZA');
+
+        expect(only(detectRecurring(charges)).pixToPerson).toBe(true);
+    });
+
+    it('cobrança comum sem Pix segue como Outra', () => {
+        const charges: DetectorTransaction[] = monthly(['2026-09-10', '2026-10-10', '2026-11-10'], 180, 'ACADEMIA BODY');
+
+        expect(only(detectRecurring(charges)).pixToPerson).toBe(false);
+    });
+});
