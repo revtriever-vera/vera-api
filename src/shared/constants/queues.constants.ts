@@ -7,6 +7,7 @@ export const QUEUES = {
     plans: 'vera-plans',
     identity: 'vera-identity',
     usage: 'vera-usage',
+    aiAssistant: 'vera-ai-assistant',
     whatsapp: 'vera-whatsapp'
 } as const;
 
@@ -29,6 +30,7 @@ export const MESSAGE_TYPES = {
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',
     usageGaugeRequested: 'usage.gauge.requested',
+    aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
     whatsappWebhookReceived: 'whatsapp.webhook.received',
     whatsappInboundReceived: 'whatsapp.inbound.received',
     whatsappStatusReceived: 'whatsapp.status.received',

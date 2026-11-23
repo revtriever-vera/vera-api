@@ -3,6 +3,7 @@ import { DiscoveryModule } from '@nestjs/core';
 import { ContextModule } from '../../../core/context/context.module';
 import { LlmModule } from '../../../core/llm/llm.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
+import { UsageModule } from '../../../core/usage/usage.module';
 import { ContributionApplicationModule } from '../../contribution/application/contribution-application.module';
 import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { PlansApplicationModule } from '../../plans/application/plans-application.module';
@@ -20,8 +21,14 @@ import { AiConsentService } from '../services/ai-consent.service';
 import { AiContextBuilderService } from '../services/ai-context-builder.service';
 import { AiDataPurgeRegistry } from '../services/ai-data-purge.registry';
 import { AiFeatureAvailability } from '../services/ai-feature-availability';
+import { AiSummariesEraser } from '../services/ai-summaries.eraser';
+import { AiSummariesExporter } from '../services/ai-summaries.exporter';
+import { AiSummariesPurge } from '../services/ai-summaries.purge';
+import { SummaryGeneratorService } from '../services/summary-generator.service';
+import { SummarySubjectService } from '../services/summary-subject.service';
 import { AiConsentApplication } from './ai-consent.application';
 import { AiPayloadApplication } from './ai-payload.application';
+import { SummariesApplication } from './summaries.application';
 
 @Module({
     imports: [
@@ -30,6 +37,7 @@ import { AiPayloadApplication } from './ai-payload.application';
         DiscoveryModule,
         ObservabilityModule,
         LlmModule,
+        UsageModule,
         PlansApplicationModule,
         IdentityApplicationModule,
         SpendingSummaryApplicationModule,
@@ -40,6 +48,12 @@ import { AiPayloadApplication } from './ai-payload.application';
     providers: [
         AiConsentApplication,
         AiPayloadApplication,
+        SummariesApplication,
+        SummaryGeneratorService,
+        SummarySubjectService,
+        AiSummariesPurge,
+        AiSummariesEraser,
+        AiSummariesExporter,
         AiConsentService,
         AiConsentGuard,
         AiContextBuilderService,
@@ -51,6 +65,14 @@ import { AiPayloadApplication } from './ai-payload.application';
         AiAssistantLogService,
         AiAssistantMetricsService
     ],
-    exports: [AiConsentApplication, AiPayloadApplication, AiConsentService, AiConsentGuard, AiContextBuilderService, AiTextRenderer]
+    exports: [
+        AiConsentApplication,
+        AiPayloadApplication,
+        SummariesApplication,
+        AiConsentService,
+        AiConsentGuard,
+        AiContextBuilderService,
+        AiTextRenderer
+    ]
 })
 export class AiAssistantApplicationModule {}

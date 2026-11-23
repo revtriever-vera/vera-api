@@ -10,6 +10,7 @@ export const COMMAND_KEYS = {
     identityMembersCleanup: 'identity-members-cleanup-command',
     usageCleanup: 'usage-cleanup-command',
     usageGauge: 'usage-gauge-command',
+    aiSummariesRetention: 'ai-summaries-retention-command',
     whatsappTemplatesSync: 'whatsapp-templates-sync-command',
     whatsappHealth: 'whatsapp-health-command',
     whatsappRetention: 'whatsapp-retention-command'
