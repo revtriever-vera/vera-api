@@ -5,7 +5,7 @@ import { RevtrieverEventDomain } from '../domain/revtriever-event.domain';
 import { WebhookEvent, webhookEventSchema } from '../validation/revtriever-events.schemas';
 import { BillingLogService } from '../services/billing-log.service';
 import { BillingMetricsService } from '../services/billing-metrics.service';
-import { BillingReplayService } from '../services/billing-replay.service';
+import { BillingReplayService, ReconcileResult } from '../services/billing-replay.service';
 import { BillingSweepService } from '../services/billing-sweep.service';
 import { eventTypeLabel, RevtrieverEventIngestService } from '../services/revtriever-event-ingest.service';
 import { ProcessOutcome, RevtrieverEventProcessor } from '../services/revtriever-event-processor.service';
@@ -69,7 +69,7 @@ export class BillingEventsApplication {
         return this.replays.replay();
     }
 
-    public async reconcile(): Promise<{ checked: number; fixed: number }> {
+    public async reconcile(): Promise<ReconcileResult> {
         return this.replays.reconcile();
     }
 

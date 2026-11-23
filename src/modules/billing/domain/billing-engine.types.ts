@@ -3,7 +3,7 @@ export type BillingEngine = (typeof BILLING_ENGINES)[number];
 
 export type PaymentMethod = 'card' | 'pix';
 export type PaymentLinkKind = 'payment_page' | 'gateway';
-export type OpenInvoiceStatus = 'issued' | 'overdue';
+export type ListedInvoiceStatus = 'issued' | 'overdue' | 'paid';
 
 export interface CreateSubscriptionInput {
     readonly idempotencyKey: string;

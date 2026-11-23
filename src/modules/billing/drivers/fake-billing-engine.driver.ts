@@ -13,7 +13,7 @@ import {
     EngineInvoice,
     EnginePage,
     EngineSubscription,
-    OpenInvoiceStatus,
+    ListedInvoiceStatus,
     PaymentLink,
     SavedCard
 } from '../domain/billing-engine.types';
@@ -132,7 +132,7 @@ export class FakeBillingEngineDriver extends BillingEnginePort {
         return this.invoiceById(id);
     }
 
-    public async invoicesWithStatus(status: OpenInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>> {
+    public async invoicesWithStatus(status: ListedInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>> {
         this.assertAvailable();
         const matching: EngineInvoice[] = [...this.invoices.values()].filter(
             (invoice: EngineInvoice): boolean => invoice.status === status

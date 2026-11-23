@@ -14,6 +14,7 @@ const MIN_SECRET_LENGTH: number = 16;
 const DEFAULT_APP_URL: string = 'http://localhost:5173';
 const DEFAULT_GRACE_DAYS: number = 3;
 const DEFAULT_WITHDRAWAL_DAYS: number = 7;
+const DEFAULT_RECONCILE_WINDOW_DAYS: number = 7;
 
 function blankAsUndefined(value: unknown): unknown {
     return typeof value === 'string' && value.trim().length === 0 ? undefined : value;
@@ -45,6 +46,10 @@ const schema = z.object({
     REVTRIEVER_WEBHOOK_SECRETS: optionalText(),
     BILLING_GRACE_DAYS: z.preprocess(blankAsUndefined, z.coerce.number().int().min(0).default(DEFAULT_GRACE_DAYS)),
     BILLING_WITHDRAWAL_DAYS: z.preprocess(blankAsUndefined, z.coerce.number().int().min(0).default(DEFAULT_WITHDRAWAL_DAYS)),
+    BILLING_RECONCILE_WINDOW_DAYS: z.preprocess(
+        blankAsUndefined,
+        z.coerce.number().int().positive().default(DEFAULT_RECONCILE_WINDOW_DAYS)
+    ),
     BILLING_REFUND_NOTIFY_EMAIL: z.preprocess(blankAsUndefined, z.string().trim().email().optional()),
     APP_URL: z.preprocess(blankAsUndefined, z.string().trim().url().default(DEFAULT_APP_URL))
 });
@@ -74,6 +79,8 @@ export interface BillingSettings {
     readonly REVTRIEVER_WEBHOOK_SECRETS: readonly string[];
     readonly BILLING_GRACE_DAYS: number;
     readonly BILLING_WITHDRAWAL_DAYS: number;
+    /** Quantos dias para trás a reconciliação procura, na Revtriever, faturas que a Vera não tem. */
+    readonly BILLING_RECONCILE_WINDOW_DAYS: number;
     readonly BILLING_REFUND_NOTIFY_EMAIL: string | null;
     readonly APP_URL: string;
 }
@@ -132,6 +139,7 @@ type WebhookSettings = Pick<
     | 'REVTRIEVER_WEBHOOK_SECRETS'
     | 'BILLING_GRACE_DAYS'
     | 'BILLING_WITHDRAWAL_DAYS'
+    | 'BILLING_RECONCILE_WINDOW_DAYS'
     | 'BILLING_REFUND_NOTIFY_EMAIL'
     | 'APP_URL'
 >;
@@ -142,6 +150,7 @@ function lifecycleSettingsOf(parsed: Parsed): WebhookSettings {
         REVTRIEVER_WEBHOOK_SECRETS: secretsOf(parsed),
         BILLING_GRACE_DAYS: parsed.BILLING_GRACE_DAYS,
         BILLING_WITHDRAWAL_DAYS: parsed.BILLING_WITHDRAWAL_DAYS,
+        BILLING_RECONCILE_WINDOW_DAYS: parsed.BILLING_RECONCILE_WINDOW_DAYS,
         BILLING_REFUND_NOTIFY_EMAIL: parsed.BILLING_REFUND_NOTIFY_EMAIL ?? null,
         APP_URL: stripTrailing(parsed.APP_URL, '/')
     };

@@ -12,7 +12,7 @@ import {
     EngineInvoice,
     EnginePage,
     EngineSubscription,
-    OpenInvoiceStatus,
+    ListedInvoiceStatus,
     PaymentLink,
     PaymentMethod,
     SavedCard
@@ -159,7 +159,7 @@ export class RevtrieverBillingEngineDriver extends BillingEnginePort {
         return invoiceOf(response);
     }
 
-    public async invoicesWithStatus(status: OpenInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>> {
+    public async invoicesWithStatus(status: ListedInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>> {
         const query: string = new URLSearchParams({ status, page: String(page), pageSize: String(INVOICES_PAGE_SIZE) }).toString();
         const response: z.infer<typeof revtrieverInvoicePageSchema> = await this.client().request({
             method: 'GET',

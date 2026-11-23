@@ -19,6 +19,15 @@ export class BillingInvoicesRepository extends BareTenantRepository<'BillingInvo
         return this.findOne({ engine, engineInvoiceId });
     }
 
+    public async existsByEngineIdAcrossTenants(engine: BillingEngine, engineInvoiceId: string): Promise<boolean> {
+        const row: { id: string } | undefined = await this.selectSkipConstraint()
+            .select('id')
+            .where('engine', '=', engine)
+            .where('engineInvoiceId', '=', engineInvoiceId)
+            .executeTakeFirst();
+        return row !== undefined;
+    }
+
     public async insertOnce(engine: BillingEngine, subscriptionId: string, mirror: InvoiceMirror): Promise<BillingInvoice | null> {
         const row: BillingInvoice | undefined = await this.insertBuilder()
             .values({ id: IdUtil.newId(), companyId: this.companyId, subscriptionId, engine, ...mirror })

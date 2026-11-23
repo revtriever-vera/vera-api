@@ -9,7 +9,7 @@ import {
     EngineInvoice,
     EnginePage,
     EngineSubscription,
-    OpenInvoiceStatus,
+    ListedInvoiceStatus,
     PaymentLink,
     SavedCard
 } from '../domain/billing-engine.types';
@@ -73,7 +73,7 @@ export class ObservedBillingEngine extends BillingEnginePort {
         return this.track('invoice', async () => this.inner.invoiceOf(id));
     }
 
-    public async invoicesWithStatus(status: OpenInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>> {
+    public async invoicesWithStatus(status: ListedInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>> {
         return this.track('invoices', async () => this.inner.invoicesWithStatus(status, page));
     }
 

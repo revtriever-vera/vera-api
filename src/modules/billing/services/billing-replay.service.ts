@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { DateUtil } from '../../../shared/utils/date.util';
-import { EngineEvent, EngineEventPage, EngineInvoice } from '../domain/billing-engine.types';
+import { billingConfig } from '../config/billing.config';
+import { EngineEvent, EngineEventPage, EngineInvoice, EnginePage, ListedInvoiceStatus } from '../domain/billing-engine.types';
 import { BillingInvoiceDomain } from '../domain/billing-invoice.domain';
-import { advancedInvoiceStatus, isInvoiceStatus } from '../domain/billing-invoice.rules';
+import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
+import { advancedInvoiceStatus, isInvoiceInWindow, isInvoiceStatus } from '../domain/billing-invoice.rules';
 import {
     BillingInvoice,
+    BillingSubscription,
     EVENT_STALE_MINUTES,
     EVENTS_CURSOR_SOURCE,
     INVOICE_STATUSES,
@@ -22,6 +26,19 @@ import { RevtrieverEventIngestService } from './revtriever-event-ingest.service'
 const REPLAY_PAGE_SIZE: number = 100;
 const REPLAY_MAX_PAGES: number = 20;
 const REPUBLISH_BATCH: number = 200;
+const RECONCILE_MAX_PAGES: number = 20;
+const LISTED_STATUSES: readonly ListedInvoiceStatus[] = [INVOICE_STATUSES.issued, INVOICE_STATUSES.overdue, INVOICE_STATUSES.paid];
+const EVENT_TYPE_OF_STATUS: Readonly<Record<InvoiceRowStatus, string>> = {
+    [INVOICE_STATUSES.issued]: 'invoice.issued',
+    [INVOICE_STATUSES.overdue]: 'invoice.overdue',
+    [INVOICE_STATUSES.paid]: 'invoice.paid'
+};
+
+export interface ReconcileResult {
+    readonly checked: number;
+    readonly fixed: number;
+    readonly created: number;
+}
 
 function webhookEventOf(event: EngineEvent): WebhookEvent {
     return { id: event.id, type: event.type, occurredAt: event.createdAt, data: { ...event.data } };
@@ -35,6 +52,8 @@ export class BillingReplayService {
         private readonly events: RevtrieverEventDomain,
         private readonly cursors: RevtrieverEventCursorDomain,
         private readonly invoices: BillingInvoiceDomain,
+        private readonly subscriptions: BillingSubscriptionDomain,
+        @Inject(billingConfig.KEY) private readonly config: ConfigType<typeof billingConfig>,
         private readonly logs: BillingLogService
     ) {}
 
@@ -50,14 +69,16 @@ export class BillingReplayService {
         return ingested + stalled.length;
     }
 
-    public async reconcile(): Promise<{ checked: number; fixed: number }> {
+    public async reconcile(): Promise<ReconcileResult> {
         const open: BillingInvoice[] = await this.invoices.listOpenAcrossTenants(SWEEP_BATCH);
         let fixed: number = 0;
         for (const local of open) {
             fixed += (await this.reconcileOne(local)) ? 1 : 0;
         }
-        this.logs.reconciled(open.length, fixed);
-        return { checked: open.length, fixed };
+        const missing: { checked: number; created: number } = await this.createMissing();
+        const result: ReconcileResult = { checked: open.length + missing.checked, fixed, created: missing.created };
+        this.logs.reconciled(result.checked, result.fixed, result.created);
+        return result;
     }
 
     private async pullFromCursor(): Promise<number> {
@@ -81,6 +102,74 @@ export class BillingReplayService {
             ingested += (await this.ingestion.ingest(webhookEventOf(event))) ? 1 : 0;
         }
         return ingested;
+    }
+
+    /** Faturas da Revtriever na janela que a Vera nunca recebeu (webhook perdido): entram pelo mesmo caminho idempotente dos eventos. */
+    private async createMissing(): Promise<{ checked: number; created: number }> {
+        const since: Date = DateUtil.addDays(new Date(), -this.config.BILLING_RECONCILE_WINDOW_DAYS);
+        const listed: EngineInvoice[] = [];
+        for (const status of LISTED_STATUSES) {
+            listed.push(...(await this.listedWithStatus(status)));
+        }
+        const inWindow: EngineInvoice[] = listed.filter((invoice: EngineInvoice): boolean => isInvoiceInWindow(invoice, since));
+        let created: number = 0;
+        for (const remote of inWindow) {
+            created += (await this.createIfMissing(remote)) ? 1 : 0;
+        }
+        return { checked: inWindow.length, created };
+    }
+
+    private async listedWithStatus(status: ListedInvoiceStatus): Promise<EngineInvoice[]> {
+        const found: EngineInvoice[] = [];
+        for (let page: number = 1; page <= RECONCILE_MAX_PAGES; page += 1) {
+            const result: EnginePage<EngineInvoice> | null = await this.pageOf(status, page);
+            if (result === null) {
+                return found;
+            }
+            found.push(...result.items);
+            if (result.items.length === 0 || page * result.pageSize >= result.total) {
+                return found;
+            }
+        }
+        return found;
+    }
+
+    private async pageOf(status: ListedInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice> | null> {
+        try {
+            return await this.engine.invoicesWithStatus(status, page);
+        } catch {
+            return null;
+        }
+    }
+
+    private async createIfMissing(remote: EngineInvoice): Promise<boolean> {
+        if (!isInvoiceStatus(remote.status)) {
+            return false;
+        }
+        const status: InvoiceRowStatus = remote.status;
+        const linked: BillingSubscription | null = await this.subscriptions.findByEngineSubscriptionIdAcrossTenants(
+            this.engine.engine,
+            remote.subscriptionId
+        );
+        if (linked === null || (await this.invoices.existsByEngineIdAcrossTenants(this.engine.engine, remote.id))) {
+            return false;
+        }
+        return this.ingestion.ingest(this.reconciliationEvent(remote, status));
+    }
+
+    private reconciliationEvent(remote: EngineInvoice, status: InvoiceRowStatus): WebhookEvent {
+        return {
+            id: `reconciliation-${remote.id}-${status}`,
+            type: EVENT_TYPE_OF_STATUS[status],
+            occurredAt: new Date().toISOString(),
+            data: {
+                invoiceId: remote.id,
+                subscriptionId: remote.subscriptionId,
+                totalCents: remote.totalCents,
+                dueDate: remote.dueDate,
+                paidAt: remote.paidAt
+            }
+        };
     }
 
     private async reconcileOne(local: BillingInvoice): Promise<boolean> {
