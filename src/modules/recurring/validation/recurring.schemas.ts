@@ -223,3 +223,14 @@ export type AlertSeenView = z.infer<typeof alertSeenSchema>;
 
 export class CalendarQueryDto extends createZodDto(calendarQuerySchema) {}
 export class AlertIdParamsDto extends createZodDto(alertIdParamsSchema) {}
+
+export const OVERVIEW_TOPICS = { week: 'week', subscriptions: 'subscriptions' } as const;
+
+export const overviewToolInputSchema = z
+    .object({
+        topic: z
+            .enum([OVERVIEW_TOPICS.week, OVERVIEW_TOPICS.subscriptions])
+            .default(OVERVIEW_TOPICS.week)
+            .describe('`week` for the debits until Sunday; `subscriptions` for the monthly and yearly cost of the confirmed subscriptions')
+    })
+    .strict();

@@ -112,12 +112,16 @@ describe('avisos por e-mail', () => {
 
         expect(before.body.items).toEqual([
             { type: TYPE, enabled: true },
-            { type: OTHER_TYPE, enabled: true }
+            { type: OTHER_TYPE, enabled: true },
+            { type: 'recurring_due', enabled: true },
+            { type: 'recurring_week', enabled: true }
         ]);
         expect(changed).toEqual({ status: 200, body: { type: TYPE, enabled: false } });
         expect(viewerAfter.body.items).toEqual([
             { type: TYPE, enabled: false },
-            { type: OTHER_TYPE, enabled: true }
+            { type: OTHER_TYPE, enabled: true },
+            { type: 'recurring_due', enabled: true },
+            { type: 'recurring_week', enabled: true }
         ]);
         expect(ownerAfter.body.items.every((item) => item.enabled)).toBe(true);
     });

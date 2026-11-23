@@ -40,6 +40,7 @@ import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { GoalsModule } from './modules/goals/goals.module';
 import { PositionsModule } from './modules/positions/positions.module';
 import { RecurringModule } from './modules/recurring/recurring.module';
+import { RecurringNoticesModule } from './modules/recurring-notices/recurring-notices.module';
 import { SpendingCategoriesModule } from './modules/spending-categories/spending-categories.module';
 import { SpendingCutsModule } from './modules/spending-cuts/spending-cuts.module';
 import { SpendingSummaryModule } from './modules/spending-summary/spending-summary.module';
@@ -94,6 +95,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         FixedIncomeScheduleModule,
         GoalsModule,
         RecurringModule,
+        RecurringNoticesModule,
         PositionsModule,
         MarketDataModule,
         PortfolioModule,

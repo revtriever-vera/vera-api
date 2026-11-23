@@ -10,7 +10,8 @@ export const QUEUES = {
     aiAssistant: 'vera-ai-assistant',
     whatsapp: 'vera-whatsapp',
     reminders: 'vera-reminders',
-    recurring: 'vera-recurring'
+    recurring: 'vera-recurring',
+    recurringNotices: 'vera-recurring-notices'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -48,7 +49,11 @@ export const MESSAGE_TYPES = {
     remindersSweepRequested: 'reminders.sweep.requested',
     remindersGaugeRequested: 'reminders.gauge.requested',
     recurringDetectRequested: 'recurring.detect.requested',
-    recurringDailyRequested: 'recurring.daily.requested'
+    recurringDailyRequested: 'recurring.daily.requested',
+    recurringNoticesDailyRequested: 'recurring-notices.daily.requested',
+    recurringNoticesScheduleRequested: 'recurring-notices.schedule.requested',
+    recurringWeekDue: 'recurring-notices.week.due',
+    recurringDueDue: 'recurring-notices.due.due'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
