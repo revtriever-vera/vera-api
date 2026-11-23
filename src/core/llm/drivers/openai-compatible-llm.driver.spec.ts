@@ -80,6 +80,7 @@ describe('OpenAiCompatibleLlmDriver', () => {
                 maxOutputTokens: 50,
                 maxCostMicros: 1,
                 temperature: 0.1,
+                reasoning: 'provider-default',
                 timeoutMs: 5000,
                 maxRetries,
                 evalThreshold: 0.8,

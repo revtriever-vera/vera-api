@@ -9,6 +9,7 @@ const CALL: LlmDriverCall = {
         maxOutputTokens: 10,
         maxCostMicros: 1,
         temperature: 0,
+        reasoning: 'provider-default',
         timeoutMs: 1,
         maxRetries: 0,
         evalThreshold: 0,

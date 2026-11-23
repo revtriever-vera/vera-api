@@ -1,0 +1,45 @@
+{
+  "id": "categoria-propria",
+  "task": "summary_cuts",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:custom_1": "Cuidados com o pet",
+    "cat:leisure": "Lazer"
+  },
+  "context": {
+    "meta_economia_pct": "20%",
+    "falta_por_mes": "R$ 1.100",
+    "status": "possivel",
+    "categorias_flexiveis": [
+      {
+        "chave": "custom_1",
+        "atual": "R$ 1.600",
+        "media_3m": "R$ 900",
+        "cortar": "R$ 700",
+        "limite_sugerido": "R$ 900"
+      },
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Lazer",
+        "atual": "R$ 700",
+        "media_3m": "R$ 500",
+        "cortar": "R$ 200",
+        "limite_sugerido": "R$ 500"
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 1.100"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Para guardar 20% da renda, faltam **R$ 1.100** por mês.",
+    "O caminho mais leve é voltar à sua própria média onde o gasto subiu: [[cat:custom_1]] (de R$ 1.600 para R$ 900) e [[cat:leisure]] (de R$ 700 para R$ 500).",
+    "Se for escolher uma só, comece por [[cat:custom_1]]: cortar **R$ 700** é a maior parte dos R$ 1.100 que faltam."
+  ]
+}

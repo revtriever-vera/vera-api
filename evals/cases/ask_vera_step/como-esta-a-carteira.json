@@ -1,0 +1,35 @@
+{
+  "id": "como-esta-a-carteira",
+  "task": "ask_vera_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "como está minha carteira?",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "portfolio_overview",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$ 412.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "reference": ["Sua carteira soma **R$ 412.000**, com 18% em dólar. [[cls:acoes_br]] está acima da meta (38% contra 30%)."]
+}

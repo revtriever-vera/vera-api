@@ -1,0 +1,71 @@
+{
+  "id": "referencia-prototipo",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:acoes_br": "Ações Brasil",
+    "cls:acoes_eua": "Ações EUA",
+    "cls:fii": "FIIs"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$ 412.000",
+    "exposicao_dolar_pct": "18%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "atual": "22%",
+        "meta": "30%",
+        "situacao": "abaixo"
+      },
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "atual": "38%",
+        "meta": "30%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "acoes_eua",
+        "rotulo_padrao": "Ações EUA",
+        "atual": "18%",
+        "meta": "20%",
+        "situacao": "dentro"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "FIIs",
+        "atual": "22%",
+        "meta": "20%",
+        "situacao": "dentro"
+      }
+    ],
+    "aporte_planejado": {
+      "total": "R$ 5.000",
+      "por_classe": [
+        {
+          "chave": "rf_pos",
+          "valor": "R$ 5.000"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "mustCite": ["R$ 412.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **R$ 412.000**, com 18% em dólar.",
+    "[[cls:rf_pos]] está abaixo da meta (22% contra 30%) e [[cls:acoes_br]] está acima (38% contra 30%).",
+    "Não precisa vender; basta não aportar nelas por um tempo.",
+    "Com **R$ 5.000** de aporte, a sugestão é R$ 5.000 em [[cls:rf_pos]]."
+  ]
+}

@@ -25,3 +25,4 @@ coverage/
 CREDENCIAIS-LOCAIS.md
 
 cdk.context.json
+evals/out/

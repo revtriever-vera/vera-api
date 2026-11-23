@@ -1,0 +1,94 @@
+{
+  "id": "referencia-prototipo",
+  "task": "summary_month",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:eating_out": "Delivery e restaurantes",
+    "cat:leisure": "Lazer",
+    "cat:housing": "Moradia",
+    "cat:health": "Saúde",
+    "cat:groceries": "Mercado"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": false,
+    "renda": "R$ 28.000",
+    "gastos": "R$ 22.400",
+    "guardado": "R$ 5.600",
+    "taxa_poupanca": "20%",
+    "meta_economia_pct": "25%",
+    "falta_para_meta": "R$ 1.400",
+    "fixos": {
+      "total": "R$ 11.200",
+      "pct_renda": "40%"
+    },
+    "flexiveis": {
+      "total": "R$ 11.200"
+    },
+    "sem_categoria": {
+      "total": "R$ 1.900",
+      "transacoes": 14
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "eating_out",
+        "rotulo_padrao": "Delivery e restaurantes",
+        "tipo": "flexivel",
+        "total": "R$ 1.800",
+        "media_3m": "R$ 1.300",
+        "variacao_pct": "+38%",
+        "nova": false
+      },
+      {
+        "chave": "leisure",
+        "rotulo_padrao": "Lazer",
+        "tipo": "flexivel",
+        "total": "R$ 970",
+        "media_3m": "R$ 800",
+        "variacao_pct": "+21%",
+        "nova": false
+      },
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Moradia",
+        "tipo": "fixo",
+        "total": "R$ 7.200",
+        "media_3m": "R$ 7.200",
+        "variacao_pct": "0%",
+        "nova": false
+      },
+      {
+        "chave": "health",
+        "rotulo_padrao": "Saúde",
+        "tipo": "fixo",
+        "total": "R$ 4.000",
+        "media_3m": "R$ 3.900",
+        "variacao_pct": "+3%",
+        "nova": false
+      },
+      {
+        "chave": "groceries",
+        "rotulo_padrao": "Mercado",
+        "tipo": "flexivel",
+        "total": "R$ 3.500",
+        "media_3m": "R$ 3.600",
+        "variacao_pct": "-3%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 28.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Entraram **R$ 28.000** e saíram R$ 22.400, então você guardou R$ 5.600, 20% da renda contra a meta de 25%.",
+    "O que mais subiu foi [[cat:eating_out]] (+38% sobre a sua média) e [[cat:leisure]] (+21%).",
+    "Os fixos ([[cat:housing]] e [[cat:health]]) somam **R$ 11.200**, 40% da renda."
+  ]
+}

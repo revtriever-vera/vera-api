@@ -1,0 +1,74 @@
+{
+  "id": "gastou-mais-que-ganhou",
+  "task": "summary_month",
+  "locale": "pt-BR",
+  "labels": {
+    "cat:housing": "Moradia",
+    "cat:subscriptions": "Assinaturas",
+    "cat:shopping": "Compras"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": false,
+    "renda": "R$ 8.000",
+    "gastos": "R$ 9.400",
+    "guardado": "-R$ 1.400",
+    "taxa_poupanca": "-17%",
+    "meta_economia_pct": "20%",
+    "falta_para_meta": "R$ 3.000",
+    "fixos": {
+      "total": "R$ 4.500",
+      "pct_renda": "56%"
+    },
+    "flexiveis": {
+      "total": "R$ 4.900"
+    },
+    "sem_categoria": {
+      "total": "R$ 700",
+      "transacoes": 9
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Moradia",
+        "tipo": "fixo",
+        "total": "R$ 4.500",
+        "media_3m": "R$ 4.500",
+        "variacao_pct": "0%",
+        "nova": false
+      },
+      {
+        "chave": "subscriptions",
+        "rotulo_padrao": "Assinaturas",
+        "tipo": "flexivel",
+        "total": "R$ 900",
+        "media_3m": "R$ 400",
+        "variacao_pct": "+125%",
+        "nova": false
+      },
+      {
+        "chave": "shopping",
+        "rotulo_padrao": "Compras",
+        "tipo": "flexivel",
+        "total": "R$ 2.600",
+        "media_3m": "R$ 1.500",
+        "variacao_pct": "+73%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$ 8.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Entraram **R$ 8.000** e saíram R$ 9.400, então faltaram R$ 1.400.",
+    "O que mais subiu foi [[cat:subscriptions]] (+125% sobre a sua média) e [[cat:shopping]] (+73%).",
+    "Os fixos ([[cat:housing]]) somam **R$ 4.500**, 56% da renda."
+  ]
+}

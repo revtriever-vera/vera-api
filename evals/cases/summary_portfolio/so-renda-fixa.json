@@ -1,0 +1,55 @@
+{
+  "id": "so-renda-fixa",
+  "task": "summary_portfolio",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:rf_ipca": "Renda fixa IPCA+"
+  },
+  "context": {
+    "moeda_base": "BRL",
+    "total": "R$ 64.000",
+    "exposicao_dolar_pct": "0%",
+    "tolerancia_pp": "5 pp",
+    "carteira_pct": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "atual": "70%",
+        "meta": "60%",
+        "situacao": "acima"
+      },
+      {
+        "chave": "rf_ipca",
+        "rotulo_padrao": "Renda fixa IPCA+",
+        "atual": "30%",
+        "meta": "40%",
+        "situacao": "abaixo"
+      }
+    ],
+    "aporte_planejado": {
+      "total": "R$ 2.000",
+      "por_classe": [
+        {
+          "chave": "rf_ipca",
+          "valor": "R$ 2.000"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "mustCite": ["R$ 64.000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira soma **R$ 64.000**, com 0% em dólar.",
+    "[[cls:rf_ipca]] está abaixo da meta (30% contra 40%) e [[cls:rf_pos]] está acima (70% contra 60%).",
+    "Não precisa vender; basta não aportar nelas por um tempo.",
+    "Com **R$ 2.000** de aporte, a sugestão é R$ 2.000 em [[cls:rf_ipca]]."
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "mostly-uncategorized",
+  "task": "summary_month",
+  "locale": "en",
+  "labels": {
+    "cat:housing": "Housing",
+    "cat:shopping": "Shopping"
+  },
+  "context": {
+    "mes": "2026-03",
+    "parcial": false,
+    "renda": "R$15,000",
+    "gastos": "R$13,800",
+    "guardado": "R$1,200",
+    "taxa_poupanca": "8%",
+    "meta_economia_pct": "20%",
+    "falta_para_meta": "R$1,800",
+    "fixos": {
+      "total": "R$5,200",
+      "pct_renda": "35%"
+    },
+    "flexiveis": {
+      "total": "R$8,600"
+    },
+    "sem_categoria": {
+      "total": "R$5,600",
+      "transacoes": 41
+    },
+    "gastos_por_categoria": [
+      {
+        "chave": "housing",
+        "rotulo_padrao": "Housing",
+        "tipo": "fixo",
+        "total": "R$5,200",
+        "media_3m": "R$5,200",
+        "variacao_pct": "0%",
+        "nova": false
+      },
+      {
+        "chave": "shopping",
+        "rotulo_padrao": "Shopping",
+        "tipo": "flexivel",
+        "total": "R$3,000",
+        "media_3m": "R$2,100",
+        "variacao_pct": "+43%",
+        "nova": false
+      }
+    ]
+  },
+  "expect": {
+    "mustCite": ["R$15,000"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "**R$15,000** came in and R$13,800 went out, so you saved R$1,200, 8% of income against your 20% goal.",
+    "What rose most was [[cat:shopping]] (+43% over your average).",
+    "Fixed costs ([[cat:housing]]) add up to **R$5,200**, 35% of income.",
+    "R$5,600 is still uncategorized, in 41 transactions."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "goal-met",
+  "task": "summary_cuts",
+  "locale": "en",
+  "labels": {},
+  "context": {
+    "meta_economia_pct": "25%",
+    "falta_por_mes": "R$0",
+    "status": "meta_batida",
+    "categorias_flexiveis": []
+  },
+  "fixedFigures": {
+    "goalBps": 2500,
+    "surplusMinor": 240000,
+    "currency": "BRL"
+  },
+  "expect": {
+    "mustCite": ["R$2,400"],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 4
+    }
+  },
+  "reference": [
+    "You already save more than your 25% goal: **R$2,400** is left above it. There is nothing to cut; that money can go to your next contribution."
+  ]
+}

@@ -395,6 +395,7 @@ export default tseslint.config(
             'src/shared/constants/**/*.ts',
             'src/**/*.schema.ts',
             'src/**/*.schemas.ts',
+            'evals/**/*.schemas.ts',
             'src/**/*.contracts.ts',
             'src/**/*.types.ts'
         ],

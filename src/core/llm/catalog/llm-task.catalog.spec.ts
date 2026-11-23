@@ -49,6 +49,12 @@ describe('catálogo de tarefas', () => {
         expect(askSteps).toBe(67);
     });
 
+    it('toda tarefa usa raciocínio mínimo: nos evals ao vivo ficou 3 a 4 vezes mais rápido, sem texto cortado e com a mesma nota', () => {
+        for (const spec of LLM_TASK_CATALOG) {
+            expect(spec.reasoning).toBe('minimal');
+        }
+    });
+
     it('toda tarefa tem teto de saída, limite de tentativas e versão de prompt', () => {
         for (const spec of LLM_TASK_CATALOG) {
             expect(spec.maxOutputTokens).toBeGreaterThan(0);
