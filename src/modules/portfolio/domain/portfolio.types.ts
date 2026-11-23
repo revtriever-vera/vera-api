@@ -68,6 +68,7 @@ export interface SourceAsset {
     readonly currency: string;
     readonly quantityDecimals: number;
     readonly dollarExposure: boolean;
+    readonly assetKind: string;
     readonly sector: string | null;
     readonly issuerGroupId: string | null;
 }
@@ -152,6 +153,7 @@ export interface Holding {
     readonly valueSource: ValueSource;
     readonly priceDate: string | null;
     readonly dollarExposure: boolean;
+    readonly assetKind: string | null;
     readonly sector: string | null;
     readonly issuerGroupId: string | null;
     readonly issuerId: string | null;

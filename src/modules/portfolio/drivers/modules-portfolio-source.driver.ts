@@ -95,6 +95,7 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
             currency: asset.currency,
             quantityDecimals: asset.quantityDecimals,
             dollarExposure: asset.dollarExposure,
+            assetKind: asset.kind,
             sector: profile.sector,
             issuerGroupId: profile.issuerGroupId
         };

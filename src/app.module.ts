@@ -16,6 +16,7 @@ import { QueueModule } from './core/queue/queue.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { BankConnectionsModule } from './modules/bank-connections/bank-connections.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { ConcentrationModule } from './modules/concentration/concentration.module';
 import { ContributionModule } from './modules/contribution/contribution.module';
 import { FixedIncomeModule } from './modules/fixed-income/fixed-income.module';
 import { FixedIncomeCoverageModule } from './modules/fixed-income-coverage/fixed-income-coverage.module';
@@ -73,6 +74,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         MarketDataModule,
         PortfolioModule,
         PortfolioExportModule,
+        ConcentrationModule,
         ContributionModule,
         SpendingCategoriesModule,
         TransactionsModule,
