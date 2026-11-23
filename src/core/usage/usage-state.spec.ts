@@ -3,8 +3,21 @@ import { usageStateOf } from './usage-state';
 
 const RESETS_AT: Date = new Date('2026-11-01T03:00:00.000Z');
 
-function stateOf(capMicros: number | null, ai: number, whatsapp: number = 0, warningBps: number = 8000, minRoomMicros: number = 0): ReturnType<typeof usageStateOf> {
-    return usageStateOf({ period: '2026-10', resetsAt: RESETS_AT, capMicros, byFeatureMicros: { ai, whatsapp }, warningBps, minRoomMicros });
+function stateOf(
+    capMicros: number | null,
+    ai: number,
+    whatsapp: number = 0,
+    warningBps: number = 8000,
+    minRoomMicros: number = 0
+): ReturnType<typeof usageStateOf> {
+    return usageStateOf({
+        period: '2026-10',
+        resetsAt: RESETS_AT,
+        capMicros,
+        byFeatureMicros: { ai, whatsapp },
+        warningBps,
+        minRoomMicros
+    });
 }
 
 describe('usageStateOf', () => {

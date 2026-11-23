@@ -6,7 +6,10 @@ import { FakeEventDelivery } from './fake-event-delivery.service';
 
 function build(extra: NodeJS.ProcessEnv = {}, quoted: number | null = null): { driver: FakeBillingEngineDriver; delivered: EngineEvent[] } {
     const delivered: EngineEvent[] = [];
-    const delivery = { quote: vi.fn().mockResolvedValue(quoted), deliver: vi.fn().mockImplementation((event: EngineEvent) => Promise.resolve(void delivered.push(event))) };
+    const delivery = {
+        quote: vi.fn().mockResolvedValue(quoted),
+        deliver: vi.fn().mockImplementation((event: EngineEvent) => Promise.resolve(void delivered.push(event)))
+    };
     const config: BillingSettings = parseBillingConfig({ IS_LOCAL: 'true', ...extra });
     return { driver: new FakeBillingEngineDriver(config, delivery as unknown as FakeEventDelivery), delivered };
 }

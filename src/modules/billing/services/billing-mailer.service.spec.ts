@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MailerPort } from '../../../core/mail/mailer.port';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { OwnerRecipientsService } from '../../identity/services/owner-recipients.service';
@@ -11,8 +10,10 @@ function build(locale: AppLocale): { service: BillingMailerService; enqueue: Ret
     const enqueue: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const service: BillingMailerService = new BillingMailerService(
         parseBillingConfig({ IS_LOCAL: 'true' }),
-        { enqueue } as unknown as MailerPort,
-        { list: vi.fn().mockResolvedValue([{ userId: 'u1', email: 'dono@example.test', firstName: 'Ana', locale }]) } as unknown as OwnerRecipientsService,
+        { enqueue },
+        {
+            list: vi.fn().mockResolvedValue([{ userId: 'u1', email: 'dono@example.test', firstName: 'Ana', locale }])
+        } as unknown as OwnerRecipientsService,
         { timezoneOfCompany: vi.fn().mockResolvedValue('America/Sao_Paulo') } as unknown as CompanyTimezoneService,
         { recordOnce: vi.fn().mockResolvedValue(true) } as unknown as BillingNotificationDomain
     );
@@ -21,7 +22,7 @@ function build(locale: AppLocale): { service: BillingMailerService; enqueue: Ret
 
 async function paidThroughSent(locale: AppLocale, notice: Partial<BillingNotice>): Promise<string> {
     const { service, enqueue } = build(locale);
-    await service.notify({ kind: 'premium_activated', subjectId: 'sub-1', ...notice } as BillingNotice);
+    await service.notify({ kind: 'premium_activated', subjectId: 'sub-1', ...notice });
     const call = enqueue.mock.calls[0] as [{ props: Record<string, string> }];
     return call[0].props['paidThrough'] ?? '';
 }

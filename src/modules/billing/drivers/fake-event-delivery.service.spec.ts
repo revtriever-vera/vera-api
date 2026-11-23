@@ -86,7 +86,13 @@ describe('FakeEventDelivery', () => {
     });
 
     describe('quote', () => {
-        const ASK = { subscriptionId: 'fake_x_sub_000001', customerExternalRef: 'company-1', cycle: 2, periodStart: '2026-12-01', periodEnd: '2026-12-31' };
+        const ASK = {
+            subscriptionId: 'fake_x_sub_000001',
+            customerExternalRef: 'company-1',
+            cycle: 2,
+            periodStart: '2026-12-01',
+            periodEnd: '2026-12-31'
+        };
         const ENV: NodeJS.ProcessEnv = {
             FAKE_BILLING_WEBHOOK_URL: 'http://localhost:3333/hook',
             FAKE_BILLING_PUBLIC_URL: 'http://localhost:3333',

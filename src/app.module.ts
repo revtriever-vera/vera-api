@@ -54,7 +54,12 @@ import { WhatsAppChatModule } from './modules/whatsapp-chat/whatsapp-chat.module
 import { WhatsAppLinkModule } from './modules/whatsapp-link/whatsapp-link.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 
-const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cookie', 'req.headers["x-revtriever-signature"]', 'res.headers["set-cookie"]'];
+const REDACTED_PATHS: string[] = [
+    'req.headers.authorization',
+    'req.headers.cookie',
+    'req.headers["x-revtriever-signature"]',
+    'res.headers["set-cookie"]'
+];
 
 @Module({
     imports: [
