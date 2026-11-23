@@ -63,6 +63,12 @@ export class AlreadySubscribedError extends AppError {
     }
 }
 
+export class PlatformCompanyCannotSubscribeError extends AppError {
+    public constructor() {
+        super({ code: 'billing.platform_company', status: 403, detail: 'The platform company does not subscribe to Premium.' });
+    }
+}
+
 export class TrialRequiresCardError extends AppError {
     public constructor() {
         super({
