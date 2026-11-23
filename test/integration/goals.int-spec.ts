@@ -1,3 +1,5 @@
+import { Workbook, Worksheet } from 'exceljs';
+import JSZip from 'jszip';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { IndexSyncApplication } from '../../src/modules/fixed-income/application/index-sync.application';
 import { addDays } from '../../src/modules/fixed-income/domain/curve/business-days';
@@ -6,7 +8,7 @@ import { TransactionIngestionService } from '../../src/modules/transactions/serv
 import { addMonths, monthOfDate } from '../../src/modules/spending-summary/domain/month';
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { asRole } from '../support/as-role';
-import { Account, AllocationHarness } from './support/allocation-harness';
+import { Account, AllocationHarness, RawResponse } from './support/allocation-harness';
 import { seedPrototypeAssets, seedUsdRate } from './support/portfolio-seed';
 import { CapturingPublisher } from './support/queue';
 
@@ -419,5 +421,107 @@ describe('goals', () => {
         expect([travel.status, plain.status, invalid.status]).toEqual([422, 201, 400]);
         expect(travel.body.type).toBe('goals.reserve_months_not_allowed');
         expect((plain.body as ReserveBody).reserve).toBeNull();
+    });
+    interface ExportBody {
+        readonly sections: {
+            readonly goals?: {
+                readonly goals: { readonly name: string; readonly holderUserId: string | null }[];
+                readonly goalHoldings: { readonly holdingId: string; readonly shareBps: number }[];
+            };
+        };
+    }
+
+    async function team(label: string): Promise<{ owner: Account; ana: Account }> {
+        const owner: Account = await harness.signUp(label);
+        return { owner, ana: await asRole(harness, owner, 'editor') };
+    }
+
+    async function rowsOf(zip: JSZip, file: string, sheet: number): Promise<unknown[][]> {
+        const workbook: Workbook = new Workbook();
+        await workbook.xlsx.load(
+            (await (zip.file(file) as JSZip.JSZipObject).async('nodebuffer')) as unknown as Parameters<Workbook['xlsx']['load']>[0]
+        );
+        const worksheet: Worksheet = workbook.worksheets[sheet] as Worksheet;
+        const rows: unknown[][] = [];
+        worksheet.eachRow((row) => rows.push((row.values as unknown[]).slice(1)));
+        return rows;
+    }
+
+    it('Exportar tudo: leva os objetivos e os vínculos da company, nas duas abas, e só o dono baixa', async () => {
+        const { owner } = await team('export-a');
+        const other: Account = await harness.signUp('export-b');
+        const positionId: string = await addPosition(owner, 'PETR4');
+        await create(owner, { name: 'Viagem da A', holdings: [{ kind: 'position', holdingId: positionId, shareBps: 2500 }] });
+        await create(other, { name: 'Da B' });
+
+        const json = await harness.call<ExportBody>(owner.token, 'GET', '/account/export');
+        const sheets: RawResponse = await harness.callRaw(owner.token, '/account/export/spreadsheets');
+        const editor: Account = await asRole(harness, owner, 'editor');
+
+        expect(json.body.sections.goals?.goals.map((goal) => goal.name)).toEqual(['Viagem da A']);
+        expect(json.body.sections.goals?.goalHoldings).toEqual([expect.objectContaining({ holdingId: positionId, shareBps: 2500 })]);
+        const zip: JSZip = await JSZip.loadAsync(sheets.bytes);
+        const goals: unknown[][] = await rowsOf(zip, 'objetivos.xlsx', 0);
+        const links: unknown[][] = await rowsOf(zip, 'objetivos.xlsx', 1);
+        expect(goals.map((row) => [row[0], row[1], row[5], row[6]])).toEqual([
+            ['Objetivo', 'Tipo', 'Situação', 'Titular'],
+            ['Viagem da A', 'Viagem', 'Em dia', 'Conta toda']
+        ]);
+        expect(links.map((row) => [row[0], row[1]])).toEqual([
+            ['Objetivo', 'Ativo'],
+            ['Viagem da A', expect.any(String)]
+        ]);
+        expect((await harness.callRaw(editor.token, '/account/export/spreadsheets')).status).toBe(403);
+    });
+
+    it('dados de exemplo: carrega a reserva em dia e a viagem atrasada, marcadas, sem duplicar, fora da exportação, e limpa', async () => {
+        const owner: Account = await harness.signUp('sample');
+
+        await harness.call(owner.token, 'POST', '/onboarding/sample');
+        await harness.call(owner.token, 'POST', '/onboarding/sample');
+
+        const list = await harness.call<ListBody>(owner.token, 'GET', '/goals');
+        expect(list.body.items.map((item) => [item.name, item.status]).toSorted()).toEqual([
+            ['Reserva de emergência', 'on_track'],
+            ['Viagem', 'behind']
+        ]);
+        const marked = await harness.pg.query<{ total: string }>(
+            `SELECT count(*) AS total FROM "Goals" WHERE "companyId" = $1 AND "isSample" = true AND "deletedAt" IS NULL`,
+            [owner.company.id]
+        );
+        expect(Number(marked.rows[0]?.total)).toBe(2);
+        const exported = await harness.call<ExportBody>(owner.token, 'GET', '/account/export');
+        expect(exported.body.sections.goals).toEqual({ goals: [], goalHoldings: [] });
+
+        await harness.call(owner.token, 'DELETE', '/onboarding/sample');
+
+        expect((await harness.call<ListBody>(owner.token, 'GET', '/goals')).body.items).toEqual([]);
+    });
+
+    it('com objetivo real, o exemplo não é carregado e a limpeza só apaga exemplo', async () => {
+        const owner: Account = await harness.signUp('sample-real');
+        await create(owner, { name: 'Real' });
+
+        await harness.call(owner.token, 'POST', '/onboarding/sample');
+        await harness.call(owner.token, 'DELETE', '/onboarding/sample');
+
+        expect((await harness.call<ListBody>(owner.token, 'GET', '/goals')).body.items.map((item) => item.name)).toEqual(['Real']);
+    });
+
+    it('saída de titular: o objetivo da pessoa passa para a Conta toda e a reserva dela vira objetivo comum se já há reserva da conta', async () => {
+        const { owner, ana } = await team('departure');
+        const hers = await create(owner, { name: 'Da Ana', holderUserId: ana.user.id });
+        const herReserve = await create(owner, { kind: 'emergency_reserve', name: 'Reserva da Ana', holderUserId: ana.user.id });
+        const wholeReserve = await create(owner, { kind: 'emergency_reserve', name: 'Reserva da conta' });
+        expect([hers.status, herReserve.status, wholeReserve.status]).toEqual([201, 201, 201]);
+
+        const removal = await harness.call(owner.token, 'DELETE', `/members/${ana.user.id}`);
+
+        expect(removal.status).toBe(204);
+        const list = await harness.call<ListBody & { items: (GoalBody & { kind: string })[] }>(owner.token, 'GET', '/goals');
+        const byName = new Map(list.body.items.map((item) => [item.name, item]));
+        expect(byName.get('Da Ana')?.holderUserId).toBeNull();
+        expect(byName.get('Reserva da Ana')).toMatchObject({ holderUserId: null, kind: 'other' });
+        expect(byName.get('Reserva da conta')).toMatchObject({ holderUserId: null, kind: 'emergency_reserve' });
     });
 });

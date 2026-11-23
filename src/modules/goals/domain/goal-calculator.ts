@@ -13,6 +13,11 @@ export function firstOfMonth(isoDate: string): string {
     return `${isoDate.slice(0, 7)}-01`;
 }
 
+export function monthOf(isoDate: string, deltaMonths: number): string {
+    const index: number = monthIndexOf(isoDate) + deltaMonths;
+    return `${String(Math.floor(index / MONTHS_IN_YEAR)).padStart(4, '0')}-${String((index % MONTHS_IN_YEAR) + 1).padStart(2, '0')}`;
+}
+
 export function monthsRemaining(today: string, targetDate: string): number {
     return Math.max(1, monthIndexOf(targetDate) - monthIndexOf(today));
 }

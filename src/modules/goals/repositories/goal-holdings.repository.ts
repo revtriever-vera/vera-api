@@ -37,6 +37,12 @@ export class GoalHoldingsRepository extends TenantRepository<'GoalHoldings'> {
         );
     }
 
+    public async softDeleteByGoals(goalIds: readonly string[]): Promise<void> {
+        if (goalIds.length > 0) {
+            await this.updateManyRows({ goalId: goalIds }, { deletedAt: new Date() });
+        }
+    }
+
     public async softDeleteByGoal(goalId: string): Promise<void> {
         await this.updateManyRows({ goalId }, { deletedAt: new Date() });
     }
