@@ -29,9 +29,12 @@ export function isOverdue(lastDate: string, cadence: Cadence, today: string): bo
     return signedDaysBetween(stopDeadline(lastDate, cadence), today) > 0;
 }
 
-export function kindOf(categoryKey: string | null, knownSubscription: boolean): SeriesKind {
+export function kindOf(categoryKey: string | null, knownSubscription: boolean, pixToPerson: boolean): SeriesKind {
     if (knownSubscription || categoryKey === SUBSCRIPTIONS_CATEGORY) {
         return SERIES_KINDS.subscription;
+    }
+    if (pixToPerson && categoryKey === null) {
+        return SERIES_KINDS.bill;
     }
     return categoryKey !== null && BILL_CATEGORIES.has(categoryKey) ? SERIES_KINDS.bill : SERIES_KINDS.other;
 }

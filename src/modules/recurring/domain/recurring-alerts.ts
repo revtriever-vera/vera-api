@@ -88,18 +88,28 @@ function priceAlert(series: AlertSeries, charge: AlertCharge, from: number): Des
     };
 }
 
+function plateauStart(amounts: readonly number[]): number {
+    for (let start: number = 0; start < amounts.length; start += 1) {
+        if (isSteady(amounts.slice(start))) {
+            return start;
+        }
+    }
+    return amounts.length - 1;
+}
+
 function priceIncreaseInside(series: AlertSeries, scope: Scope): DesiredAlert[] {
     const own: AlertCharge[] = resolve(series.chargeIds, scope);
-    const last: AlertCharge | undefined = own.at(-1);
     const annual: boolean = series.cadence === CADENCES.annual;
-    const prior: AlertCharge[] = own.slice(0, -1).slice(-(annual ? ANNUAL_WINDOW : PRICE_WINDOW));
-    if (last === undefined || prior.length < (annual ? ANNUAL_WINDOW : MIN_PRIOR) || !isRecent(last.date, scope.today)) {
+    const start: number = plateauStart(own.map((charge: AlertCharge): number => charge.amountMinor));
+    const first: AlertCharge | undefined = own[start];
+    const prior: AlertCharge[] = own.slice(0, start).slice(-(annual ? ANNUAL_WINDOW : PRICE_WINDOW));
+    if (first === undefined || prior.length < (annual ? ANNUAL_WINDOW : MIN_PRIOR) || !isRecent(first.date, scope.today)) {
         return [];
     }
     const amounts: number[] = prior.map((charge: AlertCharge): number => charge.amountMinor);
     const base: number = median(amounts);
-    const raised: boolean = last.amountMinor >= base + riseThreshold(base);
-    return raised && isSteady(amounts) ? [priceAlert(series, last, base)] : [];
+    const raised: boolean = first.amountMinor >= base + riseThreshold(base);
+    return raised && isSteady(amounts) ? [priceAlert(series, first, base)] : [];
 }
 
 function isOnSchedule(series: AlertSeries, previous: AlertCharge, next: AlertCharge): boolean {

@@ -87,8 +87,10 @@ function leftoverOf(stored: StoredSeries, today: string): SeriesAction[] {
     if (stored.status === SERIES_STATUSES.suggested) {
         return [{ kind: 'remove', id: stored.id }];
     }
-    const overdue: boolean = stored.status === SERIES_STATUSES.confirmed && isOverdue(stored.lastDate, stored.cadence, today);
-    return overdue ? [{ kind: 'stop', id: stored.id }] : [];
+    const confirmed: boolean = stored.status === SERIES_STATUSES.confirmed;
+    const orphan: boolean = confirmed && stored.chargeIds.size === 0;
+    const overdue: boolean = confirmed && isOverdue(stored.lastDate, stored.cadence, today);
+    return orphan || overdue ? [{ kind: 'stop', id: stored.id }] : [];
 }
 
 function planDetected(
@@ -157,7 +159,7 @@ export function detectedFieldsOf(detected: DetectedSeries): DetectedFields {
         valueMode: detected.valueMode,
         expectedDay: detected.expectedDay,
         accountId: detected.accountId,
-        kind: kindOf(detected.categoryKey, detected.knownSubscription),
+        kind: kindOf(detected.categoryKey, detected.knownSubscription, detected.pixToPerson),
         typicalAmountMinor: detected.typicalAmountMinor,
         minAmountMinor: detected.minAmountMinor,
         maxAmountMinor: detected.maxAmountMinor,

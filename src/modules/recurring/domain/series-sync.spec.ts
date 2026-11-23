@@ -22,6 +22,7 @@ function detected(overrides: Partial<DetectedSeries> = {}): DetectedSeries {
         accountIds: ['nubank'],
         categoryKey: 'subscriptions',
         knownSubscription: true,
+        pixToPerson: false,
         firstDate: '2026-09-05',
         lastDate: '2026-11-05',
         ...overrides
@@ -112,7 +113,7 @@ describe('planSync', () => {
             status: 'confirmed',
             merchantKey: 'LUZ',
             lastDate: '2026-11-10',
-            chargeIds: new Set<string>()
+            chargeIds: new Set<string>(['t1'])
         });
         const manualSuggestion: StoredSeries = stored({
             id: 'user-stopped',
@@ -203,5 +204,28 @@ describe('conversões do detector', () => {
         expect(detectedFieldsOf(detected()).kind).toBe('subscription');
         expect(detectedFieldsOf(detected({ knownSubscription: false, categoryKey: 'housing' })).kind).toBe('bill');
         expect(detectedFieldsOf(detected({ knownSubscription: false, categoryKey: null })).kind).toBe('other');
+    });
+});
+
+describe('série confirmada sem cobranças', () => {
+    const orphan = (overrides: Partial<StoredSeries>): StoredSeries => ({
+        id: 'o',
+        status: 'confirmed',
+        merchantKey: 'ENEL',
+        accountId: 'nubank',
+        cadence: 'monthly',
+        typicalAmountMinor: 18000,
+        lastDate: '2026-11-10',
+        stoppedBy: null,
+        chargeIds: new Set<string>(),
+        ...overrides
+    });
+
+    it('para a série confirmada que perdeu todas as cobranças, mesmo em dia', () => {
+        expect(planSync([], [orphan({})], [], TODAY)).toEqual([{ kind: 'stop', id: 'o' }]);
+    });
+
+    it('não mexe na confirmada que ainda tem cobrança', () => {
+        expect(planSync([], [orphan({ chargeIds: new Set<string>(['t1']) })], [], TODAY)).toEqual([]);
     });
 });
