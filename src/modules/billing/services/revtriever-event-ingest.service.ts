@@ -47,12 +47,12 @@ export class RevtrieverEventIngestService {
         return true;
     }
 
-    public async publish(event: RevtrieverEvent, retryFailed: boolean): Promise<void> {
+    public async publish(event: RevtrieverEvent, republish: boolean): Promise<void> {
         await this.publisher.publish(
             QUEUES.billing,
             MESSAGE_TYPES.billingRevtrieverEventReceived,
             { eventId: event.id },
-            { jobId: `revtriever-event-${event.id}`, retryFailed }
+            { jobId: `revtriever-event-${event.id}`, replaceExisting: republish }
         );
     }
 }

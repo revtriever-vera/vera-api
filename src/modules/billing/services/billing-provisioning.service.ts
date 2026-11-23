@@ -7,10 +7,10 @@ import { BillingEngineRejectedError, NoSubscriptionError } from '../domain/billi
 import { CardCaptureSession, EngineSubscription, SavedCard } from '../domain/billing-engine.types';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
 import { BillingSubscription, MAX_CHARGE_DAY, RevtrieverEvent } from '../domain/billing.types';
+import { RevtrieverEventDomain } from '../domain/revtriever-event.domain';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { BillingMetricsService } from './billing-metrics.service';
 import { RevtrieverEventIngestService } from './revtriever-event-ingest.service';
-import { RevtrieverEventDomain } from '../domain/revtriever-event.domain';
 
 const LINK_REPLAY_BATCH: number = 100;
 
@@ -79,8 +79,9 @@ export class BillingProvisioningService {
             await this.subscriptions.saveCard(subscription.id, card.brand, card.last4);
             return;
         }
-        if (previous?.cardLast4 !== null && previous?.cardLast4 !== undefined && subscription.cardLast4 === null) {
-            await this.subscriptions.saveCard(subscription.id, previous.cardBrand, previous.cardLast4);
+        const last4: string | null = previous?.cardLast4 ?? null;
+        if (last4 !== null && subscription.cardLast4 === null) {
+            await this.subscriptions.saveCard(subscription.id, previous?.cardBrand ?? null, last4);
         }
     }
 

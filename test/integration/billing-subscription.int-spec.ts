@@ -522,7 +522,10 @@ describe('assinatura na Revtriever (driver fake)', () => {
         await harness.pg.query(
             `UPDATE "RevtrieverEvents" SET "receivedAt" = now() - interval '15 minutes' WHERE "externalEventId" = 'evt-before-link'`
         );
+        const replaced = (): number => publisher.published.filter((m: PublishedMessage) => m.options?.replaceExisting === true).length;
+        const before: number = replaced();
         await sync();
+        expect(replaced()).toBeGreaterThan(before);
         const row = await harness.pg.query<{ id: string }>('SELECT id FROM "RevtrieverEvents" WHERE "externalEventId" = $1', [
             'evt-before-link'
         ]);
