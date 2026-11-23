@@ -25,4 +25,8 @@ export class RevtrieverEventDomain {
     public async listOfTypeSince(type: string, since: Date): Promise<RevtrieverEvent[]> {
         return this.events.listOfTypeSince(type, since);
     }
+
+    public async listReceivedOfSubscription(engineSubscriptionId: string, limit: number): Promise<RevtrieverEvent[]> {
+        return this.events.listReceivedOfSubscription(engineSubscriptionId, limit);
+    }
 }

@@ -70,7 +70,8 @@ export class BillingCheckoutService {
             current.trialEndsAt === null ? null : await this.trials.resumeDatesOf(current.trialEndsAt);
         const fresh: BillingSubscription = await this.reservations.forResume(current, paidThrough, trialDates);
         const active: BillingSubscription = await this.provisionCounting(fresh);
-        await this.provisioning.inheritCard(active);
+        await this.provisioning.inheritCard(active, current);
+        await this.provisioning.inheritPaidPeriod(active, current);
         await this.trials.carryOver(active);
         this.logs.subscription('resumed', active.id, active.paymentMethod);
     }

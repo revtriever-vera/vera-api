@@ -61,6 +61,10 @@ export class BillingLogService {
         this.logService.info({ message: 'event ignored', identifier: EVENTS, meta: { type, eventId } });
     }
 
+    public eventDeferred(type: string, eventId: string): void {
+        this.logService.info({ message: 'event deferred', identifier: EVENTS, meta: { type, eventId } });
+    }
+
     public eventFailed(type: string, eventId: string, reason: string): void {
         this.logService.error({ message: 'event failed', identifier: EVENTS, meta: { type, eventId, reason } });
     }

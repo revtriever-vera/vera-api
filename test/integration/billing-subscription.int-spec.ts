@@ -498,4 +498,86 @@ describe('assinatura na Revtriever (driver fake)', () => {
         expect(await amountOf(account, 1)).toBe(745);
         expect(await amountOf(account, 2)).toBe(1118);
     });
+
+    it('evento que chega antes do vínculo da assinatura fica guardado e é aplicado depois do vínculo; passado o prazo, é descartado', async () => {
+        const account: Account = await harness.signUp('late-link');
+        const eventBody = (id: string): string =>
+            JSON.stringify({
+                id,
+                type: 'invoice.issued',
+                occurredAt: new Date().toISOString(),
+                data: { subscriptionId: 'late-sub-1', invoiceId: 'late-inv-1', customerExternalRef: account.company.id, totalCents: 1490 }
+            });
+        expect(await webhook(TOKEN, eventBody('evt-before-link'))).toBe(200);
+        await sync();
+        const statusOf = async (id: string): Promise<string | undefined> =>
+            (await harness.pg.query<{ status: string }>('SELECT status FROM "RevtrieverEvents" WHERE "externalEventId" = $1', [id])).rows[0]
+                ?.status;
+        expect(await statusOf('evt-before-link')).toBe('received');
+
+        expect((await harness.call(account.token, 'POST', '/billing/subscription', { method: 'pix' })).status).toBe(201);
+        await harness.pg.query(`UPDATE "BillingSubscriptions" SET "engineSubscriptionId" = 'late-sub-1' WHERE "companyId" = $1`, [
+            account.company.id
+        ]);
+        await harness.pg.query(
+            `UPDATE "RevtrieverEvents" SET "receivedAt" = now() - interval '15 minutes' WHERE "externalEventId" = 'evt-before-link'`
+        );
+        const replaced = (): number => publisher.published.filter((m: PublishedMessage) => m.options?.replaceExisting === true).length;
+        const before: number = replaced();
+        await sync();
+        expect(replaced()).toBeGreaterThan(before);
+        const row = await harness.pg.query<{ id: string }>('SELECT id FROM "RevtrieverEvents" WHERE "externalEventId" = $1', [
+            'evt-before-link'
+        ]);
+        await harness.app
+            .get(AppContext)
+            .run({ requestId: 'int-late', locale: 'pt-BR' }, async () => events().process(row.rows[0]?.id ?? ''));
+
+        expect(await statusOf('evt-before-link')).toBe('processed');
+        const invoices = await harness.pg.query(
+            'SELECT "engineInvoiceId" FROM "BillingInvoices" WHERE "companyId" = $1 AND "engineInvoiceId" = $2',
+            [account.company.id, 'late-inv-1']
+        );
+        expect(invoices.rows).toHaveLength(1);
+
+        expect(await webhook(TOKEN, eventBody('evt-never-linked').replace('late-sub-1', 'nobody-sub'))).toBe(200);
+        await harness.pg.query(
+            `UPDATE "RevtrieverEvents" SET "receivedAt" = now() - interval '25 hours' WHERE "externalEventId" = 'evt-never-linked'`
+        );
+        const old = await harness.pg.query<{ id: string }>('SELECT id FROM "RevtrieverEvents" WHERE "externalEventId" = $1', [
+            'evt-never-linked'
+        ]);
+        await harness.app
+            .get(AppContext)
+            .run({ requestId: 'int-old', locale: 'pt-BR' }, async () => events().process(old.rows[0]?.id ?? ''));
+        expect(await statusOf('evt-never-linked')).toBe('ignored');
+    });
+
+    it('cancelar, reativar e cancelar de novo respeita o fim do ciclo já pago e o cartão continua na tela', async () => {
+        const account: Account = await subscribePix('cancel-twice');
+        await payPix(account);
+        await harness.pg.query(
+            `UPDATE "BillingSubscriptions" SET "firstPaidAt" = now() - interval '30 days', "cardBrand" = 'visa', "cardLast4" = '4242' WHERE "companyId" = $1`,
+            [account.company.id]
+        );
+        expect((await harness.call(account.token, 'POST', '/billing/subscription/cancel')).status).toBe(200);
+        const resumed = await harness.call<Me>(account.token, 'POST', '/billing/subscription/resume');
+        expect(resumed.status).toBe(200);
+        expect(resumed.body.subscription?.card).toEqual({ brand: 'visa', last4: '4242' });
+
+        const again = await harness.call<Me>(account.token, 'POST', '/billing/subscription/cancel');
+        expect(again.status).toBe(200);
+        expect(again.body.subscription?.status).toBe('canceled');
+        expect(again.body.subscription?.paidThrough).not.toBeNull();
+        expect(again.body.subscription?.canResume).toBe(true);
+        expect(again.body.plan).toBe('premium');
+
+        await harness.pg.query(`UPDATE "BillingSubscriptions" SET "paidThrough" = now() - interval '1 day' WHERE "companyId" = $1`, [
+            account.company.id
+        ]);
+        await sweep();
+        const ended: Me = await me(account);
+        expect(ended.plan).toBe('free');
+        expect(ended.subscription?.status).toBe('expired');
+    });
 });
