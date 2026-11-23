@@ -2,10 +2,18 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
 import { makeTitle } from '../../../../test/support/fixed-income-fixtures';
+import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
+import { IssuersLogService } from '../../issuers/services/issuers-log.service';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
 import { FixedIncomeTitleDomain } from '../domain/fixed-income-title.domain';
-import { InvalidTermsError, TitleLimitReachedError, TitleNotFoundError } from '../domain/fixed-income.errors';
+import {
+    InvalidTermsError,
+    IssuerKindMismatchError,
+    TitleLimitReachedError,
+    TitleNotFoundError,
+    UnknownIssuerError
+} from '../domain/fixed-income.errors';
 import { FixedIncomeLogService } from '../services/fixed-income-log.service';
 import { FixedIncomeValuationService } from '../services/fixed-income-valuation.service';
 import { FixedIncomeTitleApplication } from './fixed-income-title.application';
@@ -21,12 +29,21 @@ const INPUT = {
     maturityDate: '2030-01-06'
 };
 
-function build(options: { count?: number; existing?: boolean; removed?: boolean } = {}) {
+function directory(): IssuerDirectoryService {
+    const service: IssuerDirectoryService = new IssuerDirectoryService({
+        loaded: vi.fn(),
+        failed: vi.fn()
+    } as unknown as IssuersLogService);
+    service.onModuleInit();
+    return service;
+}
+
+function build(options: { count?: number; existing?: boolean; removed?: boolean; issuerId?: string } = {}) {
     const created = makeTitle({ id: 'new-1' });
     const titles = {
         count: vi.fn().mockResolvedValue(options.count ?? 0),
         create: vi.fn().mockResolvedValue(created),
-        findById: vi.fn().mockResolvedValue(options.existing === false ? null : makeTitle()),
+        findById: vi.fn().mockResolvedValue(options.existing === false ? null : makeTitle({ issuerId: options.issuerId ?? null })),
         update: vi.fn().mockImplementation((_id: string, draft: object) => Promise.resolve({ ...makeTitle(), ...draft })),
         remove: vi.fn().mockResolvedValue(options.removed ?? true)
     };
@@ -43,7 +60,8 @@ function build(options: { count?: number; existing?: boolean; removed?: boolean 
             release,
             listForCompany: vi.fn().mockResolvedValue([{ subjectType: 'fixed_income', subjectId: 'new-1', classId: 'class-suggested' }])
         } as unknown as ClassAssignmentService,
-        { titleChanged } as unknown as FixedIncomeLogService
+        { titleChanged } as unknown as FixedIncomeLogService,
+        directory()
     );
     return { application, titles, resolveBySystemKey, assign, release, titleChanged };
 }
@@ -146,5 +164,71 @@ describe('FixedIncomeTitleApplication', () => {
         await expect(raced.application.remove('title-1')).rejects.toBeInstanceOf(TitleNotFoundError);
         expect(missing.release).not.toHaveBeenCalled();
         expect(raced.release).not.toHaveBeenCalled();
+    });
+
+    it('grava o emissor informado e o devolve com o conglomerado atual', async () => {
+        const doubles = build({ issuerId: 'banco-pan' });
+        doubles.titles.create.mockResolvedValue(makeTitle({ id: 'new-1', issuerId: 'banco-pan' }));
+
+        const view = await doubles.application.create({ ...INPUT, issuerId: 'banco-pan' });
+
+        expect(doubles.titles.create.mock.calls[0]?.[0]).toMatchObject({ issuerId: 'banco-pan' });
+        expect(view).toMatchObject({
+            needsIssuer: false,
+            issuer: {
+                id: 'banco-pan',
+                name: 'Banco Pan',
+                groupId: 'btg-pactual',
+                groupName: 'BTG Pactual',
+                kind: 'bank',
+                fgcAssociated: true
+            }
+        });
+    });
+
+    it('cadastra sem emissor e marca que o cadastro está incompleto', async () => {
+        const doubles = build();
+
+        const view = await doubles.application.create(INPUT);
+
+        expect(doubles.titles.create.mock.calls[0]?.[0]).toMatchObject({ issuerId: null });
+        expect(view).toMatchObject({ issuer: null, needsIssuer: true });
+    });
+
+    it('recusa emissor fora da lista e emissor de tipo errado sem gravar', async () => {
+        const doubles = build();
+
+        await expect(doubles.application.create({ ...INPUT, issuerId: 'banco-que-nao-existe' })).rejects.toBeInstanceOf(UnknownIssuerError);
+        await expect(doubles.application.create({ ...INPUT, kind: 'lci', issuerId: 'petrobras' })).rejects.toBeInstanceOf(
+            IssuerKindMismatchError
+        );
+        await expect(doubles.application.create({ ...INPUT, kind: 'debenture', issuerId: 'banco-inter' })).rejects.toBeInstanceOf(
+            IssuerKindMismatchError
+        );
+        expect(doubles.titles.create).not.toHaveBeenCalled();
+    });
+
+    it('troca o emissor na edição e remove com null', async () => {
+        const doubles = build({ issuerId: 'banco-inter' });
+
+        await doubles.application.update('title-1', { issuerId: 'bradesco' });
+        await doubles.application.update('title-1', { issuerId: null });
+
+        expect(doubles.titles.update.mock.calls[0]?.[1]).toMatchObject({ issuerId: 'bradesco' });
+        expect(doubles.titles.update.mock.calls[1]?.[1]).toMatchObject({ issuerId: null });
+    });
+
+    it('revalida o emissor guardado quando a edição muda o tipo do título', async () => {
+        const doubles = build({ issuerId: 'banco-inter' });
+
+        await expect(doubles.application.update('title-1', { kind: 'debenture' })).rejects.toBeInstanceOf(IssuerKindMismatchError);
+        await expect(doubles.application.update('title-1', { issuerId: 'nao-existe' })).rejects.toBeInstanceOf(UnknownIssuerError);
+        expect(doubles.titles.update).not.toHaveBeenCalled();
+    });
+
+    it('trata como sem emissor o título cujo emissor sumiu da lista', async () => {
+        const doubles = build({ issuerId: 'banco-que-sumiu' });
+
+        await expect(doubles.application.get('title-1')).resolves.toMatchObject({ issuer: null, needsIssuer: true });
     });
 });

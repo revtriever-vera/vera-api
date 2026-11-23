@@ -94,7 +94,9 @@ describe('AssetSearchApplication', () => {
                     suggestedClassKey: 'acoes_eua',
                     dollarExposure: true,
                     quantityDecimals: 0,
-                    maturityDate: null
+                    maturityDate: null,
+                    sector: 'etf_indice',
+                    issuerGroupId: null
                 }
             ]
         });

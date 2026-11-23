@@ -1,0 +1,502 @@
+[
+  {
+    "id": "ambev",
+    "name": "Ambev",
+    "groupId": "ambev",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "banco-abc-brasil",
+    "name": "Banco ABC Brasil",
+    "groupId": "abc-brasil",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["ABC"]
+  },
+  {
+    "id": "banco-agibank",
+    "name": "Banco Agibank",
+    "groupId": "agibank",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Agibank", "Agi"]
+  },
+  {
+    "id": "banco-banrisul",
+    "name": "Banrisul",
+    "groupId": "banrisul",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Banco do Estado do Rio Grande do Sul"]
+  },
+  {
+    "id": "banco-bmg",
+    "name": "Banco BMG",
+    "groupId": "bmg",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BMG"]
+  },
+  {
+    "id": "banco-bnb",
+    "name": "Banco do Nordeste",
+    "groupId": "bnb",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BNB"]
+  },
+  {
+    "id": "banco-brb",
+    "name": "BRB Banco de Brasília",
+    "groupId": "brb",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BRB"]
+  },
+  {
+    "id": "banco-bs2",
+    "name": "Banco BS2",
+    "groupId": "bs2",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BS2"]
+  },
+  {
+    "id": "banco-bv",
+    "name": "Banco BV",
+    "groupId": "bv",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BV", "Votorantim", "Banco Votorantim"]
+  },
+  {
+    "id": "banco-daycoval",
+    "name": "Banco Daycoval",
+    "groupId": "daycoval",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Daycoval"]
+  },
+  {
+    "id": "banco-digio",
+    "name": "Banco Digio",
+    "groupId": "digio",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Digio"]
+  },
+  {
+    "id": "banco-do-brasil",
+    "name": "Banco do Brasil",
+    "groupId": "banco-do-brasil",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BB"]
+  },
+  {
+    "id": "banco-genial",
+    "name": "Banco Genial",
+    "groupId": "genial",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Genial"]
+  },
+  {
+    "id": "banco-inter",
+    "name": "Banco Inter",
+    "groupId": "inter-co",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Inter"]
+  },
+  {
+    "id": "banco-mercantil",
+    "name": "Banco Mercantil do Brasil",
+    "groupId": "mercantil",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Mercantil"]
+  },
+  {
+    "id": "banco-original",
+    "name": "Banco Original",
+    "groupId": "original",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Original"]
+  },
+  {
+    "id": "banco-pagbank",
+    "name": "PagBank",
+    "groupId": "pagseguro",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["PagSeguro", "Banco PagSeguro"]
+  },
+  {
+    "id": "banco-pan",
+    "name": "Banco Pan",
+    "groupId": "btg-pactual",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Pan"]
+  },
+  {
+    "id": "banco-rendimento",
+    "name": "Banco Rendimento",
+    "groupId": "rendimento",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Rendimento"]
+  },
+  {
+    "id": "banco-safra",
+    "name": "Banco Safra",
+    "groupId": "safra",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Safra"]
+  },
+  {
+    "id": "banco-sofisa",
+    "name": "Banco Sofisa",
+    "groupId": "sofisa",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Sofisa", "Sofisa Direto"]
+  },
+  {
+    "id": "banco-xp",
+    "name": "Banco XP",
+    "groupId": "xp",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["XP", "XP Investimentos"]
+  },
+  {
+    "id": "bradesco",
+    "name": "Bradesco",
+    "groupId": "bradesco",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Banco Bradesco"]
+  },
+  {
+    "id": "braskem",
+    "name": "Braskem",
+    "groupId": "braskem",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "btg-pactual",
+    "name": "BTG Pactual",
+    "groupId": "btg-pactual",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["BTG"]
+  },
+  {
+    "id": "c6-bank",
+    "name": "C6 Bank",
+    "groupId": "c6-bank",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["C6"]
+  },
+  {
+    "id": "caixa-economica-federal",
+    "name": "Caixa Econômica Federal",
+    "groupId": "caixa",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Caixa", "CEF"]
+  },
+  {
+    "id": "ccr",
+    "name": "CCR",
+    "groupId": "ccr",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "cemig",
+    "name": "Cemig",
+    "groupId": "cemig",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Companhia Energética de Minas Gerais"]
+  },
+  {
+    "id": "copel",
+    "name": "Copel",
+    "groupId": "copel",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "cpfl-energia",
+    "name": "CPFL Energia",
+    "groupId": "cpfl-energia",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["CPFL"]
+  },
+  {
+    "id": "eletrobras",
+    "name": "Eletrobras",
+    "groupId": "eletrobras",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "energisa",
+    "name": "Energisa",
+    "groupId": "energisa",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "engie-brasil",
+    "name": "Engie Brasil Energia",
+    "groupId": "engie-brasil",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Engie"]
+  },
+  {
+    "id": "equatorial",
+    "name": "Equatorial",
+    "groupId": "equatorial",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Equatorial Energia"]
+  },
+  {
+    "id": "itau-unibanco",
+    "name": "Itaú Unibanco",
+    "groupId": "itau-unibanco",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Itaú", "Itau"]
+  },
+  {
+    "id": "klabin",
+    "name": "Klabin",
+    "groupId": "klabin",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "localiza",
+    "name": "Localiza",
+    "groupId": "localiza",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Localiza&Co", "Localiza Rent a Car"]
+  },
+  {
+    "id": "neoenergia",
+    "name": "Neoenergia",
+    "groupId": "neoenergia",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "petrobras",
+    "name": "Petrobras",
+    "groupId": "petrobras",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Petróleo Brasileiro"]
+  },
+  {
+    "id": "raizen",
+    "name": "Raízen",
+    "groupId": "raizen",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Raizen"]
+  },
+  {
+    "id": "rumo",
+    "name": "Rumo",
+    "groupId": "rumo",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Rumo Logística"]
+  },
+  {
+    "id": "sabesp",
+    "name": "Sabesp",
+    "groupId": "sabesp",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "santander",
+    "name": "Santander Brasil",
+    "groupId": "santander",
+    "kind": "bank",
+    "fgcAssociated": true,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Santander", "Banco Santander"]
+  },
+  {
+    "id": "suzano",
+    "name": "Suzano",
+    "groupId": "suzano",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "taesa",
+    "name": "Taesa",
+    "groupId": "taesa",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  },
+  {
+    "id": "tesouro-eua",
+    "name": "Tesouro dos EUA",
+    "groupId": "tesouro-eua",
+    "kind": "sovereign",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Treasury", "US Treasury"]
+  },
+  {
+    "id": "tesouro-nacional",
+    "name": "Tesouro Nacional",
+    "groupId": "tesouro-nacional",
+    "kind": "sovereign",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Tesouro Direto"]
+  },
+  {
+    "id": "ultrapar",
+    "name": "Ultrapar",
+    "groupId": "ultrapar",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": ["Ipiranga"]
+  },
+  {
+    "id": "vale",
+    "name": "Vale",
+    "groupId": "vale",
+    "kind": "company",
+    "fgcAssociated": false,
+    "status": "active",
+    "mergedInto": null,
+    "aliases": []
+  }
+]

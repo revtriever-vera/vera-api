@@ -43,6 +43,12 @@ const appliedMinorSchema = z
 const appliedAtSchema = dateSchema.describe('Application date, YYYY-MM-DD, from 2010-01-01 until today');
 const maturityDateSchema = dateSchema.describe('Maturity date, YYYY-MM-DD, after the application date and at most 50 years ahead of it');
 
+const issuerIdSchema = z
+    .string()
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+    .max(80)
+    .describe('Slug of the issuer in the curated list (GET /issuers), e.g. banco-inter');
+
 const termsShape = {
     kind: kindSchema,
     indexer: indexerSchema,
@@ -63,6 +69,7 @@ export const createFixedIncomeTitleSchema = z
     .object({
         ...termsShape,
         name: nameSchema,
+        issuerId: issuerIdSchema.optional().describe('Issuer of the security; optional, but the app asks for it on new securities'),
         classId: z.string().uuid().optional().describe('Class of the security; omitted uses the class suggested by the indexer')
     })
     .strict()
@@ -72,6 +79,7 @@ export const updateFixedIncomeTitleSchema = z
     .object({
         kind: kindSchema.optional(),
         name: nameSchema.optional(),
+        issuerId: issuerIdSchema.nullable().optional().describe('New issuer; null removes the current one'),
         indexer: indexerSchema.optional(),
         rateBps: rateSchema.optional(),
         currency: currencySchema.optional(),
@@ -101,6 +109,15 @@ export const valuationSchema = z.object({
     netEstimatedMinor: z.number().int().describe('Value net of the estimated income tax. Detail only: never part of the net worth total')
 });
 
+export const titleIssuerSchema = z.object({
+    id: z.string().describe('Slug of the issuer'),
+    name: z.string().describe('Issuer name'),
+    groupId: z.string().describe('Slug of the conglomerate or group the issuer belongs to today'),
+    groupName: z.string().describe('Name of the conglomerate or group'),
+    kind: z.enum(['bank', 'company', 'sovereign']).describe('`bank`, `company` or `sovereign`'),
+    fgcAssociated: z.boolean().describe('Whether the issuer is associated to the FGC')
+});
+
 export const fixedIncomeTitleViewSchema = z.object({
     id: z.string().uuid().describe('Fixed income security id'),
     kind: kindSchema,
@@ -112,6 +129,8 @@ export const fixedIncomeTitleViewSchema = z.object({
     appliedAt: z.string().describe('Application date, YYYY-MM-DD'),
     maturityDate: z.string().describe('Maturity date, YYYY-MM-DD'),
     classId: z.string().uuid().describe('Asset class the security belongs to'),
+    issuer: titleIssuerSchema.nullable().describe('Issuer with its conglomerate; null for securities registered without one'),
+    needsIssuer: z.boolean().describe('True when the security has no issuer and the user should complete the registration'),
     createdAt: z.string().describe('Creation instant, ISO 8601'),
     updatedAt: z.string().describe('Last update instant, ISO 8601'),
     valuation: valuationSchema.describe(

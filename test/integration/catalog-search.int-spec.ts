@@ -111,7 +111,9 @@ describe('catalog search', () => {
             currency: 'BRL',
             dollarExposure: false,
             quantityDecimals: 0,
-            maturityDate: null
+            maturityDate: null,
+            sector: 'financeiro',
+            issuerGroupId: 'itau-unibanco'
         });
     });
 

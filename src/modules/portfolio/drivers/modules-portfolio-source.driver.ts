@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { decimalStringOf } from '../../../shared/utils/decimal.util';
-import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
+import { Asset, AssetCatalogService, AssetProfile } from '../../catalog/services/asset-catalog.service';
+import { ResolvedIssuer } from '../../issuers/domain/issuer.types';
+import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { FixedIncomeValuationService, ValuedTitle } from '../../fixed-income/services/fixed-income-valuation.service';
 import { ExchangeRateReaderService, StoredRate } from '../../market-data/services/exchange-rate-reader.service';
 import { QuoteReaderService, StoredQuote } from '../../market-data/services/quote-reader.service';
@@ -32,7 +34,8 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
         private readonly catalog: AssetCatalogService,
         private readonly quotes: QuoteReaderService,
         private readonly rates: ExchangeRateReaderService,
-        private readonly classInputs: PortfolioClassInputsService
+        private readonly classInputs: PortfolioClassInputsService,
+        private readonly issuers: IssuerDirectoryService
     ) {
         super();
     }
@@ -82,6 +85,7 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
     }
 
     private assetOf(asset: Asset): SourceAsset {
+        const profile: AssetProfile = this.catalog.profileOf(asset);
         return {
             id: asset.id,
             symbol: asset.symbol,
@@ -90,14 +94,21 @@ export class ModulesPortfolioSourceDriver extends PortfolioSourcePort {
             typeGroup: asset.typeGroup,
             currency: asset.currency,
             quantityDecimals: asset.quantityDecimals,
-            dollarExposure: asset.dollarExposure
+            dollarExposure: asset.dollarExposure,
+            sector: profile.sector,
+            issuerGroupId: profile.issuerGroupId
         };
     }
 
     private titleOf(entry: ValuedTitle): SourceTitle {
+        const issuerId: string | null = entry.title.issuerId;
+        const issuer: ResolvedIssuer | null = issuerId === null ? null : this.issuers.resolve(issuerId);
         return {
             id: entry.title.id,
             name: entry.title.name,
+            titleKind: entry.title.kind,
+            issuerId,
+            issuerGroupId: issuer?.groupId ?? null,
             indexDataMissing: entry.valuation.status === INDEX_DATA_MISSING_STATUS,
             valueMinor: entry.valuation.valueMinor,
             currency: entry.valuation.currency,

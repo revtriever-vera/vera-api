@@ -1,18 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
+import type { Issuer, ResolvedIssuer } from '../../issuers/domain/issuer.types';
+import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import { ClassAssignmentService } from '../../allocation/services/class-assignment.service';
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { CURRENCIES, FixedIncomeValuation } from '../domain/curve/curve.types';
 import { FixedIncomeTitleDomain, TitleDraft } from '../domain/fixed-income-title.domain';
 import { toFixedIncomeTitleView } from '../domain/fixed-income-title.mapper';
-import { TitleLimitReachedError, TitleNotFoundError } from '../domain/fixed-income.errors';
+import { IssuerKindMismatchError, TitleLimitReachedError, TitleNotFoundError, UnknownIssuerError } from '../domain/fixed-income.errors';
 import {
     FixedIncomeTitle,
     FixedIncomeTitleView,
     MAX_TITLES_PER_COMPANY,
     SUGGESTED_CLASS_KEY_BY_INDEXER,
-    TITLE_ACTIONS
+    TITLE_ACTIONS,
+    TitleIssuerView
 } from '../domain/fixed-income.types';
 import { assertValidTerms } from '../domain/terms-validation';
 import { FixedIncomeLogService } from '../services/fixed-income-log.service';
@@ -28,13 +31,15 @@ export class FixedIncomeTitleApplication {
         private readonly valuation: FixedIncomeValuationService,
         private readonly classResolver: ClassResolverService,
         private readonly assignments: ClassAssignmentService,
-        private readonly logs: FixedIncomeLogService
+        private readonly logs: FixedIncomeLogService,
+        private readonly issuers: IssuerDirectoryService
     ) {}
 
     public async create(input: CreateFixedIncomeTitleDto): Promise<FixedIncomeTitleView> {
         const draft: TitleDraft = {
             kind: input.kind,
             name: input.name,
+            issuerId: input.issuerId ?? null,
             indexer: input.indexer,
             rateBps: input.rateBps,
             currency: input.currency ?? CURRENCIES.brl,
@@ -43,6 +48,7 @@ export class FixedIncomeTitleApplication {
             maturityDate: input.maturityDate
         };
         assertValidTerms(draft, DateUtil.todayInBrazil());
+        this.assertIssuer(draft);
         const created: FixedIncomeTitle = await this.persist(draft, input.classId);
         return this.view(created);
     }
@@ -62,6 +68,7 @@ export class FixedIncomeTitleApplication {
         }
         const draft: TitleDraft = { ...current, ...this.definedFields(patch) };
         assertValidTerms(draft, DateUtil.todayInBrazil());
+        this.assertIssuer(draft);
         const updated: FixedIncomeTitle | null = await this.titles.update(id, draft);
         if (updated === null) {
             throw new TitleNotFoundError(id);
@@ -98,7 +105,36 @@ export class FixedIncomeTitleApplication {
         const assignments: Awaited<ReturnType<ClassAssignmentService['listForCompany']>> = await this.assignments.listForCompany();
         const classId: string =
             assignments.find((entry) => entry.subjectType === SUBJECT_TYPE && entry.subjectId === title.id)?.classId ?? '';
-        return toFixedIncomeTitleView(title, classId, valuation);
+        return toFixedIncomeTitleView(title, classId, valuation, this.issuerView(title.issuerId));
+    }
+
+    private assertIssuer(draft: TitleDraft): void {
+        if (draft.issuerId === null) {
+            return;
+        }
+        const issuer: Issuer | null = this.issuers.find(draft.issuerId);
+        if (issuer === null) {
+            throw new UnknownIssuerError(draft.issuerId);
+        }
+        if (!this.issuers.accepts(issuer, draft.kind, draft.currency)) {
+            throw new IssuerKindMismatchError(draft.kind, issuer.kind);
+        }
+    }
+
+    private issuerView(issuerId: string | null): TitleIssuerView | null {
+        const stored: Issuer | null = issuerId === null ? null : this.issuers.find(issuerId);
+        const current: ResolvedIssuer | null = stored === null ? null : this.issuers.resolve(stored.id);
+        if (stored === null || current === null) {
+            return null;
+        }
+        return {
+            id: stored.id,
+            name: stored.name,
+            groupId: current.groupId,
+            groupName: current.groupName,
+            kind: stored.kind,
+            fgcAssociated: current.fgcAssociated
+        };
     }
 
     private definedFields(patch: UpdateFixedIncomeTitleDto): Partial<TitleDraft> {

@@ -8,7 +8,7 @@ import { FixedIncomeTitleRow, MAX_TITLES_PER_COMPANY, NewFixedIncomeTitle } from
 
 type TitleFields = Pick<
     NewFixedIncomeTitle,
-    'kind' | 'name' | 'indexer' | 'rateBps' | 'currency' | 'appliedMinor' | 'appliedAt' | 'maturityDate' | 'taxRegime'
+    'kind' | 'name' | 'issuerId' | 'indexer' | 'rateBps' | 'currency' | 'appliedMinor' | 'appliedAt' | 'maturityDate' | 'taxRegime'
 >;
 
 const LIST_LIMIT: number = MAX_TITLES_PER_COMPANY + 50;

@@ -24,7 +24,18 @@ describe('XlsxWriterService', () => {
         const sheet: Worksheet = await sheetOf(service, 'pt-BR', 'BRL');
 
         expect(sheet.name).toBe('Carteira');
-        expect(sheet.getRow(1).values).toEqual([undefined, 'Ativo', 'Nome', 'Classe', 'Quantidade', 'Valor (BRL)', 'Fonte do valor']);
+        expect(sheet.getRow(1).values).toEqual([
+            undefined,
+            'Ativo',
+            'Nome',
+            'Classe',
+            'Tipo',
+            'Emissor',
+            'Conglomerado',
+            'Quantidade',
+            'Valor (BRL)',
+            'Fonte do valor'
+        ]);
         expect(sheet.getRow(1).font.bold).toBe(true);
         expect(sheet.views[0]).toMatchObject({ state: 'frozen', ySplit: 1 });
     });
@@ -32,15 +43,15 @@ describe('XlsxWriterService', () => {
     it('writes quantity and value as numeric cells with formats and text as plain strings', async () => {
         const sheet: Worksheet = await sheetOf(service, 'en', 'USD');
 
-        const quantity: Cell = sheet.getCell('D2');
-        const value: Cell = sheet.getCell('E2');
+        const quantity: Cell = sheet.getCell('G2');
+        const value: Cell = sheet.getCell('H2');
         expect(sheet.name).toBe('Portfolio');
         expect(quantity.value).toBe(0.45);
         expect(quantity.numFmt).toBe('0.00000000');
         expect(value.value).toBe(75_600);
         expect(value.numFmt).toBe('"US$" #,##0.00');
         expect(sheet.getCell('A3').value).toBe("'=1+1");
-        expect(sheet.getCell('D3').value).toBeNull();
+        expect(sheet.getCell('G3').value).toBeNull();
     });
 
     it('builds formats for the currency and the quantity decimals', () => {

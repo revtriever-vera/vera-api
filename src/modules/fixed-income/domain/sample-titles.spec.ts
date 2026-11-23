@@ -34,4 +34,10 @@ describe('sampleTitleDrafts', () => {
             'Sample Debenture IPCA+6%'
         ]);
     });
+
+    it('dá a cada título de exemplo um emissor do tipo certo', () => {
+        const issuers: Array<string | null> = sampleTitleDrafts(today, 'pt-BR').map((draft) => draft.issuerId);
+
+        expect(issuers).toEqual(['banco-daycoval', 'itau-unibanco', 'eletrobras']);
+    });
 });

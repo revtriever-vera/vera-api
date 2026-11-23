@@ -20,6 +20,7 @@ import { ContributionModule } from './modules/contribution/contribution.module';
 import { FixedIncomeModule } from './modules/fixed-income/fixed-income.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { IssuersModule } from './modules/issuers/issuers.module';
 import { MarketDataModule } from './modules/market-data/market-data.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PortfolioExportModule } from './modules/portfolio-export/portfolio-export.module';
@@ -62,6 +63,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         AllocationModule,
         OnboardingModule,
         CatalogModule,
+        IssuersModule,
         FixedIncomeModule,
         PositionsModule,
         MarketDataModule,

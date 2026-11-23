@@ -49,9 +49,15 @@ function pricingOf(holding: Holding): Pick<HoldingResponse, 'quantity' | 'quanti
 
 function flagsOf(
     holding: Holding
-): Pick<HoldingResponse, 'dollarExposure' | 'missingQuote' | 'stale' | 'estimated' | 'matured' | 'missingRate'> {
+): Pick<
+    HoldingResponse,
+    'dollarExposure' | 'sector' | 'issuerGroupId' | 'issuerId' | 'missingQuote' | 'stale' | 'estimated' | 'matured' | 'missingRate'
+> {
     return {
         dollarExposure: holding.dollarExposure,
+        sector: holding.sector,
+        issuerGroupId: holding.issuerGroupId,
+        issuerId: holding.issuerId,
         missingQuote: holding.missingQuote,
         stale: holding.stale,
         estimated: holding.estimated,
