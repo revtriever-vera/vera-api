@@ -14,12 +14,12 @@ const TASK: Readonly<Record<AppLocale, string>> = {
 
 const EXAMPLE: Readonly<Record<AppLocale, string>> = {
     'pt-BR':
-        'Exemplo de saída:\n{"paragraphs":["Entraram **R$28.000** e saíram R$22.400. Você guardou R$5.600, 20% da renda: 5 pontos abaixo da meta de 25%.",' +
+        'Exemplo de saída:\n{"paragraphs":["Entraram **R$28.000** e saíram R$22.400; você guardou R$5.600, 20% da renda: 5 pontos abaixo da meta de 25%.",' +
         '"A diferença veio dos gastos flexíveis: [[cat:delivery]] (+38% sobre a sua média) e [[cat:lazer]] (+21%).",' +
         '"Os fixos ([[cat:moradia]], [[cat:saude]]) somam **R$11.200**, 40% da renda, sem mudança.",' +
         '"R$1.900 ficaram sem categoria, em 14 transações."]}',
     en:
-        'Example output:\n{"paragraphs":["**R$28,000** came in and R$22,400 went out. You saved R$5,600, 20% of income: 5 points below your 25% goal.",' +
+        'Example output:\n{"paragraphs":["**R$28,000** came in and R$22,400 went out; you saved R$5,600, 20% of income: 5 points below your 25% goal.",' +
         '"The gap came from flexible spending: [[cat:delivery]] (+38% over your average) and [[cat:lazer]] (+21%).",' +
         '"Fixed costs ([[cat:moradia]], [[cat:saude]]) add up to **R$11,200**, 40% of income, unchanged.",' +
         '"R$1,900 is still uncategorized, in 14 transactions."]}'
