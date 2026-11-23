@@ -888,6 +888,7 @@ export interface SignupLinks {
     id: string;
     label: string;
     maxUses: number | null;
+    offerValidityDays: Generated<number>;
     redemptionCount: Generated<number>;
     revokedAt: Timestamp | null;
     rules: Generated<Json>;

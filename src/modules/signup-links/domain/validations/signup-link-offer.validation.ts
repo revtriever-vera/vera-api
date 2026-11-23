@@ -4,10 +4,13 @@ import { DiscountRule, LinkOfferInput, SIGNUP_LINK_LIMITS, TRIAL_KINDS } from '.
 const DAY_MS: number = 24 * 60 * 60 * 1000;
 
 export class SignupLinkOfferValidation {
-    public static assertValid(offer: LinkOfferInput, now: Date): void {
+    public static assertValid(offer: LinkOfferInput, now: Date, expiryChanged: boolean): void {
         SignupLinkOfferValidation.assertTrial(offer);
         SignupLinkOfferValidation.assertRules(offer.rules);
-        SignupLinkOfferValidation.assertExpiry(offer, now);
+        SignupLinkOfferValidation.assertOfferValidity(offer.offerValidityDays);
+        if (expiryChanged) {
+            SignupLinkOfferValidation.assertExpiry(offer, now);
+        }
         SignupLinkOfferValidation.assertNoCardBounded(offer, now);
     }
 
@@ -35,6 +38,12 @@ export class SignupLinkOfferValidation {
                 rule.toCycle >= rule.fromCycle;
             SignupLinkOfferValidation.require(valid, 'rule_out_of_range');
         }
+    }
+
+    private static assertOfferValidity(days: number): void {
+        const valid: boolean =
+            Number.isInteger(days) && days >= SIGNUP_LINK_LIMITS.minOfferValidityDays && days <= SIGNUP_LINK_LIMITS.maxOfferValidityDays;
+        SignupLinkOfferValidation.require(valid, 'offer_validity_out_of_range');
     }
 
     private static assertExpiry(offer: LinkOfferInput, now: Date): void {

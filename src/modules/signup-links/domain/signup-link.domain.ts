@@ -5,7 +5,7 @@ import { SignupLinksRepository } from '../repositories/signup-links.repository';
 import { statusOf } from './signup-link-status';
 import { SignupLinkNotFoundError } from './signup-links.errors';
 import { SignupLinkOfferValidation } from './validations/signup-link-offer.validation';
-import { LINK_STATUSES, LinkOfferInput, SignupLink } from './signup-links.types';
+import { DiscountRule, LINK_STATUSES, LinkOfferInput, LinkOfferPatch, NewSignupLink, SignupLink, TrialKind } from './signup-links.types';
 
 const TOKEN_BYTES: number = 24;
 
@@ -14,12 +14,17 @@ export interface RevokeOutcome {
     readonly changed: boolean;
 }
 
+export interface UpdateOutcome {
+    readonly before: SignupLink;
+    readonly after: SignupLink;
+}
+
 @Injectable()
 export class SignupLinkDomain {
     public constructor(private readonly links: SignupLinksRepository) {}
 
     public async create(offer: LinkOfferInput, operatorUserId: string | null, now: Date): Promise<SignupLink> {
-        SignupLinkOfferValidation.assertValid(offer, now);
+        SignupLinkOfferValidation.assertValid(offer, now, true);
         return this.links.create({
             id: IdUtil.newId(),
             token: randomBytes(TOKEN_BYTES).toString('base64url'),
@@ -29,8 +34,24 @@ export class SignupLinkDomain {
             rules: JSON.stringify(offer.rules),
             maxUses: offer.maxUses,
             expiresAt: offer.expiresAt,
+            offerValidityDays: offer.offerValidityDays,
             createdByUserId: operatorUserId
         });
+    }
+
+    public async update(id: string, patch: LinkOfferPatch, now: Date): Promise<UpdateOutcome> {
+        const before: SignupLink | null = await this.links.lockById(id);
+        if (before === null) {
+            throw new SignupLinkNotFoundError();
+        }
+        const offer: LinkOfferInput = this.mergeOffer(before, patch);
+        const expiryChanged: boolean = (offer.expiresAt?.getTime() ?? null) !== (before.expiresAt?.getTime() ?? null);
+        SignupLinkOfferValidation.assertValid(offer, now, expiryChanged);
+        const after: SignupLink | null = await this.links.updateOffer(id, this.rowOf(offer), now);
+        if (after === null) {
+            throw new SignupLinkNotFoundError();
+        }
+        return { before, after };
     }
 
     public async listNewestFirst(limit: number): Promise<SignupLink[]> {
@@ -59,5 +80,30 @@ export class SignupLinkDomain {
             return null;
         }
         return this.links.addUse(locked, now, startsTrial);
+    }
+
+    private mergeOffer(before: SignupLink, patch: LinkOfferPatch): LinkOfferInput {
+        return {
+            label: patch.label ?? before.label,
+            trial: patch.trial ?? { kind: before.trialKind as TrialKind, days: before.trialDays },
+            rules: patch.rules ?? (before.rules as unknown as DiscountRule[]),
+            maxUses: patch.maxUses === undefined ? before.maxUses : patch.maxUses,
+            expiresAt: patch.expiresAt === undefined ? before.expiresAt : patch.expiresAt,
+            offerValidityDays: patch.offerValidityDays ?? before.offerValidityDays
+        };
+    }
+
+    private rowOf(
+        offer: LinkOfferInput
+    ): Pick<NewSignupLink, 'label' | 'trialKind' | 'trialDays' | 'rules' | 'maxUses' | 'expiresAt' | 'offerValidityDays'> {
+        return {
+            label: offer.label,
+            trialKind: offer.trial.kind,
+            trialDays: offer.trial.days,
+            rules: JSON.stringify(offer.rules),
+            maxUses: offer.maxUses,
+            expiresAt: offer.expiresAt,
+            offerValidityDays: offer.offerValidityDays
+        };
     }
 }
