@@ -106,6 +106,7 @@ describe('parseBillingConfig', () => {
         expect(settings.REVTRIEVER_WEBHOOK_SECRETS).toEqual(['novo-segredo-123456', 'antigo-segredo-123456']);
         expect(settings.BILLING_GRACE_DAYS).toBe(5);
         expect(settings.BILLING_WITHDRAWAL_DAYS).toBe(7);
+        expect(settings.BILLING_RECONCILE_WINDOW_DAYS).toBe(7);
         expect(settings.APP_URL).toBe('https://app.example.test');
     });
 

@@ -6,7 +6,7 @@ import {
     EngineInvoice,
     EnginePage,
     EngineSubscription,
-    OpenInvoiceStatus,
+    ListedInvoiceStatus,
     PaymentLink,
     SavedCard
 } from '../domain/billing-engine.types';
@@ -23,7 +23,7 @@ export abstract class BillingEnginePort {
     ): Promise<CardCaptureSession>;
     public abstract savedCardOf(subscriptionId: string): Promise<SavedCard | null>;
     public abstract invoiceOf(id: string): Promise<EngineInvoice>;
-    public abstract invoicesWithStatus(status: OpenInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>>;
+    public abstract invoicesWithStatus(status: ListedInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>>;
     public abstract invoicePaymentLinkOf(id: string): Promise<PaymentLink>;
     public abstract retryInvoicePricing(id: string): Promise<void>;
     public abstract eventsAfter(cursor: string | null, limit: number): Promise<EngineEventPage>;

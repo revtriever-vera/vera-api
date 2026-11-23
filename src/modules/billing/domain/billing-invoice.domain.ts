@@ -16,6 +16,10 @@ export class BillingInvoiceDomain {
         return this.invoices.findByEngineId(engine, engineInvoiceId);
     }
 
+    public async existsByEngineIdAcrossTenants(engine: BillingEngine, engineInvoiceId: string): Promise<boolean> {
+        return this.invoices.existsByEngineIdAcrossTenants(engine, engineInvoiceId);
+    }
+
     public async mirror(engine: BillingEngine, subscriptionId: string, mirror: InvoiceMirror): Promise<BillingInvoice> {
         const created: BillingInvoice | null = await this.invoices.insertOnce(engine, subscriptionId, mirror);
         if (created !== null) {

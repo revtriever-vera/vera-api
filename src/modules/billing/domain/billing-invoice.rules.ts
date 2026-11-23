@@ -1,3 +1,4 @@
+import { EngineInvoice } from './billing-engine.types';
 import { BillingInvoice, INVOICE_STATUSES, InvoiceMirror, InvoiceRowStatus } from './billing.types';
 
 const RANK: Readonly<Record<InvoiceRowStatus, number>> = {
@@ -50,4 +51,13 @@ export function mergedMirror(existing: BillingInvoice, incoming: InvoiceMirror):
         paidAt: existing.paidAt ?? incoming.paidAt,
         overdueAt: existing.overdueAt ?? incoming.overdueAt
     };
+}
+
+/** Fatura sem nenhuma data conhecida entra: melhor conferir uma a mais do que perder uma. */
+export function isInvoiceInWindow(invoice: EngineInvoice, since: Date): boolean {
+    const stamps: number[] = [invoice.issuedAt, invoice.dueDate, invoice.paidAt, invoice.overdueAt]
+        .filter((value: string | null): value is string => value !== null)
+        .map((value: string): number => Date.parse(value))
+        .filter((value: number): boolean => !Number.isNaN(value));
+    return stamps.length === 0 || Math.max(...stamps) >= since.getTime();
 }

@@ -77,7 +77,7 @@ export class BillingLogService {
         this.logService.info({ message: `price ${outcome}`, identifier: PRICE, meta: { outcome } });
     }
 
-    public reconciled(checked: number, fixed: number): void {
-        this.logService.info({ message: 'invoices reconciled', identifier: RECONCILE, meta: { checked, fixed } });
+    public reconciled(checked: number, fixed: number, created: number): void {
+        this.logService.info({ message: 'invoices reconciled', identifier: RECONCILE, meta: { checked, fixed, created } });
     }
 }
