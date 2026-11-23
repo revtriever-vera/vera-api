@@ -14,6 +14,10 @@ import { CompanyBillingStandingDomain } from '../domain/company-billing-standing
 import { graceEndOf, oldestOverdueInvoice, overdueSinceOfInvoice } from '../domain/company-billing-standing.rules';
 import { resumableUntilOf } from '../domain/billing-trial.rules';
 import { withdrawalEndsAt } from '../domain/withdrawal';
+import { discountViewOf, DiscountView, resolvePrice } from '../domain/billing-price.rules';
+import { BillingPriceQuoteDomain } from '../domain/billing-price-quote.domain';
+import { discountRulesSchema } from '../validation/billing-discount.schemas';
+import { PlanContractService } from '../../plans/services/plan-contract.service';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import {
     OpenInvoiceSummary,
@@ -22,6 +26,7 @@ import {
     SubscriptionSummary,
     SubscriptionSummaryPort
 } from '../../plans/services/subscription-summary.port';
+import { BillingOfferRule } from '../../plans/services/billing-offer.port';
 
 function iso(date: Date | null): string | null {
     return date === null ? null : date.toISOString();
@@ -54,7 +59,9 @@ export class BillingSubscriptionSummary extends SubscriptionSummaryPort {
         private readonly engine: BillingEnginePort,
         private readonly subscriptions: BillingSubscriptionDomain,
         private readonly invoices: BillingInvoiceDomain,
-        private readonly standings: CompanyBillingStandingDomain
+        private readonly standings: CompanyBillingStandingDomain,
+        private readonly quotes: BillingPriceQuoteDomain,
+        private readonly contracts: PlanContractService
     ) {
         super();
     }
@@ -68,7 +75,7 @@ export class BillingSubscriptionSummary extends SubscriptionSummaryPort {
         const standing: CompanyBillingStanding | null = await this.standings.current();
         const now: Date = new Date();
         return {
-            subscription: this.subscriptionOf(subscription, standing, open, now),
+            subscription: await this.withNextCharge(this.subscriptionOf(subscription, standing, open, now), subscription, open),
             openInvoice: this.openInvoiceOf(open)
         };
     }
@@ -91,7 +98,30 @@ export class BillingSubscriptionSummary extends SubscriptionSummaryPort {
             card: subscription.cardLast4 === null ? null : { brand: subscription.cardBrand ?? '', last4: subscription.cardLast4 },
             graceEndsAt: iso(this.graceEndsAtOf(standing, open)),
             withdrawalEndsAt: iso(withdrawalEnd !== null && withdrawalEnd > now && !canceled ? withdrawalEnd : null),
-            canResume: canceled && resumeLimit !== null && now < resumeLimit
+            canResume: canceled && resumeLimit !== null && now < resumeLimit,
+            discount: null,
+            nextChargeAmountMinor: null
+        };
+    }
+
+    /** Same rule as the price endpoint (`resolvePrice`), for the cycle of the next charge: the one already quoted while its invoice is open, or the one after the last quoted. */
+    private async withNextCharge(
+        summary: SubscriptionSummary,
+        subscription: BillingSubscription,
+        open: BillingInvoice[]
+    ): Promise<SubscriptionSummary> {
+        if (summary.nextChargeAt === null) {
+            return summary;
+        }
+        const lastQuoted: number = await this.quotes.lastCycleOf(subscription.id);
+        const cycle: number = Math.max(1, open.length > 0 ? lastQuoted : lastQuoted + 1) + subscription.discountCycleOffset;
+        const rules: BillingOfferRule[] = discountRulesSchema.parse(subscription.discountRules);
+        const base: number = await this.contracts.priceCentsOf('premium');
+        const view: DiscountView | null = discountViewOf(rules, cycle, new Date(summary.nextChargeAt));
+        return {
+            ...summary,
+            discount: view === null ? null : { percent: view.percent, cycle: view.cycle, endsAt: view.endsAt.toISOString() },
+            nextChargeAmountMinor: resolvePrice(base, rules, cycle).amountCents
         };
     }
 

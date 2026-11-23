@@ -14,7 +14,9 @@ const SNAPSHOT: SubscriptionSnapshot = {
         card: null,
         graceEndsAt: null,
         withdrawalEndsAt: null,
-        canResume: false
+        canResume: false,
+        discount: null,
+        nextChargeAmountMinor: null
     },
     openInvoice: null
 };

@@ -96,6 +96,8 @@ export interface SubscriptionSummary {
     readonly graceEndsAt: string | null;
     readonly withdrawalEndsAt: string | null;
     readonly canResume: boolean;
+    readonly discount: { readonly percent: number; readonly cycle: number; readonly endsAt: string } | null;
+    readonly nextChargeAmountMinor: number | null;
 }
 
 export interface OpenInvoiceSummary {
