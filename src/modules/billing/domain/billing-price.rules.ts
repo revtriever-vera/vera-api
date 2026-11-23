@@ -27,6 +27,16 @@ export function resolvePrice(baseCents: number, rules: readonly BillingOfferRule
     return { amountCents: Math.round((baseCents * (PERCENT_BASE - percent)) / PERCENT_BASE), percent };
 }
 
+/** What a subscription pays in the cycle it is in: the last one quoted (the first, before any quote), shifted by the cycles an earlier subscription already used. */
+export function currentCyclePriceOf(
+    baseCents: number,
+    rules: readonly BillingOfferRule[],
+    lastQuotedCycle: number,
+    cycleOffset: number
+): number {
+    return resolvePrice(baseCents, rules, Math.max(1, lastQuotedCycle) + cycleOffset).amountCents;
+}
+
 export interface DiscountView {
     readonly percent: number;
     readonly cycle: number;

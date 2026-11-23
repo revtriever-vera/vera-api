@@ -124,6 +124,13 @@ export class BillingSubscriptionsRepository extends BareTenantRepository<'Billin
         return rows.length > 0;
     }
 
+    public async listByIdsAcrossTenants(ids: readonly string[]): Promise<BillingSubscription[]> {
+        if (ids.length === 0) {
+            return [];
+        }
+        return this.selectSkipConstraint().selectAll().where('id', 'in', ids).execute();
+    }
+
     public async listUnconfirmedTrialsAcrossTenants(before: Date, limit: number): Promise<BillingSubscription[]> {
         return this.selectSkipConstraint()
             .selectAll()

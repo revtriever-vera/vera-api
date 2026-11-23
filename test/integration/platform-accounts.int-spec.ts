@@ -228,4 +228,45 @@ describe('contas e acesso com motivo (hospedada)', () => {
 
         expect(seen.items).toEqual([]);
     });
+
+    it('a receita estimada soma o que cada assinatura paga no ciclo atual: conta cheia, no desconto e depois da régua', async () => {
+        const ladder: string = JSON.stringify([{ percent: 50, fromCycle: 1, toCycle: 3 }]);
+        const productId: string = (await pg.query<{ id: string }>(`SELECT id FROM "GlobalProducts" WHERE key = 'premium'`)).rows[0]
+            ?.id as string;
+        const accounts: { rules: string; cycle: number }[] = [
+            { rules: '[]', cycle: 4 },
+            { rules: ladder, cycle: 2 },
+            { rules: ladder, cycle: 4 }
+        ];
+        for (const [index, account] of accounts.entries()) {
+            const email: string = `receita-${String(index)}-${crypto.randomUUID()}@example.test`;
+            await request('POST', '/auth/google', {
+                idToken: GOOGLE.register({ subject: `g-receita-${String(index)}`, email, name: 'Receita' })
+            });
+            const companyId: string = (await pg.query<{ companyId: string }>(`SELECT "companyId" FROM "Users" WHERE email = $1`, [email]))
+                .rows[0]?.companyId as string;
+            const subscriptionId: string = crypto.randomUUID();
+            await pg.query(
+                `INSERT INTO "BillingSubscriptions" (id, "companyId", engine, status, "planId", "paymentMethod", "discountRules")
+                 VALUES ($1, $2, 'fake', 'active', 'plan', 'card', $3::jsonb)`,
+                [subscriptionId, companyId, account.rules]
+            );
+            await pg.query(
+                `INSERT INTO "BillingPriceQuotes" (id, "companyId", "subscriptionId", "productRef", cycle, "amountCents", description)
+                 VALUES ($1, $2, $3, 'vera_premium', $4, 2000, 'Vera Premium')`,
+                [crypto.randomUUID(), companyId, subscriptionId, account.cycle]
+            );
+            await pg.query(
+                `INSERT INTO "CompanyProducts" (id, "companyId", "productId", "priceCents", "startsAt", source, "subscriptionId")
+                 VALUES ($1, $2, $3, 2000, now(), 'subscription', $4)`,
+                [crypto.randomUUID(), companyId, productId, subscriptionId]
+            );
+        }
+
+        const overview = (await (await request('GET', '/platform/overview', undefined, adminToken)).json()) as {
+            revenue: { estimatedMonthlyCents: number };
+        };
+
+        expect(overview.revenue.estimatedMonthlyCents).toBe(2000 + 1000 + 2000);
+    });
 });

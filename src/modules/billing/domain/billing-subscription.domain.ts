@@ -23,6 +23,10 @@ export class BillingSubscriptionDomain {
         return this.subscriptions.findById(id);
     }
 
+    public async listByIdsAcrossTenants(ids: readonly string[]): Promise<BillingSubscription[]> {
+        return this.subscriptions.listByIdsAcrossTenants(ids);
+    }
+
     public async listOfCompany(): Promise<BillingSubscription[]> {
         return this.subscriptions.listOfCompany();
     }
