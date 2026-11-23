@@ -338,6 +338,23 @@ export interface IndexSeriesPoints {
     value: Numeric;
 }
 
+export interface IntegrationCredentials {
+    baseUrl: string | null;
+    clientId: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    hint: string;
+    id: string;
+    kind: string;
+    model: string | null;
+    phoneNumberId: string | null;
+    sealed: string;
+    sealerDriver: string;
+    updatedAt: Generated<Timestamp>;
+    verifiedAt: Timestamp;
+}
+
 export interface OnboardingStates {
     assetsDoneAt: Timestamp | null;
     assetsSkippedAt: Timestamp | null;
@@ -591,6 +608,7 @@ export interface DB {
     GlobalProductLimits: GlobalProductLimits;
     GlobalProducts: GlobalProducts;
     IndexSeriesPoints: IndexSeriesPoints;
+    IntegrationCredentials: IntegrationCredentials;
     OnboardingStates: OnboardingStates;
     PaidUsageEntries: PaidUsageEntries;
     PaidUsageNotices: PaidUsageNotices;
