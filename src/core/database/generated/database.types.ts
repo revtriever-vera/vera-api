@@ -276,6 +276,7 @@ export interface Companies {
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
     id: string;
+    isPlatform: Generated<boolean>;
     locale: Generated<string>;
     name: string;
     timezone: Generated<string>;
@@ -486,6 +487,15 @@ export interface PaidUsageNotices {
     kind: string;
     period: string;
     sentAt: Generated<Timestamp>;
+}
+
+export interface PlatformAuditLog {
+    action: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    meta: Generated<Json>;
+    operatorUserId: string | null;
+    targetCompanyId: string | null;
 }
 
 export interface PluggyCredentials {
@@ -842,6 +852,7 @@ export interface DB {
     OnboardingStates: OnboardingStates;
     PaidUsageEntries: PaidUsageEntries;
     PaidUsageNotices: PaidUsageNotices;
+    PlatformAuditLog: PlatformAuditLog;
     PluggyCredentials: PluggyCredentials;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;

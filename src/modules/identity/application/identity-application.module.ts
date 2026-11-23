@@ -33,6 +33,11 @@ import { IdentityAccountExporter } from '../services/identity-account.exporter';
 import { IdentityLogService } from '../services/identity-log.service';
 import { IdentityMetricsService } from '../services/identity-metrics.service';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
+import { PlatformAuditReaderService } from '../services/platform-audit-reader.service';
+import { PlatformAvailabilityService } from '../services/platform-availability.service';
+import { PlatformSeedService } from '../services/platform-seed.service';
+import { PlatformEnabledGuard } from '../services/platform-enabled.guard';
+import { PlatformGuard } from '../services/platform.guard';
 import { RolesGuard } from '../services/roles.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import { SessionIssuerService } from '../services/session-issuer.service';
@@ -101,6 +106,11 @@ import { SocialLoginApplication } from './social-login.application';
         UserLocaleService,
         JwtAuthGuard,
         RolesGuard,
+        PlatformGuard,
+        PlatformEnabledGuard,
+        PlatformAvailabilityService,
+        PlatformSeedService,
+        PlatformAuditReaderService,
         RefreshCookieAdapter,
         TokenService,
         IdentityLogService,
@@ -123,6 +133,11 @@ import { SocialLoginApplication } from './social-login.application';
         OwnerRecipientsService,
         JwtAuthGuard,
         RolesGuard,
+        PlatformGuard,
+        PlatformEnabledGuard,
+        PlatformAvailabilityService,
+        PlatformSeedService,
+        PlatformAuditReaderService,
         TokenService,
         RefreshCookieAdapter,
         SessionIssuerPort,

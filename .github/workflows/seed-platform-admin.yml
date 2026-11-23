@@ -1,0 +1,53 @@
+name: seed platform admin
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: seed-platform-admin
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  APP_STACK: vera-app-prod
+  AWS_ACCOUNT_ID_PROD: ${{ vars.AWS_ACCOUNT_ID_PROD }}
+  SHARED_INFRA_PROD: ${{ vars.SHARED_INFRA_PROD }}
+
+jobs:
+  seed:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mascara valores de infraestrutura
+        run: bash .github/scripts/mask-values.sh AWS_ACCOUNT_ID_PROD SHARED_INFRA_PROD
+
+      - name: Mascara o e-mail do admin
+        env:
+          PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
+        run: echo "::add-mask::$PLATFORM_ADMIN_EMAIL"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID_PROD }}:role/vera-github-deploy-prod
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Mascara outputs do stack da aplicação
+        run: bash .github/scripts/mask-outputs.sh "$AWS_REGION" "$APP_STACK"
+
+      - name: cria o admin na company de sistema
+        env:
+          PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
+        run: |
+          PUBLIC_SUBNET_IDS="$(printf '%s' "$SHARED_INFRA_PROD" | jq -r '.publicSubnetIds | join(",")')"
+          export PUBLIC_SUBNET_IDS
+          bash .github/scripts/run-platform-seed.sh "$APP_STACK" "$AWS_REGION"

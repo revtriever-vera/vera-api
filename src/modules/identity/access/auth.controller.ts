@@ -8,7 +8,7 @@ import { RateLimit } from '../../../core/throttle/rate-limit.decorator';
 import { ProfileApplication, SessionProfile } from '../application/profile.application';
 import { SessionApplication } from '../application/session.application';
 import { SocialLoginApplication, SocialLoginResult } from '../application/social-login.application';
-import { LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
+import { LOGIN_AUDIENCES, LOGIN_PROVIDERS, LoginProvider } from '../domain/identity.types';
 import { AuthTokens, RequestMeta } from '../ports/session-issuer.port';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
 import { RequiresRole } from '../services/requires-role.decorator';
@@ -74,6 +74,17 @@ export class AuthController {
         example: { type: 'invites.invalid', title: 'InviteInvalidError', status: 410 }
     })
     @ApiProblemResponse({
+        status: 403,
+        description:
+            'Audience `admin` with a person outside the platform company (identity.platform_only), or the app audience with a person of the platform company (identity.admin_audience_required)',
+        example: { type: 'identity.platform_only', title: 'PlatformOnlyError', status: 403 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'Audience `admin` in a self-hosted deployment (identity.platform_disabled)',
+        example: { type: 'identity.platform_disabled', title: 'PlatformDisabledError', status: 404 }
+    })
+    @ApiProblemResponse({
         status: 429,
         description: 'Too many attempts from this IP (core.too_many_attempts)',
         example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
@@ -88,6 +99,9 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
     ): Promise<LoginResponse> {
+        if (body.audience === LOGIN_AUDIENCES.admin) {
+            return this.respond(await this.socialLogin.loginAdmin(body.idToken, this.meta(req)), res);
+        }
         return this.signIn(LOGIN_PROVIDERS.google, body.idToken, body.inviteToken, req, res);
     }
 
@@ -233,7 +247,10 @@ export class AuthController {
         req: Request,
         res: Response
     ): Promise<LoginResponse> {
-        const result: SocialLoginResult = await this.socialLogin.login(provider, credential, this.meta(req), inviteToken);
+        return this.respond(await this.socialLogin.login(provider, credential, this.meta(req), inviteToken), res);
+    }
+
+    private respond(result: SocialLoginResult, res: Response): LoginResponse {
         this.refreshCookie.write(res, result.tokens.refreshToken);
         return {
             outcome: 'authenticated',

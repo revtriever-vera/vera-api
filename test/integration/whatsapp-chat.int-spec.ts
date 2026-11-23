@@ -276,7 +276,7 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
             })
         );
         const tokens: AuthTokens = await harness.inCompany(owner.company.id, async () =>
-            issuer.issueForNewLogin(user, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google')
+            issuer.issueForNewLogin(user, { ip: '203.0.113.9', userAgent: 'int-test' }, 'google', 'app')
         );
         const issued = await harness.call<IssuedBody>(tokens.accessToken, 'POST', '/whatsapp/link/code', { consent: true });
         await say(phone, `VINCULAR ${issued.body.code}`);

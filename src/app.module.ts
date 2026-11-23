@@ -28,6 +28,7 @@ import { FixedIncomeScheduleModule } from './modules/fixed-income-schedule/fixed
 import { HealthModule } from './modules/health/health.module';
 import { IntegrationCredentialsModule } from './modules/integration-credentials/integration-credentials.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
 import { IssuersModule } from './modules/issuers/issuers.module';
 import { MarketDataModule } from './modules/market-data/market-data.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
@@ -76,6 +77,7 @@ const REDACTED_PATHS: string[] = ['req.headers.authorization', 'req.headers.cook
         HttpModule,
         HealthModule,
         IdentityModule,
+        PlatformAdminModule,
         IntegrationCredentialsModule,
         AllocationModule,
         AiAssistantModule,

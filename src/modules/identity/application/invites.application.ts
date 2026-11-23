@@ -9,7 +9,13 @@ import { AccountClosedError } from '../domain/identity.errors';
 import { AccountInvite, Company, INVITE_OUTCOMES, User, UserRole } from '../domain/identity.types';
 import { InviteDomain, IssuedInvite } from '../domain/invite.domain';
 import { isInviteUsable, maskEmail, normalizeEmail } from '../domain/invite-rules';
-import { AlreadyMemberError, InviteInvalidError, InviteNotFoundError, MembersLimitReachedError } from '../domain/members.errors';
+import {
+    AlreadyMemberError,
+    InviteInvalidError,
+    InviteNotFoundError,
+    MembersLimitReachedError,
+    PlatformInviteRefusedError
+} from '../domain/members.errors';
 import { UserDomain } from '../domain/user.domain';
 import { CurrentUserService } from '../services/current-user.service';
 import { MembersLogService } from '../services/members-log.service';
@@ -37,7 +43,7 @@ export class InvitesApplication {
 
     public async create(email: string, role: UserRole): Promise<InviteResult> {
         const inviter: User = await this.currentUser.require();
-        const company: Company = await this.requireCompany(inviter.companyId);
+        const company: Company = await this.requireInvitingCompany(inviter.companyId);
         const persisted: Persisted = await this.persist(inviter, email, role);
         await this.deliver(persisted.issued, inviter, company);
         this.logPersisted(persisted, role);
@@ -46,7 +52,7 @@ export class InvitesApplication {
 
     public async resend(inviteId: string): Promise<InviteResult> {
         const inviter: User = await this.currentUser.require();
-        const company: Company = await this.requireCompany(inviter.companyId);
+        const company: Company = await this.requireInvitingCompany(inviter.companyId);
         const issued: IssuedInvite = await this.renewPending(inviteId);
         await this.deliver(issued, inviter, company);
         this.logs.resent(issued.invite.id, issued.invite.role);
@@ -139,6 +145,14 @@ export class InvitesApplication {
     private async deliver(issued: IssuedInvite, inviter: User, company: Company): Promise<void> {
         await this.mailer.invited({ invite: issued.invite, token: issued.token, inviterName: inviter.name, company });
         this.metrics.invite(INVITE_OUTCOMES.sent);
+    }
+
+    private async requireInvitingCompany(companyId: string): Promise<Company> {
+        const company: Company = await this.requireCompany(companyId);
+        if (company.isPlatform) {
+            throw new PlatformInviteRefusedError();
+        }
+        return company;
     }
 
     private async requireCompany(companyId: string): Promise<Company> {

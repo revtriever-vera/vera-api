@@ -14,6 +14,7 @@ export interface TokenClaims {
     readonly purpose: TokenPurpose;
     readonly sessionId: string;
     readonly locale: AppLocale;
+    readonly platform: boolean;
 }
 
 export interface OpaqueToken {
@@ -27,6 +28,7 @@ interface RawClaims {
     readonly purpose?: unknown;
     readonly sessionId?: unknown;
     readonly locale?: unknown;
+    readonly platform?: unknown;
 }
 
 const JWT_ALGORITHM: Algorithm = 'HS256';
@@ -47,8 +49,8 @@ export class TokenService {
         this.accessTtlSeconds = config.ACCESS_TOKEN_TTL_MINUTES * SECONDS_PER_MINUTE;
     }
 
-    public signAccessToken(userId: string, companyId: string, sessionId: string, locale: AppLocale): string {
-        const claims: TokenClaims = { sub: userId, companyId, purpose: TOKEN_PURPOSES.access, sessionId, locale };
+    public signAccessToken(userId: string, companyId: string, sessionId: string, locale: AppLocale, platform: boolean): string {
+        const claims: TokenClaims = { sub: userId, companyId, purpose: TOKEN_PURPOSES.access, sessionId, locale, platform };
         return this.jwt.sign({ ...claims }, { expiresIn: this.accessTtlSeconds });
     }
 
@@ -85,7 +87,8 @@ export class TokenService {
             companyId: raw.companyId,
             purpose: TOKEN_PURPOSES.access,
             sessionId: raw.sessionId,
-            locale: raw.locale as AppLocale
+            locale: raw.locale as AppLocale,
+            platform: raw.platform === true
         };
     }
 }

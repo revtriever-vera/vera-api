@@ -53,7 +53,9 @@ describe('onboarding sample data without registered ports', () => {
             })
         );
         const tokens = await inCompany(company.id, async () =>
-            app.get(SessionIssuerPort, { strict: false }).issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google')
+            app
+                .get(SessionIssuerPort, { strict: false })
+                .issueForNewLogin(user, { ip: '203.0.113.7', userAgent: 'int-test' }, 'google', 'app')
         );
         token = tokens.accessToken;
     });

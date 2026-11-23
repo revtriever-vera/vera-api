@@ -25,15 +25,30 @@ const VALID: Record<string, unknown> = {
 
 describe('TokenService', () => {
     it('assina e verifica o access token com o locale no claim', () => {
-        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en');
+        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en', false);
 
         const claims: TokenClaims | null = tokens.verifyAccessToken(token);
 
-        expect(claims).toEqual({ sub: 'user-1', companyId: 'company-1', purpose: 'access', sessionId: 'session-1', locale: 'en' });
+        expect(claims).toEqual({
+            sub: 'user-1',
+            companyId: 'company-1',
+            purpose: 'access',
+            sessionId: 'session-1',
+            locale: 'en',
+            platform: false
+        });
+    });
+
+    it('leva o claim platform só para a company de sistema', () => {
+        const platform: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en', true);
+
+        expect(tokens.verifyAccessToken(platform)?.platform).toBe(true);
+        expect(tokens.verifyAccessToken(forge({ ...VALID, platform: 'true' }))?.platform).toBe(false);
+        expect(tokens.verifyAccessToken(forge(VALID))?.platform).toBe(false);
     });
 
     it('expira o access token em dez minutos', () => {
-        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'pt-BR');
+        const token: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'pt-BR', false);
 
         const decoded: jwt.JwtPayload = jwt.decode(token) as jwt.JwtPayload;
 

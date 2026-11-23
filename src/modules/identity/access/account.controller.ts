@@ -124,7 +124,8 @@ export class AccountController {
     })
     @ApiProblemResponse({
         status: 403,
-        description: 'Only the owner can delete the company (members.forbidden_role)',
+        description:
+            'Only the owner can delete the company (members.forbidden_role); the platform company cannot be deleted (identity.platform_company_protected)',
         example: { type: 'members.forbidden_role', title: 'RoleForbiddenError', status: 403 }
     })
     @ApiProblemResponse({
