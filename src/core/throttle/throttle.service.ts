@@ -22,6 +22,10 @@ export class ThrottleService {
         }
     }
 
+    public async countAttempt(key: string, windowSeconds: number): Promise<number> {
+        return this.throttles.registerAttempt(key, windowSeconds);
+    }
+
     public async isAllowed(key: string, limit: number, windowSeconds: number): Promise<boolean> {
         return (await this.throttles.registerAttempt(key, windowSeconds)) <= limit;
     }

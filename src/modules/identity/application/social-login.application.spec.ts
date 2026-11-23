@@ -11,6 +11,9 @@ import { IdentityMetricsService } from '../services/identity-metrics.service';
 import { LoginOfferRegistry } from '../services/login-offer.registry';
 import { PlatformAvailabilityService } from '../services/platform-availability.service';
 import { PlatformLoginAuditService } from '../services/platform-login-audit.service';
+import { PlatformLoginService } from '../services/platform-login.service';
+import { UserTotpDomain } from '../domain/user-totp.domain';
+import { TokenService } from '../services/token.service';
 import { SocialIdentityRegistry } from '../services/social-identity.registry';
 import { SocialLoginApplication } from './social-login.application';
 
@@ -25,6 +28,7 @@ function build(
         outcome?: string;
         platformUser?: User | null;
         platformEnabled?: boolean;
+        totpActive?: boolean;
         offer?: () => Promise<unknown>;
     } = {}
 ): {
@@ -37,6 +41,7 @@ function build(
     resolvePlatformUser: ReturnType<typeof vi.fn>;
     record: ReturnType<typeof vi.fn>;
     redeemOffer: ReturnType<typeof vi.fn>;
+    signToken: ReturnType<typeof vi.fn>;
 } {
     const verifier: SocialIdentityVerifierPort = {
         provider: 'google',
@@ -51,6 +56,8 @@ function build(
     const redeemOffer: ReturnType<typeof vi.fn> = vi.fn(
         options.offer ?? ((): Promise<unknown> => Promise.resolve({ redeemed: true, reason: null }))
     );
+    const signToken: ReturnType<typeof vi.fn> = vi.fn().mockReturnValue('signed-step-token');
+    const findTotp: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(options.totpActive ? { activatedAt: new Date() } : null);
     const metrics: Record<string, ReturnType<typeof vi.fn>> = { login: vi.fn(), providerLatency: vi.fn() };
     const logs: Record<string, ReturnType<typeof vi.fn>> = { providerTokenRejected: vi.fn() };
     const application: SocialLoginApplication = new SocialLoginApplication(
@@ -60,13 +67,17 @@ function build(
         { get: () => ({ requestId: 'r', locale: 'en' }), enrich } as unknown as AppContext,
         logs as unknown as IdentityLogService,
         metrics as unknown as IdentityMetricsService,
-        new PlatformLoginAuditService(
-            { record } as unknown as PlatformAuditDomain,
-            { enabled: () => options.platformEnabled ?? true } as unknown as PlatformAvailabilityService
+        new PlatformLoginService(
+            new PlatformLoginAuditService(
+                { record } as unknown as PlatformAuditDomain,
+                { enabled: () => options.platformEnabled ?? true } as unknown as PlatformAvailabilityService
+            ),
+            { findByUserId: findTotp } as unknown as UserTotpDomain,
+            { signSecondFactorToken: signToken } as unknown as TokenService
         ),
         { redeem: redeemOffer } as unknown as LoginOfferRegistry
     );
-    return { application, metrics, logs, enrich, issue, resolve, resolvePlatformUser, record, redeemOffer };
+    return { application, metrics, logs, enrich, issue, resolve, resolvePlatformUser, record, redeemOffer, signToken };
 }
 
 describe('SocialLoginApplication', () => {
@@ -131,21 +142,27 @@ describe('SocialLoginApplication', () => {
     });
 
     describe('loginAdmin', () => {
-        it('entra a pessoa da company de sistema, emite com a audiência admin e grava admin.login', async () => {
-            const { application, issue, record, resolve, metrics } = build({ platformUser: USER });
+        it('sem autenticador ativo devolve o token de cadastro e nunca emite sessão', async () => {
+            const { application, issue, signToken, resolve, enrich } = build({ platformUser: USER });
 
             const result = await application.loginAdmin('credential', { ip: '203.0.113.1' });
 
-            expect(result).toEqual({ tokens: TOKENS, isNewAccount: false, joinedAccount: false, offer: null });
-            expect(issue).toHaveBeenCalledWith(USER, { ip: '203.0.113.1' }, 'google', 'admin');
-            expect(record).toHaveBeenCalledWith({
-                operatorUserId: 'user-1',
-                action: 'admin.login',
-                targetCompanyId: 'company-1',
-                meta: { ip: '203.0.113.1' }
-            });
+            expect(result).toEqual({ outcome: 'totp_enrollment_required', setupToken: 'signed-step-token' });
+            expect(signToken).toHaveBeenCalledWith('totp_enrollment', 'user-1', 'company-1');
+            expect(enrich).toHaveBeenCalledWith({ companyId: 'company-1', userId: 'user-1' });
+            expect(issue).not.toHaveBeenCalled();
             expect(resolve).not.toHaveBeenCalled();
-            expect(metrics['login']).toHaveBeenCalledWith('google', 'success');
+        });
+
+        it('com autenticador ativo devolve o token de desafio e nunca emite sessão', async () => {
+            const { application, issue, signToken, record } = build({ platformUser: USER, totpActive: true });
+
+            const result = await application.loginAdmin('credential', {});
+
+            expect(result).toEqual({ outcome: 'totp_required', challengeToken: 'signed-step-token' });
+            expect(signToken).toHaveBeenCalledWith('totp_challenge', 'user-1', 'company-1');
+            expect(issue).not.toHaveBeenCalled();
+            expect(record).not.toHaveBeenCalled();
         });
 
         it('recusa quem não é da company de sistema, sem emitir sessão, e grava admin.denied', async () => {

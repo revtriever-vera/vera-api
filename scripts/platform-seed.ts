@@ -4,10 +4,11 @@ import { INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { AppContext } from '../src/core/context/app-context.port';
-import { PlatformSeedOutcome } from '../src/modules/identity/domain/identity.types';
+import { PlatformSeedOutcome, PlatformTotpResetOutcome } from '../src/modules/identity/domain/identity.types';
 import { PlatformSeedService } from '../src/modules/identity/services/platform-seed.service';
 
 const EMAIL_VARIABLE: string = 'PLATFORM_ADMIN_EMAIL';
+const RESET_VARIABLE: string = 'PLATFORM_RESET_TOTP';
 
 function loadEnv(): void {
     try {
@@ -25,6 +26,23 @@ function requiredEmail(): string {
     return email;
 }
 
+function wantsReset(): boolean {
+    return process.argv.includes('--reset-totp') || process.env[RESET_VARIABLE] === 'true';
+}
+
+async function run(app: INestApplicationContext, email: string): Promise<string> {
+    const context: AppContext = app.get(AppContext, { strict: false });
+    const service: PlatformSeedService = app.get(PlatformSeedService, { strict: false });
+    return context.run({ requestId: 'platform-seed', locale: 'pt-BR' }, async () => {
+        if (wantsReset()) {
+            const reset: PlatformTotpResetOutcome = await service.resetTotp(email);
+            return reset === 'reset' ? 'autenticador zerado e sessões revogadas' : 'o usuário não é da company de sistema: nada a fazer';
+        }
+        const outcome: PlatformSeedOutcome = await service.seed(email);
+        return outcome === 'created' ? 'admin criado na company de sistema' : 'o usuário já existe: nada a fazer';
+    });
+}
+
 async function seed(): Promise<void> {
     loadEnv();
     if (process.env['DEPLOYMENT_MODE'] === 'self_hosted') {
@@ -33,11 +51,7 @@ async function seed(): Promise<void> {
     const email: string = requiredEmail();
     const app: INestApplicationContext = await NestFactory.createApplicationContext(AppModule, { logger: ['error'] });
     try {
-        const context: AppContext = app.get(AppContext, { strict: false });
-        const outcome: PlatformSeedOutcome = await context.run({ requestId: 'platform-seed', locale: 'pt-BR' }, async () =>
-            app.get(PlatformSeedService, { strict: false }).seed(email)
-        );
-        console.log(outcome === 'created' ? 'admin criado na company de sistema' : 'o usuário já existe: nada a fazer');
+        console.log(await run(app, email));
     } finally {
         await app.close();
     }

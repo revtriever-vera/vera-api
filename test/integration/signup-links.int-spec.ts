@@ -2,6 +2,7 @@ import { AddressInfo, Server } from 'node:net';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import { authenticator } from 'otplib';
 import { Client } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 import { AppModule } from '../../src/app.module';
@@ -109,11 +110,15 @@ describe('links de cadastro (hospedada)', () => {
         pg = new Client({ connectionString: isolated.url });
         await pg.connect();
         await app.get(AppContext).run({ requestId: 'seed', locale: 'pt-BR' }, async () => app.get(PlatformSeedService).seed(adminEmail));
-        const login = (await (
+        const step = (await (
             await request('POST', '/auth/google', {
                 idToken: GOOGLE.register({ subject: 'g-admin', email: adminEmail, name: 'Admin' }),
                 audience: 'admin'
             })
+        ).json()) as { setupToken: string };
+        const enrolled = (await (await request('POST', '/auth/totp/enroll', { setupToken: step.setupToken })).json()) as { secret: string };
+        const login = (await (
+            await request('POST', '/auth/totp/activate', { setupToken: step.setupToken, code: authenticator.generate(enrolled.secret) })
         ).json()) as LoginBody;
         adminToken = login.accessToken;
         adminId = login.user.id;

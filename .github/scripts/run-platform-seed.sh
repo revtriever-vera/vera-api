@@ -16,8 +16,8 @@ FAMILY="$(output MigrationTaskFamily)"
 SUBNETS="${PUBLIC_SUBNET_IDS:-$(output PublicSubnetIds)}"
 SECURITY_GROUP="$(output AppSecurityGroupId)"
 
-OVERRIDES="$(jq -cn --arg email "$PLATFORM_ADMIN_EMAIL" \
-  '{containerOverrides: [{name: "migrate", command: ["node", "dist-scripts/scripts/platform-seed.js"], environment: [{name: "PLATFORM_ADMIN_EMAIL", value: $email}]}]}')"
+OVERRIDES="$(jq -cn --arg email "$PLATFORM_ADMIN_EMAIL" --arg reset "${PLATFORM_RESET_TOTP:-false}" \
+  '{containerOverrides: [{name: "migrate", command: ["node", "dist-scripts/scripts/platform-seed.js"], environment: [{name: "PLATFORM_ADMIN_EMAIL", value: $email}, {name: "PLATFORM_RESET_TOTP", value: $reset}]}]}')"
 
 ARN="$(aws ecs run-task \
   --cluster "$CLUSTER" \

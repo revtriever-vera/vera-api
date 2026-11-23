@@ -93,4 +93,46 @@ describe('TokenService', () => {
         expect(opaque.hash).not.toBe(opaque.raw);
         expect(tokens.generateOpaqueToken().raw).not.toBe(opaque.raw);
     });
+
+    it('o token de desafio e o de cadastro valem só para o seu passo, com TTLs próprios', () => {
+        const challenge: string = tokens.signSecondFactorToken('totp_challenge', 'user-1', 'company-1');
+        const enrollment: string = tokens.signSecondFactorToken('totp_enrollment', 'user-1', 'company-1');
+
+        expect(tokens.verifySecondFactorToken(challenge, 'totp_challenge')).toEqual({ sub: 'user-1', companyId: 'company-1' });
+        expect(tokens.verifySecondFactorToken(challenge, 'totp_enrollment')).toBeNull();
+        expect(tokens.verifySecondFactorToken(enrollment, 'totp_challenge')).toBeNull();
+        const ttl = (token: string): number => {
+            const decoded: jwt.JwtPayload = jwt.decode(token) as jwt.JwtPayload;
+            return (decoded.exp ?? 0) - (decoded.iat ?? 0);
+        };
+        expect(ttl(challenge)).toBe(300);
+        expect(ttl(enrollment)).toBe(900);
+    });
+
+    it('nem o token de desafio nem o de cadastro abrem a API como access token', () => {
+        const challenge: string = tokens.signSecondFactorToken('totp_challenge', 'user-1', 'company-1');
+        const enrollment: string = tokens.signSecondFactorToken('totp_enrollment', 'user-1', 'company-1');
+
+        expect(tokens.verifyAccessToken(challenge)).toBeNull();
+        expect(tokens.verifyAccessToken(enrollment)).toBeNull();
+    });
+
+    it('o access token não serve como token de passo, e assinatura errada ou expiração são recusadas', () => {
+        const access: string = tokens.signAccessToken('user-1', 'company-1', 'session-1', 'en', true);
+
+        expect(tokens.verifySecondFactorToken(access, 'totp_challenge')).toBeNull();
+        expect(
+            tokens.verifySecondFactorToken(
+                forge({ sub: 'u', companyId: 'c', purpose: 'totp_challenge' }, 'other-secret-with-length-xxxxxxxxx'),
+                'totp_challenge'
+            )
+        ).toBeNull();
+        expect(
+            tokens.verifySecondFactorToken(
+                forge({ sub: 'u', companyId: 'c', purpose: 'totp_challenge' }, config.JWT_SECRET, { expiresIn: -5 }),
+                'totp_challenge'
+            )
+        ).toBeNull();
+        expect(tokens.verifySecondFactorToken(forge({ purpose: 'totp_challenge' }), 'totp_challenge')).toBeNull();
+    });
 });

@@ -27,6 +27,7 @@ import {
     UpdatePreferencesDto,
     updatePreferencesSchema
 } from '../validation/auth.schemas';
+import { GoogleLoginResponse, googleLoginResponseSchema } from '../validation/totp.schemas';
 
 const SOCIAL_LOGIN_LIMIT: number = 30;
 const SOCIAL_LOGIN_WINDOW_SECONDS: number = 15 * 60;
@@ -53,10 +54,16 @@ export class AuthController {
         summary: 'Sign in (or sign up) with a Google ID token',
         description:
             'Verifies the ID token against Google, then signs the person in. A person never seen before gets a company and an ' +
-            'owner user in the same call. Sets the rt_refresh cookie.'
+            'owner user in the same call. Sets the rt_refresh cookie. With audience `admin` no session is issued: the answer is ' +
+            'a `totp_required` challenge (authenticator already active) or a `totp_enrollment_required` setup token, and the session ' +
+            'only comes from the /auth/totp endpoints.'
     })
     @ApiZodBody(googleLoginSchema)
-    @ApiZodResponse({ status: 200, description: 'Session issued — refresh cookie set', schema: loginResponseSchema })
+    @ApiZodResponse({
+        status: 200,
+        description: 'Session issued (refresh cookie set), or the second-factor step for audience `admin`',
+        schema: googleLoginResponseSchema
+    })
     @ApiProblemResponse({
         status: 401,
         description: 'Invalid Google token (identity.invalid_google_token)',
@@ -98,9 +105,9 @@ export class AuthController {
         @Body() body: GoogleLoginDto,
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response
-    ): Promise<LoginResponse> {
+    ): Promise<GoogleLoginResponse> {
         if (body.audience === LOGIN_AUDIENCES.admin) {
-            return this.respond(await this.socialLogin.loginAdmin(body.idToken, this.meta(req)), res);
+            return this.socialLogin.loginAdmin(body.idToken, this.meta(req));
         }
         return this.signIn(LOGIN_PROVIDERS.google, body.idToken, { invite: body.inviteToken, offer: body.offerToken }, req, res);
     }

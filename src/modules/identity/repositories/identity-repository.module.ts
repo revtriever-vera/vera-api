@@ -7,6 +7,8 @@ import { AuthIdentitiesRepository } from './auth-identities.repository';
 import { CompaniesRepository } from './companies.repository';
 import { PlatformAuditLogRepository } from './platform-audit-log.repository';
 import { SessionsRepository } from './sessions.repository';
+import { UserRecoveryCodesRepository } from './user-recovery-codes.repository';
+import { UserTotpsRepository } from './user-totps.repository';
 import { UsersRepository } from './users.repository';
 
 @Module({
@@ -18,7 +20,9 @@ import { UsersRepository } from './users.repository';
         AuthIdentitiesRepository,
         AccountDeletionLogRepository,
         AccountInvitesRepository,
-        PlatformAuditLogRepository
+        PlatformAuditLogRepository,
+        UserTotpsRepository,
+        UserRecoveryCodesRepository
     ],
     exports: [
         CompaniesRepository,
@@ -27,7 +31,9 @@ import { UsersRepository } from './users.repository';
         AuthIdentitiesRepository,
         AccountDeletionLogRepository,
         AccountInvitesRepository,
-        PlatformAuditLogRepository
+        PlatformAuditLogRepository,
+        UserTotpsRepository,
+        UserRecoveryCodesRepository
     ]
 })
 export class IdentityRepositoryModule {}
