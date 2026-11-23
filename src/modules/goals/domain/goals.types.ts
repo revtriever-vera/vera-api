@@ -107,6 +107,7 @@ export interface NewGoalData {
     readonly plan: GoalPlan;
     readonly monthStart: GoalMonthStart;
     readonly reserve: ReserveBasis | null;
+    readonly isSample?: boolean;
 }
 
 export interface GoalChanges {

@@ -3,7 +3,7 @@ import { HolderFilter } from '../../../shared/holder/holder-filter';
 import { GoalHoldingsRepository } from '../repositories/goal-holdings.repository';
 import { GoalsRepository } from '../repositories/goals.repository';
 import { toGoal } from './goal.mapper';
-import { Goal, GoalChanges, GoalHoldingLink, GoalHoldingRow, GoalPatch, GoalRow, NewGoalData } from './goals.types';
+import { Goal, GOAL_KINDS, GoalChanges, GoalHoldingLink, GoalHoldingRow, GoalPatch, GoalRow, NewGoalData } from './goals.types';
 
 export function holdingKeyOf(kind: string, holdingId: string): string {
     return `${kind}:${holdingId}`;
@@ -26,6 +26,49 @@ export class GoalDomain {
 
     public async list(filter: HolderFilter): Promise<Goal[]> {
         const rows: GoalRow[] = await this.goals.listByHolder(filter);
+        const links: Map<string, GoalHoldingRow[]> = groupByGoal(
+            await this.holdings.listByGoals(rows.map((row: GoalRow): string => row.id))
+        );
+        return rows.map((row: GoalRow): Goal => toGoal(row, links.get(row.id) ?? []));
+    }
+
+    public async listReal(): Promise<Goal[]> {
+        const rows: GoalRow[] = await this.goals.listReal();
+        return this.withLinks(rows);
+    }
+
+    public async hasSamples(): Promise<boolean> {
+        return (await this.goals.listSamples()).length > 0;
+    }
+
+    public async removeSamples(): Promise<number> {
+        const rows: GoalRow[] = await this.goals.listSamples();
+        for (const row of rows) {
+            await this.goals.softDelete(row.id);
+        }
+        await this.holdings.softDeleteByGoals(rows.map((row: GoalRow): string => row.id));
+        return rows.length;
+    }
+
+    /**
+     * The person left the account: what was theirs becomes the whole account's. A reserve cannot sit next to another
+     * whole-account reserve (one per holder), so it turns into a plain goal and loses its spending-based basis.
+     */
+    public async releaseHolder(userId: string): Promise<number> {
+        const rows: GoalRow[] = await this.goals.listOfHolder(userId);
+        for (const row of rows) {
+            const collides: boolean = row.kind === GOAL_KINDS.emergencyReserve && (await this.goals.findReserveOf(null)) !== null;
+            await this.goals.patch(
+                row.id,
+                collides
+                    ? { holderUserId: null, kind: GOAL_KINDS.other, reserveMonths: null, reserveBaseMinor: null }
+                    : { holderUserId: null }
+            );
+        }
+        return rows.length;
+    }
+
+    private async withLinks(rows: readonly GoalRow[]): Promise<Goal[]> {
         const links: Map<string, GoalHoldingRow[]> = groupByGoal(
             await this.holdings.listByGoals(rows.map((row: GoalRow): string => row.id))
         );
@@ -68,7 +111,8 @@ export class GoalDomain {
             monthStartMonth: data.monthStart.month,
             monthStartMinor: data.monthStart.minor,
             reserveMonths: data.reserve?.months ?? null,
-            reserveBaseMinor: data.reserve?.baseMinor ?? null
+            reserveBaseMinor: data.reserve?.baseMinor ?? null,
+            isSample: data.isSample ?? false
         });
         return toGoal(row, await this.holdings.insertMany(row.id, links));
     }

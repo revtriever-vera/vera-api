@@ -22,6 +22,7 @@ type GoalFields = Pick<
     | 'monthStartMinor'
     | 'reserveMonths'
     | 'reserveBaseMinor'
+    | 'isSample'
 >;
 
 @Injectable()
@@ -47,6 +48,18 @@ export class GoalsRepository extends TenantRepository<'Goals'> {
                 { property: 'createdAt', direction: 'asc' }
             ]
         });
+    }
+
+    public async listReal(): Promise<GoalRow[]> {
+        return this.findMany({ isSample: false }, { limit: MAX_GOALS_PER_COMPANY, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
+    }
+
+    public async listSamples(): Promise<GoalRow[]> {
+        return this.findMany({ isSample: true }, { limit: MAX_GOALS_PER_COMPANY });
+    }
+
+    public async listOfHolder(userId: string): Promise<GoalRow[]> {
+        return this.findMany({ holderUserId: userId }, { limit: MAX_GOALS_PER_COMPANY });
     }
 
     public async findReserveOf(holderUserId: string | null): Promise<GoalRow | null> {
