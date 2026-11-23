@@ -13,6 +13,7 @@ export default defineConfig({
     test: {
         include: ['test/integration/**/*.int-spec.ts'],
         environment: 'node',
+        env: { IS_LOCAL: 'true', DEPLOY_ENV: 'local' },
         globals: false,
         passWithNoTests: true,
         globalSetup: ['./test/integration/global-setup.ts'],

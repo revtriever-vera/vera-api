@@ -12,6 +12,12 @@ describe('parseWhatsAppConfig', () => {
         expect(remote.WHATSAPP_TEMPLATES_AUTO_SUBMIT).toBe(true);
     });
 
+    it('fora do local o mock nunca é aceito, nem pedindo', () => {
+        for (const env of [{}, { IS_LOCAL: 'false' }, { WHATSAPP_DRIVER: 'mock' }, { IS_LOCAL: 'false', WHATSAPP_DRIVER: 'mock' }]) {
+            expect(parseWhatsAppConfig(env).WHATSAPP_DRIVER).toBe('cloud');
+        }
+    });
+
     it('as rotas de dev só existem no local com o mock', () => {
         expect(parseWhatsAppConfig({ IS_LOCAL: 'true', WHATSAPP_DRIVER: 'cloud' }).WHATSAPP_DEV_ROUTES).toBe(false);
         expect(parseWhatsAppConfig({ WHATSAPP_DRIVER: 'mock' }).WHATSAPP_DEV_ROUTES).toBe(false);

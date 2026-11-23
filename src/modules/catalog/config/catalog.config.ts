@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
+import { isLocalSchema } from '../../../shared/config/environment.schema';
 
 const optionalText = z
     .string()
@@ -21,6 +22,7 @@ const optionalUrl = optionalText.refine(
 );
 
 const schema = z.object({
+    IS_LOCAL: isLocalSchema,
     CATALOG_DRIVER: optionalText.pipe(z.enum(['live', 'mock']).default('mock')),
     B3_INSTRUMENTS_URL: optionalUrl,
     TESOURO_PRICES_CSV_URL: optionalUrl,
@@ -31,6 +33,11 @@ const schema = z.object({
     CATALOG_HTTP_TIMEOUT_MS: withDefault('20000').pipe(z.coerce.number().int().positive())
 });
 
-export type CatalogConfig = z.infer<typeof schema>;
+export type CatalogConfig = Omit<z.infer<typeof schema>, 'IS_LOCAL'>;
 
-export const catalogConfig = registerAs('catalog', (): CatalogConfig => schema.parse(process.env));
+export function parseCatalogConfig(env: NodeJS.ProcessEnv): CatalogConfig {
+    const { IS_LOCAL: isLocal, ...settings } = schema.parse(env);
+    return { ...settings, CATALOG_DRIVER: isLocal ? settings.CATALOG_DRIVER : 'live' };
+}
+
+export const catalogConfig = registerAs('catalog', (): CatalogConfig => parseCatalogConfig(process.env));

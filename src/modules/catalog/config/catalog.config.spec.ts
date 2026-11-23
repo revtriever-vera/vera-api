@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { catalogConfig } from './catalog.config';
 
 const KEYS: string[] = [
+    'IS_LOCAL',
     'CATALOG_DRIVER',
     'B3_INSTRUMENTS_URL',
     'TESOURO_PRICES_CSV_URL',
@@ -19,7 +20,16 @@ afterEach(() => {
 });
 
 describe('catalogConfig', () => {
+    it('outside local the mock driver is never accepted, even when asked for', () => {
+        expect(catalogConfig().CATALOG_DRIVER).toBe('live');
+        vi.stubEnv('CATALOG_DRIVER', 'mock');
+        expect(catalogConfig().CATALOG_DRIVER).toBe('live');
+        vi.stubEnv('IS_LOCAL', 'false');
+        expect(catalogConfig().CATALOG_DRIVER).toBe('live');
+    });
+
     it('defaults to the mock driver with no keys and the public base URLs', () => {
+        vi.stubEnv('IS_LOCAL', 'true');
         const config = catalogConfig();
 
         expect(config.CATALOG_DRIVER).toBe('mock');
@@ -33,6 +43,7 @@ describe('catalogConfig', () => {
         for (const key of KEYS) {
             vi.stubEnv(key, '  ');
         }
+        vi.stubEnv('IS_LOCAL', 'true');
 
         const config = catalogConfig();
 

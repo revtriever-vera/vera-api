@@ -18,7 +18,15 @@ describe('fixedIncomeConfig', () => {
         expect(config.SGS_MAX_ATTEMPTS).toBe(3);
     });
 
+    it('fora do local o mock nunca é aceito', () => {
+        vi.stubEnv('IS_LOCAL', 'false');
+        vi.stubEnv('FIXED_INCOME_INDEX_DRIVER', 'mock');
+
+        expect(fixedIncomeConfig().FIXED_INCOME_INDEX_DRIVER).toBe('bcb');
+    });
+
     it('lê o driver e os códigos do ambiente', () => {
+        vi.stubEnv('IS_LOCAL', 'true');
         vi.stubEnv('FIXED_INCOME_INDEX_DRIVER', 'mock');
         vi.stubEnv('SGS_CDI_SERIES_CODE', '4391');
 

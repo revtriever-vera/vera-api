@@ -12,7 +12,7 @@ export class PluggyAvailabilityService {
     }
 
     public assertEnabled(): void {
-        if (this.config.PLUGGY_DRIVER === 'mock' && !this.config.PLUGGY_MOCK_ALLOWED) {
+        if (!this.config.PLUGGY_ENABLED) {
             throw new ProviderDisabledError();
         }
     }

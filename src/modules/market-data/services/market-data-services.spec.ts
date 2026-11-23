@@ -84,7 +84,7 @@ describe('selectQuoteProviders and the registry', () => {
     } as unknown as Parameters<typeof selectQuoteProviders>[1];
 
     it('uses mock drivers for every group in mock mode', () => {
-        const providers: QuoteProviderPort[] = selectQuoteProviders(parseMarketDataConfig({}), everyone);
+        const providers: QuoteProviderPort[] = selectQuoteProviders(parseMarketDataConfig({ IS_LOCAL: 'true' }), everyone);
 
         expect(providers.every((provider: QuoteProviderPort) => provider instanceof MockQuoteDriver)).toBe(true);
         expect(providers.map((provider: QuoteProviderPort) => provider.provider).sort()).toEqual([
@@ -134,7 +134,7 @@ describe('selectQuoteProviders and the registry', () => {
     });
 
     it('does not space chunks in mock mode', () => {
-        const config = parseMarketDataConfig({});
+        const config = parseMarketDataConfig({ IS_LOCAL: 'true' });
         const registry: QuoteProviderRegistryService = new QuoteProviderRegistryService(selectQuoteProviders(config, everyone), config);
 
         expect(registry.chunkSpacingMs('us_equities')).toBe(0);

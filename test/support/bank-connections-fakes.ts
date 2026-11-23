@@ -430,7 +430,7 @@ export function configOf(overrides: Partial<ConfigType<typeof bankConnectionsCon
         PLUGGY_SYNC_SPACING_MS: 2000,
         PLUGGY_INITIAL_HISTORY_DAYS: 365,
         PLUGGY_SHIFT_INSTALLMENT_DATES: false,
-        PLUGGY_MOCK_ALLOWED: true,
+        PLUGGY_ENABLED: true,
         MOCK_PLUGGY_FORCE_401: false,
         MOCK_PLUGGY_REVOKED_ITEMS: [],
         ...overrides

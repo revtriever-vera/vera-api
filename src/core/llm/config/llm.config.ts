@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
-import { deployEnvironmentSchema } from '../../../shared/config/environment.schema';
+import { deployEnvironmentSchema, isLocalSchema } from '../../../shared/config/environment.schema';
 
 const DEFAULT_MODEL_ID: string = 'meta/muse-spark-1.3-contributor';
 const DEFAULT_TIMEOUT_MS: number = 30_000;
@@ -36,6 +36,7 @@ const priceTableEnvSchema = z
 
 const schema = z
     .object({
+        IS_LOCAL: isLocalSchema,
         LLM_DRIVER: z.enum(['live', 'mock']).default('mock'),
         AI_GATEWAY_API_KEY: z.string().default(''),
         LLM_MODEL_ID: z.string().min(1).default(DEFAULT_MODEL_ID),
@@ -57,7 +58,8 @@ const schema = z
                 message: `LLM_PRICE_TABLE não tem preço para o modelo ${model}`
             });
         }
-    });
+    })
+    .transform((value) => ({ ...value, LLM_DRIVER: value.IS_LOCAL ? value.LLM_DRIVER : ('live' as const) }));
 
 export type LlmConfig = z.infer<typeof schema>;
 

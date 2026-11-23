@@ -34,7 +34,7 @@ export interface BillingEnvironmentConfig {
 }
 
 export interface CalendarEnvironmentConfig {
-    readonly driver: 'mock' | 'google';
+    readonly driver: 'google' | null;
 }
 
 export interface EnvironmentConfig {
@@ -171,9 +171,12 @@ function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
 }
 
 function calendar(env: NodeJS.ProcessEnv): CalendarEnvironmentConfig {
-    const driver: string = optionalVariable(env, 'GOOGLE_CALENDAR_DRIVER') ?? 'mock';
-    if (driver !== 'mock' && driver !== 'google') {
-        throw new Error('GOOGLE_CALENDAR_DRIVER inválida: use mock ou google');
+    const driver: string | null = optionalVariable(env, 'GOOGLE_CALENDAR_DRIVER');
+    if (driver === 'mock') {
+        throw new Error('GOOGLE_CALENDAR_DRIVER=mock não é aceito em ambiente hospedado: use google ou deixe em branco (agenda desligada)');
+    }
+    if (driver !== null && driver !== 'google') {
+        throw new Error('GOOGLE_CALENDAR_DRIVER inválida: use google ou deixe em branco');
     }
     return { driver };
 }

@@ -54,6 +54,7 @@ const schema = z.object({
 });
 
 export interface BankConnectionsSettings {
+    /** Fora do local nunca é `mock`. */
     readonly PLUGGY_DRIVER: 'live' | 'mock';
     readonly PLUGGY_BASE_URL: string;
     readonly PLUGGY_HTTP_TIMEOUT_MS: number;
@@ -67,7 +68,8 @@ export interface BankConnectionsSettings {
     readonly PLUGGY_SYNC_SPACING_MS: number;
     readonly PLUGGY_INITIAL_HISTORY_DAYS: number;
     readonly PLUGGY_SHIFT_INSTALLMENT_DATES: boolean;
-    readonly PLUGGY_MOCK_ALLOWED: boolean;
+    /** Falso fora do local sem `PLUGGY_DRIVER=live`: as rotas respondem 503 `connections.provider_disabled`. */
+    readonly PLUGGY_ENABLED: boolean;
     readonly MOCK_PLUGGY_FORCE_401: boolean;
     readonly MOCK_PLUGGY_REVOKED_ITEMS: readonly string[];
 }
@@ -106,18 +108,15 @@ function syncSettingsOf(
 
 export function parseBankConnectionsConfig(env: NodeJS.ProcessEnv): BankConnectionsSettings {
     const parsed: z.infer<typeof schema> = schema.parse(env);
-    const driver: 'live' | 'mock' | undefined = parsed.PLUGGY_DRIVER ?? (env['IS_LOCAL'] === 'true' ? 'mock' : undefined);
-    if (driver === undefined) {
-        throw new Error('PLUGGY_DRIVER é obrigatório fora do ambiente local');
-    }
+    const isLocal: boolean = env['IS_LOCAL'] === 'true';
     return {
-        PLUGGY_DRIVER: driver,
+        PLUGGY_DRIVER: isLocal ? (parsed.PLUGGY_DRIVER ?? 'mock') : 'live',
+        PLUGGY_ENABLED: isLocal || parsed.PLUGGY_DRIVER === 'live',
         PLUGGY_BASE_URL: stripTrailing(parsed.PLUGGY_BASE_URL, '/'),
         PLUGGY_HTTP_TIMEOUT_MS: parsed.PLUGGY_HTTP_TIMEOUT_MS,
         PLUGGY_AUTH_PATH: parsed.PLUGGY_AUTH_PATH,
         PLUGGY_ITEM_PATH: parsed.PLUGGY_ITEM_PATH,
         ...syncSettingsOf(parsed),
-        PLUGGY_MOCK_ALLOWED: env['IS_LOCAL'] === 'true',
         MOCK_PLUGGY_FORCE_401: parsed.MOCK_PLUGGY_FORCE_401 === 'true',
         MOCK_PLUGGY_REVOKED_ITEMS: revokedItemsOf(parsed.MOCK_PLUGGY_REVOKED_ITEMS)
     };

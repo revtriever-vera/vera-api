@@ -265,7 +265,7 @@ describe('BankConnectionsLogService e BankConnectionsMetricsService', () => {
 
 describe('PluggyAvailabilityService e driver verificado', () => {
     it('bloqueia o mock fora do ambiente local e libera no local ou com o live', () => {
-        const blocked: PluggyAvailabilityService = new PluggyAvailabilityService(configOf({ PLUGGY_MOCK_ALLOWED: false }));
+        const blocked: PluggyAvailabilityService = new PluggyAvailabilityService(configOf({ PLUGGY_ENABLED: false }));
 
         expect(() => {
             blocked.assertEnabled();
@@ -274,7 +274,7 @@ describe('PluggyAvailabilityService e driver verificado', () => {
             new PluggyAvailabilityService(configOf()).assertEnabled();
         }).not.toThrow();
         expect(() => {
-            new PluggyAvailabilityService(configOf({ PLUGGY_DRIVER: 'live', PLUGGY_MOCK_ALLOWED: false })).assertEnabled();
+            new PluggyAvailabilityService(configOf({ PLUGGY_DRIVER: 'live', PLUGGY_ENABLED: true })).assertEnabled();
         }).not.toThrow();
         expect(blocked.driver).toBe('mock');
     });
@@ -301,7 +301,7 @@ describe('PluggyAvailabilityService e driver verificado', () => {
     });
 
     it('as rotas de credencial e de conexão respondem provider_disabled com o mock fora do local', async () => {
-        const fixture: Fixture = buildFixture({ config: { PLUGGY_MOCK_ALLOWED: false } });
+        const fixture: Fixture = buildFixture({ config: { PLUGGY_ENABLED: false } });
 
         await expect(fixture.credentialsApplication.save({ clientId: CLIENT_ID, clientSecret: SENTINEL })).rejects.toMatchObject({
             code: 'connections.provider_disabled',
