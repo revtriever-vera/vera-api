@@ -25,6 +25,7 @@ interface Harness {
     readonly resetTotps: ReturnType<typeof vi.fn>;
     readonly revokeSessions: ReturnType<typeof vi.fn>;
     readonly totpReset: ReturnType<typeof vi.fn>;
+    readonly adminCreated: ReturnType<typeof vi.fn>;
 }
 
 function build(enabled: boolean = true): Harness {
@@ -35,15 +36,16 @@ function build(enabled: boolean = true): Harness {
     const resetTotps: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const revokeSessions: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(2);
     const totpReset: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
+    const adminCreated: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const service: PlatformSeedService = new PlatformSeedService(
         { enabled: () => enabled } as unknown as PlatformAvailabilityService,
         { createPlatform, findPlatform } as unknown as CompanyDomain,
         { createOwner, findByEmailAcrossTenants: findByEmail } as unknown as UserDomain,
         { reset: resetTotps } as unknown as UserTotpDomain,
         { revokeAllForUser: revokeSessions } as unknown as SessionDomain,
-        { totpReset } as unknown as PlatformAuditRecorderService
+        { totpReset, adminCreated } as unknown as PlatformAuditRecorderService
     );
-    return { service, createPlatform, findPlatform, createOwner, findByEmail, resetTotps, revokeSessions, totpReset };
+    return { service, createPlatform, findPlatform, createOwner, findByEmail, resetTotps, revokeSessions, totpReset, adminCreated };
 }
 
 const run = <T>(fn: () => Promise<T>): Promise<T> => context.run({ requestId: 'seed', locale: 'pt-BR' }, fn);
@@ -64,6 +66,12 @@ describe('PlatformSeedService', () => {
         );
     });
 
+    it('grava admin.created para o usuário criado', async () => {
+        await run(async () => harness.service.seed('admin@example.test'));
+
+        expect(harness.adminCreated).toHaveBeenCalledWith({ id: 'user-1' });
+    });
+
     it('com a company já criada, só acrescenta o usuário', async () => {
         harness.findPlatform.mockResolvedValue({ id: 'company-sys' });
 
@@ -79,6 +87,7 @@ describe('PlatformSeedService', () => {
         expect(await run(async () => harness.service.seed('admin@example.test'))).toBe('unchanged');
         expect(harness.createPlatform).not.toHaveBeenCalled();
         expect(harness.createOwner).not.toHaveBeenCalled();
+        expect(harness.adminCreated).not.toHaveBeenCalled();
     });
 
     it('recusa na auto-hospedada e sem e-mail', async () => {

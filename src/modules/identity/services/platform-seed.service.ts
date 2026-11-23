@@ -79,6 +79,13 @@ export class PlatformSeedService {
     @AsCompany()
     private async createOperator(_companyId: string, email: string): Promise<User> {
         const now: Date = new Date();
-        return this.users.createOwner({ email, name: nameFromEmail(email), emailVerifiedAt: now, termsAcceptedAt: now });
+        const user: User = await this.users.createOwner({
+            email,
+            name: nameFromEmail(email),
+            emailVerifiedAt: now,
+            termsAcceptedAt: now
+        });
+        await this.audit.adminCreated(user);
+        return user;
     }
 }

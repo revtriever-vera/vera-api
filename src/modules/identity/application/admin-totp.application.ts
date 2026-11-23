@@ -54,6 +54,7 @@ export class AdminTotpApplication {
         }
         const batch: RecoveryCodeBatch = this.codes.newRecoveryBatch();
         await this.persistActivation(pending, step, batch.hashes);
+        await this.gate.cleared(user);
         await this.notifier.enrolled(user, meta.ip);
         const tokens: AuthTokens = await this.complete(user, meta, SECOND_FACTOR_METHODS.totp);
         return { tokens, recoveryCodes: batch.codes };
@@ -64,6 +65,7 @@ export class AdminTotpApplication {
         await this.gate.admit(user, meta.ip);
         const totp: UserTotp = await this.totps.requireActive(user.id);
         const method: SecondFactorMethod = await this.consume(user, totp, code, meta);
+        await this.gate.cleared(user);
         return this.complete(user, meta, method);
     }
 

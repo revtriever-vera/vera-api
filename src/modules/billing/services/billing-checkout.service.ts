@@ -10,6 +10,7 @@ import {
     BillingEngineRejectedError,
     BillingProviderDisabledError,
     NotResumableError,
+    PlatformCompanyCannotSubscribeError,
     SelfHostedNotAvailableError,
     TrialRequiresCardError
 } from '../domain/billing-engine.errors';
@@ -38,7 +39,7 @@ export class BillingCheckoutService {
     ) {}
 
     public async subscribe(method: PaymentMethod): Promise<SubscribeResult> {
-        this.assertAvailable();
+        await this.assertCanSubscribe();
         const trial: TrialContract | null = await this.contracts.trialOf('premium');
         if ((await this.gate.planOf()) === 'premium' && trial?.subscriptionId !== null) {
             throw new AlreadySubscribedError();
@@ -91,6 +92,13 @@ export class BillingCheckoutService {
             await this.provisioning.provision(row);
         } catch (error: unknown) {
             this.metrics.subscription(row.paymentMethod, error instanceof BillingEngineRejectedError ? 'rejected' : 'unavailable');
+        }
+    }
+
+    private async assertCanSubscribe(): Promise<void> {
+        this.assertAvailable();
+        if (await this.contracts.isPlatformCompany()) {
+            throw new PlatformCompanyCannotSubscribeError();
         }
     }
 

@@ -16,13 +16,16 @@ beforeAll(() => {
 
 const STARTS_AT: Date = new Date('2026-11-06T12:00:00Z');
 
-function build(options: { mode?: string; open?: object | null; marked?: boolean } = {}) {
+function build(options: { mode?: string; open?: object | null; marked?: boolean; platform?: boolean } = {}) {
     const plans = {
         openLineOf: vi.fn().mockResolvedValue(options.open ?? null),
         open: vi.fn().mockResolvedValue(true),
         convertCardTrial: vi.fn().mockResolvedValue(true)
     };
-    const trials = { markStarted: vi.fn().mockResolvedValue(options.marked ?? true) };
+    const trials = {
+        markStarted: vi.fn().mockResolvedValue(options.marked ?? true),
+        history: vi.fn().mockResolvedValue({ isPlatform: options.platform ?? false, trialUsed: false })
+    };
     const resolver = { mode: vi.fn().mockReturnValue(options.mode ?? 'hosted') };
     const catalog = { productOf: vi.fn().mockResolvedValue({ id: 'p1' }), priceCentsOf: vi.fn().mockResolvedValue(1490) };
     const service: PlanContractService = new PlanContractService(
@@ -117,5 +120,12 @@ describe('PlanContractService card trial', () => {
         expect(await build().service.cardTrialOf('premium')).toBeNull();
         expect(await card.service.convertCardTrial('premium')).toBe(true);
         expect(card.plans.convertCardTrial).toHaveBeenCalledWith('p1', 1490);
+    });
+});
+
+describe('PlanContractService.isPlatformCompany', () => {
+    it('reflects the company flag', async () => {
+        expect(await build({ platform: true }).service.isPlatformCompany()).toBe(true);
+        expect(await build().service.isPlatformCompany()).toBe(false);
     });
 });

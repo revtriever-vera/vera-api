@@ -22,6 +22,10 @@ export class ThrottleService {
         }
     }
 
+    public async forget(key: string): Promise<void> {
+        await this.throttles.forget(key);
+    }
+
     public async countAttempt(key: string, windowSeconds: number): Promise<number> {
         return this.throttles.registerAttempt(key, windowSeconds);
     }

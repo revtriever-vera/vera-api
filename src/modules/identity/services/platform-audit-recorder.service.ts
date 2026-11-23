@@ -36,6 +36,10 @@ export class PlatformAuditRecorderService {
         await this.recordFor(user, PLATFORM_AUDIT_ACTIONS.totpLocked, { ip: ip ?? null });
     }
 
+    public async adminCreated(user: User): Promise<void> {
+        await this.recordFor(user, PLATFORM_AUDIT_ACTIONS.created, { via: 'seed' });
+    }
+
     public async totpReset(user: User): Promise<void> {
         await this.recordFor(user, PLATFORM_AUDIT_ACTIONS.totpReset, { via: 'seed' });
     }

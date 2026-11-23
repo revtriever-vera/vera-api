@@ -46,6 +46,7 @@ function build(): Harness {
         issueForPlatform: vi.fn().mockResolvedValue(TOKENS),
         claims: vi.fn().mockReturnValue({ sub: 'user-1', companyId: 'company-1' }),
         admit: vi.fn().mockResolvedValue(undefined),
+        cleared: vi.fn().mockResolvedValue(undefined),
         enrolled: vi.fn().mockResolvedValue(undefined),
         recoveryCodeUsed: vi.fn().mockResolvedValue(undefined),
         signedIn: vi.fn().mockResolvedValue(undefined),
@@ -108,6 +109,7 @@ describe('AdminTotpApplication', () => {
 
             await expect(run(async () => h.app.activate('setup', '123456', META))).rejects.toBeInstanceOf(InvalidTotpCodeError);
 
+            expect(h.fns['cleared']).not.toHaveBeenCalled();
             expect(h.fns['activate']).not.toHaveBeenCalled();
             expect(h.fns['enrolled']).not.toHaveBeenCalled();
             expect(h.fns['issueForPlatform']).not.toHaveBeenCalled();
@@ -122,12 +124,14 @@ describe('AdminTotpApplication', () => {
             expect(h.fns['claimStep']).toHaveBeenCalledWith(ACTIVE, 100);
             expect(h.fns['issueForPlatform']).toHaveBeenCalledWith(USER, META, 'google', { userId: 'user-1', method: 'totp' });
             expect(h.fns['recoveryCodeUsed']).not.toHaveBeenCalled();
+            expect(h.fns['cleared']).toHaveBeenCalledWith(USER);
         });
 
         it('código repetido (passo já usado) é recusado sem sessão', async () => {
             h.fns['claimStep']?.mockResolvedValue(false);
 
             await expect(run(async () => h.app.verify('challenge', '123456', META))).rejects.toBeInstanceOf(InvalidTotpCodeError);
+            expect(h.fns['cleared']).not.toHaveBeenCalled();
             expect(h.fns['issueForPlatform']).not.toHaveBeenCalled();
         });
 

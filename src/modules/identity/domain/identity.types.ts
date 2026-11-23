@@ -80,6 +80,7 @@ export type LoginAudience = (typeof LOGIN_AUDIENCES)[keyof typeof LOGIN_AUDIENCE
 
 export const PLATFORM_AUDIT_ACTIONS = {
     login: 'admin.login',
+    created: 'admin.created',
     denied: 'admin.denied',
     totpEnrolled: 'admin.totp_enrolled',
     recoveryCodeUsed: 'admin.recovery_code_used',

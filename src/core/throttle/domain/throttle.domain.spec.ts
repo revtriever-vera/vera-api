@@ -10,4 +10,12 @@ describe('ThrottleDomain', () => {
         expect(await throttles.registerAttempt('key-1', 60)).toBe(3);
         expect(registerAttempt).toHaveBeenCalledWith('key-1', 60);
     });
+
+    it('forgets a key through the repository', async () => {
+        const forget: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
+
+        await new ThrottleDomain({ forget } as unknown as ThrottlesRepository).forget('key-1');
+
+        expect(forget).toHaveBeenCalledWith('key-1');
+    });
 });
