@@ -22,17 +22,6 @@ export class FeatureDisabledError extends AppError {
     }
 }
 
-export class CapReachedError extends AppError {
-    public constructor(feature: string, resetsAt: string | null) {
-        super({
-            code: 'usage.cap_reached',
-            status: 429,
-            detail: 'The monthly paid usage cap was reached; paid features resume when the month turns.',
-            meta: { feature, resetsAt }
-        });
-    }
-}
-
 export class BillingNotAvailableError extends AppError {
     public constructor() {
         super({

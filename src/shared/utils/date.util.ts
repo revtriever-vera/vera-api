@@ -42,6 +42,11 @@ export class DateUtil {
         return DateUtil.midnightIn(timeZone, Date.UTC(today.year, today.month - 1, today.day + 1));
     }
 
+    public static startOfNextMonthIn(timeZone: string, at: Date): Date {
+        const today: DateParts = DateUtil.partsIn(timeZone, at);
+        return DateUtil.midnightIn(timeZone, Date.UTC(today.year, today.month, 1));
+    }
+
     public static startOfTodayInBrazil(now: Date = new Date()): Date {
         return new Date(`${DateUtil.todayInBrazil(now)}T00:00:00${BRAZIL_UTC_OFFSET}`);
     }

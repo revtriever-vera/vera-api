@@ -3,6 +3,7 @@ import { ConfigModule, ConfigType } from '@nestjs/config';
 import { DiscoveryModule } from '@nestjs/core';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { QueueModule } from '../../../core/queue/queue.module';
+import { UsageModule } from '../../../core/usage/usage.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
 import { marketDataConfig } from '../config/market-data.config';
 import { MarketDataDomainModule } from '../domain/market-data-domain.module';
@@ -22,6 +23,7 @@ import { ExchangeRateReaderService } from '../services/exchange-rate-reader.serv
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
+import { PtaxUsdRateAdapter } from '../services/ptax-usd-rate.adapter';
 import { ProviderBudgetService } from '../services/provider-budget.service';
 import { QuoteCollectorService } from '../services/quote-collector.service';
 import { QuoteProviderRegistryService, selectQuoteProviders } from '../services/quote-provider-registry.service';
@@ -38,7 +40,8 @@ import { ReferenceDataApplication } from './reference-data.application';
         CatalogApplicationModule,
         QueueModule,
         ObservabilityModule,
-        DiscoveryModule
+        DiscoveryModule,
+        UsageModule
     ],
     providers: [
         QuoteReadApplication,
@@ -47,6 +50,7 @@ import { ReferenceDataApplication } from './reference-data.application';
         ReferenceDataApplication,
         QuoteReaderService,
         ExchangeRateReaderService,
+        PtaxUsdRateAdapter,
         ProviderBudgetService,
         QuoteProviderRegistryService,
         QuoteCollectorService,

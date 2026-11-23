@@ -31,6 +31,7 @@
     "issuers:compare": "tsx scripts/issuers-compare-sources.ts",
     "env:pull": "tsx scripts/env-pull.ts",
     "tick": "tsx scripts/tick.ts",
+    "usage:simulate": "tsx scripts/usage-simulate.ts",
     "qa:statement-fixture": "tsx scripts/qa-statement-fixture.ts",
     "secrets:reseal": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/secrets-reseal.js",
     "billing:provision": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/billing-provision.js",

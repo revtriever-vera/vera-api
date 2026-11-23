@@ -35,6 +35,7 @@ import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
 import { SessionIssuerService } from '../services/session-issuer.service';
 import { SocialIdentityRegistry } from '../services/social-identity.registry';
 import { TokenService } from '../services/token.service';
+import { OwnerRecipientsService } from '../services/owner-recipients.service';
 import { AccountDeletedTemplate } from '../templates/account-deleted.template';
 import { MemberTemplates } from '../templates/member.templates';
 import { AccountDeletionApplication } from './account-deletion.application';
@@ -74,6 +75,7 @@ import { SocialLoginApplication } from './social-login.application';
         AccountInvitesExporter,
         MemberDepartureRegistry,
         MemberDirectoryService,
+        OwnerRecipientsService,
         MembersLogService,
         MembersMailerService,
         MembersMetricsService,
@@ -108,6 +110,7 @@ import { SocialLoginApplication } from './social-login.application';
         CurrentUserService,
         CompanyTimezoneService,
         MemberDirectoryService,
+        OwnerRecipientsService,
         JwtAuthGuard,
         RolesGuard,
         TokenService,
