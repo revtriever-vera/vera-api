@@ -59,8 +59,10 @@ export class ObservedBillingEngine extends BillingEnginePort {
         return this.track('cancel_subscription', async () => this.inner.cancelSubscription(id, idempotencyKey));
     }
 
-    public async createCardCaptureSession(subscriptionId: string, returnUrl: string): Promise<CardCaptureSession> {
-        return this.track('card_capture_session', async () => this.inner.createCardCaptureSession(subscriptionId, returnUrl));
+    public async createCardCaptureSession(subscriptionId: string, returnUrl: string, idempotencyKey: string): Promise<CardCaptureSession> {
+        return this.track('card_capture_session', async () =>
+            this.inner.createCardCaptureSession(subscriptionId, returnUrl, idempotencyKey)
+        );
     }
 
     public async savedCardOf(subscriptionId: string): Promise<SavedCard | null> {

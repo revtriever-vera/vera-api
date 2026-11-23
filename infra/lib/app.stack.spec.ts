@@ -106,10 +106,10 @@ describe('a task do serviço', () => {
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('OTEL_EXPORTER_OTLP_HEADERS');
     });
 
-    it('liga o fake por padrão: driver no ambiente e nenhuma chave da Revtriever pedida ao SSM', () => {
+    it('sem driver configurado não entra BILLING_ENGINE_DRIVER nem chave da Revtriever: a cobrança fica desligada', () => {
         const api: ContainerResource = container(taskContainers(appTemplate('prod'), 'vera-api-prod'), 'api');
 
-        expect(api.Environment).toContainEqual({ Name: 'BILLING_ENGINE_DRIVER', Value: 'fake' });
+        expect((api.Environment ?? []).map((entry): string => entry.Name)).not.toContain('BILLING_ENGINE_DRIVER');
         expect((api.Secrets ?? []).map((secret): string => secret.Name)).not.toContain('REVTRIEVER_API_KEY');
     });
 

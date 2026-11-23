@@ -28,7 +28,8 @@ export interface EngineInvoice {
     readonly id: string;
     readonly subscriptionId: string;
     readonly status: string;
-    readonly totalCents: number;
+    /** Nulo enquanto a fatura espera o valor do endpoint de preço. */
+    readonly totalCents: number | null;
     readonly method: PaymentMethod | null;
     readonly dueDate: string | null;
     readonly cycleStart: string | null;
@@ -63,7 +64,8 @@ export interface CardCaptureSession {
 }
 
 export interface SavedCard {
-    readonly brand: string;
+    /** Nula quando o gateway não informa a bandeira. */
+    readonly brand: string | null;
     readonly last4: string;
 }
 

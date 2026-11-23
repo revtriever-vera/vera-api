@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { BillingSettings } from '../config/billing.config';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { BillingCatalogPort } from '../ports/billing-catalog.port';
@@ -17,6 +18,13 @@ export function billingEngineFactory(
     logs: BillingLogService,
     metrics: BillingMetricsService
 ): BillingEnginePort {
+    if (config.BILLING_FAKE_REFUSED) {
+        new Logger('Billing').warn(
+            'BILLING_ENGINE_DRIVER=fake é recusado fora do local: cobrança desligada (503 billing.provider_disabled)'
+        );
+    } else if (!config.BILLING_ENGINE_ENABLED) {
+        new Logger('Billing').warn('Motor de cobrança sem configuração completa: cobrança desligada (503 billing.provider_disabled)');
+    }
     return new ObservedBillingEngine(config.BILLING_ENGINE_DRIVER === 'fake' ? fake : revtriever, logs, metrics);
 }
 

@@ -83,7 +83,7 @@ describe('FakeBillingEngineDriver', () => {
         const subscription = await driver.createSubscription(input());
         expect(await driver.savedCardOf(subscription.id)).toBeNull();
 
-        const session = await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back');
+        const session = await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back', 'key-x');
         const token: string = session.captureUrl.split('/').at(-1) ?? '';
         expect(session.captureUrl.startsWith('http://localhost:9999/billing/_dev/capture/')).toBe(true);
         expect(driver.captureOf(token)?.subscriptionId).toBe(subscription.id);
@@ -101,7 +101,9 @@ describe('FakeBillingEngineDriver', () => {
         const { driver } = build();
         const subscription = await driver.createSubscription(input());
         const token: string =
-            (await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back')).captureUrl.split('/').at(-1) ?? '';
+            (await driver.createCardCaptureSession(subscription.id, 'https://app.example.test/back', 'key-x')).captureUrl
+                .split('/')
+                .at(-1) ?? '';
 
         vi.advanceTimersByTime(31 * 60 * 1000);
 
@@ -156,7 +158,7 @@ describe('FakeBillingEngineDriver', () => {
         await expect(driver.invoicePaymentLinkOf('x')).rejects.toMatchObject({ httpStatus: 404 });
         await expect(driver.retryInvoicePricing('x')).rejects.toMatchObject({ httpStatus: 404 });
         await expect(driver.savedCardOf('x')).rejects.toMatchObject({ httpStatus: 404 });
-        await expect(driver.createCardCaptureSession('x', 'https://a.test')).rejects.toMatchObject({ httpStatus: 404 });
+        await expect(driver.createCardCaptureSession('x', 'https://a.test', 'key-x')).rejects.toMatchObject({ httpStatus: 404 });
     });
 
     it('retry de preço numa fatura existente não faz nada', async () => {
@@ -174,7 +176,7 @@ describe('FakeBillingEngineDriver', () => {
             driver.createSubscription(input()),
             driver.subscriptionOf('a'),
             driver.cancelSubscription('a', 'k'),
-            driver.createCardCaptureSession('a', 'https://a.test'),
+            driver.createCardCaptureSession('a', 'https://a.test', 'key-x'),
             driver.savedCardOf('a'),
             driver.invoiceOf('a'),
             driver.invoicesWithStatus('issued', 1),

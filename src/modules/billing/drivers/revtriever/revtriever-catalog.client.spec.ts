@@ -24,28 +24,55 @@ describe('RevtrieverCatalogClient', () => {
     });
 
     it('confere a integração', async () => {
-        const fetchMock = stubJson({ mode: 'test' });
+        const fetchMock = stubJson({ gateways: [{ connectionId: 'gw_1', provider: 'vindi' }] });
 
         expect(await clientOf().integrationOk()).toBe(true);
         expect(lastCall(fetchMock)[0]).toBe('https://rv.invalid/v1/integration');
     });
 
-    it('acha o produto pelo externalRef e ignora os de outro ref', async () => {
+    it('acha o produto varrendo as páginas pelo externalRef e ignora os de outro ref', async () => {
+        const pagination = { page: 1, pageSize: 100, totalRecords: 2, totalPages: 1 };
         const fetchMock = stubJson({
-            items: [
-                { id: 'p0', externalRef: 'outro' },
+            data: [
+                { id: 'p0', externalRef: null },
                 { id: 'p1', externalRef: 'vera_premium' }
-            ]
+            ],
+            pagination
         });
 
         expect(await clientOf().productByRef('vera_premium')).toEqual({ id: 'p1', externalRef: 'vera_premium' });
-        expect(lastCall(fetchMock)[0]).toBe('https://rv.invalid/v1/products?externalRef=vera_premium');
+        expect(lastCall(fetchMock)[0]).toBe('https://rv.invalid/v1/products?page=1&pageSize=100');
 
-        stubJson({ items: [] });
+        stubJson({ data: [], pagination });
         expect(await clientOf().productByRef('vera_premium')).toBeNull();
     });
 
-    it('cria o produto com preço externo e teto, e roda o pricing-test', async () => {
+    it('segue para a página seguinte até achar o produto', async () => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        data: [{ id: 'p0', externalRef: 'a' }],
+                        pagination: { page: 1, pageSize: 100, totalRecords: 101, totalPages: 2 }
+                    })
+                )
+            )
+            .mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        data: [{ id: 'p1', externalRef: 'vera_premium' }],
+                        pagination: { page: 2, pageSize: 100, totalRecords: 101, totalPages: 2 }
+                    })
+                )
+            );
+        vi.stubGlobal('fetch', fetchMock);
+
+        expect(await clientOf().productByRef('vera_premium')).toEqual({ id: 'p1', externalRef: 'vera_premium' });
+        expect(fetchMock.mock.calls[1]?.[0]).toBe('https://rv.invalid/v1/products?page=2&pageSize=100');
+    });
+
+    it('cria o produto com preço por endpoint e teto, e roda o pricing-test', async () => {
         let fetchMock = stubJson({ id: 'p1', externalRef: 'vera_premium' });
         await clientOf().createProduct({
             externalRef: 'vera_premium',
@@ -57,33 +84,63 @@ describe('RevtrieverCatalogClient', () => {
         expect(JSON.parse(lastCall(fetchMock)[1].body as string)).toEqual({
             externalRef: 'vera_premium',
             name: 'Vera Premium',
-            pricing: { mode: 'external', url: 'https://api.example.test/price', maxAmountCents: 5000 }
+            pricing: { mode: 'endpoint', url: 'https://api.example.test/price', capCents: 5000 }
         });
 
-        fetchMock = stubJson({ ok: false });
+        fetchMock = stubJson({ outcome: 'http_error', amountCents: null, responseStatus: 500 });
         expect(await clientOf().testPricing('p1')).toBe(false);
         expect(lastCall(fetchMock)[0]).toBe('https://rv.invalid/v1/products/p1/pricing-test');
+
+        stubJson({ outcome: 'ok', amountCents: 1490 });
+        expect(await clientOf().testPricing('p1')).toBe(true);
     });
 
-    it('acha, cria e atualiza o plano', async () => {
-        stubJson({ items: [{ id: 'pl1', externalRef: 'vera_premium_monthly', productId: 'p1' }] });
+    it('acha o plano pelo nome (sem arquivados), lê o produto no detalhe, cria e atualiza', async () => {
+        const pagination = { page: 1, pageSize: 100, totalRecords: 2, totalPages: 1 };
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({
+                        data: [
+                            { id: 'old', name: 'vera_premium_monthly', archivedAt: '2026-01-01T00:00:00.000Z' },
+                            { id: 'pl1', name: 'vera_premium_monthly', archivedAt: null }
+                        ],
+                        pagination
+                    })
+                )
+            )
+            .mockResolvedValueOnce(
+                new Response(JSON.stringify({ id: 'pl1', name: 'vera_premium_monthly', archivedAt: null, items: [{ productId: 'p1' }] }))
+            );
+        vi.stubGlobal('fetch', fetchMock);
         expect(await clientOf().planByRef('vera_premium_monthly')).toEqual({
             id: 'pl1',
             externalRef: 'vera_premium_monthly',
             productId: 'p1'
         });
-        stubJson({ items: [] });
+        expect(fetchMock.mock.calls[1]?.[0]).toBe('https://rv.invalid/v1/plans/pl1');
+
+        stubJson({ data: [], pagination: { page: 1, pageSize: 100, totalRecords: 0, totalPages: 0 } });
         expect(await clientOf().planByRef('vera_premium_monthly')).toBeNull();
 
         const draft = { externalRef: 'vera_premium_monthly', name: 'Vera Premium', productId: 'p1', interval: 'monthly' } as const;
-        let fetchMock = stubJson({ id: 'pl1', externalRef: 'vera_premium_monthly', productId: 'p1' });
+        const planResponse = { id: 'pl1', name: 'vera_premium_monthly', archivedAt: null, items: [{ productId: 'p1' }] };
+        let created = stubJson(planResponse);
         await clientOf().createPlan(draft);
-        expect(lastCall(fetchMock)[0]).toBe('https://rv.invalid/v1/plans');
-        expect(lastCall(fetchMock)[1].method).toBe('POST');
+        expect(lastCall(created)[0]).toBe('https://rv.invalid/v1/plans');
+        expect(lastCall(created)[1].method).toBe('POST');
+        expect(JSON.parse(lastCall(created)[1].body as string)).toEqual({
+            name: 'vera_premium_monthly',
+            periodMonths: 1,
+            defaultPaymentMethod: 'card',
+            maxInstallments: 1,
+            items: [{ productId: 'p1', discounts: [] }]
+        });
 
-        fetchMock = stubJson({ id: 'pl1', externalRef: 'vera_premium_monthly', productId: 'p2' });
-        await clientOf().updatePlan('pl1', { ...draft, productId: 'p2' });
-        expect(lastCall(fetchMock)[0]).toBe('https://rv.invalid/v1/plans/pl1');
-        expect(lastCall(fetchMock)[1].method).toBe('PUT');
+        created = stubJson({ ...planResponse, items: [{ productId: 'p2' }] });
+        expect(await clientOf().updatePlan('pl1', { ...draft, productId: 'p2' })).toMatchObject({ productId: 'p2' });
+        expect(lastCall(created)[0]).toBe('https://rv.invalid/v1/plans/pl1');
+        expect(lastCall(created)[1].method).toBe('PUT');
     });
 });

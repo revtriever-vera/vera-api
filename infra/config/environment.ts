@@ -22,7 +22,7 @@ export interface SharedInfrastructureConfig {
 }
 
 export interface BillingEnvironmentConfig {
-    readonly driver: 'fake' | 'revtriever';
+    readonly driver: 'revtriever' | null;
     readonly apiUrl: string | null;
     readonly planId: string | null;
     readonly gatewayConnectionId: string | null;
@@ -143,9 +143,14 @@ function optionalVariable(env: NodeJS.ProcessEnv, variable: string): string | nu
 }
 
 function billing(env: NodeJS.ProcessEnv): BillingEnvironmentConfig {
-    const driver: string = optionalVariable(env, 'BILLING_ENGINE_DRIVER') ?? 'fake';
-    if (driver !== 'fake' && driver !== 'revtriever') {
-        throw new Error('BILLING_ENGINE_DRIVER inválida: use fake ou revtriever');
+    const driver: string | null = optionalVariable(env, 'BILLING_ENGINE_DRIVER');
+    if (driver === 'fake') {
+        throw new Error(
+            'BILLING_ENGINE_DRIVER=fake não é aceito em ambiente hospedado: use revtriever ou deixe em branco (cobrança desligada)'
+        );
+    }
+    if (driver !== null && driver !== 'revtriever') {
+        throw new Error('BILLING_ENGINE_DRIVER inválida: use revtriever ou deixe em branco');
     }
     const planId: string | null = optionalVariable(env, 'REVTRIEVER_PLAN_ID');
     if (driver === 'revtriever' && planId === null) {

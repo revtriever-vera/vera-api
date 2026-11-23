@@ -16,7 +16,11 @@ export abstract class BillingEnginePort {
     public abstract createSubscription(input: CreateSubscriptionInput): Promise<EngineSubscription>;
     public abstract subscriptionOf(id: string): Promise<EngineSubscription>;
     public abstract cancelSubscription(id: string, idempotencyKey: string): Promise<EngineSubscription>;
-    public abstract createCardCaptureSession(subscriptionId: string, returnUrl: string): Promise<CardCaptureSession>;
+    public abstract createCardCaptureSession(
+        subscriptionId: string,
+        returnUrl: string,
+        idempotencyKey: string
+    ): Promise<CardCaptureSession>;
     public abstract savedCardOf(subscriptionId: string): Promise<SavedCard | null>;
     public abstract invoiceOf(id: string): Promise<EngineInvoice>;
     public abstract invoicesWithStatus(status: OpenInvoiceStatus, page: number): Promise<EnginePage<EngineInvoice>>;

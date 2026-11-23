@@ -87,7 +87,7 @@ describe('ObservedBillingEngine', () => {
             invoicePaymentLinkOf: vi.fn().mockResolvedValue({ url: 'https://pay.example.test/segredo-link', kind: 'payment_page' })
         });
 
-        await engine.createCardCaptureSession('s', 'https://back.test');
+        await engine.createCardCaptureSession('s', 'https://back.test', 'key-1');
         await engine.invoicePaymentLinkOf('i');
 
         expect(JSON.stringify(info.mock.calls)).not.toContain('segredo');

@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { CurrentUserService } from '../../identity/services/current-user.service';
 import { hasRole } from '../../identity/services/role-rank';
 import { EffectivePlan, FeatureState, PaidFeature, PaidUsageSnapshot, SubscriptionSnapshot } from '../domain/plans.types';
@@ -17,7 +17,7 @@ export class BillingMeApplication {
         private readonly contract: PlanContractService,
         private readonly limits: PlanLimitService,
         private readonly usage: PaidUsageReader,
-        @Optional() private readonly summary: SubscriptionSummaryPort | undefined
+        @Optional() @Inject(SubscriptionSummaryPort) private readonly summary: SubscriptionSummaryPort | undefined
     ) {}
 
     public async get(): Promise<BillingMe> {

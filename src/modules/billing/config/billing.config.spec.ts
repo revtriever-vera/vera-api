@@ -11,21 +11,36 @@ describe('parseBillingConfig', () => {
         expect(settings.REVTRIEVER_API_KEY).toBeNull();
     });
 
-    it('exige o driver fora do local em hosted', () => {
-        expect(() => parseBillingConfig({ IS_LOCAL: 'false', DEPLOYMENT_MODE: 'hosted' })).toThrow('BILLING_ENGINE_DRIVER');
-        expect(() => parseBillingConfig({ IS_LOCAL: 'false' })).toThrow('BILLING_ENGINE_DRIVER');
+    it('fora do local o fake nunca é aceito: sem driver ou com fake, o driver efetivo é revtriever e desligado, sem falhar o boot', () => {
+        for (const env of [
+            { IS_LOCAL: 'false' },
+            { IS_LOCAL: 'false', DEPLOYMENT_MODE: 'hosted', BILLING_ENGINE_DRIVER: 'fake' },
+            { IS_LOCAL: 'false', DEPLOYMENT_MODE: 'self_hosted' }
+        ]) {
+            const settings = parseBillingConfig(env);
+
+            expect(settings.BILLING_ENGINE_DRIVER).toBe('revtriever');
+            expect(settings.BILLING_ENGINE_ENABLED).toBe(false);
+        }
+        expect(parseBillingConfig({ IS_LOCAL: 'false', BILLING_ENGINE_DRIVER: 'fake' }).BILLING_FAKE_REFUSED).toBe(true);
+        expect(parseBillingConfig({ IS_LOCAL: 'false' }).BILLING_FAKE_REFUSED).toBe(false);
     });
 
-    it('assume o fake em self_hosted fora do local', () => {
-        expect(parseBillingConfig({ IS_LOCAL: 'false', DEPLOYMENT_MODE: 'self_hosted' }).BILLING_ENGINE_DRIVER).toBe('fake');
+    it('fora do local, revtriever só liga com chave e plano; faltando um, fica desligado sem falhar o boot', () => {
+        const base: NodeJS.ProcessEnv = { IS_LOCAL: 'false', BILLING_ENGINE_DRIVER: 'revtriever' };
+
+        expect(parseBillingConfig(base).BILLING_ENGINE_ENABLED).toBe(false);
+        expect(parseBillingConfig({ ...base, REVTRIEVER_API_KEY: 'k' }).BILLING_ENGINE_ENABLED).toBe(false);
+        expect(parseBillingConfig({ ...base, REVTRIEVER_PLAN_ID: 'p' }).BILLING_ENGINE_ENABLED).toBe(false);
+        expect(parseBillingConfig({ ...base, REVTRIEVER_API_KEY: 'k', REVTRIEVER_PLAN_ID: 'p' }).BILLING_ENGINE_ENABLED).toBe(true);
     });
 
-    it('falha o boot com revtriever sem chave ou sem plano fora do local', () => {
-        const base: NodeJS.ProcessEnv = { IS_LOCAL: 'false', DEPLOYMENT_MODE: 'hosted', BILLING_ENGINE_DRIVER: 'revtriever' };
-
-        expect(() => parseBillingConfig(base)).toThrow('REVTRIEVER_API_KEY e REVTRIEVER_PLAN_ID');
-        expect(() => parseBillingConfig({ ...base, REVTRIEVER_API_KEY: 'k' })).toThrow('REVTRIEVER_PLAN_ID');
-        expect(() => parseBillingConfig({ ...base, REVTRIEVER_PLAN_ID: 'p' })).toThrow('REVTRIEVER_API_KEY');
+    it('no local, o fake liga sozinho e o revtriever liga com a chave', () => {
+        expect(parseBillingConfig({ IS_LOCAL: 'true' }).BILLING_ENGINE_ENABLED).toBe(true);
+        expect(parseBillingConfig({ IS_LOCAL: 'true', BILLING_ENGINE_DRIVER: 'revtriever' }).BILLING_ENGINE_ENABLED).toBe(false);
+        expect(
+            parseBillingConfig({ IS_LOCAL: 'true', BILLING_ENGINE_DRIVER: 'revtriever', REVTRIEVER_API_KEY: 'k' }).BILLING_ENGINE_ENABLED
+        ).toBe(true);
     });
 
     it('aceita revtriever completo e normaliza a URL', () => {
@@ -71,30 +86,10 @@ describe('parseBillingConfig', () => {
     });
 
     it('o segredo de dev do webhook do fake só existe no local', () => {
+        expect(parseBillingConfig({ IS_LOCAL: 'false' }).FAKE_BILLING_WEBHOOK_SECRET).toBeNull();
         expect(parseBillingConfig({ IS_LOCAL: 'true' }).FAKE_BILLING_WEBHOOK_SECRET).toBe('vera-dev-billing-webhook-secret');
         expect(
             parseBillingConfig({ IS_LOCAL: 'true', FAKE_BILLING_WEBHOOK_SECRET: 'outro-segredo-de-teste' }).FAKE_BILLING_WEBHOOK_SECRET
         ).toBe('outro-segredo-de-teste');
-    });
-
-    it('fora do local, o fake sem URL de webhook não precisa de segredo e não ganha o de dev', () => {
-        const settings = parseBillingConfig({ IS_LOCAL: 'false', DEPLOYMENT_MODE: 'hosted', BILLING_ENGINE_DRIVER: 'fake' });
-
-        expect(settings.FAKE_BILLING_WEBHOOK_SECRET).toBeNull();
-    });
-
-    it('fora do local, o fake com URL de webhook exige segredo próprio de ao menos 16 caracteres', () => {
-        const base: NodeJS.ProcessEnv = {
-            IS_LOCAL: 'false',
-            DEPLOYMENT_MODE: 'hosted',
-            BILLING_ENGINE_DRIVER: 'fake',
-            FAKE_BILLING_WEBHOOK_URL: 'https://api.example.test/hook'
-        };
-
-        expect(() => parseBillingConfig(base)).toThrow('FAKE_BILLING_WEBHOOK_SECRET');
-        expect(() => parseBillingConfig({ ...base, FAKE_BILLING_WEBHOOK_SECRET: 'curto' })).toThrow();
-        expect(parseBillingConfig({ ...base, FAKE_BILLING_WEBHOOK_SECRET: 'segredo-com-16-ou-mais' }).FAKE_BILLING_WEBHOOK_SECRET).toBe(
-            'segredo-com-16-ou-mais'
-        );
     });
 });
