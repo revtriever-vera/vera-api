@@ -8,8 +8,10 @@ import { ContributionApplicationModule } from '../../contribution/application/co
 import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
 import { PlansApplicationModule } from '../../plans/application/plans-application.module';
 import { PortfolioApplicationModule } from '../../portfolio/application/portfolio-application.module';
+import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
 import { SpendingCutsApplicationModule } from '../../spending-cuts/application/spending-cuts-application.module';
 import { SpendingSummaryApplicationModule } from '../../spending-summary/application/spending-summary-application.module';
+import { TransactionsApplicationModule } from '../../transactions/application/transactions-application.module';
 import { AiAssistantDomainModule } from '../domain/ai-assistant-domain.module';
 import { AiTextRenderer } from '../domain/context/ai-text-renderer';
 import { AiAssistantLogService } from '../services/ai-assistant-log.service';
@@ -24,6 +26,16 @@ import { AiFeatureAvailability } from '../services/ai-feature-availability';
 import { AiSummariesEraser } from '../services/ai-summaries.eraser';
 import { AiSummariesExporter } from '../services/ai-summaries.exporter';
 import { AiSummariesPurge } from '../services/ai-summaries.purge';
+import { AskVeraAccessService } from '../services/ask-vera-access.service';
+import { AskVeraTelemetryService } from '../services/ask-vera-telemetry.service';
+import { AskVeraToolRegistry } from '../services/ask-vera-tool.registry';
+import { AskVeraService } from '../services/ask-vera.service';
+import { ContributionSuggestionTool } from '../services/tools/contribution-suggestion.tool';
+import { ListCategoriesTool } from '../services/tools/list-categories.tool';
+import { PortfolioOverviewTool } from '../services/tools/portfolio-overview.tool';
+import { SpendingByCategoryTool } from '../services/tools/spending-by-category.tool';
+import { SpendingCutsTool } from '../services/tools/spending-cuts.tool';
+import { SpendingMonthSummaryTool } from '../services/tools/spending-month-summary.tool';
 import { SummaryGeneratorService } from '../services/summary-generator.service';
 import { SummarySubjectService } from '../services/summary-subject.service';
 import { AiConsentApplication } from './ai-consent.application';
@@ -43,7 +55,9 @@ import { SummariesApplication } from './summaries.application';
         SpendingSummaryApplicationModule,
         SpendingCutsApplicationModule,
         PortfolioApplicationModule,
-        ContributionApplicationModule
+        ContributionApplicationModule,
+        SpendingCategoriesApplicationModule,
+        TransactionsApplicationModule
     ],
     providers: [
         AiConsentApplication,
@@ -63,7 +77,17 @@ import { SummariesApplication } from './summaries.application';
         AiConsentEraser,
         AiConsentExporter,
         AiAssistantLogService,
-        AiAssistantMetricsService
+        AiAssistantMetricsService,
+        AskVeraService,
+        AskVeraAccessService,
+        AskVeraTelemetryService,
+        AskVeraToolRegistry,
+        SpendingMonthSummaryTool,
+        SpendingCutsTool,
+        SpendingByCategoryTool,
+        PortfolioOverviewTool,
+        ContributionSuggestionTool,
+        ListCategoriesTool
     ],
     exports: [
         AiConsentApplication,
@@ -72,7 +96,8 @@ import { SummariesApplication } from './summaries.application';
         AiConsentService,
         AiConsentGuard,
         AiContextBuilderService,
-        AiTextRenderer
+        AiTextRenderer,
+        AskVeraService
     ]
 })
 export class AiAssistantApplicationModule {}

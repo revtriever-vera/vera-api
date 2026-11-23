@@ -22,7 +22,7 @@ export type GuardResult =
 
 export interface GuardInput {
     readonly paragraphs: readonly string[];
-    readonly built: BuiltContext<AiContext>;
+    readonly built: Pick<BuiltContext<AiContext>, 'numbers' | 'keys'>;
     readonly locale: AppLocale;
     readonly renderer: AiTextRenderer;
 }
