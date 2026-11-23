@@ -29,7 +29,7 @@ function applicationWith(enabled: boolean): { application: SignupLinksPublicAppl
     const application: SignupLinksPublicApplication = new SignupLinksPublicApplication(
         { findByToken } as unknown as SignupLinkDomain,
         { enabled: () => enabled } as unknown as PlatformAvailabilityService,
-        new SignupLinkViewMapper({ APP_URL: 'https://app.example.test' })
+        new SignupLinkViewMapper({ APP_URL: 'https://app.example.test', SIGNUP_EMAIL_MARK_HMAC_KEY: null, SIGNUP_REDEEM_IP_DAILY_LIMIT: 5 })
     );
     return { application, findByToken };
 }

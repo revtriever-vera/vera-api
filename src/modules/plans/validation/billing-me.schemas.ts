@@ -9,6 +9,28 @@ const featureStateSchema = z
 
 const usedBpsSchema = z.object({ usedBps: z.number().int().min(0).describe('Share of the monthly cap used, in basis points') });
 
+export const billingOfferSchema = z.object({
+    trial: z
+        .object({
+            kind: z
+                .enum(['none', 'card', 'no_card'])
+                .describe('`none`: no trial; `card`: trial with the card saved; `no_card`: Premium for N days without a card'),
+            days: z.number().int().nullable().describe('Trial length in days; null when there is no trial')
+        })
+        .describe('The trial part of the redeemed offer'),
+    rules: z
+        .array(
+            z.object({
+                percent: z.number().int().describe('Discount on the Premium price, in percent'),
+                fromCycle: z.number().int().describe('First paid cycle the rule covers'),
+                toCycle: z.number().int().describe('Last paid cycle the rule covers, inclusive')
+            })
+        )
+        .describe('Discount scale by paid cycle; the first rule that matches wins'),
+    redeemedAt: z.string().describe('When the account redeemed the link (ISO 8601)'),
+    expiresAt: z.string().describe('Until when the offer can still start (ISO 8601); after it, full price and no trial')
+});
+
 export const billingMeSchema = z.object({
     mode: z.enum(['hosted', 'self_hosted']).describe('Deployment mode of this installation'),
     plan: z.enum(['free', 'premium', 'self_hosted']).describe('Effective plan of the signed-in company'),
@@ -50,6 +72,9 @@ export const billingMeSchema = z.object({
         })
         .nullable()
         .describe('Free Premium trial in course; null when there is none'),
+    offer: billingOfferSchema
+        .nullable()
+        .describe('Signup-link offer redeemed by this account and still within its 30 days; null when there is none'),
     features: z
         .object({
             ai: featureStateSchema.describe('Text summaries and the assistant'),

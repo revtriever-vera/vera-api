@@ -8,7 +8,9 @@ import { SocialIdentityVerifierPort } from '../ports/social-identity-verifier.po
 import { AccountProvisioningService } from '../services/account-provisioning.service';
 import { IdentityLogService } from '../services/identity-log.service';
 import { IdentityMetricsService } from '../services/identity-metrics.service';
+import { LoginOfferRegistry } from '../services/login-offer.registry';
 import { PlatformAvailabilityService } from '../services/platform-availability.service';
+import { PlatformLoginAuditService } from '../services/platform-login-audit.service';
 import { SocialIdentityRegistry } from '../services/social-identity.registry';
 import { SocialLoginApplication } from './social-login.application';
 
@@ -23,6 +25,7 @@ function build(
         outcome?: string;
         platformUser?: User | null;
         platformEnabled?: boolean;
+        offer?: () => Promise<unknown>;
     } = {}
 ): {
     application: SocialLoginApplication;
@@ -33,6 +36,7 @@ function build(
     resolve: ReturnType<typeof vi.fn>;
     resolvePlatformUser: ReturnType<typeof vi.fn>;
     record: ReturnType<typeof vi.fn>;
+    redeemOffer: ReturnType<typeof vi.fn>;
 } {
     const verifier: SocialIdentityVerifierPort = {
         provider: 'google',
@@ -44,6 +48,9 @@ function build(
     const record: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const issue: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(TOKENS);
     const enrich: ReturnType<typeof vi.fn> = vi.fn();
+    const redeemOffer: ReturnType<typeof vi.fn> = vi.fn(
+        options.offer ?? ((): Promise<unknown> => Promise.resolve({ redeemed: true, reason: null }))
+    );
     const metrics: Record<string, ReturnType<typeof vi.fn>> = { login: vi.fn(), providerLatency: vi.fn() };
     const logs: Record<string, ReturnType<typeof vi.fn>> = { providerTokenRejected: vi.fn() };
     const application: SocialLoginApplication = new SocialLoginApplication(
@@ -53,10 +60,13 @@ function build(
         { get: () => ({ requestId: 'r', locale: 'en' }), enrich } as unknown as AppContext,
         logs as unknown as IdentityLogService,
         metrics as unknown as IdentityMetricsService,
-        { record } as unknown as PlatformAuditDomain,
-        { enabled: () => options.platformEnabled ?? true } as unknown as PlatformAvailabilityService
+        new PlatformLoginAuditService(
+            { record } as unknown as PlatformAuditDomain,
+            { enabled: () => options.platformEnabled ?? true } as unknown as PlatformAvailabilityService
+        ),
+        { redeem: redeemOffer } as unknown as LoginOfferRegistry
     );
-    return { application, metrics, logs, enrich, issue, resolve, resolvePlatformUser, record };
+    return { application, metrics, logs, enrich, issue, resolve, resolvePlatformUser, record, redeemOffer };
 }
 
 describe('SocialLoginApplication', () => {
@@ -65,7 +75,7 @@ describe('SocialLoginApplication', () => {
 
         const result = await application.login('google', 'credential', { ip: '203.0.113.1' });
 
-        expect(result).toEqual({ tokens: TOKENS, isNewAccount: false, joinedAccount: false });
+        expect(result).toEqual({ tokens: TOKENS, isNewAccount: false, joinedAccount: false, offer: null });
         expect(resolve).toHaveBeenCalledWith(IDENTITY, 'en', undefined);
         expect(enrich).toHaveBeenCalledWith({ companyId: 'company-1', userId: 'user-1' });
         expect(issue).toHaveBeenCalledWith(USER, { ip: '203.0.113.1' }, 'google', 'app');
@@ -126,7 +136,7 @@ describe('SocialLoginApplication', () => {
 
             const result = await application.loginAdmin('credential', { ip: '203.0.113.1' });
 
-            expect(result).toEqual({ tokens: TOKENS, isNewAccount: false, joinedAccount: false });
+            expect(result).toEqual({ tokens: TOKENS, isNewAccount: false, joinedAccount: false, offer: null });
             expect(issue).toHaveBeenCalledWith(USER, { ip: '203.0.113.1' }, 'google', 'admin');
             expect(record).toHaveBeenCalledWith({
                 operatorUserId: 'user-1',
@@ -176,6 +186,56 @@ describe('SocialLoginApplication', () => {
             const { application } = build({ enabled: false });
 
             await expect(application.loginAdmin('credential', {})).rejects.toBeInstanceOf(ProviderDisabledError);
+        });
+    });
+
+    describe('oferta de link de cadastro', () => {
+        it('resgata a oferta depois da sessão e devolve o resultado', async () => {
+            const { application, redeemOffer } = build({ outcome: 'new_account' });
+
+            const result = await application.login('google', 'credential', { ip: '203.0.113.1' }, undefined, 'offer-token-0000000');
+
+            expect(result.offer).toEqual({ redeemed: true, reason: null });
+            expect(redeemOffer).toHaveBeenCalledWith({ token: 'offer-token-0000000', user: USER, isNewAccount: true, ip: '203.0.113.1' });
+        });
+
+        it('recusa de regra de negócio não derruba o login: volta o código em offer.reason', async () => {
+            const { application } = build({ offer: () => Promise.reject(new InvalidGoogleTokenError()) });
+
+            const result = await application.login('google', 'credential', {}, undefined, 'offer-token-0000000');
+
+            expect(result.offer).toEqual({ redeemed: false, reason: 'identity.invalid_google_token' });
+        });
+
+        it('erro inesperado do resgate não é engolido', async () => {
+            const { application } = build({ offer: () => Promise.reject(new Error('boom')) });
+
+            await expect(application.login('google', 'credential', {}, undefined, 'offer-token-0000000')).rejects.toThrow('boom');
+        });
+
+        it('sem token não chama o resgate', async () => {
+            const { application, redeemOffer } = build();
+
+            await application.login('google', 'credential', {});
+
+            expect(redeemOffer).not.toHaveBeenCalled();
+        });
+
+        it('quem entrou numa conta por convite não resgata oferta', async () => {
+            const { application, redeemOffer } = build({ outcome: 'joined' });
+
+            const result = await application.login('google', 'credential', {}, 'invite-token-00000000', 'offer-token-0000000');
+
+            expect(result.offer).toBeNull();
+            expect(redeemOffer).not.toHaveBeenCalled();
+        });
+
+        it('na auto-hospedada o registro devolve null e o login segue sem oferta', async () => {
+            const { application } = build({ offer: () => Promise.resolve(null) });
+
+            const result = await application.login('google', 'credential', {}, undefined, 'offer-token-0000000');
+
+            expect(result.offer).toBeNull();
         });
     });
 });

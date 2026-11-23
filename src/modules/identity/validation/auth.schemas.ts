@@ -20,10 +20,29 @@ export const sessionResponseSchema = z.object({
 export const loginResponseSchema = sessionResponseSchema.extend({
     outcome: z.literal('authenticated').describe('The provider credential was verified and a session was issued'),
     isNewAccount: z.boolean().describe('True when this login created the company and the user'),
-    joinedAccount: z.boolean().describe('True when this login entered an account through an invite (no company was created)')
+    joinedAccount: z.boolean().describe('True when this login entered an account through an invite (no company was created)'),
+    offer: z
+        .object({
+            redeemed: z.boolean().describe('True when the signup link was redeemed by this login'),
+            reason: z
+                .string()
+                .nullable()
+                .describe('Error code of the refusal (for example signup_links.account_not_eligible); null when redeemed')
+        })
+        .nullable()
+        .describe(
+            'Result of the `offerToken` sent with the login; null when no token was sent, the login joined an account by invite or the deployment is self-hosted'
+        )
 });
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
+
+const offerTokenSchema = z
+    .string()
+    .min(16)
+    .max(128)
+    .optional()
+    .describe('Token of a signup link (from /entrar?oferta=). A refusal does not fail the login: it comes back in `offer.reason`');
 
 const inviteTokenSchema = z.string().min(20).max(200).optional().describe('Token of the invite link, to enter the account that invited');
 
@@ -31,6 +50,7 @@ export const googleLoginSchema = z
     .object({
         idToken: z.string().min(20).describe('Google Identity Services ID token (JWT)'),
         inviteToken: inviteTokenSchema,
+        offerToken: offerTokenSchema,
         audience: z
             .nativeEnum(LOGIN_AUDIENCES)
             .optional()
@@ -41,7 +61,11 @@ export const googleLoginSchema = z
 export class GoogleLoginDto extends createZodDto(googleLoginSchema) {}
 
 export const facebookLoginSchema = z
-    .object({ accessToken: z.string().min(20).describe('Facebook JS SDK user access token'), inviteToken: inviteTokenSchema })
+    .object({
+        accessToken: z.string().min(20).describe('Facebook JS SDK user access token'),
+        inviteToken: inviteTokenSchema,
+        offerToken: offerTokenSchema
+    })
     .strict();
 
 export class FacebookLoginDto extends createZodDto(facebookLoginSchema) {}

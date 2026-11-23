@@ -30,4 +30,21 @@ export class SignupLinksRepository extends BareGlobalRepository<'SignupLinks'> {
         const revoked: SignupLink[] = await this.updateManyRows({ id, revokedAt: null }, { revokedAt: at, updatedAt: at });
         return revoked[0] ?? null;
     }
+
+    public async lockById(id: string): Promise<SignupLink | null> {
+        const row: SignupLink | undefined = await this.selectSkipConstraint()
+            .selectAll()
+            .where('id', '=', id)
+            .forUpdate()
+            .executeTakeFirst();
+        return row ?? null;
+    }
+
+    public async addUse(locked: SignupLink, now: Date, startsTrial: boolean): Promise<SignupLink | null> {
+        return this.updateRow(locked.id, {
+            redemptionCount: locked.redemptionCount + 1,
+            trialCount: locked.trialCount + (startsTrial ? 1 : 0),
+            updatedAt: now
+        });
+    }
 }

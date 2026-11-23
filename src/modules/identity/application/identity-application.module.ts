@@ -12,6 +12,7 @@ import { SessionIssuerPort } from '../ports/session-issuer.port';
 import { AccountClosureMailer } from '../services/account-closure-mailer.service';
 import { InviteAcceptanceService } from '../services/invite-acceptance.service';
 import { MemberDirectoryService } from '../services/member-directory.service';
+import { LoginOfferRegistry } from '../services/login-offer.registry';
 import { MemberExitService } from '../services/member-exit.service';
 import { AccountEmptinessService } from '../services/account-emptiness.service';
 import { AccountInvitesExporter } from '../services/account-invites.exporter';
@@ -37,6 +38,7 @@ import { JwtAuthGuard } from '../services/jwt-auth.guard';
 import { PlatformAuditReaderService } from '../services/platform-audit-reader.service';
 import { PlatformAuditRecorderService } from '../services/platform-audit-recorder.service';
 import { PlatformAvailabilityService } from '../services/platform-availability.service';
+import { PlatformLoginAuditService } from '../services/platform-login-audit.service';
 import { PlatformSeedService } from '../services/platform-seed.service';
 import { PlatformEnabledGuard } from '../services/platform-enabled.guard';
 import { PlatformGuard } from '../services/platform.guard';
@@ -86,6 +88,7 @@ import { SocialLoginApplication } from './social-login.application';
         AccountEmptinessService,
         AccountClosureMailer,
         InviteAcceptanceService,
+        LoginOfferRegistry,
         MemberExitService,
         AccountInvitesExporter,
         MemberDepartureRegistry,
@@ -114,6 +117,7 @@ import { SocialLoginApplication } from './social-login.application';
         PlatformGuard,
         PlatformEnabledGuard,
         PlatformAvailabilityService,
+        PlatformLoginAuditService,
         PlatformSeedService,
         PlatformAuditReaderService,
         PlatformAuditRecorderService,

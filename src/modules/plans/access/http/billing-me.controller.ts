@@ -18,6 +18,7 @@ const HOSTED_EXAMPLE: BillingMe = {
     subscription: null,
     openInvoice: null,
     trial: null,
+    offer: null,
     features: { ai: 'premium_required', whatsapp: 'premium_required', calendar: 'premium_required' },
     usage: null
 };
@@ -32,6 +33,7 @@ const SELF_HOSTED_EXAMPLE: BillingMe = {
     subscription: null,
     openInvoice: null,
     trial: null,
+    offer: null,
     features: { ai: 'available', whatsapp: 'disabled', calendar: 'disabled' },
     usage: {
         usedBps: 4200,
