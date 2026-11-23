@@ -11,7 +11,15 @@ export interface BillingOfferSnapshot {
     readonly expiresAt: string;
 }
 
+export interface UsableOffer {
+    readonly rules: BillingOfferRule[];
+    readonly cardTrialDays: number | null;
+}
+
 export abstract class BillingOfferPort {
     public abstract offer(): Promise<BillingOfferSnapshot | null>;
     public abstract trialStarted(at: Date): Promise<void>;
+    public abstract usable(): Promise<UsableOffer | null>;
+    public abstract markApplied(): Promise<boolean>;
+    public abstract release(): Promise<void>;
 }

@@ -4,6 +4,8 @@ import { selectEligible } from './eligible-transactions';
 import { AmountProfile, profileAmounts } from './amount-profile';
 import { ExpectedDay, expectDay } from './expected-day';
 import { merchantKeyOf } from './merchant-key';
+import { isPixToPerson } from './pix-to-person';
+import { isPriceStep, orderedByStart } from './price-step';
 import { daysBetween, signedDaysBetween } from './recurring-dates';
 import { isWithinRatio, mostFrequent, sortedUnique } from './recurring-math';
 import {
@@ -91,6 +93,14 @@ function duplicateIdsOf(duplicates: readonly Charge[], firstDate: string): reado
         .map((charge: Charge): string => charge.transaction.id);
 }
 
+function amountFieldsOf(profile: AmountProfile): Pick<DetectedSeries, 'typicalAmountMinor' | 'minAmountMinor' | 'maxAmountMinor'> {
+    return {
+        typicalAmountMinor: profile.typicalAmountMinor,
+        minAmountMinor: profile.minAmountMinor,
+        maxAmountMinor: profile.maxAmountMinor
+    };
+}
+
 function buildSeries(merchantKey: string, fit: CadenceFit, profile: AmountProfile, duplicates: readonly Charge[]): DetectedSeries {
     const sorted: readonly Charge[] = fit.charges;
     const firstDate: string = sorted[0]?.transaction.date ?? '';
@@ -98,9 +108,7 @@ function buildSeries(merchantKey: string, fit: CadenceFit, profile: AmountProfil
         merchantKey,
         cadence: fit.cadence,
         valueMode: profile.mode,
-        typicalAmountMinor: profile.typicalAmountMinor,
-        minAmountMinor: profile.minAmountMinor,
-        maxAmountMinor: profile.maxAmountMinor,
+        ...amountFieldsOf(profile),
         ...dayFieldsOf(fit),
         chargeIds: sorted.map((charge: Charge): string => charge.transaction.id),
         duplicateChargeIds: duplicateIdsOf(duplicates, firstDate),
@@ -109,18 +117,32 @@ function buildSeries(merchantKey: string, fit: CadenceFit, profile: AmountProfil
         accountIds: sortedUnique(sorted.map((charge: Charge): string => charge.transaction.accountId)),
         categoryKey: categoryOf(sorted),
         knownSubscription: isKnownSubscription(sorted),
+        pixToPerson: isPixToPerson(sorted, fit.cadence),
         firstDate,
         lastDate: sorted.at(-1)?.transaction.date ?? ''
     };
 }
 
-function detectGroup(merchantKey: string, charges: readonly Charge[]): DetectedSeries | null {
+function profileOf(fit: CadenceFit, latest: ReadonlySet<string> | null): AmountProfile | null {
+    const all: readonly number[] = fit.charges.map((charge: Charge): number => charge.amountMinor);
+    if (latest === null) {
+        return profileAmounts(all);
+    }
+    const current: AmountProfile | null = profileAmounts(
+        fit.charges
+            .filter((charge: Charge): boolean => latest.has(charge.transaction.id))
+            .map((charge: Charge): number => charge.amountMinor)
+    );
+    return current === null ? null : { ...current, minAmountMinor: Math.min(...all), maxAmountMinor: Math.max(...all) };
+}
+
+function detectGroup(merchantKey: string, charges: readonly Charge[], latest: ReadonlySet<string> | null = null): DetectedSeries | null {
     const collapsed: ReturnType<typeof collapseDuplicates> = collapseDuplicates(charges);
     const fit: CadenceFit | null = fitCadence(collapsed.kept, isKnownSubscription(charges));
     if (fit === null) {
         return null;
     }
-    const profile: AmountProfile | null = profileAmounts(fit.charges.map((charge: Charge): number => charge.amountMinor));
+    const profile: AmountProfile | null = profileOf(fit, latest);
     if (profile === null || !isAllowedProfile(profile, categoryOf(fit.charges))) {
         return null;
     }
@@ -155,11 +177,32 @@ function attachTrials(series: DetectedSeries, charges: readonly Charge[], used: 
     return { ...series, trialChargeIds };
 }
 
-function detectMerchant(merchantKey: string, charges: readonly Charge[]): readonly DetectedSeries[] {
-    const found: DetectedSeries[] = [];
-    for (const band of groupIntoBands(charges)) {
-        found.push(...detectBand(merchantKey, band));
+function mergedSeriesOf(merchantKey: string, earlier: readonly Charge[], later: readonly Charge[]): DetectedSeries | null {
+    if (!isPriceStep(earlier, later)) {
+        return null;
     }
+    const latest: ReadonlySet<string> = new Set<string>(later.map((charge: Charge): string => charge.transaction.id));
+    return detectGroup(merchantKey, [...earlier, ...later], latest);
+}
+
+function mergePriceChanges(merchantKey: string, bands: readonly (readonly Charge[])[]): readonly DetectedSeries[] {
+    const found: DetectedSeries[] = [];
+    let pending: readonly Charge[] | null = null;
+    for (const band of orderedByStart(bands)) {
+        const merged: DetectedSeries | null = pending === null ? null : mergedSeriesOf(merchantKey, pending, band);
+        if (merged !== null) {
+            found.push(merged);
+            pending = null;
+            continue;
+        }
+        found.push(...(pending === null ? [] : detectBand(merchantKey, pending)));
+        pending = band;
+    }
+    return [...found, ...(pending === null ? [] : detectBand(merchantKey, pending))];
+}
+
+function detectMerchant(merchantKey: string, charges: readonly Charge[]): readonly DetectedSeries[] {
+    const found: DetectedSeries[] = [...mergePriceChanges(merchantKey, groupIntoBands(charges))];
     const used: Set<string> = new Set<string>(found.flatMap((series: DetectedSeries): readonly string[] => series.chargeIds));
     return found.map((series: DetectedSeries): DetectedSeries => attachTrials(series, charges, used));
 }

@@ -4,10 +4,10 @@ import { AppError } from '../../../shared/errors/app.error';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { BillingOfferRegistry } from '../../plans/services/billing-offer.registry';
-import { BillingOfferRule, BillingOfferSnapshot } from '../../plans/services/billing-offer.port';
+import { BillingOfferRule, UsableOffer } from '../../plans/services/billing-offer.port';
 import { PlanContractService } from '../../plans/services/plan-contract.service';
 import { SavedCard } from '../domain/billing-engine.types';
-import { discountedPriceOf } from '../domain/billing-offer-price.rules';
+import { resolvePrice } from '../domain/billing-price.rules';
 import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
 import { cardTrialDatesOf, CardTrialDates } from '../domain/billing-trial.rules';
 import {
@@ -17,6 +17,7 @@ import {
     SWEEP_BATCH,
     TRIAL_ENDING_NOTICE_DAYS
 } from '../domain/billing.types';
+import { discountRulesSchema } from '../validation/billing-discount.schemas';
 import { BillingEnginePort } from '../ports/billing-engine.port';
 import { BillingLogService } from './billing-log.service';
 import { BillingMailerService } from './billing-mailer.service';
@@ -41,9 +42,9 @@ export class BillingTrialService {
     ) {}
 
     public async offerOf(): Promise<CardTrialOffer | null> {
-        const offer: BillingOfferSnapshot | null = await this.offers.current();
-        const days: number = offer?.trial.days ?? 0;
-        if (offer === null || offer.trial.kind !== 'card' || days <= 0) {
+        const offer: UsableOffer | null = await this.offers.usable();
+        const days: number = offer?.cardTrialDays ?? 0;
+        if (offer === null || days <= 0) {
             return null;
         }
         if ((await this.contracts.trialUsed()) || (await this.contracts.everHadPremium())) {
@@ -67,14 +68,7 @@ export class BillingTrialService {
         if (trialEndsAt === null || subscription.trialStartedAt !== null || subscription.cardLast4 === null || trialEndsAt <= now) {
             return;
         }
-        const opened: boolean = await this.contracts.openCardTrial('premium', {
-            startsAt: now,
-            endsAt: trialEndsAt,
-            subscriptionId: subscription.id
-        });
-        if (!opened) {
-            await this.contracts.attachSubscription('premium', subscription.id);
-        }
+        const opened: boolean = await this.openContract(subscription, trialEndsAt, now);
         await this.subscriptions.markTrialStarted(subscription.id, now);
         await this.offers.trialStarted(now);
         await this.standing.recompute(now);
@@ -84,10 +78,22 @@ export class BillingTrialService {
                 kind: NOTIFICATION_KINDS.trialStarted,
                 subjectId: subscription.id,
                 trialEndsAt,
-                amountCents: await this.firstAmountOf(),
+                amountCents: await this.firstAmountOf(subscription),
                 cardLast4: subscription.cardLast4
             });
         }
+    }
+
+    private async openContract(subscription: BillingSubscription, trialEndsAt: Date, now: Date): Promise<boolean> {
+        const opened: boolean = await this.contracts.openCardTrial('premium', {
+            startsAt: now,
+            endsAt: trialEndsAt,
+            subscriptionId: subscription.id
+        });
+        if (!opened) {
+            await this.contracts.attachSubscription('premium', subscription.id);
+        }
+        return opened;
     }
 
     public async carryOver(subscription: BillingSubscription): Promise<void> {
@@ -146,6 +152,7 @@ export class BillingTrialService {
         await this.engine.cancelSubscription(row.engineSubscriptionId, `vera-trial-unconfirmed-${row.id}`);
         const canceled: BillingSubscription | null = await this.subscriptions.cancel(row, new Date(), false);
         if (canceled !== null) {
+            await this.offers.release();
             this.logs.subscription('trial_unconfirmed_canceled', row.id, row.paymentMethod);
         }
     }
@@ -156,13 +163,14 @@ export class BillingTrialService {
             kind: NOTIFICATION_KINDS.trialEnding,
             subjectId: row.id,
             trialEndsAt: row.trialEndsAt,
-            amountCents: await this.firstAmountOf(),
+            amountCents: await this.firstAmountOf(row),
             cardLast4: row.cardLast4
         });
     }
 
-    private async firstAmountOf(): Promise<number> {
-        const offer: BillingOfferSnapshot | null = await this.offers.current();
-        return discountedPriceOf(await this.contracts.priceCentsOf('premium'), offer?.rules ?? [], 1);
+    private async firstAmountOf(subscription: BillingSubscription): Promise<number> {
+        const rules: BillingOfferRule[] = discountRulesSchema.parse(subscription.discountRules);
+        const base: number = await this.contracts.priceCentsOf('premium');
+        return resolvePrice(base, rules, 1 + subscription.discountCycleOffset).amountCents;
     }
 }

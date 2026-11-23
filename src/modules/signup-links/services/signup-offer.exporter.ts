@@ -10,6 +10,7 @@ export const SIGNUP_OFFER_EXPORT_AREA: string = 'signup_offer';
 export interface SignupOfferExport extends RedeemedOfferView {
     readonly source: string;
     readonly trialStartedAt: string | null;
+    readonly appliedAt: string | null;
 }
 
 @Injectable()
@@ -31,7 +32,8 @@ export class SignupOfferExporter extends AccountDataExporterPort {
         return {
             ...this.mapper.toRedeemedView(redemption),
             source: redemption.source,
-            trialStartedAt: redemption.trialStartedAt?.toISOString() ?? null
+            trialStartedAt: redemption.trialStartedAt?.toISOString() ?? null,
+            appliedAt: redemption.appliedAt?.toISOString() ?? null
         };
     }
 }

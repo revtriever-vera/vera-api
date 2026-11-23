@@ -38,4 +38,12 @@ export class BillingPriceQuotesRepository extends BareTenantRepository<'BillingP
         });
         return updated ?? existing;
     }
+
+    public async lastCycleOf(subscriptionId: string): Promise<number> {
+        const rows: BillingPriceQuote[] = await this.findMany(
+            { subscriptionId },
+            { limit: 1, orderBy: [{ property: 'cycle', direction: 'desc' }] }
+        );
+        return rows[0]?.cycle ?? 0;
+    }
 }

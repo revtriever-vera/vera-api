@@ -70,7 +70,7 @@ function fieldsOf(key: string, target: DetectorTransaction, similar: readonly De
         merchantKey: key,
         accountId: target.accountId,
         cadence,
-        kind: kindOf(categoryOf(similar), known),
+        kind: kindOf(categoryOf(similar), known, false),
         status: SERIES_STATUSES.confirmed,
         origin: SERIES_ORIGINS.manual,
         expectedDay: expectedDayFor(cadence, target.date),

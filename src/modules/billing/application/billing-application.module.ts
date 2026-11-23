@@ -17,6 +17,7 @@ import { BillingAccountExporter } from '../services/billing-account.exporter';
 import { BillingCancellationService } from '../services/billing-cancellation.service';
 import { BillingCardService } from '../services/billing-card.service';
 import { BillingCheckoutService } from '../services/billing-checkout.service';
+import { BillingReservationService } from '../services/billing-reservation.service';
 import { BillingPendingCancellationService } from '../services/billing-pending-cancellation.service';
 import { BillingReplayService } from '../services/billing-replay.service';
 import { BillingSweepService } from '../services/billing-sweep.service';
@@ -59,6 +60,7 @@ import { SubscriptionApplication } from './subscription.application';
         BillingEventsApplication,
         BillingProvisioningService,
         BillingCheckoutService,
+        BillingReservationService,
         BillingCancellationService,
         BillingCardService,
         BillingPendingCancellationService,

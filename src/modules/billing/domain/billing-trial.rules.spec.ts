@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { discountedPriceOf, discountPercentOf } from './billing-offer-price.rules';
 import { cardTrialDatesOf, resumableUntilOf } from './billing-trial.rules';
 import { BillingSubscription } from './billing.types';
 
@@ -25,6 +24,8 @@ function subscription(overrides: Partial<BillingSubscription>): BillingSubscript
         cardLast4: null,
         trialEndsAt: null,
         trialStartedAt: null,
+        discountRules: [],
+        discountCycleOffset: 0,
         createdAt: new Date('2026-11-01T00:00:00Z'),
         updatedAt: new Date('2026-11-01T00:00:00Z'),
         ...overrides
@@ -66,24 +67,5 @@ describe('resumableUntilOf', () => {
         expect(resumableUntilOf(subscription({ trialEndsAt: TRIAL_END }))).toBeNull();
         expect(resumableUntilOf(subscription({ status: 'active', trialEndsAt: TRIAL_END, trialStartedAt: new Date() }))).toBeNull();
         expect(resumableUntilOf(null)).toBeNull();
-    });
-});
-
-describe('discountedPriceOf', () => {
-    const RULES = [
-        { percent: 50, fromCycle: 1, toCycle: 3 },
-        { percent: 20, fromCycle: 4, toCycle: 6 }
-    ];
-
-    it('aplica a primeira regra que cobre o ciclo e arredonda ao centavo', () => {
-        expect(discountedPriceOf(1490, RULES, 1)).toBe(745);
-        expect(discountedPriceOf(1499, RULES, 3)).toBe(750);
-        expect(discountedPriceOf(1490, RULES, 4)).toBe(1192);
-    });
-
-    it('sem regra para o ciclo cobra o preço cheio', () => {
-        expect(discountPercentOf(RULES, 7)).toBe(0);
-        expect(discountedPriceOf(1490, RULES, 7)).toBe(1490);
-        expect(discountedPriceOf(1490, [], 1)).toBe(1490);
     });
 });

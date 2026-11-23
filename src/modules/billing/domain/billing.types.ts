@@ -10,6 +10,7 @@ import {
     RevtrieverEventCursors,
     RevtrieverEvents
 } from '../../../core/database/generated/database.types';
+import type { BillingOfferRule } from '../../plans/services/billing-offer.port';
 import { BillingEngine, PaymentMethod } from './billing-engine.types';
 
 export type BillingSubscription = Selectable<BillingSubscriptions>;
@@ -84,6 +85,8 @@ export interface NewSubscriptionDraft {
     readonly paymentMethod: PaymentMethod;
     readonly firstChargeDate: string | null;
     readonly trialEndsAt: Date | null;
+    readonly discountRules: readonly BillingOfferRule[];
+    readonly discountCycleOffset: number;
 }
 
 export interface InvoiceMirror {

@@ -16,27 +16,23 @@ import {
 import { PaymentMethod } from '../domain/billing-engine.types';
 import { BillingTrialService, CardTrialOffer } from './billing-trial.service';
 import { CardTrialDates, resumableUntilOf } from '../domain/billing-trial.rules';
-import { BillingSubscriptionDomain } from '../domain/billing-subscription.domain';
 import { BillingSubscription, PROVISIONING_STALE_MINUTES, SUBSCRIPTION_STATUSES, SWEEP_BATCH } from '../domain/billing.types';
-import { BillingEnginePort } from '../ports/billing-engine.port';
 import { BillingLogService } from './billing-log.service';
 import { BillingMetricsService } from './billing-metrics.service';
 import { BillingProvisioningService } from './billing-provisioning.service';
+import { BillingReservationService } from './billing-reservation.service';
 
 export type SubscribeResult = { readonly next: 'card_capture'; readonly captureUrl: string } | { readonly next: 'pay_invoice' };
-
-const FAKE_PLAN_ID: string = 'fake-premium-monthly';
 
 @Injectable()
 export class BillingCheckoutService {
     public constructor(
         @Inject(billingConfig.KEY) private readonly config: ConfigType<typeof billingConfig>,
-        private readonly engine: BillingEnginePort,
         private readonly gate: PlanGateService,
         private readonly contracts: PlanContractService,
         private readonly provisioning: BillingProvisioningService,
         private readonly trials: BillingTrialService,
-        private readonly subscriptions: BillingSubscriptionDomain,
+        private readonly reservations: BillingReservationService,
         private readonly logs: BillingLogService,
         private readonly metrics: BillingMetricsService
     ) {}
@@ -52,11 +48,7 @@ export class BillingCheckoutService {
             throw new TrialRequiresCardError();
         }
         const dates: CardTrialDates | null = cardTrial === null ? null : await this.trials.datesOf(cardTrial, new Date());
-        const row: BillingSubscription = await this.reservedRow(
-            method,
-            dates?.firstChargeDate ?? (await this.firstChargeDateOf(trial)),
-            dates?.trialEndsAt ?? null
-        );
+        const row: BillingSubscription = await this.reservations.forSubscribe(method, trial, dates);
         const active: BillingSubscription = row.status === SUBSCRIPTION_STATUSES.pending ? await this.provisionCounting(row) : row;
         if (trial !== null) {
             await this.contracts.attachSubscription('premium', active.id);
@@ -68,18 +60,14 @@ export class BillingCheckoutService {
 
     public async resume(): Promise<void> {
         this.assertAvailable();
-        const current: BillingSubscription | null = await this.subscriptions.findCurrent(this.engine.engine);
+        const current: BillingSubscription | null = await this.reservations.currentOf();
         const paidThrough: Date | null = resumableUntilOf(current);
         if (current === null || paidThrough === null || new Date() >= paidThrough) {
             throw new NotResumableError();
         }
         const trialDates: CardTrialDates | null =
             current.trialEndsAt === null ? null : await this.trials.resumeDatesOf(current.trialEndsAt);
-        const fresh: BillingSubscription = await this.reservedRow(
-            current.paymentMethod === 'card' ? 'card' : 'pix',
-            trialDates?.firstChargeDate ?? DateUtil.onlyDateString(paidThrough),
-            trialDates?.trialEndsAt ?? null
-        );
+        const fresh: BillingSubscription = await this.reservations.forResume(current, paidThrough, trialDates);
         const active: BillingSubscription = await this.provisionCounting(fresh);
         await this.provisioning.inheritCard(active);
         await this.trials.carryOver(active);
@@ -87,7 +75,7 @@ export class BillingCheckoutService {
     }
 
     public async rescue(): Promise<number> {
-        const stale: BillingSubscription[] = await this.subscriptions.listStalePendingAcrossTenants(
+        const stale: BillingSubscription[] = await this.reservations.stalePendingOf(
             DateUtil.addMinutes(new Date(), -PROVISIONING_STALE_MINUTES),
             SWEEP_BATCH
         );
@@ -113,34 +101,6 @@ export class BillingCheckoutService {
         if (!this.config.BILLING_ENGINE_ENABLED) {
             throw new BillingProviderDisabledError();
         }
-    }
-
-    private async firstChargeDateOf(trial: TrialContract | null): Promise<string> {
-        const today: string = await this.provisioning.todayInCompany();
-        const trialEnd: string | null = trial === null ? null : DateUtil.onlyDateString(trial.endsAt);
-        return trialEnd !== null && trialEnd > today ? trialEnd : today;
-    }
-
-    private async reservedRow(method: PaymentMethod, firstChargeDate: string, trialEndsAt: Date | null): Promise<BillingSubscription> {
-        const reserved: BillingSubscription | null = await this.subscriptions.reserve({
-            engine: this.engine.engine,
-            planId: this.config.REVTRIEVER_PLAN_ID ?? FAKE_PLAN_ID,
-            paymentMethod: method,
-            firstChargeDate,
-            trialEndsAt
-        });
-        if (reserved !== null) {
-            return reserved;
-        }
-        const open: BillingSubscription | null = await this.subscriptions.findOpen(this.engine.engine);
-        if (open === null || (open.status === SUBSCRIPTION_STATUSES.active && !this.awaitsCard(open))) {
-            throw new AlreadySubscribedError();
-        }
-        return open;
-    }
-
-    private awaitsCard(row: BillingSubscription): boolean {
-        return row.paymentMethod === 'card' && row.cardLast4 === null;
     }
 
     private async provisionCounting(row: BillingSubscription): Promise<BillingSubscription> {

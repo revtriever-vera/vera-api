@@ -15,11 +15,13 @@ describe('prazo da parada', () => {
 
 describe('tipo, nome e dia', () => {
     it('assinatura conhecida ou categoria Assinaturas é assinatura; fixas são contas; o resto é outra', () => {
-        expect(kindOf(null, true)).toBe('subscription');
-        expect(kindOf('subscriptions', false)).toBe('subscription');
-        expect(kindOf('home_services', false)).toBe('bill');
-        expect(kindOf('leisure', false)).toBe('other');
-        expect(kindOf(null, false)).toBe('other');
+        expect(kindOf(null, true, false)).toBe('subscription');
+        expect(kindOf(null, false, true)).toBe('bill');
+        expect(kindOf('shopping', false, true)).toBe('other');
+        expect(kindOf('subscriptions', false, false)).toBe('subscription');
+        expect(kindOf('home_services', false, false)).toBe('bill');
+        expect(kindOf('leisure', false, false)).toBe('other');
+        expect(kindOf(null, false, false)).toBe('other');
     });
 
     it('semanal e quinzenal não têm dia do mês', () => {

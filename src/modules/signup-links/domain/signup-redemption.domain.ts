@@ -16,6 +16,14 @@ export class SignupRedemptionDomain {
         return this.redemptions.markTrialStarted(at);
     }
 
+    public async markApplied(at: Date): Promise<boolean> {
+        return this.redemptions.markApplied(at);
+    }
+
+    public async release(at: Date): Promise<boolean> {
+        return this.redemptions.release(at);
+    }
+
     public async record(link: SignupLink, source: RedemptionSource, now: Date): Promise<SignupRedemption | null> {
         return this.redemptions.createOnce({
             id: IdUtil.newId(),

@@ -32,4 +32,14 @@ export class SignupRedemptionsRepository extends BareTenantRepository<'SignupRed
             .executeTakeFirst();
         return row ?? null;
     }
+
+    public async release(at: Date): Promise<boolean> {
+        const rows: SignupRedemption[] = await this.updateManyRows({ trialStartedAt: null }, { appliedAt: null, updatedAt: at });
+        return rows.length > 0;
+    }
+
+    public async markApplied(at: Date): Promise<boolean> {
+        const rows: SignupRedemption[] = await this.updateManyRows({ appliedAt: null }, { appliedAt: at, updatedAt: at });
+        return rows.length > 0;
+    }
 }

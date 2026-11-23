@@ -274,6 +274,8 @@ export interface BillingSubscriptions {
     chargeDay: number | null;
     companyId: string;
     createdAt: Generated<Timestamp>;
+    discountCycleOffset: Generated<number>;
+    discountRules: Generated<Json>;
     engine: string;
     engineCustomerId: string | null;
     engineSubscriptionId: string | null;
@@ -898,6 +900,7 @@ export interface SignupLinks {
 }
 
 export interface SignupRedemptions {
+    appliedAt: Timestamp | null;
     companyId: string;
     createdAt: Generated<Timestamp>;
     expiresAt: Timestamp;
