@@ -6,6 +6,8 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
 import { TransactionsApplicationModule } from '../../transactions/application/transactions-application.module';
 import { RecurringDomainModule } from '../domain/recurring-domain.module';
+import { RecurringOverviewTool } from '../services/recurring-ask-vera.tool';
+import { RecurringUpcomingService } from '../services/recurring-upcoming.service';
 import { RecurringAccountEraser } from '../services/recurring-account.eraser';
 import { RecurringAccountExporter } from '../services/recurring-account.exporter';
 import { RecurringAccountSpreadsheet } from '../services/recurring-account.spreadsheet';
@@ -47,8 +49,10 @@ import { RecurringReviewApplication } from './recurring-review.application';
         RecurringAccountSpreadsheet,
         RecurringAccountEraser,
         RecurringSampleDataService,
+        RecurringUpcomingService,
+        RecurringOverviewTool,
         RecurringLogService
     ],
-    exports: [RecurringReviewApplication, RecurringOverviewApplication, RecurringDetectionApplication]
+    exports: [RecurringReviewApplication, RecurringOverviewApplication, RecurringDetectionApplication, RecurringUpcomingService]
 })
 export class RecurringApplicationModule {}
