@@ -15,7 +15,7 @@ function requestOf(overrides: Partial<EnqueueMailRequest> = {}): EnqueueMailRequ
 describe('QueueMailer', () => {
     it('publishes to the email-send queue with the fixed message type', async () => {
         const publish: ReturnType<typeof vi.fn> = vi.fn();
-        const publisher: QueuePublisherPort = { publish };
+        const publisher: QueuePublisherPort = { publish, remove: vi.fn() };
         const mailer: QueueMailer = new QueueMailer(publisher);
 
         await mailer.enqueue(requestOf());
@@ -25,7 +25,7 @@ describe('QueueMailer', () => {
 
     it('builds a deterministic jobId from the template and the reference', async () => {
         const publish: ReturnType<typeof vi.fn> = vi.fn();
-        const publisher: QueuePublisherPort = { publish };
+        const publisher: QueuePublisherPort = { publish, remove: vi.fn() };
         const mailer: QueueMailer = new QueueMailer(publisher);
 
         await mailer.enqueue(requestOf({ reference: 'otp-user-1' }));

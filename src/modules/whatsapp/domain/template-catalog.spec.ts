@@ -26,6 +26,12 @@ describe('template-catalog', () => {
         }
     });
 
+    it('declara os três botões de resposta rápida do lembrete em cada idioma', () => {
+        for (const definition of catalogDefinitions()) {
+            expect(definition.quickReplies).toHaveLength(3);
+        }
+    });
+
     it('versiona o nome: a 1 é o nome limpo, as seguintes ganham sufixo', () => {
         expect(remoteNameOf('vera_lembrete', 1)).toBe('vera_lembrete');
         expect(remoteNameOf('vera_lembrete', 2)).toBe('vera_lembrete_v2');
@@ -34,7 +40,7 @@ describe('template-catalog', () => {
     });
 
     it('resolve o nome atual pela chave', () => {
-        expect(currentTemplateName(REMINDER_TEMPLATE_KEY)).toBe('vera_lembrete');
+        expect(currentTemplateName(REMINDER_TEMPLATE_KEY)).toBe('vera_lembrete_v2');
         expect(currentTemplateName('outro')).toBeNull();
     });
 });

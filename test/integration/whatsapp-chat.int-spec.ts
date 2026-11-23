@@ -27,9 +27,9 @@ import { CapturingPublisher, PublishedMessage } from './support/queue';
 const executed: { readonly kind: string; readonly payload: JsonObject }[] = [];
 
 abstract class FakeExecutor extends PendingActionExecutorPort {
-    public execute(payload: JsonObject): Promise<void> {
+    public execute(payload: JsonObject): Promise<string | null> {
         executed.push({ kind: this.kind, payload });
-        return Promise.resolve();
+        return Promise.resolve(null);
     }
 
     public describe(payload: JsonObject): string {
@@ -40,11 +40,6 @@ abstract class FakeExecutor extends PendingActionExecutorPort {
 @Injectable()
 class FakeCalendarExecutor extends FakeExecutor {
     public readonly kind = 'calendar_create' as const;
-}
-
-@Injectable()
-class FakeReminderExecutor extends FakeExecutor {
-    public readonly kind = 'reminder_create' as const;
 }
 
 abstract class FakeTool extends AskVeraToolPort {
@@ -68,18 +63,12 @@ class FakeCalendarTool extends FakeTool {
 }
 
 @Injectable()
-class FakeReminderTool extends FakeTool {
-    public readonly name: string = 'reminder_create';
-    public readonly kind: AskVeraToolKind = 'proposal';
-}
-
-@Injectable()
 class FakeOutsideTool extends FakeTool {
     public readonly name: string = 'secret_tool';
     public readonly kind: AskVeraToolKind = 'read';
 }
 
-@Module({ providers: [FakeCalendarExecutor, FakeReminderExecutor, FakeCalendarTool, FakeReminderTool, FakeOutsideTool] })
+@Module({ providers: [FakeCalendarExecutor, FakeCalendarTool, FakeOutsideTool] })
 class FakeChatModule {}
 
 interface IssuedBody {
@@ -484,8 +473,8 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
         const phone: string = '5511999992001';
         const viewer: Account = await viewerLinked(owner, phone);
         executed.length = 0;
-        llm.enqueue({ text: '', toolUses: [{ toolUseId: 'r1', name: 'reminder_create', input: { title: 'aportar todo dia 5' } }] });
-        llm.enqueue('Posso criar o lembrete, aguardo sua confirmação.');
+        llm.enqueue({ text: '', toolUses: [{ toolUseId: 'r1', name: 'calendar_create_event', input: { title: 'aportar todo dia 5' } }] });
+        llm.enqueue('Posso marcar, aguardo sua confirmação.');
 
         await say(phone, 'Me lembra de aportar todo dia 5');
 
@@ -500,9 +489,9 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
         await say(phone, 'Sim.');
         await say(phone, 'sim');
 
-        expect(executed).toEqual([{ kind: 'reminder_create', payload: { title: 'aportar todo dia 5' } }]);
+        expect(executed).toEqual([{ kind: 'calendar_create', payload: { title: 'aportar todo dia 5' } }]);
         expect(bodiesTo(phone)).toContain('Feito.');
-        expect(await pendingRows(viewer)).toEqual([{ kind: 'reminder_create', resolution: 'confirmed' }]);
+        expect(await pendingRows(viewer)).toEqual([{ kind: 'calendar_create', resolution: 'confirmed' }]);
         expect(viewer.user.id).toBeTruthy();
         calls.mockRestore();
     });

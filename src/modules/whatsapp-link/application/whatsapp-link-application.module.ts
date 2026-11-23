@@ -13,6 +13,7 @@ import { WhatsAppLinkDomainModule } from '../domain/whatsapp-link-domain.module'
 import { LinkCommandMatcher } from '../services/link-command-matcher.service';
 import { LinkBinder } from '../services/link-binder.service';
 import { LinkCodeIssuer } from '../services/link-code-issuer.service';
+import { LinkContactService } from '../services/link-contact.service';
 import { LinkConversationService } from '../services/link-conversation.service';
 import { LinkViewService } from '../services/link-view.service';
 import { LinkResolverService } from '../services/link-resolver.service';
@@ -49,6 +50,7 @@ import { UnlinkApplication } from './unlink.application';
         UnlinkApplication,
         LinkResolverService,
         LinkUnlinkService,
+        LinkContactService,
         LinkCommandMatcher,
         LinkBinder,
         LinkCodeIssuer,
@@ -70,6 +72,7 @@ import { UnlinkApplication } from './unlink.application';
         UnlinkApplication,
         LinkResolverService,
         LinkUnlinkService,
+        LinkContactService,
         LinkCommandMatcher,
         PhoneVault
     ]

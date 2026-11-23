@@ -82,7 +82,15 @@ export class CloudWhatsAppDriver extends WhatsAppCloudPort {
             template: {
                 name: template.name,
                 language: { code: template.language },
-                components: [{ type: 'body', parameters: template.variables.map((text: string) => ({ type: 'text', text })) }]
+                components: [
+                    { type: 'body', parameters: template.variables.map((text: string) => ({ type: 'text', text })) },
+                    ...(template.buttonPayloads ?? []).map((payload: string, index: number) => ({
+                        type: 'button',
+                        sub_type: 'quick_reply',
+                        index: String(index),
+                        parameters: [{ type: 'payload', payload }]
+                    }))
+                ]
             }
         });
     }
@@ -116,7 +124,12 @@ export class CloudWhatsAppDriver extends WhatsAppCloudPort {
                     language: template.language,
                     category: template.category,
                     allow_category_change: false,
-                    components: [{ type: 'BODY', text: template.body, example: { body_text: [template.examples] } }]
+                    components: [
+                        { type: 'BODY', text: template.body, example: { body_text: [template.examples] } },
+                        ...(template.quickReplies.length === 0
+                            ? []
+                            : [{ type: 'BUTTONS', buttons: template.quickReplies.map((text: string) => ({ type: 'QUICK_REPLY', text })) }])
+                    ]
                 }
             },
             submitResponseSchema

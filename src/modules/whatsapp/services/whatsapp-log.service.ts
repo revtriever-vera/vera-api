@@ -17,6 +17,14 @@ export type SendLogFields = {
 export class WhatsAppLogService {
     public constructor(private readonly logService: LogService) {}
 
+    public failureObserverFailed(error: unknown): void {
+        this.logService.error({
+            message: 'whatsapp outbound failure observer failed',
+            identifier: SEND,
+            meta: { detail: error instanceof Error ? error.message : String(error) }
+        });
+    }
+
     public webhookBatch(items: number, kinds: Readonly<Record<string, number>>): void {
         this.logService.info({ message: 'whatsapp webhook batch processed', identifier: WEBHOOK, meta: { items, kinds } });
     }

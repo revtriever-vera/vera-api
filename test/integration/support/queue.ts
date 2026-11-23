@@ -17,6 +17,13 @@ export class CapturingPublisher extends QueuePublisherPort {
         return Promise.resolve();
     }
 
+    public readonly removed: { readonly queue: QueueName; readonly jobId: string }[] = [];
+
+    public remove(queue: QueueName, jobId: string): Promise<void> {
+        this.removed.push({ queue, jobId });
+        return Promise.resolve();
+    }
+
     public ofType(type: string): PublishedMessage[] {
         return this.published.filter((message: PublishedMessage) => message.type === type);
     }
