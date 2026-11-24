@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:child_process', () => ({ execFileSync: vi.fn() }));
 
+import { existsSync, readFileSync, statSync } from 'node:fs';
+
 import { execFileSync } from 'node:child_process';
 import { putParameterWithAwsCli, runTunnel, routesOf, settingsFrom, TunnelSettings } from './tunnel-core';
 
@@ -237,24 +239,38 @@ describe('runTunnel', () => {
 });
 
 describe('putParameterWithAwsCli', () => {
-    it('sends the secret through stdin, never as an argument', () => {
+    it('sends the secret through a private temp file, never as an argument, and removes it', () => {
+        let file: string = '';
+        let mode: number = 0;
+        let content: string = '';
+        vi.mocked(execFileSync).mockImplementationOnce(((_command: string, args: string[]) => {
+            file = (args[args.indexOf('--cli-input-json') + 1] ?? '').replace('file://', '');
+            mode = statSync(file).mode & 0o777;
+            content = readFileSync(file, 'utf8');
+            return Buffer.from('');
+        }) as unknown as typeof execFileSync);
         putParameterWithAwsCli('/vera/tunnel-token', 'secret-value', settingsFrom(['dev'], ENV));
-        const [command, args, options] = vi.mocked(execFileSync).mock.calls.at(-1) as unknown as [string, string[], { input: string }];
+        const [command, args] = vi.mocked(execFileSync).mock.calls.at(-1) as unknown as [string, string[]];
         expect(command).toBe('aws');
         expect(args.join(' ')).not.toContain('secret-value');
         expect(args).toContain('profile-1');
-        expect(JSON.parse(options.input)).toEqual({
+        expect(file.startsWith('/')).toBe(true);
+        expect(mode).toBe(0o600);
+        expect(JSON.parse(content)).toEqual({
             Name: '/vera/tunnel-token',
             Value: 'secret-value',
             Type: 'SecureString',
             Overwrite: true
         });
+        expect(existsSync(file)).toBe(false);
     });
 
-    it('throws a fixed message without leaking the secret when aws fails', () => {
-        vi.mocked(execFileSync).mockImplementationOnce(() => {
+    it('throws a fixed message without leaking the secret and still removes the file when aws fails', () => {
+        let file: string = '';
+        vi.mocked(execFileSync).mockImplementationOnce(((_command: string, args: string[]) => {
+            file = (args[args.indexOf('--cli-input-json') + 1] ?? '').replace('file://', '');
             throw new Error('Command failed: aws ssm put-parameter --value secret-value');
-        });
+        }) as unknown as typeof execFileSync);
         let message: string = '';
         try {
             putParameterWithAwsCli('/vera/tunnel-token', 'secret-value', settingsFrom(['dev'], ENV));
@@ -263,5 +279,6 @@ describe('putParameterWithAwsCli', () => {
         }
         expect(message).toContain('/vera/tunnel-token');
         expect(message).not.toContain('secret-value');
+        expect(existsSync(file)).toBe(false);
     });
 });

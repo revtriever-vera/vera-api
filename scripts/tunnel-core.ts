@@ -1,4 +1,7 @@
 import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const API: string = 'https://api.cloudflare.com/client/v4';
 const TOKEN_PARAMETER: string = '/vera/tunnel-token';
@@ -239,24 +242,33 @@ async function storeToken(settings: TunnelSettings, tunnelId: string, deps: Tunn
     deps.log(`token guardado em ${TOKEN_PARAMETER}`);
 }
 
+function runAwsPutParameter(file: string, settings: TunnelSettings): void {
+    execFileSync(
+        'aws',
+        [
+            'ssm',
+            'put-parameter',
+            '--cli-input-json',
+            `file://${file}`,
+            '--region',
+            settings.awsRegion,
+            '--profile',
+            settings.awsProfile ?? ''
+        ],
+        { stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+}
+
 export function putParameterWithAwsCli(name: string, value: string, settings: TunnelSettings): void {
+    const directory: string = mkdtempSync(join(tmpdir(), 'vera-tunnel-'));
+    const file: string = join(directory, 'parameter.json');
     try {
-        execFileSync(
-            'aws',
-            [
-                'ssm',
-                'put-parameter',
-                '--cli-input-json',
-                'file:///dev/stdin',
-                '--region',
-                settings.awsRegion,
-                '--profile',
-                settings.awsProfile ?? ''
-            ],
-            { input: JSON.stringify({ Name: name, Value: value, Type: 'SecureString', Overwrite: true }), stdio: ['pipe', 'pipe', 'pipe'] }
-        );
+        writeFileSync(file, JSON.stringify({ Name: name, Value: value, Type: 'SecureString', Overwrite: true }), { mode: 0o600 });
+        runAwsPutParameter(file, settings);
     } catch {
         throw new Error(`falha ao gravar ${name} no SSM; confira o perfil AWS e a sessão`);
+    } finally {
+        rmSync(directory, { recursive: true, force: true });
     }
 }
 
