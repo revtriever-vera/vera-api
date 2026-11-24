@@ -436,7 +436,7 @@ describe('transactions api', () => {
             expect(second.status).toBe(200);
             expect(upstream).toEqual(['https://logos.example/connectors/itau.png']);
             expect(forged.status).toBe(404);
-            expect(forged.headers.get('cache-control')).not.toContain('public');
+            expect(forged.headers.get('cache-control') ?? '').not.toContain('public');
             expect(stranger.status).toBe(404);
         } finally {
             globalThis.fetch = realFetch;
