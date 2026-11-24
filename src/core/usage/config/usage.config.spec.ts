@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LLM_TASK_CATALOG } from '../../llm/catalog/llm-task.catalog';
+import { LlmTaskSpec } from '../../llm/catalog/llm-task.types';
 import { usageConfig } from './usage.config';
 
 describe('usageConfig', () => {
@@ -15,7 +17,7 @@ describe('usageConfig', () => {
 
         expect(usageConfig()).toEqual({
             PAID_USAGE_CAP_MICROS: 4_000_000,
-            PAID_USAGE_MIN_ROOM_MICROS: 20_000,
+            PAID_USAGE_MIN_ROOM_MICROS: 60_000,
             PAID_USAGE_WARNING_BPS: 8000,
             USAGE_USD_BRL_FALLBACK: '5.0000',
             WHATSAPP_PRICE_TABLE: expect.objectContaining({
@@ -46,5 +48,15 @@ describe('usageConfig', () => {
         expect(() => usageConfig()).toThrow();
         vi.stubEnv('WHATSAPP_PRICE_TABLE', JSON.stringify({ outro: {} }));
         expect(() => usageConfig()).toThrow();
+    });
+
+    it('o piso padrão cobre a operação paga mais cara: a chamada de IA de maior custo e um envio utility ao câmbio de reserva', () => {
+        const config = usageConfig();
+        const worstAiMicros: number = Math.max(...LLM_TASK_CATALOG.map((spec: LlmTaskSpec): number => spec.maxCostMicros));
+        const utility = config.WHATSAPP_PRICE_TABLE.utility;
+        const utilityMicros: number = Math.ceil(Number(utility?.amount) * Number(config.USAGE_USD_BRL_FALLBACK) * 1_000_000);
+
+        expect(config.PAID_USAGE_MIN_ROOM_MICROS).toBeGreaterThanOrEqual(worstAiMicros);
+        expect(config.PAID_USAGE_MIN_ROOM_MICROS).toBeGreaterThanOrEqual(utilityMicros);
     });
 });

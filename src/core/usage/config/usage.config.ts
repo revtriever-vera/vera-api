@@ -4,7 +4,7 @@ import { SendCategory } from '../usage.types';
 
 const DECIMAL_PATTERN: RegExp = /^\d+(\.\d+)?$/;
 const DEFAULT_CAP_MICROS: number = 4_000_000;
-const DEFAULT_MIN_ROOM_MICROS: number = 20_000;
+const DEFAULT_MIN_ROOM_MICROS: number = 60_000;
 const DEFAULT_WARNING_BPS: number = 8000;
 const DEFAULT_USD_BRL_FALLBACK: string = '5.0000';
 
