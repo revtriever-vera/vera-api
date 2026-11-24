@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:child_process', () => ({ execFileSync: vi.fn() }));
 
+import { existsSync, readFileSync, statSync } from 'node:fs';
+
 import { execFileSync } from 'node:child_process';
 import { putParameterWithAwsCli, runTunnel, routesOf, settingsFrom, TunnelSettings } from './tunnel-core';
 
@@ -135,7 +137,7 @@ describe('runTunnel', () => {
                 return ok([{ id: 'tunnel-9', name: 'vera-prod', deleted_at: null }]);
             }
             if (url.includes('dns_records?')) {
-                return ok([{ id: 'record-1', name: 'api.example.test' }]);
+                return ok([{ id: 'record-1', name: 'api.example.test', content: 'tunnel-9.cfargotunnel.com' }]);
             }
             return ok({});
         });
@@ -149,6 +151,67 @@ describe('runTunnel', () => {
         expect(calls.some((call: string): boolean => call.endsWith('/token'))).toBe(false);
         expect(putParameter).not.toHaveBeenCalled();
         expect(log).toHaveBeenCalledWith('tunnel existente: vera-prod');
+    });
+
+    describe('guard against foreign cnames', () => {
+        function stubForeign(content: string): ReturnType<typeof vi.fn> {
+            return stubFetch((url: string): Response => {
+                if (url.includes('/zones?name=')) {
+                    return ok([{ id: 'zone-1' }]);
+                }
+                if (url.includes('cfd_tunnel?name=')) {
+                    return ok([{ id: 'tunnel-9', name: 'vera-dev', deleted_at: null }]);
+                }
+                if (url.includes('name=api-dev.example.test')) {
+                    return ok([{ id: 'record-1', name: 'api-dev.example.test', content }]);
+                }
+                if (url.includes('dns_records?')) {
+                    return ok([]);
+                }
+                return ok({});
+            });
+        }
+
+        function writes(fetchMock: ReturnType<typeof vi.fn>): string[] {
+            return describeCalls(fetchMock).filter((call: string): boolean => !call.startsWith('GET '));
+        }
+
+        it('updates a cname that already points to the Vera tunnel', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubForeign('tunnel-9.cfargotunnel.com');
+            await runTunnel(settings('dev', ['--routes-only']), { putParameter: vi.fn(), log: vi.fn() });
+            expect(writes(fetchMock)).toContain('PUT https://api.cloudflare.com/client/v4/zones/zone-1/dns_records/record-1');
+        });
+
+        it('aborts before any write when a cname points to another tunnel', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubForeign('other-tunnel.cfargotunnel.com');
+            const log = vi.fn();
+            await expect(runTunnel(settings('dev', ['--routes-only']), { putParameter: vi.fn(), log })).rejects.toThrow(
+                /api-dev\.example\.test.*other-tunnel.*--force/
+            );
+            expect(writes(fetchMock)).toEqual([]);
+            expect(log).toHaveBeenCalledWith('dns: api-dev.example.test -> other-tunnel.cfargotunnel.com');
+            expect(log).toHaveBeenCalledWith('dns: mail-dev.example.test -> (não existe)');
+        });
+
+        it('aborts without creating the tunnel when it does not exist yet and a cname is taken', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubFetch((url: string): Response => {
+                if (url.includes('/zones?name=')) {
+                    return ok([{ id: 'zone-1' }]);
+                }
+                if (url.includes('name=api-dev.example.test')) {
+                    return ok([{ id: 'record-1', name: 'api-dev.example.test', content: 'other-tunnel.cfargotunnel.com' }]);
+                }
+                return ok([]);
+            });
+            await expect(runTunnel(settings('dev', ['--routes-only']), { putParameter: vi.fn(), log: vi.fn() })).rejects.toThrow('--force');
+            expect(writes(fetchMock)).toEqual([]);
+        });
+
+        it('overwrites the foreign cname with --force', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubForeign('other-tunnel.cfargotunnel.com');
+            await runTunnel(settings('dev', ['--routes-only', '--force']), { putParameter: vi.fn(), log: vi.fn() });
+            expect(writes(fetchMock)).toContain('PUT https://api.cloudflare.com/client/v4/zones/zone-1/dns_records/record-1');
+        });
     });
 
     it('encodes query parameters', async () => {
@@ -176,24 +239,38 @@ describe('runTunnel', () => {
 });
 
 describe('putParameterWithAwsCli', () => {
-    it('sends the secret through stdin, never as an argument', () => {
+    it('sends the secret through a private temp file, never as an argument, and removes it', () => {
+        let file: string = '';
+        let mode: number = 0;
+        let content: string = '';
+        vi.mocked(execFileSync).mockImplementationOnce(((_command: string, args: string[]) => {
+            file = (args[args.indexOf('--cli-input-json') + 1] ?? '').replace('file://', '');
+            mode = statSync(file).mode & 0o777;
+            content = readFileSync(file, 'utf8');
+            return Buffer.from('');
+        }) as unknown as typeof execFileSync);
         putParameterWithAwsCli('/vera/tunnel-token', 'secret-value', settingsFrom(['dev'], ENV));
-        const [command, args, options] = vi.mocked(execFileSync).mock.calls.at(-1) as unknown as [string, string[], { input: string }];
+        const [command, args] = vi.mocked(execFileSync).mock.calls.at(-1) as unknown as [string, string[]];
         expect(command).toBe('aws');
         expect(args.join(' ')).not.toContain('secret-value');
         expect(args).toContain('profile-1');
-        expect(JSON.parse(options.input)).toEqual({
+        expect(file.startsWith('/')).toBe(true);
+        expect(mode).toBe(0o600);
+        expect(JSON.parse(content)).toEqual({
             Name: '/vera/tunnel-token',
             Value: 'secret-value',
             Type: 'SecureString',
             Overwrite: true
         });
+        expect(existsSync(file)).toBe(false);
     });
 
-    it('throws a fixed message without leaking the secret when aws fails', () => {
-        vi.mocked(execFileSync).mockImplementationOnce(() => {
+    it('throws a fixed message without leaking the secret and still removes the file when aws fails', () => {
+        let file: string = '';
+        vi.mocked(execFileSync).mockImplementationOnce(((_command: string, args: string[]) => {
+            file = (args[args.indexOf('--cli-input-json') + 1] ?? '').replace('file://', '');
             throw new Error('Command failed: aws ssm put-parameter --value secret-value');
-        });
+        }) as unknown as typeof execFileSync);
         let message: string = '';
         try {
             putParameterWithAwsCli('/vera/tunnel-token', 'secret-value', settingsFrom(['dev'], ENV));
@@ -202,5 +279,6 @@ describe('putParameterWithAwsCli', () => {
         }
         expect(message).toContain('/vera/tunnel-token');
         expect(message).not.toContain('secret-value');
+        expect(existsSync(file)).toBe(false);
     });
 });
