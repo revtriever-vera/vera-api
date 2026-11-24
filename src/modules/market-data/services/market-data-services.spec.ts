@@ -80,7 +80,8 @@ describe('selectQuoteProviders and the registry', () => {
         twelvedata: live('twelvedata'),
         alphavantage: live('alphavantage'),
         coingecko: live('coingecko'),
-        tesouro: live('tesouro')
+        tesouro: live('tesouro'),
+        cvm: live('cvm')
     } as unknown as Parameters<typeof selectQuoteProviders>[1];
 
     it('uses mock drivers for every group in mock mode', () => {
@@ -90,6 +91,7 @@ describe('selectQuoteProviders and the registry', () => {
         expect(providers.map((provider: QuoteProviderPort) => provider.provider).sort()).toEqual([
             'brapi',
             'coingecko',
+            'cvm',
             'finnhub',
             'tesouro'
         ]);
@@ -101,7 +103,7 @@ describe('selectQuoteProviders and the registry', () => {
             everyone
         );
 
-        expect(providers.map((provider: QuoteProviderPort) => provider.provider)).toEqual(['brapi', 'twelvedata', 'tesouro']);
+        expect(providers.map((provider: QuoteProviderPort) => provider.provider)).toEqual(['brapi', 'twelvedata', 'tesouro', 'cvm']);
     });
 
     it('orders the US chain by US_QUOTE_PROVIDERS and sizes chunks by the head provider', () => {

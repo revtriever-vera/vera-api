@@ -16,6 +16,10 @@ function bond(id: string): QuotableAsset {
     return { id, market: 'TESOURO', externalId: id, symbol: id, currency: 'BRL', quotesProvider: 'tesouro' };
 }
 
+function fund(id: string): QuotableAsset {
+    return { id, market: 'CVM', externalId: id, symbol: id, currency: 'BRL', quotesProvider: 'cvm' };
+}
+
 function stock(id: string): QuotableAsset {
     return { id, market: 'B3', externalId: id, symbol: id, currency: 'BRL', quotesProvider: 'brapi' };
 }
@@ -64,6 +68,19 @@ describe('ReferenceDataApplication', () => {
         expect(collect).toHaveBeenCalledWith('tesouro', [bond('t1')]);
         expect(save).toHaveBeenCalledWith(rate, expect.any(Date));
         expect(rateAge).toHaveBeenCalledWith('USD', 3);
+    });
+
+    it('quotes the held funds in the morning and again in the afternoon tick', async () => {
+        const { application, collect } = rig({ assets: [fund('f1'), bond('t1'), stock('s1')] });
+
+        await application.handleReference();
+        await application.handlePtax();
+
+        expect(collect.mock.calls).toEqual([
+            ['tesouro', [bond('t1')]],
+            ['cvm', [fund('f1')]],
+            ['cvm', [fund('f1')]]
+        ]);
     });
 
     it('skips the Tesouro fetch when no bond is held', async () => {

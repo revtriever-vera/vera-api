@@ -7,7 +7,8 @@ export const QUOTE_PROVIDER_IDS = {
     twelvedata: 'twelvedata',
     alphavantage: 'alphavantage',
     coingecko: 'coingecko',
-    tesouro: 'tesouro'
+    tesouro: 'tesouro',
+    cvm: 'cvm'
 } as const;
 
 export type QuoteProviderId = (typeof QUOTE_PROVIDER_IDS)[keyof typeof QUOTE_PROVIDER_IDS];
@@ -16,12 +17,15 @@ export const QUOTE_GROUPS = {
     brapi: 'brapi',
     usEquities: 'us_equities',
     coingecko: 'coingecko',
-    tesouro: 'tesouro'
+    tesouro: 'tesouro',
+    cvm: 'cvm'
 } as const;
 
 export type QuoteGroup = (typeof QUOTE_GROUPS)[keyof typeof QUOTE_GROUPS];
 
 export const SWEEP_GROUPS: readonly QuoteGroup[] = [QUOTE_GROUPS.brapi, QUOTE_GROUPS.usEquities, QUOTE_GROUPS.coingecko];
+
+export const EVERY_RUN_GROUPS: ReadonlySet<QuoteGroup> = new Set<QuoteGroup>([QUOTE_GROUPS.cvm]);
 
 export const GROUP_BY_PROVIDER: Readonly<Record<QuoteProviderId, QuoteGroup>> = {
     brapi: QUOTE_GROUPS.brapi,
@@ -29,14 +33,16 @@ export const GROUP_BY_PROVIDER: Readonly<Record<QuoteProviderId, QuoteGroup>> = 
     twelvedata: QUOTE_GROUPS.usEquities,
     alphavantage: QUOTE_GROUPS.usEquities,
     coingecko: QUOTE_GROUPS.coingecko,
-    tesouro: QUOTE_GROUPS.tesouro
+    tesouro: QUOTE_GROUPS.tesouro,
+    cvm: QUOTE_GROUPS.cvm
 };
 
 export const QUOTE_MARKETS = {
     b3: 'B3',
     us: 'US',
     crypto: 'CRYPTO',
-    tesouro: 'TESOURO'
+    tesouro: 'TESOURO',
+    cvm: 'CVM'
 } as const;
 
 export type QuoteMarket = (typeof QUOTE_MARKETS)[keyof typeof QUOTE_MARKETS];

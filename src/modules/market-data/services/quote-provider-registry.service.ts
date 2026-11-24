@@ -14,14 +14,16 @@ const LIVE_REQUIREMENTS: Readonly<Record<QuoteProviderId, (config: MarketDataSet
     twelvedata: (config: MarketDataSettings): boolean => config.TWELVEDATA_API_KEY !== undefined,
     alphavantage: (config: MarketDataSettings): boolean => config.ALPHAVANTAGE_API_KEY !== undefined,
     coingecko: (config: MarketDataSettings): boolean => config.COINGECKO_API_KEY !== undefined,
-    tesouro: (): boolean => true
+    tesouro: (): boolean => true,
+    cvm: (): boolean => true
 };
 
 const MOCK_PROVIDER_IDS: readonly QuoteProviderId[] = [
     QUOTE_PROVIDER_IDS.brapi,
     QUOTE_PROVIDER_IDS.finnhub,
     QUOTE_PROVIDER_IDS.coingecko,
-    QUOTE_PROVIDER_IDS.tesouro
+    QUOTE_PROVIDER_IDS.tesouro,
+    QUOTE_PROVIDER_IDS.cvm
 ];
 
 export function selectQuoteProviders(

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { ExchangeRateDomain } from '../domain/exchange-rate.domain';
-import { QUOTE_GROUPS, QuotableAsset, SUPPORTED_RATE_CURRENCIES } from '../domain/market-data.types';
+import { QUOTE_GROUPS, QuotableAsset, QuoteGroup, SUPPORTED_RATE_CURRENCIES } from '../domain/market-data.types';
 import { ageInDays } from '../domain/quote-staleness';
 import { ExchangeRatePort, FetchedRate } from '../ports/exchange-rate.port';
 import { HeldAssetsService } from '../services/held-assets.service';
@@ -23,19 +23,26 @@ export class ReferenceDataApplication {
     ) {}
 
     public async handleReference(): Promise<void> {
-        await this.refreshTreasuryQuotes();
+        await this.refreshGroups([QUOTE_GROUPS.tesouro, QUOTE_GROUPS.cvm]);
         await this.refreshRates();
     }
 
     public async handlePtax(): Promise<void> {
+        await this.refreshGroups([QUOTE_GROUPS.cvm]);
         await this.refreshRates();
     }
 
-    private async refreshTreasuryQuotes(): Promise<void> {
+    private async refreshGroups(groups: readonly QuoteGroup[]): Promise<void> {
         const assets: QuotableAsset[] = await this.catalog.findManyByIds(await this.held.listHeldAssetIds());
-        const bonds: QuotableAsset[] = assets.filter((asset: QuotableAsset): boolean => asset.quotesProvider === QUOTE_GROUPS.tesouro);
-        if (bonds.length > 0) {
-            await this.collector.collect(QUOTE_GROUPS.tesouro, bonds);
+        const byGroup: Map<string, QuotableAsset[]> = new Map<string, QuotableAsset[]>();
+        for (const asset of assets) {
+            byGroup.set(asset.quotesProvider, [...(byGroup.get(asset.quotesProvider) ?? []), asset]);
+        }
+        for (const group of groups) {
+            const inGroup: QuotableAsset[] = byGroup.get(group) ?? [];
+            if (inGroup.length > 0) {
+                await this.collector.collect(group, inGroup);
+            }
         }
     }
 
