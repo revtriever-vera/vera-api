@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TransactionalContext } from '../../../core/database/using-transaction.decorator';
 import { CompanyTrialService } from '../../identity/services/company-trial.service';
@@ -78,6 +78,15 @@ function build(options: Options = {}): {
 describe('OfferRedemptionService.redeem', () => {
     beforeAll(() => {
         TransactionalContext.set({ withTransaction: async <T>(fn: () => Promise<T>): Promise<T> => fn() } as unknown as DatabaseClient);
+    });
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(NOW);
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it('teste sem cartão: consome o uso, marca o e-mail, grava o resgate e abre o teste', async () => {
