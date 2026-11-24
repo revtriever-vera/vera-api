@@ -61,6 +61,21 @@ curl -s localhost:3333/health/ready
 
 O e-mail enviado pela API aparece em `http://localhost:8027`. A API sobe com o Swagger em `/docs` (quando `DOCS_ENABLED=true`) e o painel de filas em `/admin/queues` (quando `QUEUES_DASHBOARD_ENABLED=true`).
 
+### Servidor MCP da plataforma
+
+A equipe da plataforma opera a Vera por um cliente MCP (Claude Code, Claude Desktop) em `/mcp` (Streamable HTTP, sem sessão). Só existe na versão hospedada; na auto-hospedada responde 404.
+
+1. Entre no admin com uma conta da company de sistema (o login já pede o segundo fator) e crie um token: `POST /platform/tokens` com `{ "name": "meu notebook", "expiresInDays": 90 }`. O token (`vera_pat_...`) aparece só nessa resposta; o banco guarda apenas o hash. O padrão é 90 dias, no máximo 365. `GET /platform/tokens` lista e `DELETE /platform/tokens/:id` revoga na hora. Token não cria nem revoga token: só a sessão do admin.
+2. Conecte o cliente:
+
+```bash
+claude mcp add --transport http vera https://<api>/mcp --header "Authorization: Bearer <token>"
+```
+
+Ferramentas de leitura: `overview`, `list_accounts`, `get_account` (exige um motivo, grava `account.viewed` e o Dono vê o acesso), `list_signup_links`, `list_audit`, `billing_status`. Ferramentas de escrita: `create_signup_link`, `update_signup_link`, `disable_signup_link`, `billing_reconcile`, `billing_replay_events` (janela de até 7 dias). Ficam fora: acesso de suporte aos dados da conta, apagar qualquer coisa e mudar plano ou cobrança de uma conta.
+
+Toda chamada grava `mcp.tool_called` na trilha de auditoria (token, ferramenta, argumentos sem segredos, resultado). O limite é de 120 chamadas por minuto por token.
+
 ### Tick de fila
 
 ```bash

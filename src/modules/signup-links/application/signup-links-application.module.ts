@@ -10,6 +10,7 @@ import { PlansApplicationModule } from '../../plans/application/plans-applicatio
 import { BillingOfferAdapter } from '../services/billing-offer.adapter';
 import { LoginOfferAdapter } from '../services/login-offer.adapter';
 import { OfferRedemptionService } from '../services/offer-redemption.service';
+import { SignupLinksAdminService } from '../services/signup-links-admin.service';
 import { SignupLinkViewMapper } from '../services/signup-link-view.mapper';
 import { SignupOfferExporter } from '../services/signup-offer.exporter';
 import { TrialEmailMarkService } from '../services/trial-email-mark.service';
@@ -28,6 +29,7 @@ import { SignupLinksPublicApplication } from './signup-links-public.application'
         ThrottleModule
     ],
     providers: [
+        SignupLinksAdminService,
         SignupLinksAdminApplication,
         SignupLinksPublicApplication,
         OfferRedeemApplication,
@@ -38,6 +40,6 @@ import { SignupLinksPublicApplication } from './signup-links-public.application'
         BillingOfferAdapter,
         SignupOfferExporter
     ],
-    exports: [SignupLinksAdminApplication, SignupLinksPublicApplication, OfferRedeemApplication]
+    exports: [SignupLinksAdminApplication, SignupLinksPublicApplication, OfferRedeemApplication, SignupLinksAdminService]
 })
 export class SignupLinksApplicationModule {}

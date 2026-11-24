@@ -22,6 +22,14 @@ export class RevtrieverEventDomain {
         return this.events.listStalledReceived(before, limit);
     }
 
+    public async listRecent(limit: number): Promise<RevtrieverEvent[]> {
+        return this.events.listRecent(limit);
+    }
+
+    public async listReceivedBetween(from: Date, to: Date, limit: number): Promise<RevtrieverEvent[]> {
+        return this.events.listReceivedBetween(from, to, limit);
+    }
+
     public async listOfTypeSince(type: string, since: Date): Promise<RevtrieverEvent[]> {
         return this.events.listOfTypeSince(type, since);
     }

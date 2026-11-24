@@ -5,6 +5,7 @@ import { AuthIdentityDomain } from './auth-identity.domain';
 import { CompanyDomain } from './company.domain';
 import { SessionDomain } from './session.domain';
 import { InviteDomain } from './invite.domain';
+import { PlatformAccessTokenDomain } from './platform-access-token.domain';
 import { PlatformAuditDomain } from './platform-audit.domain';
 import { RecoveryCodeDomain } from './recovery-code.domain';
 import { UserDomain } from './user.domain';
@@ -20,6 +21,7 @@ import { UserTotpDomain } from './user-totp.domain';
         AccountDeletionLogDomain,
         InviteDomain,
         PlatformAuditDomain,
+        PlatformAccessTokenDomain,
         RecoveryCodeDomain,
         UserTotpDomain
     ],
@@ -31,6 +33,7 @@ import { UserTotpDomain } from './user-totp.domain';
         AccountDeletionLogDomain,
         InviteDomain,
         PlatformAuditDomain,
+        PlatformAccessTokenDomain,
         RecoveryCodeDomain,
         UserTotpDomain
     ]

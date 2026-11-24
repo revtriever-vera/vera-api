@@ -29,6 +29,7 @@ import { HealthModule } from './modules/health/health.module';
 import { IntegrationCredentialsModule } from './modules/integration-credentials/integration-credentials.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
+import { PlatformMcpModule } from './modules/platform-mcp/platform-mcp.module';
 import { SignupLinksModule } from './modules/signup-links/signup-links.module';
 import { IssuersModule } from './modules/issuers/issuers.module';
 import { MarketDataModule } from './modules/market-data/market-data.module';
@@ -89,6 +90,7 @@ const REDACTED_PATHS: string[] = [
         HealthModule,
         IdentityModule,
         PlatformAdminModule,
+        PlatformMcpModule,
         SignupLinksModule,
         IntegrationCredentialsModule,
         AllocationModule,

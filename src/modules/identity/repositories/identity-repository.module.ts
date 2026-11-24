@@ -5,6 +5,7 @@ import { AccountInvitesRepository } from './account-invites.repository';
 import { AccountDeletionLogRepository } from './account-deletion-log.repository';
 import { AuthIdentitiesRepository } from './auth-identities.repository';
 import { CompaniesRepository } from './companies.repository';
+import { PlatformAccessTokensRepository } from './platform-access-tokens.repository';
 import { PlatformAuditLogRepository } from './platform-audit-log.repository';
 import { SessionsRepository } from './sessions.repository';
 import { UserRecoveryCodesRepository } from './user-recovery-codes.repository';
@@ -21,6 +22,7 @@ import { UsersRepository } from './users.repository';
         AccountDeletionLogRepository,
         AccountInvitesRepository,
         PlatformAuditLogRepository,
+        PlatformAccessTokensRepository,
         UserTotpsRepository,
         UserRecoveryCodesRepository
     ],
@@ -32,6 +34,7 @@ import { UsersRepository } from './users.repository';
         AccountDeletionLogRepository,
         AccountInvitesRepository,
         PlatformAuditLogRepository,
+        PlatformAccessTokensRepository,
         UserTotpsRepository,
         UserRecoveryCodesRepository
     ]

@@ -653,6 +653,19 @@ export interface PaidUsageNotices {
     sentAt: Generated<Timestamp>;
 }
 
+export interface PlatformAccessTokens {
+    createdAt: Generated<Timestamp>;
+    createdByUserId: string;
+    expiresAt: Timestamp;
+    id: string;
+    lastUsedAt: Timestamp | null;
+    name: string;
+    revokedAt: Timestamp | null;
+    tokenHash: string;
+    tokenHint: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface PlatformAuditLog {
     action: string;
     createdAt: Generated<Timestamp>;
@@ -1188,6 +1201,7 @@ export interface DB {
     OnboardingStates: OnboardingStates;
     PaidUsageEntries: PaidUsageEntries;
     PaidUsageNotices: PaidUsageNotices;
+    PlatformAccessTokens: PlatformAccessTokens;
     PlatformAuditLog: PlatformAuditLog;
     PluggyCredentials: PluggyCredentials;
     PortfolioSettings: PortfolioSettings;

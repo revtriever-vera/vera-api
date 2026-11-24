@@ -71,6 +71,15 @@ export class BillingInvoicesRepository extends BareTenantRepository<'BillingInvo
             .execute();
     }
 
+    public async listOverdueAcrossTenants(limit: number): Promise<BillingInvoice[]> {
+        return this.selectSkipConstraint()
+            .selectAll()
+            .where('status', '=', INVOICE_STATUSES.overdue)
+            .orderBy('dueDate')
+            .limit(limit)
+            .execute();
+    }
+
     public async companiesWithOverdueAcrossTenants(limit: number): Promise<string[]> {
         const rows: { companyId: string }[] = await this.selectSkipConstraint()
             .select('companyId')
