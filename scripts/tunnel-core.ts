@@ -24,6 +24,7 @@ export interface TunnelSettings {
     readonly appPort: string;
     readonly mailpitPort: string;
     readonly routesOnly: boolean;
+    readonly force: boolean;
 }
 
 export interface TunnelDependencies {
@@ -50,6 +51,12 @@ interface Zone {
 interface DnsRecord {
     readonly id: string;
     readonly name: string;
+    readonly content?: string;
+}
+
+interface DnsPlan {
+    readonly route: Route;
+    readonly record: DnsRecord | undefined;
 }
 
 interface CallOptions {
@@ -69,7 +76,7 @@ function environmentOf(argument: string | undefined): TunnelEnvironment {
     if (argument === 'dev' || argument === 'prod') {
         return argument;
     }
-    throw new Error('uso: npx tsx scripts/tunnel.ts <dev|prod> [--routes-only]');
+    throw new Error('uso: npx tsx scripts/tunnel.ts <dev|prod> [--routes-only] [--force]');
 }
 
 function hostPrefixOf(env: NodeJS.ProcessEnv): string {
@@ -93,7 +100,8 @@ export function settingsFrom(args: readonly string[], env: NodeJS.ProcessEnv): T
         awsRegion: env['AWS_REGION'] ?? DEFAULT_REGION,
         appPort: env['PORT'] ?? DEFAULT_APP_PORT,
         mailpitPort: env['MAILPIT_UI_PORT'] ?? DEFAULT_MAILPIT_PORT,
-        routesOnly
+        routesOnly,
+        force: args.includes('--force')
     };
 }
 
@@ -130,15 +138,14 @@ async function findZone(settings: TunnelSettings): Promise<Zone> {
     return found;
 }
 
-async function findOrCreateTunnel(settings: TunnelSettings, name: string, deps: TunnelDependencies): Promise<Tunnel> {
+async function findTunnel(settings: TunnelSettings, name: string): Promise<Tunnel | undefined> {
     const base: string = `/accounts/${settings.accountId}/cfd_tunnel`;
     const tunnels: Tunnel[] = await call<Tunnel[]>(settings, `${base}?name=${name}&is_deleted=false`);
-    const existing: Tunnel | undefined = tunnels.find((tunnel: Tunnel): boolean => tunnel.name === name && tunnel.deleted_at === null);
-    if (existing) {
-        deps.log(`tunnel existente: ${existing.name}`);
-        return existing;
-    }
-    const created: Tunnel = await call<Tunnel>(settings, base, {
+    return tunnels.find((tunnel: Tunnel): boolean => tunnel.name === name && tunnel.deleted_at === null);
+}
+
+async function createTunnel(settings: TunnelSettings, name: string, deps: TunnelDependencies): Promise<Tunnel> {
+    const created: Tunnel = await call<Tunnel>(settings, `/accounts/${settings.accountId}/cfd_tunnel`, {
         method: 'POST',
         body: JSON.stringify({ name, config_src: 'cloudflare' })
     });
@@ -156,26 +163,74 @@ async function putIngress(settings: TunnelSettings, tunnelId: string, routes: re
     }
 }
 
-async function upsertDns(
+function targetOf(tunnelId: string): string {
+    return `${tunnelId}.cfargotunnel.com`;
+}
+
+async function planDns(settings: TunnelSettings, zoneId: string, routes: readonly Route[]): Promise<DnsPlan[]> {
+    const plans: DnsPlan[] = [];
+    for (const route of routes) {
+        const records: DnsRecord[] = await call<DnsRecord[]>(
+            settings,
+            `/zones/${zoneId}/dns_records?name=${encodeURIComponent(route.hostname)}&type=CNAME`
+        );
+        plans.push({ route, record: records[0] });
+    }
+    return plans;
+}
+
+function currentTarget(record: DnsRecord | undefined): string {
+    if (!record) {
+        return '(não existe)';
+    }
+    return record.content ?? '(sem conteúdo)';
+}
+
+function isForeign(record: DnsRecord | undefined, expectedTarget: string | undefined): boolean {
+    if (!record) {
+        return false;
+    }
+    return expectedTarget === undefined || record.content !== expectedTarget;
+}
+
+function assertNoForeignRecords(
+    plans: readonly DnsPlan[],
+    expectedTarget: string | undefined,
+    settings: TunnelSettings,
+    deps: TunnelDependencies
+): void {
+    for (const { route, record } of plans) {
+        deps.log(`dns: ${route.hostname} -> ${currentTarget(record)}`);
+    }
+    const foreign: string[] = plans
+        .filter((plan: DnsPlan): boolean => isForeign(plan.record, expectedTarget))
+        .map((plan: DnsPlan): string => `${plan.route.hostname} (aponta para ${currentTarget(plan.record)})`);
+    if (foreign.length === 0 || settings.force) {
+        return;
+    }
+    throw new Error(
+        `abortado sem alterar nada: CNAME existente aponta para outro alvo que não ${expectedTarget ?? 'o túnel da Vera'}: ${foreign.join(', ')}. ` +
+            'Se for mesmo para sobrescrever, rode com --force'
+    );
+}
+
+async function applyDns(
     settings: TunnelSettings,
     zoneId: string,
-    hostname: string,
+    plans: readonly DnsPlan[],
     tunnelId: string,
     deps: TunnelDependencies
 ): Promise<void> {
-    const records: DnsRecord[] = await call<DnsRecord[]>(
-        settings,
-        `/zones/${zoneId}/dns_records?name=${encodeURIComponent(hostname)}&type=CNAME`
-    );
-    const existing: DnsRecord | undefined = records[0];
-    const payload: string = JSON.stringify({ type: 'CNAME', name: hostname, content: `${tunnelId}.cfargotunnel.com`, proxied: true });
-    if (existing) {
-        await call(settings, `/zones/${zoneId}/dns_records/${existing.id}`, { method: 'PUT', body: payload });
-        deps.log(`CNAME atualizado: ${hostname}`);
-        return;
+    for (const { route, record } of plans) {
+        const payload: string = JSON.stringify({ type: 'CNAME', name: route.hostname, content: targetOf(tunnelId), proxied: true });
+        if (record) {
+            await call(settings, `/zones/${zoneId}/dns_records/${record.id}`, { method: 'PUT', body: payload });
+            deps.log(`CNAME atualizado: ${route.hostname}`);
+            continue;
+        }
+        await call(settings, `/zones/${zoneId}/dns_records`, { method: 'POST', body: payload });
+        deps.log(`CNAME criado: ${route.hostname}`);
     }
-    await call(settings, `/zones/${zoneId}/dns_records`, { method: 'POST', body: payload });
-    deps.log(`CNAME criado: ${hostname}`);
 }
 
 async function storeToken(settings: TunnelSettings, tunnelId: string, deps: TunnelDependencies): Promise<void> {
@@ -208,11 +263,16 @@ export function putParameterWithAwsCli(name: string, value: string, settings: Tu
 export async function runTunnel(settings: TunnelSettings, deps: TunnelDependencies): Promise<void> {
     const routes: Route[] = routesOf(settings);
     const zone: Zone = await findZone(settings);
-    const tunnel: Tunnel = await findOrCreateTunnel(settings, `vera-${settings.environment}`, deps);
-    await putIngress(settings, tunnel.id, routes, deps);
-    for (const route of routes) {
-        await upsertDns(settings, zone.id, route.hostname, tunnel.id, deps);
+    const name: string = `vera-${settings.environment}`;
+    const existing: Tunnel | undefined = await findTunnel(settings, name);
+    const plans: DnsPlan[] = await planDns(settings, zone.id, routes);
+    assertNoForeignRecords(plans, existing ? targetOf(existing.id) : undefined, settings, deps);
+    if (existing) {
+        deps.log(`tunnel existente: ${existing.name}`);
     }
+    const tunnel: Tunnel = existing ?? (await createTunnel(settings, name, deps));
+    await putIngress(settings, tunnel.id, routes, deps);
+    await applyDns(settings, zone.id, plans, tunnel.id, deps);
     if (!settings.routesOnly) {
         await storeToken(settings, tunnel.id, deps);
     }

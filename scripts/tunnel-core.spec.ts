@@ -135,7 +135,7 @@ describe('runTunnel', () => {
                 return ok([{ id: 'tunnel-9', name: 'vera-prod', deleted_at: null }]);
             }
             if (url.includes('dns_records?')) {
-                return ok([{ id: 'record-1', name: 'api.example.test' }]);
+                return ok([{ id: 'record-1', name: 'api.example.test', content: 'tunnel-9.cfargotunnel.com' }]);
             }
             return ok({});
         });
@@ -149,6 +149,67 @@ describe('runTunnel', () => {
         expect(calls.some((call: string): boolean => call.endsWith('/token'))).toBe(false);
         expect(putParameter).not.toHaveBeenCalled();
         expect(log).toHaveBeenCalledWith('tunnel existente: vera-prod');
+    });
+
+    describe('guard against foreign cnames', () => {
+        function stubForeign(content: string): ReturnType<typeof vi.fn> {
+            return stubFetch((url: string): Response => {
+                if (url.includes('/zones?name=')) {
+                    return ok([{ id: 'zone-1' }]);
+                }
+                if (url.includes('cfd_tunnel?name=')) {
+                    return ok([{ id: 'tunnel-9', name: 'vera-dev', deleted_at: null }]);
+                }
+                if (url.includes('name=api-dev.example.test')) {
+                    return ok([{ id: 'record-1', name: 'api-dev.example.test', content }]);
+                }
+                if (url.includes('dns_records?')) {
+                    return ok([]);
+                }
+                return ok({});
+            });
+        }
+
+        function writes(fetchMock: ReturnType<typeof vi.fn>): string[] {
+            return describeCalls(fetchMock).filter((call: string): boolean => !call.startsWith('GET '));
+        }
+
+        it('updates a cname that already points to the Vera tunnel', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubForeign('tunnel-9.cfargotunnel.com');
+            await runTunnel(settings('dev', ['--routes-only']), { putParameter: vi.fn(), log: vi.fn() });
+            expect(writes(fetchMock)).toContain('PUT https://api.cloudflare.com/client/v4/zones/zone-1/dns_records/record-1');
+        });
+
+        it('aborts before any write when a cname points to another tunnel', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubForeign('other-tunnel.cfargotunnel.com');
+            const log = vi.fn();
+            await expect(runTunnel(settings('dev', ['--routes-only']), { putParameter: vi.fn(), log })).rejects.toThrow(
+                /api-dev\.example\.test.*other-tunnel.*--force/
+            );
+            expect(writes(fetchMock)).toEqual([]);
+            expect(log).toHaveBeenCalledWith('dns: api-dev.example.test -> other-tunnel.cfargotunnel.com');
+            expect(log).toHaveBeenCalledWith('dns: mail-dev.example.test -> (não existe)');
+        });
+
+        it('aborts without creating the tunnel when it does not exist yet and a cname is taken', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubFetch((url: string): Response => {
+                if (url.includes('/zones?name=')) {
+                    return ok([{ id: 'zone-1' }]);
+                }
+                if (url.includes('name=api-dev.example.test')) {
+                    return ok([{ id: 'record-1', name: 'api-dev.example.test', content: 'other-tunnel.cfargotunnel.com' }]);
+                }
+                return ok([]);
+            });
+            await expect(runTunnel(settings('dev', ['--routes-only']), { putParameter: vi.fn(), log: vi.fn() })).rejects.toThrow('--force');
+            expect(writes(fetchMock)).toEqual([]);
+        });
+
+        it('overwrites the foreign cname with --force', async () => {
+            const fetchMock: ReturnType<typeof vi.fn> = stubForeign('other-tunnel.cfargotunnel.com');
+            await runTunnel(settings('dev', ['--routes-only', '--force']), { putParameter: vi.fn(), log: vi.fn() });
+            expect(writes(fetchMock)).toContain('PUT https://api.cloudflare.com/client/v4/zones/zone-1/dns_records/record-1');
+        });
     });
 
     it('encodes query parameters', async () => {

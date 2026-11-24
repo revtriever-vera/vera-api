@@ -97,7 +97,7 @@ export AWS_PROFILE=<perfil-aws-do-ambiente>
 npx tsx scripts/tunnel.ts dev
 ```
 
-O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reaproveita o túnel `vera-<ambiente>`, publica `<prefixo>api[-dev].<domínio>` (em dev também `<prefixo>mail-dev.<domínio>`, o Mailpit; o prefixo é o `VERA_HOST_PREFIX`, vazio por padrão), cria ou atualiza os CNAMEs e grava o token do túnel no SSM em `/vera/tunnel-token` usando o perfil AWS informado. Com `--routes-only` só mexe em rotas e DNS, sem AWS. `PORT`, `MAILPIT_UI_PORT` e `AWS_REGION` ajustam as portas locais e a região. Atenção: rodar com `prod` e o perfil de produção troca o túnel de produção.
+O argumento `dev` ou `prod` é obrigatório, sem padrão. O script cria ou reaproveita o túnel `vera-<ambiente>`, publica `<prefixo>api[-dev].<domínio>` (em dev também `<prefixo>mail-dev.<domínio>`, o Mailpit; o prefixo é o `VERA_HOST_PREFIX`, vazio por padrão), cria ou atualiza os CNAMEs e grava o token do túnel no SSM em `/vera/tunnel-token` usando o perfil AWS informado. Com `--routes-only` só mexe em rotas e DNS, sem AWS. Antes de qualquer escrita o script lista o alvo atual de cada host e aborta se algum CNAME existente apontar para outro túnel (de outro produto na mesma zona); `--force` sobrescreve. `PORT`, `MAILPIT_UI_PORT` e `AWS_REGION` ajustam as portas locais e a região. Atenção: rodar com `prod` e o perfil de produção troca o túnel de produção.
 
 ### Banco
 
