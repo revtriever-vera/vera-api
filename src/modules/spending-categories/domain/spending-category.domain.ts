@@ -3,6 +3,7 @@ import { isUniqueViolationError } from '../../../core/database/database.errors';
 import { SpendingCategoriesRepository } from '../repositories/spending-categories.repository';
 import { CategoryLimitReachedError, CategoryNameTakenError } from './categories.errors';
 import { CATEGORY_KINDS, CategoryKind, Flexibility, IconKey, MAX_USER_CATEGORIES, SpendingCategory } from './categories.types';
+import { isSystemCategoryName } from './system-category-names';
 import { SYSTEM_CATEGORIES } from './system-categories';
 
 export interface CreateCategoryInput {
@@ -39,17 +40,27 @@ export class SpendingCategoryDomain {
         if (existing.filter((item: SpendingCategory): boolean => item.systemKey === null).length >= MAX_USER_CATEGORIES) {
             throw new CategoryLimitReachedError(MAX_USER_CATEGORIES);
         }
+        this.assertNotDefaultName(input.name, null);
         const position: number = existing.reduce((highest: number, item: SpendingCategory) => Math.max(highest, item.position), 0) + 1;
         const flexibility: Flexibility | null = input.kind === CATEGORY_KINDS.expense ? input.flexibility : null;
         return this.guardingName(async () => this.categories.create({ ...input, flexibility, position }));
     }
 
-    public async update(id: string, input: UpdateCategoryInput): Promise<SpendingCategory | null> {
+    public async update(id: string, input: UpdateCategoryInput, ownSystemKey: string | null): Promise<SpendingCategory | null> {
+        if (typeof input.name === 'string') {
+            this.assertNotDefaultName(input.name, ownSystemKey);
+        }
         return this.guardingName(async () => this.categories.updateFields(id, input));
     }
 
     public async remove(id: string): Promise<void> {
         await this.categories.softDelete(id);
+    }
+
+    private assertNotDefaultName(name: string, ownSystemKey: string | null): void {
+        if (isSystemCategoryName(name, ownSystemKey)) {
+            throw new CategoryNameTakenError();
+        }
     }
 
     private async guardingName<T>(operation: () => Promise<T>): Promise<T> {

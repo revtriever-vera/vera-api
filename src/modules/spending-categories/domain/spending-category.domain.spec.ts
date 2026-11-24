@@ -80,6 +80,17 @@ describe('SpendingCategoryDomain.create', () => {
         );
     });
 
+    it('recusa nome igual ao de uma categoria padrão, em qualquer idioma e sem diferenciar caixa ou acento', async () => {
+        const create: ReturnType<typeof vi.fn> = vi.fn();
+
+        for (const name of ['lazer', 'LAZER', ' Lazer ', 'leisure', 'educacao', 'Outros GASTOS']) {
+            await expect(
+                build({ create }).create({ name, kind: 'expense', flexibility: 'flexible', icon: 'Film' }, [])
+            ).rejects.toBeInstanceOf(CategoryNameTakenError);
+        }
+        expect(create).not.toHaveBeenCalled();
+    });
+
     it('deixa passar outros erros', async () => {
         const boom: Error = new Error('boom');
 
@@ -103,8 +114,19 @@ describe('SpendingCategoryDomain.update e remove', () => {
             .mockRejectedValueOnce(UNIQUE_VIOLATION);
         const domain: SpendingCategoryDomain = build({ updateFields });
 
-        await expect(domain.update('c1', { name: 'Novo' })).resolves.toMatchObject({ id: 'c1' });
-        await expect(domain.update('c1', { name: 'Repetido' })).rejects.toBeInstanceOf(CategoryNameTakenError);
+        await expect(domain.update('c1', { name: 'Novo' }, null)).resolves.toMatchObject({ id: 'c1' });
+        await expect(domain.update('c1', { name: 'Repetido' }, null)).rejects.toBeInstanceOf(CategoryNameTakenError);
+    });
+
+    it('recusa renomear para o nome de uma padrão, mas a própria padrão pode manter o seu', async () => {
+        const updateFields: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(makeCategory({ id: 'c1' }));
+        const domain: SpendingCategoryDomain = build({ updateFields });
+
+        await expect(domain.update('c1', { name: 'lazer' }, null)).rejects.toBeInstanceOf(CategoryNameTakenError);
+        await expect(domain.update('c2', { name: 'Moradia' }, 'leisure')).rejects.toBeInstanceOf(CategoryNameTakenError);
+        await expect(domain.update('c3', { name: 'Lazer' }, 'leisure')).resolves.toMatchObject({ id: 'c1' });
+        await expect(domain.update('c3', { name: null }, 'leisure')).resolves.toMatchObject({ id: 'c1' });
+        expect(updateFields).toHaveBeenCalledTimes(2);
     });
 
     it('lista, remove e devolve as ativas', async () => {

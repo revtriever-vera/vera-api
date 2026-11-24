@@ -68,7 +68,7 @@ export class CategoryApplication {
     public async update(id: string, payload: UpdateCategoryPayload): Promise<CategoryView> {
         const current: SpendingCategory = await this.reader.requireById(id);
         this.assertUpdateAllowed(current, payload);
-        const updated: SpendingCategory | null = await this.categories.update(id, payload);
+        const updated: SpendingCategory | null = await this.categories.update(id, payload, current.systemKey);
         if (updated === null) {
             throw new CategoryNotFoundError(id);
         }
