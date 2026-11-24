@@ -3,6 +3,7 @@ import { makeFinancialAccount } from '../../../../test/support/spending-factorie
 import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { FinancialAccountService } from '../services/financial-account.service';
+import { InstitutionLogoService } from '../services/institution-logo.service';
 import { AccountApplication } from './account.application';
 
 function build(): { application: AccountApplication; removeFileAccount: ReturnType<typeof vi.fn>; rename: ReturnType<typeof vi.fn> } {
@@ -21,7 +22,8 @@ function build(): { application: AccountApplication; removeFileAccount: ReturnTy
                     Promise.resolve(ids.includes('a1') ? [{ accountId: 'a1', transactionCount: 3, lastTransactionDate: '2026-09-30' }] : [])
                 )
         } as unknown as TransactionDomain,
-        { removeFileAccount } as unknown as FinancialAccountService
+        { removeFileAccount } as unknown as FinancialAccountService,
+        new InstitutionLogoService({ sha256Hex: (value: string): string => `sig-${value}` })
     );
     return { application, removeFileAccount, rename };
 }

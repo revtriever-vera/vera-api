@@ -76,3 +76,13 @@ export class InvalidCorrectionRuleError extends AppError {
         });
     }
 }
+
+export class InstitutionLogoNotFoundError extends AppError {
+    public constructor() {
+        super({
+            code: 'transactions.logo_not_found',
+            status: 404,
+            detail: 'The institution logo does not exist or could not be fetched.'
+        });
+    }
+}

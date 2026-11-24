@@ -4,10 +4,11 @@ import { ThrottleModule } from '../../../../core/throttle/throttle.module';
 import { IdentityApplicationModule } from '../../../identity/application/identity-application.module';
 import { TransactionsApplicationModule } from '../../application/transactions-application.module';
 import { AccountsController } from './accounts.controller';
+import { InstitutionLogosController } from './institution-logos.controller';
 import { TransactionsController } from './transactions.controller';
 
 @Module({
     imports: [TransactionsApplicationModule, IdentityApplicationModule, ThrottleModule, ContextModule],
-    controllers: [TransactionsController, AccountsController]
+    controllers: [TransactionsController, AccountsController, InstitutionLogosController]
 })
 export class TransactionsHttpModule {}

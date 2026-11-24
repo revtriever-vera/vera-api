@@ -48,13 +48,16 @@ describe('transaction mapper', () => {
     it('monta a visão da conta pela origem e pelas estatísticas', () => {
         const stats = { accountId: 'a', transactionCount: 4, lastTransactionDate: '2026-09-30' };
 
-        expect(toAccountView(makeFinancialAccount({ provider: 'pluggy', externalId: 'x', kind: 'credit_card' }), stats)).toMatchObject({
+        expect(
+            toAccountView(makeFinancialAccount({ provider: 'pluggy', externalId: 'x', kind: 'credit_card' }), stats, null)
+        ).toMatchObject({
             source: 'pluggy',
             kind: 'credit_card',
             transactionCount: 4,
             lastTransactionDate: '2026-09-30'
         });
-        expect(toAccountView(makeFinancialAccount(), undefined)).toMatchObject({
+        expect(toAccountView(makeFinancialAccount(), undefined, '/spending/institution-logos/t')).toMatchObject({
+            institutionLogoUrl: '/spending/institution-logos/t',
             source: 'file',
             transactionCount: 0,
             lastTransactionDate: null

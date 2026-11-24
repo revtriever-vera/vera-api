@@ -4,13 +4,15 @@ import { TransactionDomain } from '../domain/transaction.domain';
 import { toAccountView } from '../domain/transaction.mapper';
 import { AccountStats, AccountView, FinancialAccount } from '../domain/transactions.types';
 import { FinancialAccountService } from '../services/financial-account.service';
+import { InstitutionLogoImage, InstitutionLogoService } from '../services/institution-logo.service';
 
 @Injectable()
 export class AccountApplication {
     public constructor(
         private readonly accounts: FinancialAccountDomain,
         private readonly transactions: TransactionDomain,
-        private readonly accountService: FinancialAccountService
+        private readonly accountService: FinancialAccountService,
+        private readonly logos: InstitutionLogoService
     ) {}
 
     public async list(): Promise<{ accounts: AccountView[] }> {
@@ -21,16 +23,24 @@ export class AccountApplication {
         const byAccount: Map<string, AccountStats> = new Map<string, AccountStats>(
             stats.map((entry: AccountStats): [string, AccountStats] => [entry.accountId, entry])
         );
-        return { accounts: accounts.map((account: FinancialAccount): AccountView => toAccountView(account, byAccount.get(account.id))) };
+        return {
+            accounts: accounts.map((account: FinancialAccount): AccountView =>
+                toAccountView(account, byAccount.get(account.id), this.logos.pathFor(account.institutionLogoUrl))
+            )
+        };
     }
 
     public async rename(id: string, name: string): Promise<AccountView> {
         const renamed: FinancialAccount = await this.accounts.rename(id, name);
         const [stats] = await this.transactions.statsByAccount([id]);
-        return toAccountView(renamed, stats);
+        return toAccountView(renamed, stats, this.logos.pathFor(renamed.institutionLogoUrl));
     }
 
     public async remove(id: string): Promise<void> {
         await this.accountService.removeFileAccount(id);
+    }
+
+    public async logo(token: string): Promise<InstitutionLogoImage> {
+        return this.logos.load(token);
     }
 }

@@ -68,13 +68,13 @@ export function toTransactionView(row: Transaction, accountName: string, isRecur
     };
 }
 
-export function toAccountView(account: FinancialAccount, stats: AccountStats | undefined): AccountView {
+export function toAccountView(account: FinancialAccount, stats: AccountStats | undefined, logoPath: string | null): AccountView {
     return {
         id: account.id,
         name: account.name,
         kind: toAccountKind(account.kind),
         institutionName: account.institutionName,
-        institutionLogoUrl: account.institutionLogoUrl,
+        institutionLogoUrl: logoPath,
         numberLast4: account.numberLast4,
         currency: account.currency,
         source: account.provider === null ? 'file' : 'pluggy',
