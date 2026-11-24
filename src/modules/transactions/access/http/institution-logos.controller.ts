@@ -1,4 +1,5 @@
-import { Controller, Get, Header, Param, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Header, Param, Res, StreamableFile } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiOperation, ApiParam, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { RateLimit } from '../../../../core/throttle/rate-limit.decorator';
@@ -6,7 +7,7 @@ import { AccountApplication } from '../../application/account.application';
 import type { InstitutionLogoImage } from '../../services/institution-logo.service';
 import { InstitutionLogoParamsDto } from '../../validation/transactions.schemas';
 
-const CACHE_CONTROL: string = 'public, max-age=86400, immutable';
+const CACHE_CONTROL: string = 'public, max-age=86400';
 const LOGOS_PER_WINDOW: number = 600;
 const WINDOW_SECONDS: number = 15 * 60;
 
@@ -16,7 +17,6 @@ export class InstitutionLogosController {
     public constructor(private readonly accounts: AccountApplication) {}
 
     @Get(':token')
-    @Header('Cache-Control', CACHE_CONTROL)
     @Header('X-Content-Type-Options', 'nosniff')
     @Header('Cross-Origin-Resource-Policy', 'cross-origin')
     @RateLimit({
@@ -45,8 +45,9 @@ export class InstitutionLogosController {
         description: 'Too many calls from this IP (core.too_many_attempts)',
         example: { type: 'core.too_many_attempts', title: 'TooManyAttemptsError', status: 429 }
     })
-    public async logo(@Param() params: InstitutionLogoParamsDto): Promise<StreamableFile> {
+    public async logo(@Param() params: InstitutionLogoParamsDto, @Res({ passthrough: true }) response: Response): Promise<StreamableFile> {
         const image: InstitutionLogoImage = await this.accounts.logo(params.token);
+        response.setHeader('Cache-Control', CACHE_CONTROL);
         return new StreamableFile(image.content, { type: image.contentType });
     }
 }
