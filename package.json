@@ -27,6 +27,7 @@
     "migrate:down": "kysely migrate:down",
     "migrate:make": "kysely migrate:make",
     "codegen": "kysely-codegen --out-file src/core/database/generated/database.types.ts && prettier --write src/core/database/generated/database.types.ts",
+    "ci:local": "bash scripts/ci-local.sh",
     "check:migrations": "tsx scripts/check-migration-names.ts",
     "issuers:compare": "tsx scripts/issuers-compare-sources.ts",
     "env:pull": "tsx scripts/env-pull.ts",
