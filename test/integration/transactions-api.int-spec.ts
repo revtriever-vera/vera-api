@@ -42,6 +42,7 @@ interface AccountBody {
     readonly id: string;
     readonly name: string;
     readonly source: string;
+    readonly institutionLogoUrl?: string | null;
     readonly transactionCount: number;
     readonly lastTransactionDate: string | null;
 }
@@ -393,7 +394,7 @@ describe('transactions api', () => {
                 id: provider,
                 name: 'Itaú',
                 source: 'pluggy',
-                institutionLogoUrl: 'https://logos.example/connectors/itau.png',
+                institutionLogoUrl: expect.stringMatching(/^\/spending\/institution-logos\/[\w-]+\.[0-9a-f]{64}$/) as string,
                 transactionCount: 2,
                 lastTransactionDate: '2026-09-12'
             },
@@ -405,6 +406,41 @@ describe('transactions api', () => {
         expect(again).toMatchObject({ status: 404, body: { type: 'transactions.account_not_found' } });
         const remaining = await list(owner, 'month=2026-09');
         expect(remaining.body.totals.count).toBe(2);
+    });
+
+    it('logo do banco: rota pública serve a imagem pela API, com cache, e recusa token adulterado', async () => {
+        const owner: Account = await harness.signUp('logo');
+        await seedAccount(owner, 'provider', 'Itaú');
+        const listed = await harness.call<{ accounts: AccountBody[] }>(owner.token, 'GET', '/spending/accounts');
+        const path: string = listed.body.accounts[0]?.institutionLogoUrl ?? '';
+        const realFetch: typeof fetch = globalThis.fetch;
+        const upstream: string[] = [];
+        globalThis.fetch = (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]): Promise<Response> => {
+            if (typeof input === 'string' && input.startsWith('https://logos.example/')) {
+                upstream.push(input);
+                return Promise.resolve(new Response(new Uint8Array([137, 80, 78, 71]), { headers: { 'content-type': 'image/png' } }));
+            }
+            return realFetch(input, init);
+        };
+
+        try {
+            const first = await harness.callRaw(null, path);
+            const second = await harness.callRaw(null, path);
+            const forged = await harness.callRaw(null, `${path.slice(0, -1)}0`);
+            const stranger = await harness.callRaw(null, '/spending/institution-logos/abc.def');
+
+            expect(first.status).toBe(200);
+            expect(first.headers.get('content-type')).toBe('image/png');
+            expect(first.headers.get('cache-control')).toBe('public, max-age=86400');
+            expect([...first.bytes]).toEqual([137, 80, 78, 71]);
+            expect(second.status).toBe(200);
+            expect(upstream).toEqual(['https://logos.example/connectors/itau.png']);
+            expect(forged.status).toBe(404);
+            expect(forged.headers.get('cache-control')).not.toContain('public');
+            expect(stranger.status).toBe(404);
+        } finally {
+            globalThis.fetch = realFetch;
+        }
     });
 
     it('isolamento: a company B não lista, não edita nem lê a contagem da A', async () => {
