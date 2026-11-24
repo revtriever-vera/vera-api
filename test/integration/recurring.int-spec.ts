@@ -588,7 +588,7 @@ describe('recurring', () => {
         expect(rerun.body.alerts.filter((item) => item.kind === 'price_increase')).toEqual([]);
     });
 
-    it('a segunda cobrança no valor novo mantém o alerta de aumento, ancorado na primeira cobrança do valor novo', async () => {
+    it('a segunda cobrança no valor novo encerra o alerta de aumento', async () => {
         const { owner, accountId } = await raised('increase-gone');
         await detect(owner);
         await ingest(owner, accountId, monthly('nfmore', 'NETFLIX.COM', -5590, [1]));
@@ -597,8 +597,7 @@ describe('recurring', () => {
         const response = await harness.call<OverviewBody>(owner.token, 'GET', '/spending/recurring');
 
         const raisedAlerts = response.body.alerts.filter((item) => item.kind === 'price_increase');
-        expect(raisedAlerts).toHaveLength(1);
-        expect(raisedAlerts[0]).toMatchObject({ occurredOn: daysAgo(5) });
+        expect(raisedAlerts).toEqual([]);
     });
 
     it('"Visto" só vale para o alerta da própria company e só para quem edita', async () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { requestLogLevel, requestLogProps } from './http-log';
 
 function request(url: string, originalUrl?: string): IncomingMessage {
-    return { url, originalUrl } as unknown as IncomingMessage;
+    return { url, originalUrl, headers: {} } as unknown as IncomingMessage;
 }
 
 function response(statusCode: number, headers: Record<string, string> = {}, headersSent: boolean = true): ServerResponse {

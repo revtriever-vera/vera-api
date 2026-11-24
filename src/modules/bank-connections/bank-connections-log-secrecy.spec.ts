@@ -40,8 +40,9 @@ function captureFilter(): Capture {
 }
 
 function respondThrough(capture: Capture, error: unknown): void {
-    const response: { status: (code: number) => { json: (body: unknown) => void } } = {
-        status: () => ({ json: (body: unknown): number => capture.bodies.push(body) })
+    const sender: { json: (body: unknown) => number } = { json: (body: unknown): number => capture.bodies.push(body) };
+    const response: { status: (code: number) => { type: (contentType: string) => typeof sender } } = {
+        status: () => ({ type: () => sender })
     };
     capture.filter.catch(error, { switchToHttp: () => ({ getResponse: () => response }) } as unknown as ArgumentsHost);
 }
