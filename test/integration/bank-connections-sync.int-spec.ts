@@ -21,6 +21,8 @@ const NUBANK: string = MOCK_ITEM_NUBANK;
 const ITAU: string = MOCK_ITEM_ITAU;
 const SYNC_TYPE: string = 'bank-connections.sync.requested';
 
+const LOGO_PATH: RegExp = /^\/spending\/institution-logos\/[\w-]+\.[0-9a-f]{64}$/;
+
 interface ConnectionBody {
     readonly id: string;
     readonly status: string;
@@ -180,18 +182,19 @@ describe('bank connections sync', () => {
             ['Itaú Conta Corrente']
         ]);
         expect(connections.map((connection) => connection.institutionLogoUrl)).toEqual([
-            'https://logos.example/connectors/nubank.png',
-            'https://logos.example/connectors/itau.png'
+            expect.stringMatching(LOGO_PATH),
+            expect.stringMatching(LOGO_PATH)
         ]);
+        expect(JSON.stringify(connections)).not.toContain('logos.example');
         const listedAccounts = await harness.call<{ accounts: { name: string; institutionLogoUrl: string | null }[] }>(
             account.token,
             'GET',
             '/spending/accounts'
         );
         expect(listedAccounts.body.accounts.map((entry) => [entry.name, entry.institutionLogoUrl]).sort()).toEqual([
-            ['Itaú Conta Corrente', 'https://logos.example/connectors/itau.png'],
-            ['Nubank Cartão', 'https://logos.example/connectors/nubank.png'],
-            ['Nubank Conta', 'https://logos.example/connectors/nubank.png']
+            ['Itaú Conta Corrente', expect.stringMatching(LOGO_PATH)],
+            ['Nubank Cartão', expect.stringMatching(LOGO_PATH)],
+            ['Nubank Conta', expect.stringMatching(LOGO_PATH)]
         ]);
         expect(connections.every((connection) => connection.status === 'active' && !connection.syncing)).toBe(true);
         expect(connections.every((connection) => connection.lastRun?.status === 'succeeded')).toBe(true);
