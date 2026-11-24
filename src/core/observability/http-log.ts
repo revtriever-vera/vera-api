@@ -21,7 +21,7 @@ export function requestLogProps(req: IncomingMessage, res: ServerResponse): Reco
     if (!res.headersSent) {
         return {};
     }
-    const locale: string = resolveLocale(req.headers?.['accept-language']);
+    const locale: string = resolveLocale(req.headers['accept-language']);
     const requestId: number | string | string[] | undefined = res.getHeader(REQUEST_ID_HEADER);
     return typeof requestId === 'string' ? { requestId, locale } : { locale };
 }
