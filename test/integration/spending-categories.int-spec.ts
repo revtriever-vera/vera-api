@@ -190,6 +190,32 @@ describe('spending categories', () => {
         expect([nullName.status, nullName.body.type]).toEqual([422, 'categories.name_required']);
     });
 
+    it('recusa nome de categoria padrão (gravada com nome nulo) ao criar e ao renomear, e a padrão mantém o seu', async () => {
+        const account: Account = await harness.signUp('default-names');
+        const categories: CategoryBody[] = await list(account);
+        const leisure: CategoryBody = byKey(categories, 'leisure');
+        expect(leisure.name).toBeNull();
+
+        const create = await harness.call<ProblemBody>(account.token, 'POST', '/spending/categories', {
+            name: 'lazer',
+            kind: 'expense',
+            flexibility: 'flexible',
+            icon: 'Film'
+        });
+        const mine: CategoryBody = await createExpense(account, 'Pets');
+        const rename = await harness.call<ProblemBody>(account.token, 'PATCH', `/spending/categories/${mine.id}`, { name: 'Moradia' });
+        const swap = await harness.call<ProblemBody>(account.token, 'PATCH', `/spending/categories/${leisure.id}`, { name: 'Moradia' });
+        const own = await harness.call<CategoryBody>(account.token, 'PATCH', `/spending/categories/${leisure.id}`, { name: 'Lazer' });
+        const restored = await harness.call<CategoryBody>(account.token, 'PATCH', `/spending/categories/${leisure.id}`, { name: null });
+
+        expect([create.status, create.body.type]).toEqual([409, 'categories.name_taken']);
+        expect([rename.status, rename.body.type]).toEqual([409, 'categories.name_taken']);
+        expect([swap.status, swap.body.type]).toEqual([409, 'categories.name_taken']);
+        expect(own.status).toBe(200);
+        expect(restored.body).toMatchObject({ name: null, systemKey: 'leisure' });
+        expect((await list(account)).filter((item: CategoryBody) => item.name === 'lazer')).toHaveLength(0);
+    });
+
     it('o nome de uma categoria excluída pode ser reaproveitado', async () => {
         const account: Account = await harness.signUp('reuse');
         await list(account);
