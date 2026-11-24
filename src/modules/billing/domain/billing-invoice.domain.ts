@@ -48,6 +48,10 @@ export class BillingInvoiceDomain {
         return this.invoices.listOpenAcrossTenants(limit);
     }
 
+    public async listOverdueAcrossTenants(limit: number): Promise<BillingInvoice[]> {
+        return this.invoices.listOverdueAcrossTenants(limit);
+    }
+
     public async companiesWithOverdueAcrossTenants(limit: number): Promise<string[]> {
         return this.invoices.companiesWithOverdueAcrossTenants(limit);
     }

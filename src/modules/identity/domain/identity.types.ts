@@ -4,6 +4,7 @@ import {
     AccountInvites,
     AuthIdentities,
     Companies,
+    PlatformAccessTokens,
     PlatformAuditLog,
     Sessions,
     UserRecoveryCodes,
@@ -25,6 +26,8 @@ export type NewAuthIdentity = Insertable<AuthIdentities>;
 export type NewAccountDeletionRecord = Insertable<AccountDeletionLog>;
 export type PlatformAuditEntry = Selectable<PlatformAuditLog>;
 export type NewPlatformAuditEntry = Insertable<PlatformAuditLog>;
+export type PlatformAccessToken = Selectable<PlatformAccessTokens>;
+export type NewPlatformAccessToken = Insertable<PlatformAccessTokens>;
 export type AccountInvite = Selectable<AccountInvites>;
 export type NewAccountInvite = Insertable<AccountInvites>;
 export type UserTotp = Selectable<UserTotps>;
@@ -89,7 +92,10 @@ export const PLATFORM_AUDIT_ACTIONS = {
     signupLinkCreated: 'signup_link.created',
     signupLinkUpdated: 'signup_link.updated',
     signupLinkRevoked: 'signup_link.revoked',
-    accountViewed: 'account.viewed'
+    accountViewed: 'account.viewed',
+    platformTokenCreated: 'platform_token.created',
+    platformTokenRevoked: 'platform_token.revoked',
+    mcpToolCalled: 'mcp.tool_called'
 } as const;
 
 export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[keyof typeof PLATFORM_AUDIT_ACTIONS];
@@ -107,6 +113,8 @@ export const PLATFORM_TOTP_RESET_OUTCOMES = {
 } as const;
 
 export type PlatformTotpResetOutcome = (typeof PLATFORM_TOTP_RESET_OUTCOMES)[keyof typeof PLATFORM_TOTP_RESET_OUTCOMES];
+
+export const PLATFORM_TOKEN_PREFIX: string = 'vera_pat_';
 
 export const PLATFORM_COMPANY_NAME: string = 'Vera (sistema)';
 

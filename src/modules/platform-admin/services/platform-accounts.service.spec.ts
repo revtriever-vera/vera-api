@@ -9,7 +9,7 @@ import { PlatformBillingReaderService } from '../../billing/services/platform-bi
 import { PlatformPlanReaderService } from '../../plans/services/platform-plan-reader.service';
 import { PlatformAccountNotFoundError } from '../domain/platform-admin.errors';
 import { AccessRequestDto } from '../validation/platform-accounts.schemas';
-import { PlatformAccountsApplication } from './platform-accounts.application';
+import { PlatformAccountsService } from './platform-accounts.service';
 
 const context: AlsAppContext = new AlsAppContext();
 ContextHolder.set(context);
@@ -25,7 +25,7 @@ const COMPANY: CustomerAccount = {
 const OPERATOR: string = '0198b9a0-0000-7000-8000-0000000000aa';
 
 interface Harness {
-    readonly app: PlatformAccountsApplication;
+    readonly app: PlatformAccountsService;
     readonly calls: string[];
     readonly viewed: ReturnType<typeof vi.fn>;
     readonly fns: Record<string, ReturnType<typeof vi.fn>>;
@@ -71,7 +71,7 @@ function build(options: { company?: CustomerAccount | null; auditFails?: boolean
                 ])
             )
     };
-    const app: PlatformAccountsApplication = new PlatformAccountsApplication(
+    const app: PlatformAccountsService = new PlatformAccountsService(
         fns as unknown as PlatformAccountReaderService,
         fns as unknown as PlatformPlanReaderService,
         fns as unknown as PlatformBillingReaderService,
@@ -85,7 +85,7 @@ function asOperator<T>(fn: () => Promise<T>): Promise<T> {
     return context.run({ requestId: 'r1', userId: OPERATOR, companyId: 'platform-company', platform: true, locale: 'pt-BR' }, fn);
 }
 
-describe('PlatformAccountsApplication.overview', () => {
+describe('PlatformAccountsService.overview', () => {
     it('breaks the trials by kind and adds the overdue accounts and the estimated revenue', async () => {
         const result = await build().app.overview();
 
@@ -101,7 +101,7 @@ describe('PlatformAccountsApplication.overview', () => {
     });
 });
 
-describe('PlatformAccountsApplication.access', () => {
+describe('PlatformAccountsService.access', () => {
     let harness: Harness;
 
     beforeEach(() => {
@@ -149,7 +149,7 @@ describe('PlatformAccountsApplication.access', () => {
     });
 });
 
-describe('PlatformAccountsApplication.list', () => {
+describe('PlatformAccountsService.list', () => {
     it('maps the page with the plan of each account and opens no customer data', async () => {
         const harness: Harness = build();
         harness.fns['page'] = vi.fn().mockResolvedValue({ items: [COMPANY], page: 1, pageSize: 25, total: 1 });

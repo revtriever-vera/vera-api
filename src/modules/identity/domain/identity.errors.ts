@@ -257,3 +257,13 @@ export class TotpAlreadyActiveError extends AppError {
         });
     }
 }
+
+export class PlatformTokenNotFoundError extends AppError {
+    public constructor() {
+        super({
+            code: 'identity.platform_token_not_found',
+            status: 404,
+            detail: 'There is no platform token with this id.'
+        });
+    }
+}

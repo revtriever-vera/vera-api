@@ -48,6 +48,7 @@
     "@aws-sdk/client-sesv2": "^3.1102.0",
     "@bull-board/api": "^8.6.0",
     "@bull-board/express": "^8.6.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@nestjs/common": "^11.1.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.1.0",

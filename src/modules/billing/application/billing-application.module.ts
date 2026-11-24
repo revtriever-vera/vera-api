@@ -98,6 +98,7 @@ import { SubscriptionApplication } from './subscription.application';
         InvoicesApplication,
         BillingEventsApplication,
         BillingViewMapper,
+        BillingReplayService,
         PlatformBillingReaderService
     ]
 })

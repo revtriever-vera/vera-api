@@ -24,6 +24,18 @@ export class PlatformAuditRecorderService {
         await this.audit.record({ operatorUserId, action: PLATFORM_AUDIT_ACTIONS.accountViewed, targetCompanyId, meta });
     }
 
+    public async platformTokenCreated(operatorUserId: string | null, meta: AuditMeta): Promise<void> {
+        await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.platformTokenCreated, meta);
+    }
+
+    public async platformTokenRevoked(operatorUserId: string | null, meta: AuditMeta): Promise<void> {
+        await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.platformTokenRevoked, meta);
+    }
+
+    public async mcpToolCalled(operatorUserId: string | null, meta: AuditMeta): Promise<void> {
+        await this.record(operatorUserId, PLATFORM_AUDIT_ACTIONS.mcpToolCalled, meta);
+    }
+
     public async totpEnrolled(user: User, ip: string | undefined): Promise<void> {
         await this.recordFor(user, PLATFORM_AUDIT_ACTIONS.totpEnrolled, { ip: ip ?? null });
     }

@@ -69,6 +69,14 @@ export class BillingReplayService {
         return ingested + stalled.length;
     }
 
+    public async replayWindow(from: Date, to: Date): Promise<number> {
+        const pending: RevtrieverEvent[] = await this.events.listReceivedBetween(from, to, REPUBLISH_BATCH);
+        for (const event of pending) {
+            await this.ingestion.publish(event, true);
+        }
+        return pending.length;
+    }
+
     public async reconcile(): Promise<ReconcileResult> {
         const open: BillingInvoice[] = await this.invoices.listOpenAcrossTenants(SWEEP_BATCH);
         let fixed: number = 0;

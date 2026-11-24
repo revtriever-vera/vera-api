@@ -46,6 +46,17 @@ export class RevtrieverEventsRepository extends BareGlobalRepository<'Revtriever
         );
     }
 
+    public async listRecent(limit: number): Promise<RevtrieverEvent[]> {
+        return this.findMany({}, { limit, orderBy: [{ property: 'receivedAt', direction: 'desc' }] });
+    }
+
+    public async listReceivedBetween(from: Date, to: Date, limit: number): Promise<RevtrieverEvent[]> {
+        return this.findMany(
+            { status: EVENT_STATUSES.received, receivedAt: { '>=': from, '<=': to } },
+            { limit, orderBy: [{ property: 'receivedAt', direction: 'asc' }] }
+        );
+    }
+
     public async listOfTypeSince(type: string, since: Date): Promise<RevtrieverEvent[]> {
         return this.findMany(
             { type, receivedAt: { '>=': since } },

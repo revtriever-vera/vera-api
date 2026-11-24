@@ -43,6 +43,8 @@ import { PlatformAuditRecorderService } from '../services/platform-audit-recorde
 import { PlatformAvailabilityService } from '../services/platform-availability.service';
 import { PlatformLoginAuditService } from '../services/platform-login-audit.service';
 import { PlatformSeedService } from '../services/platform-seed.service';
+import { PlatformTokenGuard } from '../services/platform-token.guard';
+import { PlatformTokenService } from '../services/platform-token.service';
 import { PlatformEnabledGuard } from '../services/platform-enabled.guard';
 import { PlatformGuard } from '../services/platform.guard';
 import { RolesGuard } from '../services/roles.guard';
@@ -130,6 +132,8 @@ import { SocialLoginApplication } from './social-login.application';
         RolesGuard,
         PlatformGuard,
         PlatformEnabledGuard,
+        PlatformTokenGuard,
+        PlatformTokenService,
         PlatformAvailabilityService,
         PlatformLoginAuditService,
         PlatformLoginService,
@@ -172,6 +176,8 @@ import { SocialLoginApplication } from './social-login.application';
         RolesGuard,
         PlatformGuard,
         PlatformEnabledGuard,
+        PlatformTokenGuard,
+        PlatformTokenService,
         PlatformAvailabilityService,
         PlatformSeedService,
         PlatformAuditReaderService,
