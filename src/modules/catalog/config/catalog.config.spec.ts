@@ -4,7 +4,7 @@ import { catalogConfig } from './catalog.config';
 const KEYS: string[] = [
     'IS_LOCAL',
     'CATALOG_DRIVER',
-    'B3_INSTRUMENTS_URL',
+    'CVM_DATA_BASE_URL',
     'TESOURO_PRICES_CSV_URL',
     'FINNHUB_API_KEY',
     'FINNHUB_BASE_URL',
@@ -48,15 +48,15 @@ describe('catalogConfig', () => {
         const config = catalogConfig();
 
         expect(config.CATALOG_DRIVER).toBe('mock');
-        expect(config.B3_INSTRUMENTS_URL).toBeUndefined();
+        expect(config.CVM_DATA_BASE_URL).toBe('https://dados.cvm.gov.br/dados');
         expect(config.TESOURO_PRICES_CSV_URL).toBeUndefined();
         expect(config.COINGECKO_API_KEY).toBeUndefined();
         expect(config.FINNHUB_BASE_URL).toBe('https://finnhub.io/api/v1');
     });
 
-    it('reads the live configuration and accepts a dated URL template', () => {
+    it('reads the live configuration', () => {
         vi.stubEnv('CATALOG_DRIVER', 'live');
-        vi.stubEnv('B3_INSTRUMENTS_URL', 'https://b3.example/{date}/instruments.csv');
+        vi.stubEnv('CVM_DATA_BASE_URL', 'https://cvm.example/dados');
         vi.stubEnv('FINNHUB_API_KEY', 'chave-falsa');
         vi.stubEnv('CATALOG_HTTP_TIMEOUT_MS', '5000');
 
@@ -64,7 +64,7 @@ describe('catalogConfig', () => {
 
         expect(config).toMatchObject({
             CATALOG_DRIVER: 'live',
-            B3_INSTRUMENTS_URL: 'https://b3.example/{date}/instruments.csv',
+            CVM_DATA_BASE_URL: 'https://cvm.example/dados',
             FINNHUB_API_KEY: 'chave-falsa',
             CATALOG_HTTP_TIMEOUT_MS: 5000
         });
@@ -75,7 +75,7 @@ describe('catalogConfig', () => {
         expect(() => catalogConfig()).toThrow();
 
         vi.stubEnv('CATALOG_DRIVER', 'live');
-        vi.stubEnv('B3_INSTRUMENTS_URL', 'nao-e-url');
+        vi.stubEnv('CVM_DATA_BASE_URL', 'nao-e-url');
         expect(() => catalogConfig()).toThrow();
     });
 });

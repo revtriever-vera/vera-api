@@ -12,7 +12,13 @@ export const curatedEntrySchema = z
 
 export const curatedMapSchema = z.array(curatedEntrySchema);
 
+export const curatedEtfEntrySchema = curatedEntrySchema.extend({ cnpj: z.string().regex(/^\d{14}$/) }).strict();
+
+export const curatedEtfMapSchema = z.array(curatedEtfEntrySchema);
+
 export type CuratedEntry = z.infer<typeof curatedEntrySchema>;
+
+export type CuratedEtfEntry = z.infer<typeof curatedEtfEntrySchema>;
 
 export const popularAssetsSchema = z.record(
     z.string(),

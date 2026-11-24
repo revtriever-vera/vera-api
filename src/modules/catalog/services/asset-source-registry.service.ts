@@ -8,7 +8,7 @@ import { ASSET_SOURCES, AssetSourcePort } from '../ports/asset-source.port';
 type CatalogSettings = ConfigType<typeof catalogConfig>;
 
 const LIVE_REQUIREMENTS: Readonly<Record<CatalogSource, (config: CatalogSettings) => boolean>> = {
-    b3: (config: CatalogSettings): boolean => config.B3_INSTRUMENTS_URL !== undefined,
+    b3: (): boolean => true,
     us: (config: CatalogSettings): boolean => config.FINNHUB_API_KEY !== undefined,
     crypto: (config: CatalogSettings): boolean => config.COINGECKO_API_KEY !== undefined,
     tesouro: (config: CatalogSettings): boolean => config.TESOURO_PRICES_CSV_URL !== undefined

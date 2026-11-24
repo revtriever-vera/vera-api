@@ -1,121 +1,139 @@
 [
   {
     "symbol": "ACWI11",
+    "cnpj": "38542889000101",
     "classKey": null,
     "dollarExposure": false
   },
   {
     "symbol": "BITH11",
+    "cnpj": "41256573000168",
     "classKey": "cripto",
     "dollarExposure": false
   },
   {
     "symbol": "BOVA11",
+    "cnpj": "10406511000161",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "BOVV11",
+    "cnpj": "21407758000119",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "BRAX11",
+    "cnpj": "11455378000104",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "DIVO11",
+    "cnpj": "13416245000146",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "ECOO11",
+    "cnpj": "15562377000101",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "ETHE11",
+    "cnpj": "41907631000176",
     "classKey": "cripto",
     "dollarExposure": false
   },
   {
-    "symbol": "EURP11",
-    "classKey": null,
-    "dollarExposure": false
-  },
-  {
     "symbol": "FIND11",
+    "cnpj": "11961094000181",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "GOLD11",
+    "cnpj": "37985763000149",
     "classKey": null,
     "dollarExposure": false
   },
   {
     "symbol": "HASH11",
+    "cnpj": "38314708000190",
     "classKey": "cripto",
     "dollarExposure": false
   },
   {
     "symbol": "IMAB11",
+    "cnpj": "31024153000100",
     "classKey": "rf_ipca",
     "dollarExposure": false
   },
   {
     "symbol": "IRFM11",
+    "cnpj": "32880642000119",
     "classKey": "rf_pre",
     "dollarExposure": false
   },
   {
     "symbol": "ISUS11",
+    "cnpj": "12984444000198",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "IVVB11",
+    "cnpj": "19909560000191",
     "classKey": "acoes_eua",
     "dollarExposure": true
   },
   {
     "symbol": "LFTS11",
+    "cnpj": "45823821000166",
     "classKey": "rf_pos",
     "dollarExposure": false
   },
   {
     "symbol": "MATB11",
+    "cnpj": "13416228000109",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "NASD11",
+    "cnpj": "35578672000163",
     "classKey": "acoes_eua",
     "dollarExposure": true
   },
   {
     "symbol": "PIBB11",
+    "cnpj": "06323688000127",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "QBTC11",
+    "cnpj": "39979022000180",
     "classKey": "cripto",
     "dollarExposure": false
   },
   {
     "symbol": "SMAL11",
+    "cnpj": "10406600000108",
     "classKey": "acoes_br",
     "dollarExposure": false
   },
   {
     "symbol": "SPXI11",
+    "cnpj": "17036289000100",
     "classKey": "acoes_eua",
     "dollarExposure": true
   },
   {
     "symbol": "XINA11",
+    "cnpj": "38542870000165",
     "classKey": null,
     "dollarExposure": false
   }

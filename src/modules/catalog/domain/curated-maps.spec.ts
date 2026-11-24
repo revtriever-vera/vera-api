@@ -5,6 +5,7 @@ import seedAssetsJson from '../data/seed-assets.json';
 import usReitMapJson from '../data/us-reit-map.json';
 import {
     CuratedEntry,
+    curatedEtfMapSchema,
     curatedMapSchema,
     popularAssetsSchema,
     PopularAssets,
@@ -18,9 +19,14 @@ const MAPS: ReadonlyArray<readonly [string, unknown]> = [
     ['us-reit-map.json', usReitMapJson]
 ];
 
-describe.each(MAPS)('%s', (_name: string, json: unknown) => {
+const SCHEMAS: Readonly<Record<string, typeof curatedMapSchema>> = {
+    'etf-class-map.json': curatedEtfMapSchema,
+    'us-reit-map.json': curatedMapSchema
+};
+
+describe.each(MAPS)('%s', (name: string, json: unknown) => {
     it('passes the schema with class keys from the standard set', () => {
-        expect(curatedMapSchema.safeParse(json).success).toBe(true);
+        expect(SCHEMAS[name]?.safeParse(json).success).toBe(true);
     });
 
     it('has no duplicated symbol and is sorted by symbol', () => {
@@ -33,7 +39,7 @@ describe.each(MAPS)('%s', (_name: string, json: unknown) => {
 
 describe('curated maps', () => {
     it('indexes both maps by symbol', () => {
-        expect(B3_ETF_MAP.get('IVVB11')).toEqual({ symbol: 'IVVB11', classKey: 'acoes_eua', dollarExposure: true });
+        expect(B3_ETF_MAP.get('IVVB11')).toEqual({ symbol: 'IVVB11', cnpj: '19909560000191', classKey: 'acoes_eua', dollarExposure: true });
         expect(US_REIT_MAP.get('VNQ')?.classKey).toBe('reits');
     });
 

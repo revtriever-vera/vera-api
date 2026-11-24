@@ -5,8 +5,8 @@ import { QueueModule } from '../../../core/queue/queue.module';
 import { catalogConfig } from '../config/catalog.config';
 import { CatalogDomainModule } from '../domain/catalog-domain.module';
 import { CATALOG_SOURCES, CatalogSource } from '../domain/catalog.types';
-import { B3InstrumentsDriver } from '../drivers/b3-instruments.driver';
 import { CoinGeckoMarketsDriver } from '../drivers/coingecko-markets.driver';
+import { CvmInstrumentsDriver } from '../drivers/cvm-instruments.driver';
 import { FinnhubSymbolsDriver } from '../drivers/finnhub-symbols.driver';
 import { TesouroTitlesDriver } from '../drivers/tesouro-titles.driver';
 import { ASSET_SOURCES, AssetSourcePort } from '../ports/asset-source.port';
@@ -28,16 +28,16 @@ import { CatalogSyncApplication } from './catalog-sync.application';
         CatalogLogService,
         CatalogMetricsService,
         TesouroCsvReaderService,
-        B3InstrumentsDriver,
+        CvmInstrumentsDriver,
         FinnhubSymbolsDriver,
         CoinGeckoMarketsDriver,
         TesouroTitlesDriver,
         {
             provide: ASSET_SOURCES,
-            inject: [catalogConfig.KEY, B3InstrumentsDriver, FinnhubSymbolsDriver, CoinGeckoMarketsDriver, TesouroTitlesDriver],
+            inject: [catalogConfig.KEY, CvmInstrumentsDriver, FinnhubSymbolsDriver, CoinGeckoMarketsDriver, TesouroTitlesDriver],
             useFactory: (
                 config: ConfigType<typeof catalogConfig>,
-                b3: B3InstrumentsDriver,
+                b3: CvmInstrumentsDriver,
                 us: FinnhubSymbolsDriver,
                 crypto: CoinGeckoMarketsDriver,
                 tesouro: TesouroTitlesDriver

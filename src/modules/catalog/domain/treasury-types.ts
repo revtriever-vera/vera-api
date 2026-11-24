@@ -8,7 +8,8 @@ const EXACT: Readonly<Record<string, TreasuryType>> = {
     'tesouro prefixado': { slug: 'prefixado', label: 'Tesouro Prefixado' },
     'tesouro prefixado com juros semestrais': { slug: 'prefixado-juros-semestrais', label: 'Tesouro Prefixado com Juros Semestrais' },
     'tesouro ipca+': { slug: 'ipca', label: 'Tesouro IPCA+' },
-    'tesouro ipca+ com juros semestrais': { slug: 'ipca-juros-semestrais', label: 'Tesouro IPCA+ com Juros Semestrais' }
+    'tesouro ipca+ com juros semestrais': { slug: 'ipca-juros-semestrais', label: 'Tesouro IPCA+ com Juros Semestrais' },
+    'tesouro igpm+ com juros semestrais': { slug: 'igpm-juros-semestrais', label: 'Tesouro IGPM+ com Juros Semestrais' }
 };
 
 const BY_PREFIX: ReadonlyArray<readonly [string, TreasuryType]> = [

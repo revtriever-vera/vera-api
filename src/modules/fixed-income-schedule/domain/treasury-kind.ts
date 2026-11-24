@@ -2,7 +2,7 @@ import { TREASURY_KINDS, TreasuryKind } from './schedule.types';
 
 const TESOURO_MARKET: string = 'TESOURO';
 const TREASURY_ASSET_KIND: string = 'treasury';
-const UNSUPPORTED_PREFIXES: readonly string[] = ['prefixado-juros', 'ipca-juros', 'renda-mais', 'educa-mais'];
+const UNSUPPORTED_PREFIXES: readonly string[] = ['prefixado-juros', 'ipca-juros', 'igpm-juros', 'renda-mais', 'educa-mais'];
 
 const KIND_BY_CLASS_KEY: Readonly<Record<string, TreasuryKind>> = {
     rf_pos: TREASURY_KINDS.selic,
