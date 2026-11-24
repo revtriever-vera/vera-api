@@ -1,6 +1,7 @@
 export const COMMAND_KEYS = {
     catalogSyncWeekly: 'catalog-sync-weekly-command',
     catalogSyncTesouroDaily: 'catalog-sync-tesouro-daily-command',
+    catalogSyncCvmFundsDaily: 'catalog-sync-cvm-funds-daily-command',
     fixedIncomeIndexSync: 'fixed-income-index-sync-command',
     marketDataQuotesSweep: 'market-data-quotes-sweep-command',
     marketDataReferenceDaily: 'market-data-reference-daily-command',
@@ -44,6 +45,7 @@ export const CRON = {
     everyDayAtNineThirtyAm: '30 9 * * *',
     twiceDaily: '0 9,21 * * *',
     everyMondayAtSixAm: '0 6 * * 1',
+    mondayToSaturdayAtNineAm: '0 9 * * 1-6',
     everyDayAtTenThirtyPm: '30 22 * * *',
     weekdaysAtTwoThirtyPm: '30 14 * * 1-5',
     firstOfMonthAtFourAm: '0 4 1 * *'

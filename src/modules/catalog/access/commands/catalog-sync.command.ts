@@ -31,6 +31,18 @@ export class CatalogSyncTesouroDailyCommand extends BaseCommand {
 }
 
 @Injectable()
+export class CatalogSyncCvmFundsDailyCommand extends BaseCommand {
+    public readonly key: CommandKey = COMMAND_KEYS.catalogSyncCvmFundsDaily;
+    public readonly queue: QueueName = QUEUES.catalog;
+    public readonly type: string = MESSAGE_TYPES.catalogSyncTickRequested;
+    public readonly pattern: string = CRON.mondayToSaturdayAtNineAm;
+
+    public override get payload(): Readonly<Record<string, unknown>> {
+        return { cadence: SYNC_CADENCES.cvmFundsDaily };
+    }
+}
+
+@Injectable()
 export class CatalogSyncTickHandler extends QueueHandlerPort {
     public readonly queue: QueueName = QUEUES.catalog;
     public readonly type: string = MESSAGE_TYPES.catalogSyncTickRequested;

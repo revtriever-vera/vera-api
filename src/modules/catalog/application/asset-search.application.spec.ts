@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AssetDomain } from '../domain/asset.domain';
 import { Asset } from '../domain/catalog.types';
 import { CatalogLogService } from '../services/catalog-log.service';
-import { AssetSearchApplication, toAssetItem } from './asset-search.application';
+import { AssetSearchApplication, searchTextOf, toAssetItem } from './asset-search.application';
 
 const ASSET: Asset = {
     id: '0199c3a0-7b1e-7c2a-9d4e-2f6a8b1c3d5e',
@@ -123,4 +123,23 @@ describe('AssetSearchApplication', () => {
             meta: { assetId: '0199c3a0-0000-7000-8000-000000000000' }
         });
     });
+});
+
+describe('searchTextOf', () => {
+    it.each([
+        ['12.345.678/0001-90', '12345678000190'],
+        ['12345678000190', '12345678000190'],
+        ['  12.345.678 ', '12345678'],
+        ['12345678', '12345678'],
+        ['00.017', '00017']
+    ])('reduces the CNPJ %s to its digits', (raw: string, expected: string) => {
+        expect(searchTextOf(raw)).toBe(expected);
+    });
+
+    it.each([['ITUB4'], ['  Itub '], ['123'], ['b3sa3'], ['-'], ['.'], ['tesouro 2035'], ['12.3 fundo']])(
+        'keeps %s as a plain text search',
+        (raw: string) => {
+            expect(searchTextOf(raw)).toBe(raw.trim().toLowerCase());
+        }
+    );
 });

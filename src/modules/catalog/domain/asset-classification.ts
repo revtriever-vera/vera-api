@@ -6,6 +6,7 @@ export interface ClassifiableAsset {
     readonly externalId: string;
     readonly symbol: string;
     readonly kind: AssetKind;
+    readonly raw: Readonly<Record<string, string>>;
 }
 
 export interface AssetClassification {
@@ -98,11 +99,47 @@ const classifyTesouro: Classifier = (asset: ClassifiableAsset): AssetClassificat
     return { kind: ASSET_KINDS.treasury, typeGroup: TYPE_GROUPS.tesouro, suggestedClassKey: classKey, dollarExposure: false };
 };
 
+const FUND_CLASS_BY_CLASSIFICATION: Readonly<Record<string, ClassKey>> = {
+    'renda fixa': CLASS_KEYS.rfPos,
+    ações: CLASS_KEYS.acoesBr
+};
+
+const FUND_EXCLUDED_ANBIMA_TERMS: readonly string[] = ['exterior', 'previdencia', 'indice'];
+
+function plainLower(text: string): string {
+    return text
+        .normalize('NFD')
+        .replaceAll(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+}
+
+export function suggestedClassOfFund(classification: string, anbima: string): ClassKey | null {
+    const suggested: ClassKey | undefined = FUND_CLASS_BY_CLASSIFICATION[classification.trim().toLowerCase()];
+    const plainAnbima: string = plainLower(anbima);
+    if (suggested === undefined || FUND_EXCLUDED_ANBIMA_TERMS.some((term: string): boolean => plainAnbima.includes(term))) {
+        return null;
+    }
+    return suggested;
+}
+
+const classifyCvm: Classifier = (asset: ClassifiableAsset): AssetClassification | null => {
+    if (asset.kind !== ASSET_KINDS.fund) {
+        return null;
+    }
+    return {
+        kind: ASSET_KINDS.fund,
+        typeGroup: TYPE_GROUPS.fundos,
+        suggestedClassKey: suggestedClassOfFund(asset.raw['classification'] ?? '', asset.raw['anbima'] ?? ''),
+        dollarExposure: false
+    };
+};
+
 const CLASSIFIERS: Readonly<Record<CatalogMarket, Classifier>> = {
     [MARKETS.b3]: classifyB3,
     [MARKETS.us]: classifyUs,
     [MARKETS.crypto]: classifyCrypto,
-    [MARKETS.tesouro]: classifyTesouro
+    [MARKETS.tesouro]: classifyTesouro,
+    [MARKETS.cvm]: classifyCvm
 };
 
 export function classifyAsset(market: CatalogMarket, asset: ClassifiableAsset): AssetClassification | null {

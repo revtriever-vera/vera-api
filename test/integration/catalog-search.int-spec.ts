@@ -132,6 +132,29 @@ describe('catalog search', () => {
         expect(found[0]?.symbol).toBe('O');
     });
 
+    it('finds a CVM fund by name and by CNPJ with or without punctuation, suggesting a class only for Renda Fixa and Ações', async () => {
+        const byName: ItemBody[] = await search('q=exemplo%20a%C3%A7%C3%B5es&group=fundos');
+        const masked: ItemBody[] = await search('q=22.222.222%2F0001-91&group=fundos');
+        const digits: ItemBody[] = await search('q=22222222000191');
+        const macro: ItemBody[] = await search('q=33333333&group=fundos');
+
+        expect(byName[0]).toMatchObject({
+            symbol: '22222222000191',
+            market: 'CVM',
+            kind: 'fund',
+            typeGroup: 'fundos',
+            suggestedClassKey: 'acoes_br',
+            dollarExposure: false,
+            quantityDecimals: 8,
+            currency: 'BRL'
+        });
+        expect(masked.map((item: ItemBody) => item.symbol)).toEqual(['22222222000191']);
+        expect(digits.map((item: ItemBody) => item.symbol)).toEqual(['22222222000191']);
+        expect(macro[0]).toMatchObject({ symbol: '33333333000191', suggestedClassKey: null });
+        expect(await search('q=exemplo&group=fundos')).toHaveLength(3);
+        expect(await search('q=11111111000191&group=acoes_br')).toEqual([]);
+    });
+
     it('finds crypto by name and Tesouro by title', async () => {
         const crypto: ItemBody[] = await search('q=bitcoin');
         const tesouro: ItemBody[] = await search('q=tesouro%20ipca%2B');

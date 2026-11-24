@@ -11,6 +11,16 @@ describe('MockAssetSourceDriver', () => {
         expect(assets.every((asset: SourceAsset) => asset.kind === 'treasury' && asset.maturityDate !== undefined)).toBe(true);
     });
 
+    it('serves three example funds with the classification the suggestion needs and no network', async () => {
+        const assets: readonly SourceAsset[] = await new MockAssetSourceDriver(CATALOG_SOURCES.cvmFunds).fetchAll();
+
+        expect(assets.map((asset: SourceAsset) => [asset.kind, asset.raw['classification']])).toEqual([
+            ['fund', 'Renda Fixa'],
+            ['fund', 'Ações'],
+            ['fund', 'Multimercado']
+        ]);
+    });
+
     it('covers every source with at least one asset', async () => {
         for (const source of MOCK_SOURCES) {
             const assets: readonly SourceAsset[] = await new MockAssetSourceDriver(source).fetchAll();

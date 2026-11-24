@@ -5,7 +5,8 @@ export const MARKETS = {
     b3: 'B3',
     us: 'US',
     crypto: 'CRYPTO',
-    tesouro: 'TESOURO'
+    tesouro: 'TESOURO',
+    cvm: 'CVM'
 } as const;
 
 export type CatalogMarket = (typeof MARKETS)[keyof typeof MARKETS];
@@ -14,7 +15,8 @@ export const CATALOG_SOURCES = {
     b3: 'b3',
     us: 'us',
     crypto: 'crypto',
-    tesouro: 'tesouro'
+    tesouro: 'tesouro',
+    cvmFunds: 'cvm_funds'
 } as const;
 
 export type CatalogSource = (typeof CATALOG_SOURCES)[keyof typeof CATALOG_SOURCES];
@@ -23,7 +25,8 @@ export const MARKET_BY_SOURCE: Readonly<Record<CatalogSource, CatalogMarket>> = 
     b3: MARKETS.b3,
     us: MARKETS.us,
     crypto: MARKETS.crypto,
-    tesouro: MARKETS.tesouro
+    tesouro: MARKETS.tesouro,
+    cvm_funds: MARKETS.cvm
 };
 
 export const ASSET_KINDS = {
@@ -33,7 +36,8 @@ export const ASSET_KINDS = {
     bdr: 'bdr',
     reit: 'reit',
     crypto: 'crypto',
-    treasury: 'treasury'
+    treasury: 'treasury',
+    fund: 'fund'
 } as const;
 
 export type AssetKind = (typeof ASSET_KINDS)[keyof typeof ASSET_KINDS];
@@ -44,7 +48,8 @@ export const TYPE_GROUPS = {
     acoesEua: 'acoes_eua',
     reits: 'reits',
     cripto: 'cripto',
-    tesouro: 'tesouro'
+    tesouro: 'tesouro',
+    fundos: 'fundos'
 } as const;
 
 export type TypeGroup = (typeof TYPE_GROUPS)[keyof typeof TYPE_GROUPS];
@@ -66,7 +71,8 @@ export const QUOTES_PROVIDERS = {
     brapi: 'brapi',
     usEquities: 'us_equities',
     coingecko: 'coingecko',
-    tesouro: 'tesouro'
+    tesouro: 'tesouro',
+    cvm: 'cvm'
 } as const;
 
 export type QuotesProvider = (typeof QUOTES_PROVIDERS)[keyof typeof QUOTES_PROVIDERS];
@@ -89,14 +95,16 @@ export type SyncRunStatus = (typeof SYNC_RUN_STATUSES)[keyof typeof SYNC_RUN_STA
 
 export const SYNC_CADENCES = {
     weekly: 'weekly',
-    tesouroDaily: 'tesouro_daily'
+    tesouroDaily: 'tesouro_daily',
+    cvmFundsDaily: 'cvm_funds_daily'
 } as const;
 
 export type SyncCadence = (typeof SYNC_CADENCES)[keyof typeof SYNC_CADENCES];
 
 export const SOURCES_BY_CADENCE: Readonly<Record<SyncCadence, readonly CatalogSource[]>> = {
     weekly: [CATALOG_SOURCES.b3, CATALOG_SOURCES.us, CATALOG_SOURCES.crypto],
-    tesouro_daily: [CATALOG_SOURCES.tesouro]
+    tesouro_daily: [CATALOG_SOURCES.tesouro],
+    cvm_funds_daily: [CATALOG_SOURCES.cvmFunds]
 };
 
 export interface MarketAttributes {
@@ -108,7 +116,8 @@ export const MARKET_ATTRIBUTES: Readonly<Record<CatalogMarket, MarketAttributes>
     B3: { quantityDecimals: 0, quotesProvider: QUOTES_PROVIDERS.brapi },
     US: { quantityDecimals: 6, quotesProvider: QUOTES_PROVIDERS.usEquities },
     CRYPTO: { quantityDecimals: 8, quotesProvider: QUOTES_PROVIDERS.coingecko },
-    TESOURO: { quantityDecimals: 2, quotesProvider: QUOTES_PROVIDERS.tesouro }
+    TESOURO: { quantityDecimals: 2, quotesProvider: QUOTES_PROVIDERS.tesouro },
+    CVM: { quantityDecimals: 8, quotesProvider: QUOTES_PROVIDERS.cvm }
 };
 
 export const SEARCH_MAX_LIMIT: number = 30;

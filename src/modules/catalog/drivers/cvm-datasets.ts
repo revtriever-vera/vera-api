@@ -41,6 +41,14 @@ export async function requiredZippedCsv(client: DatasetClient, path: string, ent
     return text;
 }
 
+export async function requiredZippedCsvs(client: DatasetClient, path: string, entries: readonly string[]): Promise<string[]> {
+    const archive: Buffer | null = await download(client, path);
+    if (archive === null) {
+        throw new CatalogSourceError(SOURCE_ERROR_CODES.rejected);
+    }
+    return entries.map((entry: string): string => decodeCsv(zipEntryContent(archive, entry)));
+}
+
 export function recentYears(today: string, count: number): string[] {
     const year: number = Number(today.slice(0, 4));
     return Array.from({ length: count }, (_unused: unknown, back: number): string => String(year - back));
@@ -87,4 +95,23 @@ export async function yearlyCsvs(
         throw new CatalogSourceError(SOURCE_ERROR_CODES.rejected);
     }
     return texts;
+}
+
+const FIRST_BUSINESS_DAYS: number = 5;
+const SUNDAY: number = 0;
+const SATURDAY: number = 6;
+
+function businessDayOfMonth(today: string): number {
+    const day: number = Number(today.slice(8, 10));
+    let count: number = 0;
+    for (let current: number = 1; current <= day; current += 1) {
+        const weekday: number = new Date(`${today.slice(0, 8)}${String(current).padStart(MONTH_PAD, '0')}T12:00:00Z`).getUTCDay();
+        count += weekday === SUNDAY || weekday === SATURDAY ? 0 : 1;
+    }
+    return count;
+}
+
+export function informeMonths(today: string): string[] {
+    const [current, previous]: string[] = recentMonths(today);
+    return businessDayOfMonth(today) <= FIRST_BUSINESS_DAYS ? [current ?? '', previous ?? ''] : [current ?? ''];
 }

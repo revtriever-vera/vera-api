@@ -16,6 +16,22 @@ O catálogo de ações, units, BDRs, FIIs e ETFs vem do Portal de Dados Abertos 
 
 O tipo vem da classe da CVM (`Tipo_Classe`: FII e FIAGRO viram `fii`, FIIM, o fundo de índice, vira `etf`), nunca de heurística sobre o ticker. A CVM não publica o ticker de um fundo: o do FII e do FIAGRO sai do código do emissor no ISIN da cota (`BR` + 4 letras + `CTF`...) mais `11`, e o do ETF vem da lista curada. Só entra fundo com situação `Em Funcionamento Normal` no cadastro.
 
+## Fundos (FIF) pelo cadastro e pelo informe diário da CVM
+
+A fonte `cvm_funds` (`CvmFundCatalogDriver`, `market = 'CVM'`, `kind = 'fund'`, `typeGroup = 'fundos'`) grava uma linha por série (classe ou subclasse) de fundo FIF com cota pública. Fonte: Portal de Dados Abertos da CVM, licença ODbL; cite "Fonte: CVM – Portal Dados Abertos" onde a Vera mostrar esses dados.
+
+| Conjunto                                                                           | O que dá                                                                                                     |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `FI/CAD/DADOS/registro_fundo_classe.zip` (`registro_classe`, `registro_subclasse`) | classe, nome, classificação CVM e ANBIMA, situação, exclusividade, público-alvo, patrimônio líquido          |
+| `FI/DOC/INF_DIARIO/DADOS/inf_diario_fi_AAAAMM.zip`                                 | quais séries têm cota no mês corrente (e no anterior nos 5 primeiros dias úteis) e a última cota de cada uma |
+
+- Entra a classe `Classes de Cotas de Fundos FIF` em `Em Funcionamento Normal`, `Exclusivo = N`, `Publico_Alvo` Público Geral ou Qualificado e `Patrimonio_Liquido >= 1.000.000`. A subclasse entra quando está em funcionamento, não é exclusiva e o público dela é aberto (ou vazio, herdando o da classe).
+- Série sem cota no informe do mês não entra. O `externalId` é o CNPJ da classe (14 dígitos) ou `CNPJ:ID_SUBCLASSE`; o `symbol` é sempre o CNPJ.
+- `name` é a denominação social sem os sufixos regulatórios (lista fechada em `drivers/cvm-fund-parsers.ts`); a denominação completa e a classificação ficam no `raw` da fonte.
+- Classe sugerida (`asset-classification.ts`): `Classificacao = 'Renda Fixa'` vira `rf_pos`, `'Ações'` vira `acoes_br`; fica `null` quando a classificação ANBIMA tem "Exterior", "Previdência" ou "Índice", e para qualquer outra classificação CVM.
+- No modo `mock`, os três fundos de exemplo vêm de `seed-assets.json` (`fundClassification` e `fundAnbima` alimentam a sugestão).
+- O leitor do informe (`CvmDailyInformeReaderService`) é exportado para o `market-data`: `seriesKeys` e `latestQuotes`.
+
 ## `etf-class-map.json` (ETFs da B3)
 
 Cada entrada diz a **exposição** de um ETF negociado na B3, não onde ele é negociado, e qual classe da CVM é o ETF.

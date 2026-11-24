@@ -27,6 +27,31 @@ describe('CatalogLogService', () => {
         });
     });
 
+    it('logs the daily informe read with the month and the counts but no content', () => {
+        const { service, info } = rig();
+
+        service.informeRead('202611', true, 0, 12);
+
+        expect(info).toHaveBeenCalledWith({
+            message: 'daily informe read',
+            identifier: 'catalog-source',
+            meta: { source: 'cvm_funds', month: '202611', notModified: true, rows: 0, durationMs: 12 }
+        });
+    });
+
+    it('logs the fund catalog counts under the CVM funds source', () => {
+        const { service, info } = rig();
+        const counts = { classesRead: 10, classesFiltered: 5, seriesWithQuota: 4, seriesWritten: 3, seriesWithoutQuota: 2 };
+
+        service.fundCatalogBuilt(counts);
+
+        expect(info).toHaveBeenCalledWith({
+            message: 'fund catalog built',
+            identifier: 'catalog-source',
+            meta: { source: 'cvm_funds', ...counts }
+        });
+    });
+
     it('logs a suspicious round as a warning', () => {
         const { service, warn } = rig();
 

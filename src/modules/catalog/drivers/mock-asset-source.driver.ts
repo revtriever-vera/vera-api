@@ -22,7 +22,11 @@ export class MockAssetSourceDriver extends AssetSourcePort {
                 currency: seed.currency,
                 maturityDate: seed.maturityDate,
                 rank: seed.rank,
-                raw: { seed: 'true' }
+                raw: {
+                    seed: 'true',
+                    ...(seed.fundClassification === undefined ? {} : { classification: seed.fundClassification }),
+                    ...(seed.fundAnbima === undefined ? {} : { anbima: seed.fundAnbima })
+                }
             }))
         );
     }

@@ -26,6 +26,10 @@ export function digitsOf(cnpj: string): string {
     return cnpj.replace(/\D/g, '');
 }
 
+export function seriesKeyOf(cnpj: string, subclassId: string): string {
+    return subclassId === '' ? cnpj : `${cnpj}:${subclassId}`;
+}
+
 const NAME_SUFFIXES: readonly string[] = ['RESPONSABILIDADE LIMITADA', 'RESP LIMITADA', 'RESP LTDA', 'RESP. LTDA'];
 const SEPARATORS: ReadonlySet<string> = new Set<string>([' ', '-']);
 

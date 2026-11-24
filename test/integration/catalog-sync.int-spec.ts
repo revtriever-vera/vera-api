@@ -186,12 +186,16 @@ describe('catalog sync', () => {
         expect(treasury.rows).toEqual([{ d: '2029-03-01', suggestedClassKey: 'rf_pos' }]);
     });
 
-    it('registers both cron schedulers and fans out one job per source with a deterministic job id', async () => {
+    it('registers the three cron schedulers and fans out one job per source with a deterministic job id', async () => {
         const reconciler: CommandReconcilerService = app.get(CommandReconcilerService, { strict: false });
         await reconciler.onApplicationBootstrap();
         const schedulers: string[] = (await queue.getJobSchedulers()).map((scheduler) => scheduler.key).sort();
 
-        expect(schedulers).toEqual(['catalog-sync-tesouro-daily-command', 'catalog-sync-weekly-command']);
+        expect(schedulers).toEqual([
+            'catalog-sync-cvm-funds-daily-command',
+            'catalog-sync-tesouro-daily-command',
+            'catalog-sync-weekly-command'
+        ]);
 
         const handler: CatalogSyncTickHandler = app.get(CatalogSyncTickHandler, { strict: false });
         await handler.handle({
