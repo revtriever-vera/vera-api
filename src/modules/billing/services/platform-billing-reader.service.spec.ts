@@ -73,19 +73,17 @@ describe('PlatformBillingReaderService.status', () => {
                     ])
             } as unknown as BillingInvoiceDomain,
             {
-                listRecent: vi
-                    .fn()
-                    .mockResolvedValue([
-                        {
-                            id: 'e1',
-                            type: 'invoice.paid',
-                            status: 'failed',
-                            receivedAt: new Date(0),
-                            processedAt: null,
-                            error: 'x',
-                            payload: {}
-                        }
-                    ])
+                listRecent: vi.fn().mockResolvedValue([
+                    {
+                        id: 'e1',
+                        type: 'invoice.paid',
+                        status: 'failed',
+                        receivedAt: new Date(0),
+                        processedAt: null,
+                        error: 'x',
+                        payload: {}
+                    }
+                ])
             } as unknown as RevtrieverEventDomain
         );
 

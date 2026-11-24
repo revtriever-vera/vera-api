@@ -237,7 +237,13 @@ describe('lembretes pelo WhatsApp (drivers mock)', () => {
             .run({ requestId: 'int-person', companyId: account.company.id, userId: account.user.id, locale: 'pt-BR' }, fn);
     }
 
-    async function schedule(account: Account, text: string, offsetMs: number = 2 * HOUR_MS): Promise<ReminderRow> {
+    function sameDayOffsetMs(): number {
+        const dayMs: number = 24 * HOUR_MS;
+        const localMs: number = (Date.now() - 3 * HOUR_MS) % dayMs;
+        return Math.min(2 * HOUR_MS, Math.floor((dayMs - localMs) / 2));
+    }
+
+    async function schedule(account: Account, text: string, offsetMs: number = sameDayOffsetMs()): Promise<ReminderRow> {
         const reminder = await asPerson(account, async () =>
             engine.create({
                 userId: account.user.id,
