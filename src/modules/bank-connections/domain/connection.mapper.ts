@@ -64,13 +64,17 @@ function toLinkedAccounts(
     });
 }
 
-export function toConnectionView(details: ConnectionDetails, accounts: ReadonlyMap<string, LinkedAccountSource>): ConnectionView {
+export function toConnectionView(
+    details: ConnectionDetails,
+    accounts: ReadonlyMap<string, LinkedAccountSource>,
+    logoPath: string | null
+): ConnectionView {
     const connection: BankConnection = details.connection;
     return {
         id: connection.id,
         itemIdHint: hintOf(connection.externalItemId),
         connectorName: connection.connectorName,
-        institutionLogoUrl: connection.institutionLogoUrl,
+        institutionLogoUrl: logoPath,
         status: connection.status as ConnectionStatus,
         statusReason: connection.statusReason,
         consentExpiresAt: isoOrNull(connection.consentExpiresAt),

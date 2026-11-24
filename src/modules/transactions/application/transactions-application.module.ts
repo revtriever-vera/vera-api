@@ -7,6 +7,7 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
 import { TransactionsDomainModule } from '../domain/transactions-domain.module';
 import { FinancialAccountService } from '../services/financial-account.service';
+import { InstitutionLogoService } from '../services/institution-logo.service';
 import { SpendingDatasetService } from '../services/spending-dataset.service';
 import { SpendingSampleDatasetService } from '../services/spending-sample-dataset.service';
 import { SpendingSampleDataService } from '../services/spending-sample-data.service';
@@ -48,6 +49,7 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         TransactionViewService,
         TransactionIngestionService,
         FinancialAccountService,
+        InstitutionLogoService,
         TransactionImportService,
         TransactionAggregatesService,
         TransactionReaderService,
@@ -63,6 +65,7 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
         AccountApplication,
         TransactionIngestionService,
         FinancialAccountService,
+        InstitutionLogoService,
         TransactionImportService,
         TransactionAggregatesService,
         TransactionReaderService,

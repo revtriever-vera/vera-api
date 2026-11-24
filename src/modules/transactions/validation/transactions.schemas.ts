@@ -165,10 +165,12 @@ export const accountViewSchema = z.object({
     institutionName: z.string().nullable().describe('Name of the bank or institution'),
     institutionLogoUrl: z
         .string()
-        .max(500)
-        .startsWith('https://')
+        .max(800)
+        .startsWith('/spending/institution-logos/')
         .nullable()
-        .describe('HTTPS URL of the bank logo returned by Pluggy; null for file and sample accounts, the client falls back to initials'),
+        .describe(
+            'API-relative path of the bank logo, served and cached by the API (the browser never loads a third-party image); null for file and sample accounts, the client falls back to initials'
+        ),
     numberLast4: z
         .string()
         .length(4)
@@ -208,3 +210,9 @@ export class TransactionIdParamsDto extends createZodDto(transactionIdParamsSche
 export class RecategorizeDto extends createZodDto(recategorizeSchema) {}
 export class RenameAccountDto extends createZodDto(renameAccountSchema) {}
 export class AccountIdParamsDto extends createZodDto(accountIdParamsSchema) {}
+
+export const institutionLogoParamsSchema = z.object({
+    token: z.string().min(1).max(800).describe('Signed token the API put in the institutionLogoUrl path of an account or connection')
+});
+
+export class InstitutionLogoParamsDto extends createZodDto(institutionLogoParamsSchema) {}

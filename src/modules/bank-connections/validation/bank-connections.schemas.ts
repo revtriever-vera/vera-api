@@ -91,10 +91,12 @@ export const connectionViewSchema = z.object({
     connectorName: z.string().nullable().describe('Name of the bank connector'),
     institutionLogoUrl: z
         .string()
-        .max(500)
-        .startsWith('https://')
+        .max(800)
+        .startsWith('/spending/institution-logos/')
         .nullable()
-        .describe('HTTPS URL of the bank logo returned by Pluggy; null when unknown, the client falls back to initials'),
+        .describe(
+            'API-relative path of the bank logo, served and cached by the API (the browser never loads a third-party image); null when unknown, the client falls back to initials'
+        ),
     status: z
         .enum([CONNECTION_STATUSES.active, CONNECTION_STATUSES.needsAttention, CONNECTION_STATUSES.revoked, CONNECTION_STATUSES.paused])
         .describe('Connection status'),

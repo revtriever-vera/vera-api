@@ -3,12 +3,14 @@ import { BankConnectionDomain } from '../domain/bank-connection.domain';
 import { BankConnection, BankConnectionAccount, ConnectionDetails, ConnectionView } from '../domain/bank-connections.types';
 import { LinkedAccountSource, toConnectionView } from '../domain/connection.mapper';
 import { FinancialAccountService } from '../../transactions/services/financial-account.service';
+import { InstitutionLogoService } from '../../transactions/services/institution-logo.service';
 
 @Injectable()
 export class ConnectionViewService {
     public constructor(
         private readonly connections: BankConnectionDomain,
-        private readonly accounts: FinancialAccountService
+        private readonly accounts: FinancialAccountService,
+        private readonly logos: InstitutionLogoService
     ) {}
 
     public async listViews(): Promise<ConnectionView[]> {
@@ -33,6 +35,8 @@ export class ConnectionViewService {
                 account
             ])
         );
-        return details.map((entry: ConnectionDetails): ConnectionView => toConnectionView(entry, accounts));
+        return details.map((entry: ConnectionDetails): ConnectionView =>
+            toConnectionView(entry, accounts, this.logos.pathFor(entry.connection.institutionLogoUrl))
+        );
     }
 }

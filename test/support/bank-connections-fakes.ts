@@ -35,6 +35,7 @@ import { PluggyAvailabilityService } from '../../src/modules/bank-connections/se
 import { PluggyAuthenticatorService } from '../../src/modules/bank-connections/services/pluggy-authenticator.service';
 import { PluggyCredentialsEraser } from '../../src/modules/bank-connections/services/pluggy-credentials.eraser';
 import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
+import { InstitutionLogoService } from '../../src/modules/transactions/services/institution-logo.service';
 import { SpendingDatasetService } from '../../src/modules/transactions/services/spending-dataset.service';
 
 export const COMPANY_ID: string = '00000000-0000-4000-8000-0000000000c1';
@@ -586,7 +587,11 @@ function wireApplications(
     const authenticator: PluggyAuthenticatorService = new PluggyAuthenticatorService(core.client, core.vault, core.availability);
     const sync: BankSyncPublisherService = new BankSyncPublisherService(core.publisher, core.context, observability.logs);
     const accounts: FinancialAccountService = core.accountService as unknown as FinancialAccountService;
-    const views: ConnectionViewService = new ConnectionViewService(domains.connectionDomain, accounts);
+    const views: ConnectionViewService = new ConnectionViewService(
+        domains.connectionDomain,
+        accounts,
+        new InstitutionLogoService({ sha256Hex: (value: string): string => `sig-${value}` })
+    );
     const { logs, metrics } = observability;
     const { vault, client } = core;
     const { connectionDomain } = domains;

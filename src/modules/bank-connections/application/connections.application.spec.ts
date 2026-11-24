@@ -72,7 +72,7 @@ describe('ConnectionsApplication', () => {
         expect(results.map((result) => result.itemIdHint)).toEqual(['0000…a001', '0000…a002', '0000…a404', '0000…a409']);
         expect(results[0]?.connection).toMatchObject({
             connectorName: 'Nubank',
-            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
+            institutionLogoUrl: expect.stringMatching(/^\/spending\/institution-logos\/[\w-]+\.sig-/) as string,
             status: 'active',
             statusReason: null,
             accounts: [],
@@ -208,7 +208,7 @@ describe('ConnectionsApplication', () => {
         expect(overview.connections).toHaveLength(1);
         expect(overview.connections[0]).toMatchObject({
             connectorName: 'Nubank',
-            institutionLogoUrl: 'https://logos.example/connectors/nubank.png',
+            institutionLogoUrl: expect.stringMatching(/^\/spending\/institution-logos\/[\w-]+\.sig-/) as string,
             syncing: true,
             accounts: [{ accountId: 'account-1', name: 'Conta account-1', kind: 'checking', numberLast4: '1234' }],
             lastRun: {
