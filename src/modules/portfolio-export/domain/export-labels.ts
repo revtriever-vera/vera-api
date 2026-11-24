@@ -43,6 +43,7 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
             alphavantage: 'Alpha Vantage',
             coingecko: 'CoinGecko',
             tesouro_direto: 'Preço oficial do Tesouro',
+            cvm: 'Cota oficial da CVM',
             curve_cdi: 'Curva do CDI (BC)',
             curve_pre: 'Taxa contratada',
             curve_ipca: 'IPCA + taxa (BC)'
@@ -71,6 +72,7 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
             alphavantage: 'Alpha Vantage',
             coingecko: 'CoinGecko',
             tesouro_direto: 'Official Treasury price',
+            cvm: 'Official CVM quota',
             curve_cdi: 'CDI curve (BC)',
             curve_pre: 'Contracted rate',
             curve_ipca: 'IPCA + rate (BC)'
