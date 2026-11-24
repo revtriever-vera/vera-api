@@ -32,4 +32,15 @@ describe('quote staleness', () => {
     it('expects the current UTC date for crypto', () => {
         expect(expectedPriceDate('CRYPTO', new Date('2026-10-11T01:30:00Z'))).toBe('2026-10-11');
     });
+
+    it('keeps a fund quote fresh for seven calendar days and flags it on the eighth', () => {
+        expect(isQuoteStale('2026-10-05', 'CVM', '2026-10-12')).toBe(false);
+        expect(isQuoteStale('2026-10-04', 'CVM', '2026-10-12')).toBe(true);
+    });
+
+    it('expects the last business day before today for funds, since the quote of today never exists yet', () => {
+        expect(expectedPriceDate('CVM', new Date('2026-10-14T12:00:00Z'))).toBe('2026-10-13');
+        expect(expectedPriceDate('CVM', new Date('2026-10-12T12:00:00Z'))).toBe('2026-10-09');
+        expect(expectedPriceDate('CVM', new Date('2026-10-11T12:00:00Z'))).toBe('2026-10-09');
+    });
 });

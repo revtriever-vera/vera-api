@@ -12,6 +12,7 @@ export const VALUE_SOURCES = {
     alphavantage: 'alphavantage',
     coingecko: 'coingecko',
     tesouroDireto: 'tesouro_direto',
+    cvm: 'cvm',
     curveCdi: 'curve_cdi',
     curvePre: 'curve_pre',
     curveIpca: 'curve_ipca'
@@ -27,6 +28,7 @@ export const VALUE_SOURCE_BY_PROVIDER: Readonly<Record<string, ValueSource>> = {
     coingecko: VALUE_SOURCES.coingecko,
     tesouro: VALUE_SOURCES.tesouroDireto,
     tesouro_direto: VALUE_SOURCES.tesouroDireto,
+    cvm: VALUE_SOURCES.cvm,
     curve_cdi: VALUE_SOURCES.curveCdi,
     curve_pre: VALUE_SOURCES.curvePre,
     curve_ipca: VALUE_SOURCES.curveIpca
@@ -36,7 +38,8 @@ export const VALUE_SOURCE_BY_MARKET: Readonly<Record<string, ValueSource>> = {
     B3: VALUE_SOURCES.brapi,
     US: VALUE_SOURCES.finnhub,
     CRYPTO: VALUE_SOURCES.coingecko,
-    TESOURO: VALUE_SOURCES.tesouroDireto
+    TESOURO: VALUE_SOURCES.tesouroDireto,
+    CVM: VALUE_SOURCES.cvm
 };
 
 export const FIXED_INCOME_TYPE_GROUP: string = 'fixed_income';

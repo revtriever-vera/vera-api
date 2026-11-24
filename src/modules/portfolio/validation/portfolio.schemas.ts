@@ -20,6 +20,7 @@ const VALUE_SOURCE_VALUES = [
     'alphavantage',
     'coingecko',
     'tesouro_direto',
+    'cvm',
     'curve_cdi',
     'curve_pre',
     'curve_ipca'
@@ -43,9 +44,9 @@ export const holdingSchema = z.object({
     assetId: z.string().uuid().nullable().describe('Catalog asset id; null for fixed income'),
     symbol: z.string().describe('Ticker or title name'),
     name: z.string().describe('Asset or title name'),
-    market: z.enum(['B3', 'US', 'CRYPTO', 'TESOURO']).nullable().describe('Market of the asset; null for fixed income'),
+    market: z.enum(['B3', 'US', 'CRYPTO', 'TESOURO', 'CVM']).nullable().describe('Market of the asset; null for fixed income'),
     typeGroup: z
-        .enum(['fixed_income', 'tesouro', 'acoes_br', 'fii', 'acoes_eua', 'reits', 'cripto'])
+        .enum(['fixed_income', 'tesouro', 'acoes_br', 'fii', 'acoes_eua', 'reits', 'cripto', 'fundos'])
         .describe('Kind of holding used to group and label it'),
     classId: z.string().uuid().nullable().describe('Asset class of the holding; null only for an orphan holding without assignment'),
     quantity: z.string().nullable().describe('Quantity held, decimal string; null for fixed income'),

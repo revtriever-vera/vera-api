@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Type } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { DiscoveryModule } from '@nestjs/core';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
@@ -7,10 +7,11 @@ import { UsageModule } from '../../../core/usage/usage.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
 import { marketDataConfig } from '../config/market-data.config';
 import { MarketDataDomainModule } from '../domain/market-data-domain.module';
-import { QUOTE_PROVIDER_IDS, QuoteProviderId } from '../domain/market-data.types';
+import { QuoteProviderId } from '../domain/market-data.types';
 import { AlphaVantageQuoteDriver } from '../drivers/alphavantage-quote.driver';
 import { BcbPtaxDriver } from '../drivers/bcb-ptax.driver';
 import { BrapiQuoteDriver } from '../drivers/brapi-quote.driver';
+import { CvmQuoteDriver } from '../drivers/cvm-quote.driver';
 import { CoinGeckoQuoteDriver } from '../drivers/coingecko-quote.driver';
 import { EmptyHeldAssetsDriver } from '../drivers/empty-held-assets.driver';
 import { FinnhubQuoteDriver } from '../drivers/finnhub-quote.driver';
@@ -32,6 +33,16 @@ import { QuoteReadApplication } from './quote-read.application';
 import { QuotesChunkApplication } from './quotes-chunk.application';
 import { QuotesSweepApplication } from './quotes-sweep.application';
 import { ReferenceDataApplication } from './reference-data.application';
+
+const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
+    BrapiQuoteDriver,
+    FinnhubQuoteDriver,
+    TwelveDataQuoteDriver,
+    AlphaVantageQuoteDriver,
+    CoinGeckoQuoteDriver,
+    TesouroQuoteDriver,
+    CvmQuoteDriver
+];
 
 @Module({
     imports: [
@@ -64,36 +75,19 @@ import { ReferenceDataApplication } from './reference-data.application';
         AlphaVantageQuoteDriver,
         CoinGeckoQuoteDriver,
         TesouroQuoteDriver,
+        CvmQuoteDriver,
         BcbPtaxDriver,
         MockExchangeRateDriver,
         {
             provide: QUOTE_PROVIDERS,
-            inject: [
-                marketDataConfig.KEY,
-                BrapiQuoteDriver,
-                FinnhubQuoteDriver,
-                TwelveDataQuoteDriver,
-                AlphaVantageQuoteDriver,
-                CoinGeckoQuoteDriver,
-                TesouroQuoteDriver
-            ],
-            useFactory: (
-                config: ConfigType<typeof marketDataConfig>,
-                brapi: BrapiQuoteDriver,
-                finnhub: FinnhubQuoteDriver,
-                twelvedata: TwelveDataQuoteDriver,
-                alphavantage: AlphaVantageQuoteDriver,
-                coingecko: CoinGeckoQuoteDriver,
-                tesouro: TesouroQuoteDriver
-            ): QuoteProviderPort[] =>
-                selectQuoteProviders(config, {
-                    [QUOTE_PROVIDER_IDS.brapi]: brapi,
-                    [QUOTE_PROVIDER_IDS.finnhub]: finnhub,
-                    [QUOTE_PROVIDER_IDS.twelvedata]: twelvedata,
-                    [QUOTE_PROVIDER_IDS.alphavantage]: alphavantage,
-                    [QUOTE_PROVIDER_IDS.coingecko]: coingecko,
-                    [QUOTE_PROVIDER_IDS.tesouro]: tesouro
-                } satisfies Record<QuoteProviderId, QuoteProviderPort>)
+            inject: [marketDataConfig.KEY, ...LIVE_QUOTE_DRIVERS],
+            useFactory: (config: ConfigType<typeof marketDataConfig>, ...drivers: QuoteProviderPort[]): QuoteProviderPort[] =>
+                selectQuoteProviders(
+                    config,
+                    Object.fromEntries(
+                        drivers.map((driver: QuoteProviderPort): [QuoteProviderId, QuoteProviderPort] => [driver.provider, driver])
+                    ) as Record<QuoteProviderId, QuoteProviderPort>
+                )
         },
         {
             provide: ExchangeRatePort,

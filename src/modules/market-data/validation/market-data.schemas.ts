@@ -17,7 +17,7 @@ export const quoteItemSchema = z.object({
     price: z.string().describe('Last known price as a decimal string, in the asset currency'),
     currency: z.string().length(3).describe('ISO 4217 currency of the price'),
     priceDate: z.string().describe('Date (YYYY-MM-DD) of the session the price refers to'),
-    source: z.string().describe('Provider that answered: brapi, finnhub, twelvedata, alphavantage, coingecko, tesouro or mock'),
+    source: z.string().describe('Provider that answered: brapi, finnhub, twelvedata, alphavantage, coingecko, tesouro, cvm or mock'),
     stale: z.boolean().describe('Whether the price is older than the freshness window; the value is still shown, with a warning')
 });
 

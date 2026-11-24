@@ -5,6 +5,7 @@ export const STALE_AFTER_DAYS: Readonly<Record<QuoteMarket, number>> = {
     B3: 4,
     US: 4,
     TESOURO: 4,
+    CVM: 7,
     CRYPTO: 2
 };
 
@@ -50,5 +51,9 @@ export function expectedPriceDate(market: QuoteMarket, now: Date): string {
     if (market === QUOTE_MARKETS.us) {
         return lastWeekdayOnOrBefore(DateUtil.localDateIn(US_TIMEZONE, now));
     }
-    return lastWeekdayOnOrBefore(DateUtil.localDateIn(DateUtil.BRAZIL_TIMEZONE, now));
+    const today: string = DateUtil.localDateIn(DateUtil.BRAZIL_TIMEZONE, now);
+    if (market === QUOTE_MARKETS.cvm) {
+        return lastWeekdayOnOrBefore(isoOfDayNumber(dayNumber(today) - 1));
+    }
+    return lastWeekdayOnOrBefore(today);
 }

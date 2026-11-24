@@ -53,7 +53,8 @@ const DEFAULT_LIMITS: Readonly<Record<QuoteProviderId, BudgetLimits>> = {
     twelvedata: { minute: 8, day: 800 },
     alphavantage: { day: 25 },
     coingecko: { minute: 100, month: 10_000 },
-    tesouro: {}
+    tesouro: {},
+    cvm: {}
 };
 
 export type MarketDataSettings = z.infer<typeof schema> & {
