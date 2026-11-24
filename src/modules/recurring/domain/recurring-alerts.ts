@@ -103,7 +103,13 @@ function priceIncreaseInside(series: AlertSeries, scope: Scope): DesiredAlert[] 
     const start: number = plateauStart(own.map((charge: AlertCharge): number => charge.amountMinor));
     const first: AlertCharge | undefined = own[start];
     const prior: AlertCharge[] = own.slice(0, start).slice(-(annual ? ANNUAL_WINDOW : PRICE_WINDOW));
-    if (first === undefined || prior.length < (annual ? ANNUAL_WINDOW : MIN_PRIOR) || !isRecent(first.date, scope.today)) {
+    const secondAtNewPrice: boolean = own.length > start + 1;
+    if (
+        first === undefined ||
+        secondAtNewPrice ||
+        prior.length < (annual ? ANNUAL_WINDOW : MIN_PRIOR) ||
+        !isRecent(first.date, scope.today)
+    ) {
         return [];
     }
     const amounts: number[] = prior.map((charge: AlertCharge): number => charge.amountMinor);

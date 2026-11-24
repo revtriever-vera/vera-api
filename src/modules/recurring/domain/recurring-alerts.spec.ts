@@ -78,21 +78,25 @@ describe('aumento de preço', () => {
         });
     });
 
-    it('segue na primeira cobrança do valor novo enquanto ela é recente, mesmo com a segunda já paga', () => {
+    it('some na segunda cobrança com o preço novo, mesmo recente', () => {
         const charges: AlertCharge[] = [...MONTHLY, charge('c5', '2026-11-05', 4990), charge('c6', '2026-12-05', 4990)];
 
-        const alerts: DesiredAlert[] = deriveAlerts([series(['c1', 'c2', 'c3', 'c4', 'c5', 'c6'])], charges, '2026-12-10');
-
-        expect(alerts).toHaveLength(1);
-        expect(alerts[0]).toMatchObject({ fingerprint: 'c5' });
+        expect(deriveAlerts([series(['c1', 'c2', 'c3', 'c4', 'c5', 'c6'])], charges, '2026-12-10')).toEqual([]);
     });
 
-    it('some quando a primeira cobrança do valor novo já passou de 90 dias', () => {
-        const charges: AlertCharge[] = [...MONTHLY, charge('c5', '2026-11-05', 4990), charge('c6', '2026-12-05', 4990)];
+    it('um novo aumento depois da série estabilizar gera alerta novo', () => {
+        const charges: AlertCharge[] = [
+            ...MONTHLY,
+            charge('c5', '2026-11-05', 4990),
+            charge('c6', '2026-12-05', 4990),
+            charge('c7', '2027-01-05', 4990),
+            charge('c8', '2027-02-05', 5990)
+        ];
 
-        const alerts: DesiredAlert[] = deriveAlerts([series(['c1', 'c2', 'c3', 'c4', 'c5', 'c6'])], charges, '2027-03-10');
+        const alerts: DesiredAlert[] = deriveAlerts([series(['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'])], charges, '2027-02-10');
 
-        expect(alerts).toEqual([]);
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0]).toMatchObject({ fingerprint: 'c8', data: { fromAmountMinor: 4990, toAmountMinor: 5990 } });
     });
 
     it('com duas cobranças soltas no valor novo não alerta mais', () => {
@@ -273,20 +277,5 @@ describe('chargesOfTransactions', () => {
         ]);
 
         expect(found).toEqual([{ id: 'a', date: '2026-10-05', amountMinor: 4490, accountId: 'nubank', merchantKey: 'NETFLIX' }]);
-    });
-});
-
-describe('aumento de preço com mais de uma cobrança no valor novo', () => {
-    it('alerta na primeira cobrança do valor novo: 44,90 para 55,90 com duas cobranças', () => {
-        const all: AlertCharge[] = [...MONTHLY, charge('n1', '2026-11-05', 5590), charge('n2', '2026-12-05', 5590)];
-
-        const alerts: DesiredAlert[] = deriveAlerts([series(['c1', 'c2', 'c3', 'c4', 'n1', 'n2'])], all, '2026-12-06');
-
-        expect(alerts).toHaveLength(1);
-        expect(alerts[0]).toMatchObject({
-            kind: 'price_increase',
-            fingerprint: 'n1',
-            data: { fromAmountMinor: 4490, toAmountMinor: 5590, percent: 24 }
-        });
     });
 });
