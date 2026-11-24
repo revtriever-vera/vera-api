@@ -9,6 +9,7 @@ import {
     DeploymentMode,
     EffectivePlan,
     OpenLinesOfSource,
+    OpenSubscriptionLine,
     PAID_FEATURES,
     PaidFeature
 } from './plans.types';
@@ -47,6 +48,10 @@ export class PlanDomain {
 
     public async openLinesBySource(productId: string): Promise<OpenLinesOfSource[]> {
         return this.contracts.openBySourceAcrossTenants(productId);
+    }
+
+    public async openSubscriptionLines(productId: string): Promise<OpenSubscriptionLine[]> {
+        return this.contracts.openSubscriptionLinesAcrossTenants(productId);
     }
 
     public async hasAnyLineOf(productId: string): Promise<boolean> {

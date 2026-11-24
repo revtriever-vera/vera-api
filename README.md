@@ -129,6 +129,10 @@ npm run build
 
 Os testes de integração sobem Postgres e Redis por Testcontainers e são pesados: rode só os specs afetados.
 
+### `npm run ci:local`
+
+Repete o job `verify` do `ci.yml` na sua máquina: format, lint, typecheck, nomes de migração, drift guard dos tipos gerados (sobe um Postgres descartável numa porta livre), testes unitários com cobertura, integração com cobertura e o gate de 85%. Para no primeiro erro e imprime um resumo com o tempo de cada passo. Sonar e `cdk diff` ficam de fora porque dependem do GitHub. É a suíte inteira (leva dezenas de minutos); no dia a dia rode só os specs afetados e deixe o `ci:local` para antes de subir um conjunto grande de mudanças.
+
 ## Antes do primeiro deploy
 
 O deploy ainda não existe neste repositório. A infraestrutura de dados (CDK, pasta `infra/`) já existe e o pipeline de CI/CD chega no #36. Quando existirem, nenhum valor de infraestrutura (conta, rede, banco, endpoint) fica no código: tudo vem de variáveis e secrets do repositório ou do SSM Parameter Store. Este repositório é público, então nunca grave nesses arquivos IDs de conta, hosts internos, e-mails pessoais, tokens ou chaves.

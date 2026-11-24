@@ -3,7 +3,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareTenantRepository } from '../../../core/database/repositories/bare-tenant.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { CompanyProduct, ContractEndReason, ContractSource, OpenLinesOfSource } from '../domain/plans.types';
+import { CompanyProduct, ContractEndReason, ContractSource, OpenLinesOfSource, OpenSubscriptionLine } from '../domain/plans.types';
 
 const TRIAL_SOURCE: ContractSource = 'trial';
 const CARD_TRIAL_SOURCE: ContractSource = 'card_trial';
@@ -117,17 +117,22 @@ export class CompanyProductsRepository extends BareTenantRepository<'CompanyProd
     }
 
     public async openBySourceAcrossTenants(productId: string): Promise<OpenLinesOfSource[]> {
-        const rows: { source: string; total: string | number | bigint; priceCents: string | number | bigint | null }[] =
-            await this.selectSkipConstraint()
-                .select((eb) => ['source', eb.fn.countAll().as('total'), eb.fn.sum('priceCents').as('priceCents')])
-                .where('productId', '=', productId)
-                .where('endsAt', 'is', null)
-                .groupBy('source')
-                .execute();
-        return rows.map((row): OpenLinesOfSource => ({
-            source: row.source,
-            lines: Number(row.total),
-            priceCents: Number(row.priceCents ?? 0)
-        }));
+        const rows: { source: string; total: string | number | bigint }[] = await this.selectSkipConstraint()
+            .select((eb) => ['source', eb.fn.countAll().as('total')])
+            .where('productId', '=', productId)
+            .where('endsAt', 'is', null)
+            .groupBy('source')
+            .execute();
+        return rows.map((row): OpenLinesOfSource => ({ source: row.source, lines: Number(row.total) }));
+    }
+
+    public async openSubscriptionLinesAcrossTenants(productId: string): Promise<OpenSubscriptionLine[]> {
+        const rows: { subscriptionId: string | null; priceCents: string | number | bigint }[] = await this.selectSkipConstraint()
+            .select(['subscriptionId', 'priceCents'])
+            .where('productId', '=', productId)
+            .where('endsAt', 'is', null)
+            .where('source', '=', 'subscription')
+            .execute();
+        return rows.map((row): OpenSubscriptionLine => ({ subscriptionId: row.subscriptionId, priceCents: Number(row.priceCents) }));
     }
 }

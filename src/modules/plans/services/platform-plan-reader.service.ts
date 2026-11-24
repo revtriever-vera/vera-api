@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PlanCatalogDomain } from '../domain/plan-catalog.domain';
 import { PlanDomain } from '../domain/plan.domain';
-import { CompanyProduct, ContractSource, OpenLinesOfSource, PlanKey, PRODUCT_KEYS } from '../domain/plans.types';
+import { CompanyProduct, ContractSource, OpenLinesOfSource, OpenSubscriptionLine, PlanKey, PRODUCT_KEYS } from '../domain/plans.types';
 
 export interface PlatformPlanOverview {
     readonly premium: number;
     readonly trials: number;
     readonly cardTrials: number;
     readonly noCardTrials: number;
-    readonly estimatedMonthlyRevenueCents: number;
+    /** Open paid lines with the base price each one carries; the discount of the current cycle is applied by billing. */
+    readonly subscriptionLines: readonly OpenSubscriptionLine[];
 }
 
 export interface PlatformPlanOfCompany {
@@ -39,7 +40,7 @@ export class PlatformPlanReaderService {
             trials: cardTrials + noCardTrials,
             cardTrials,
             noCardTrials,
-            estimatedMonthlyRevenueCents: lines.find((line: OpenLinesOfSource): boolean => line.source === 'subscription')?.priceCents ?? 0
+            subscriptionLines: await this.plans.openSubscriptionLines(productId)
         };
     }
 

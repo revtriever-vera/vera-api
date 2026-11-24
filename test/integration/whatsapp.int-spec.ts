@@ -74,8 +74,10 @@ function listen(server: Server): Promise<number> {
     });
 }
 
+const NOW_SECONDS: string = String(Math.floor(Date.now() / 1000));
+
 function nowSeconds(): string {
-    return String(Math.floor(Date.now() / 1000));
+    return NOW_SECONDS;
 }
 
 function messageBody(phoneNumberId: string, from: string, wamid: string, text: string): string {
@@ -241,7 +243,7 @@ describe('whatsapp (auto-hospedada, driver mock)', () => {
         expect(aliceOk.status).toBe(200);
         const refused = await harness.callText('GET', query('unsubscribe', VERIFY_A));
         expect(refused.status).toBe(403);
-        expect(refused.contentType).toContain('application/json');
+        expect(refused.contentType).toContain('application/problem+json');
         expect((await harness.callText('GET', query('subscribe', 'errado'))).status).toBe(403);
         expect((await harness.callText('GET', '/whatsapp/webhook')).status).toBe(403);
     });

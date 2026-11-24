@@ -10,6 +10,10 @@ export class BillingPriceQuoteDomain {
         return this.quotes.quote(draft);
     }
 
+    public async lastCyclesAcrossTenants(subscriptionIds: readonly string[]): Promise<Map<string, number>> {
+        return this.quotes.lastCyclesAcrossTenants(subscriptionIds);
+    }
+
     public async lastCycleOf(subscriptionId: string): Promise<number> {
         return this.quotes.lastCycleOf(subscriptionId);
     }
