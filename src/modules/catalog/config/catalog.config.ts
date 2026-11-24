@@ -24,7 +24,7 @@ const optionalUrl = optionalText.refine(
 const schema = z.object({
     IS_LOCAL: isLocalSchema,
     CATALOG_DRIVER: optionalText.pipe(z.enum(['live', 'mock']).default('mock')),
-    B3_INSTRUMENTS_URL: optionalUrl,
+    CVM_DATA_BASE_URL: withDefault('https://dados.cvm.gov.br/dados').pipe(z.string().url()),
     TESOURO_PRICES_CSV_URL: optionalUrl,
     FINNHUB_API_KEY: optionalText,
     FINNHUB_BASE_URL: withDefault('https://finnhub.io/api/v1').pipe(z.string().url()),

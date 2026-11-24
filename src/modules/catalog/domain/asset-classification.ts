@@ -23,6 +23,7 @@ const TREASURY_CLASS_BY_SLUG: Readonly<Record<string, ClassKey>> = {
     'prefixado-juros-semestrais': CLASS_KEYS.rfPre,
     ipca: CLASS_KEYS.rfIpca,
     'ipca-juros-semestrais': CLASS_KEYS.rfIpca,
+    'igpm-juros-semestrais': CLASS_KEYS.rfIpca,
     'renda-mais': CLASS_KEYS.rfIpca,
     'educa-mais': CLASS_KEYS.rfIpca
 };

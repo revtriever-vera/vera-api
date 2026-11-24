@@ -26,19 +26,18 @@ describe('selectAssetSources', () => {
         expect(sources.every((source: AssetSourcePort) => source instanceof MockAssetSourceDriver)).toBe(true);
     });
 
-    it('registers a live driver only when its URL or key is configured', () => {
+    it('registers the CVM driver always and the others only when their URL or key is configured', () => {
         const sources: AssetSourcePort[] = selectAssetSources(
             config({ FINNHUB_API_KEY: 'chave-falsa', TESOURO_PRICES_CSV_URL: 'https://tesouro.example/p.csv' }),
             LIVE
         );
 
-        expect(sources.map((source: AssetSourcePort) => source.source)).toEqual(['us', 'tesouro']);
+        expect(sources.map((source: AssetSourcePort) => source.source)).toEqual(['b3', 'us', 'tesouro']);
     });
 
     it('registers every live driver when everything is configured and none otherwise', () => {
         const all: AssetSourcePort[] = selectAssetSources(
             config({
-                B3_INSTRUMENTS_URL: 'https://b3.example/i.csv',
                 TESOURO_PRICES_CSV_URL: 'https://tesouro.example/p.csv',
                 FINNHUB_API_KEY: 'a',
                 COINGECKO_API_KEY: 'b'
@@ -47,7 +46,7 @@ describe('selectAssetSources', () => {
         );
 
         expect(all).toHaveLength(4);
-        expect(selectAssetSources(config({}), LIVE)).toEqual([]);
+        expect(selectAssetSources(config({}), LIVE).map((source: AssetSourcePort) => source.source)).toEqual(['b3']);
     });
 });
 

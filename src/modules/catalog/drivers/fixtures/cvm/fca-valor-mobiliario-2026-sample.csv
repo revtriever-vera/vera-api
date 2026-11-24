@@ -1,0 +1,10 @@
+CNPJ_Companhia;Data_Referencia;Versao;ID_Documento;Nome_Empresarial;Valor_Mobiliario;Sigla_Classe_Acao_Preferencial;Classe_Acao_Preferencial;Codigo_Negociacao;Composicao_BDR_Unit;Mercado;Sigla_Entidade_Administradora;Entidade_Administradora;Data_Inicio_Negociacao;Data_Fim_Negociacao;Segmento;Data_Inicio_Listagem;Data_Fim_Listagem
+60.872.504/0001-23;2026-01-01;2;156921;ITAU UNIBANCO HOLDING S.A.;Ações Ordinárias;;;ITUB3;;Bolsa;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2002-12-30;;Nível 1 de Governança Corporativa;2002-12-30;
+60.872.504/0001-23;2026-01-01;2;156921;ITAU UNIBANCO HOLDING S.A.;Ações Preferenciais;;;ITUB4;;Bolsa;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2002-12-30;;Nível 1 de Governança Corporativa;2002-12-30;
+33.000.167/0001-01;2026-01-01;1;156276;PETROLEO BRASILEIRO S.A. PETROBRAS;Ações Preferenciais;;;PETR4;;Bolsa;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2018-05-14;;Nível 2 de Governança Corporativa;1977-07-20;
+07.859.971/0001-30;2026-01-01;1;158852;TRANSMISSORA ALIANÇA DE ENERGIA ELÉTRICA S.A.;Units;;;TAEE11;1 ON / 2 PN;Bolsa;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2006-10-27;;Nível 2 de Governança Corporativa;2006-10-26;
+00.001.180/0001-26;2026-01-01;4;159987;AXIA Energia S.A.;Debêntures;;;;;Balcão Organizado;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2024-10-17;;Básico;2024-09-15;
+42.737.954/0001-21;2026-01-01;1;158080;Inter & Co, Inc.;BDRs;;;INBR32;Class A Shares;Bolsa;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2022-06-20;;Básico;2021-07-16;
+00.249.786/0001-85;2026-01-01;1;154883;FORPART S.A. - EM LIQUIDAÇÃO;Ações Ordinárias;;;NÃO HÁ;;Balcão Não-Organizado;;;;;;1995-02-21;2012-12-27
+00.185.475/0001-08;2026-01-01;1;154886;PARCOM PARTICIPACOES S.A. - EM LIQUIDAÇÃO;Ações Ordinárias;;;NÃO HÁ;;Balcão Organizado;B3;B3 S.A. - Brasil, Bolsa, Balcão.;1998-06-17;2012-12-27;Básico;1998-06-17;2012-12-27
+13.444.994/0001-87;2026-01-01;4;161831;MLOG S.A.;Ações Ordinárias;;;000000;;Bolsa;B3;B3 S.A. - Brasil, Bolsa, Balcão.;2011-09-12;2017-01-05;Nível 2 de Governança Corporativa;2011-09-12;2017-01-05

@@ -31,6 +31,7 @@ describe('treasuryKindOf', () => {
         for (const externalId of [
             'prefixado-juros-semestrais:2033-01-01',
             'ipca-juros-semestrais:2032-08-15',
+            'igpm-juros-semestrais:2031-07-01',
             'renda-mais:2049-12-15',
             'educa-mais:2040-01-01'
         ]) {

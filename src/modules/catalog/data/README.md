@@ -2,19 +2,34 @@
 
 Estes arquivos são lidos por import JSON pelo módulo `catalog` e validados por schema zod (`validation/curated-maps.schemas.ts`) no carregamento e em `domain/curated-maps.spec.ts`. Correções entram por PR.
 
+## Fonte do catálogo da B3
+
+O catálogo de ações, units, BDRs, FIIs e ETFs vem do Portal de Dados Abertos da CVM (`dados.cvm.gov.br`), licença ODbL (Open Data Commons): cite a CVM como fonte onde a Vera mostrar esses dados. Nenhum arquivo ou página da B3 é lido. O endereço base é `CVM_DATA_BASE_URL`.
+
+| Tipo                                                  | Conjunto                                                                                    | O que dá                                                                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Ação, unit, BDR patrocinado                           | FCA, `valor_mobiliario` (ano corrente e anterior)                                           | ticker (`Codigo_Negociacao`), nome, CNPJ; só mercado `Bolsa` ou `Balcão Organizado` e sem data de fim de negociação |
+| Unit com código em branco no FCA, BDR não patrocinado | CDA dos fundos, `BLC_4` (último mês publicado)                                              | ticker e nome como os fundos os declaram; só os que algum fundo manteve no mês                                      |
+| FII                                                   | Informe mensal de FII, `geral` (ano corrente e anterior), cruzado com o cadastro de classes | ticker, nome, CNPJ                                                                                                  |
+| FIAGRO                                                | Informe mensal de FIAGRO (último mês publicado), cruzado com o cadastro de classes          | ticker, nome, CNPJ                                                                                                  |
+| ETF                                                   | Cadastro de fundos por classe (CVM 175), `registro_classe`                                  | nome e situação do ETF da lista curada abaixo                                                                       |
+
+O tipo vem da classe da CVM (`Tipo_Classe`: FII e FIAGRO viram `fii`, FIIM, o fundo de índice, vira `etf`), nunca de heurística sobre o ticker. A CVM não publica o ticker de um fundo: o do FII e do FIAGRO sai do código do emissor no ISIN da cota (`BR` + 4 letras + `CTF`...) mais `11`, e o do ETF vem da lista curada. Só entra fundo com situação `Em Funcionamento Normal` no cadastro.
+
 ## `etf-class-map.json` (ETFs da B3)
 
-Cada entrada diz a **exposição** de um ETF negociado na B3, não onde ele é negociado.
+Cada entrada diz a **exposição** de um ETF negociado na B3, não onde ele é negociado, e qual classe da CVM é o ETF.
 
 ```json
-{ "symbol": "IVVB11", "classKey": "acoes_eua", "dollarExposure": true }
+{ "symbol": "IVVB11", "cnpj": "19909560000191", "classKey": "acoes_eua", "dollarExposure": true }
 ```
 
 - `symbol`: ticker na B3, em maiúsculas. A lista fica ordenada por `symbol` e sem repetição.
+- `cnpj`: 14 dígitos do CNPJ da classe de cotas no `registro_classe` da CVM (`Tipo_Classe` `FIIM`). É o que liga o ticker ao cadastro: sem entrada aqui o ETF não entra no catálogo, e uma classe que a CVM cancela sai do catálogo.
 - `classKey`: uma das chaves padrão (`rf_pos`, `rf_pre`, `rf_ipca`, `acoes_br`, `fii`, `acoes_eua`, `reits`, `cripto`) ou `null` quando a exposição não tem classe padrão (ouro, China, Europa, global). Com `null` o front pede que o usuário escolha.
 - `dollarExposure`: `true` só quando a carteira do fundo é de ativos dos EUA sem hedge cambial.
 
-O mapa vale antes de qualquer outra regra. Um ticker que não está aqui e que a B3 classifica como ETF fica com `suggestedClassKey = null`.
+O mapa vale antes de qualquer outra regra.
 
 O `typeGroup` (card de tipo no modal de cadastro) segue a exposição: `acoes_eua` e `cripto` e `fii` para ETFs com essas classes; todo o resto dos ETFs da B3, inclusive os de renda fixa e os com `classKey` nulo, cai em `acoes_br`.
 
@@ -47,6 +62,6 @@ O spec exige que todo ativo de `popular-assets.json` e de `seed-assets.json` (fo
 
 ## Como contribuir
 
-1. Confira o regulamento do fundo (ou o índice que ele replica) antes de propor uma classe. Se a exposição for mista ou você não tiver certeza, não inclua o ticker: `classKey: null` só serve para exposição que de fato não tem classe padrão.
+1. Para um ETF novo, ache a classe no `registro_classe` da CVM (`Tipo_Classe` `FIIM`) e confira nome, CNPJ e ticker. Confira o regulamento do fundo (ou o índice que ele replica) antes de propor uma classe. Se a exposição for mista ou você não tiver certeza, não inclua o ticker: `classKey: null` só serve para exposição que de fato não tem classe padrão.
 2. Edite o JSON mantendo a ordem por `symbol`.
 3. Rode `npx vitest run --config vitest.config.mts src/modules/catalog/domain` e abra o PR citando a fonte (regulamento ou página do índice).

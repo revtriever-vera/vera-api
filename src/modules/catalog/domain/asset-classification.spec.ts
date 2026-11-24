@@ -116,6 +116,7 @@ describe('classifyAsset', () => {
         ['prefixado-juros-semestrais:2033-01-01', 'rf_pre'],
         ['ipca:2035-05-15', 'rf_ipca'],
         ['ipca-juros-semestrais:2040-08-15', 'rf_ipca'],
+        ['igpm-juros-semestrais:2031-07-01', 'rf_ipca'],
         ['renda-mais:2049-12-15', 'rf_ipca'],
         ['educa-mais:2038-12-15', 'rf_ipca']
     ])('classifies the treasury bond %s as %s', (externalId: string, classKey: string) => {
