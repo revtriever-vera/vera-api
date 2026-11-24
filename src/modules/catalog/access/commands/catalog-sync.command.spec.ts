@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { QueueEnvelope } from '../../../../core/queue/queue.types';
 import { CatalogSyncApplication } from '../../application/catalog-sync.application';
 import { CatalogSyncSourceHandler } from '../queue/catalog-sync-source.handler';
-import { CatalogSyncTesouroDailyCommand, CatalogSyncTickHandler, CatalogSyncWeeklyCommand } from './catalog-sync.command';
+import {
+    CatalogSyncCvmFundsDailyCommand,
+    CatalogSyncTesouroDailyCommand,
+    CatalogSyncTickHandler,
+    CatalogSyncWeeklyCommand
+} from './catalog-sync.command';
 
 function envelope(type: string, payload: unknown): QueueEnvelope {
     return { type, requestId: 'req', companyId: null, occurredAt: new Date(0).toISOString(), trace: {}, payload };
@@ -24,6 +29,18 @@ describe('catalog commands', () => {
             'catalog-sync-tesouro-daily-command',
             '0 6 * * *',
             { cadence: 'tesouro_daily' }
+        ]);
+    });
+
+    it('schedules the CVM funds sync Monday to Saturday at 09:00, after the informe is published', () => {
+        const funds: CatalogSyncCvmFundsDailyCommand = new CatalogSyncCvmFundsDailyCommand();
+
+        expect([funds.key, funds.queue, funds.type, funds.pattern, funds.payload]).toEqual([
+            'catalog-sync-cvm-funds-daily-command',
+            'vera-catalog',
+            'catalog.sync.tick.requested',
+            '0 9 * * 1-6',
+            { cadence: 'cvm_funds_daily' }
         ]);
     });
 

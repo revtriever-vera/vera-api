@@ -7,6 +7,19 @@ import { Asset, AssetSearchCriteria, SEARCH_MAX_LIMIT } from '../domain/catalog.
 import { CatalogLogService } from '../services/catalog-log.service';
 import { AssetItem, AssetSearchQuery, AssetSearchResponse } from '../validation/catalog.schemas';
 
+const CNPJ_TEXT: RegExp = /^[\d./-]+$/;
+const CNPJ_MIN_BARE_DIGITS: number = 8;
+
+export function searchTextOf(raw: string): string {
+    const text: string = raw.trim().toLowerCase();
+    if (!CNPJ_TEXT.test(text)) {
+        return text;
+    }
+    const digits: string = text.replaceAll(/\D/g, '');
+    const isCnpj: boolean = digits !== '' && (digits.length >= CNPJ_MIN_BARE_DIGITS || /[./-]/.test(text));
+    return isCnpj ? digits : text;
+}
+
 export function toAssetItem(asset: Asset): AssetItem {
     const profile: ReturnType<typeof profileOf> = profileOf(asset.market, asset.symbol);
     return {
@@ -34,7 +47,7 @@ export class AssetSearchApplication {
     ) {}
 
     public async search(query: AssetSearchQuery): Promise<AssetSearchResponse> {
-        const text: string = (query.q ?? '').trim().toLowerCase();
+        const text: string = searchTextOf(query.q ?? '');
         const criteria: AssetSearchCriteria = {
             group: query.group,
             text,

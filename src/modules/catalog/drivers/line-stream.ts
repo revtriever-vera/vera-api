@@ -6,19 +6,27 @@ function isByteStream(value: unknown): value is AsyncIterable<Uint8Array> {
     return typeof value === 'object' && value !== null && Symbol.asyncIterator in value;
 }
 
-async function* chunksOf(body: AsyncIterable<Uint8Array>): AsyncGenerator<Uint8Array> {
+export async function* chunksOf(body: AsyncIterable<Uint8Array>): AsyncGenerator<Uint8Array> {
     try {
         yield* body;
-    } catch {
-        throw new CatalogSourceError(SOURCE_ERROR_CODES.unreachable);
+    } catch (error: unknown) {
+        throw error instanceof CatalogSourceError ? error : new CatalogSourceError(SOURCE_ERROR_CODES.unreachable);
     }
 }
 
-export async function* linesOf(response: Response, encoding: string): AsyncGenerator<string> {
+export function byteStreamOf(response: Response): AsyncIterable<Uint8Array> {
     const body: unknown = response.body;
     if (!isByteStream(body)) {
         throw new CatalogSourceError(SOURCE_ERROR_CODES.formatInvalid);
     }
+    return body;
+}
+
+export async function* linesOf(response: Response, encoding: string): AsyncGenerator<string> {
+    yield* linesOfBytes(byteStreamOf(response), encoding);
+}
+
+export async function* linesOfBytes(body: AsyncIterable<Uint8Array>, encoding: string): AsyncGenerator<string> {
     const decoder: TextDecoder = new TextDecoder(encoding);
     let pending: string = '';
     for await (const chunk of chunksOf(body)) {

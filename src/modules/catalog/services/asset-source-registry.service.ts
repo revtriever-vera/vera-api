@@ -11,7 +11,8 @@ const LIVE_REQUIREMENTS: Readonly<Record<CatalogSource, (config: CatalogSettings
     b3: (): boolean => true,
     us: (config: CatalogSettings): boolean => config.FINNHUB_API_KEY !== undefined,
     crypto: (config: CatalogSettings): boolean => config.COINGECKO_API_KEY !== undefined,
-    tesouro: (config: CatalogSettings): boolean => config.TESOURO_PRICES_CSV_URL !== undefined
+    tesouro: (config: CatalogSettings): boolean => config.TESOURO_PRICES_CSV_URL !== undefined,
+    cvm_funds: (): boolean => true
 };
 
 export function selectAssetSources(config: CatalogSettings, live: Readonly<Record<CatalogSource, AssetSourcePort>>): AssetSourcePort[] {

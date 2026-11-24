@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { LogService } from '../../../core/observability/log.service';
-import { CatalogSource, SyncRunOutcome } from '../domain/catalog.types';
+import { CATALOG_SOURCES, CatalogSource, SyncRunOutcome } from '../domain/catalog.types';
+
+export interface FundCatalogCounts {
+    readonly classesRead: number;
+    readonly classesFiltered: number;
+    readonly seriesWithQuota: number;
+    readonly seriesWritten: number;
+    readonly seriesWithoutQuota: number;
+}
 
 const SYNC: string = 'catalog-sync';
 const SEARCH: string = 'catalog-search';
@@ -28,6 +36,22 @@ export class CatalogLogService {
 
     public sourceFailed(source: CatalogSource, errorCode: string): void {
         this.logService.error({ message: 'source failed', identifier: SOURCE, meta: { source, errorCode } });
+    }
+
+    public informeRead(month: string, notModified: boolean, rows: number, durationMs: number): void {
+        this.logService.info({
+            message: 'daily informe read',
+            identifier: SOURCE,
+            meta: { source: CATALOG_SOURCES.cvmFunds, month, notModified, rows, durationMs }
+        });
+    }
+
+    public fundCatalogBuilt(counts: FundCatalogCounts): void {
+        this.logService.info({
+            message: 'fund catalog built',
+            identifier: SOURCE,
+            meta: { source: CATALOG_SOURCES.cvmFunds, ...counts }
+        });
     }
 
     public searchFailed(error: unknown): void {

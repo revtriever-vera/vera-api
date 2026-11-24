@@ -1,0 +1,7 @@
+ID_Registro_Classe;ID_Subclasse;Codigo_CVM;Data_Constituicao;Data_Inicio;Denominacao_Social;Situacao;Data_Inicio_Situacao;Forma_Condominio;Exclusivo;Publico_Alvo;Previdenciario;Exclusivo_INR;Exclusivo_Previdencia_Complementar
+2;BETA0001;1;2025-01-01;2025-01-01;SUBCLASSE I DO BETA AÇÕES FIF RESP LIMITADA;Em Funcionamento Normal;2025-01-01;Aberto;N;Qualificado;N;N;N
+2;BETA0002;1;2025-01-01;2025-01-01;SUBCLASSE PRO DO BETA AÇÕES FIF RESP LIMITADA;Em Funcionamento Normal;2025-01-01;Aberto;N;Profissional;N;N;N
+2;BETA0003;1;2025-01-01;2025-01-01;SUBCLASSE CANCELADA DO BETA AÇÕES FIF RESP LIMITADA;Cancelado;2025-01-01;Aberto;N;Qualificado;N;N;N
+3;GAMA0001;1;2025-01-01;2025-01-01;SENIOR;Em Funcionamento Normal;2025-01-01;Aberto;N;;N;N;N
+5;EPSI0001;1;2025-01-01;2025-01-01;SUBCLASSE DO EPSILON;Em Funcionamento Normal;2025-01-01;Aberto;N;Público Geral;N;N;N
+2;BETA0004;1;2025-01-01;2025-01-01;SUBCLASSE SEM PUBLICO DO BETA;Em Funcionamento Normal;2025-01-01;Aberto;N;;N;N;N

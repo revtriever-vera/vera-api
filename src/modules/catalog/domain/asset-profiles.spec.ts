@@ -56,10 +56,13 @@ describe('asset-profiles.json', () => {
         expect(missing).toEqual([]);
     });
 
-    it('covers every seed asset that is not Tesouro', () => {
+    it('covers every seed asset that is not Tesouro or a CVM fund', () => {
         const missing: string[] = seedAssetsSchema
             .parse(seedAssetsJson)
-            .filter((asset) => asset.market !== 'TESOURO' && !ASSET_PROFILES.has(assetProfileKey(asset.market, asset.symbol)))
+            .filter(
+                (asset) =>
+                    asset.market !== 'TESOURO' && asset.market !== 'CVM' && !ASSET_PROFILES.has(assetProfileKey(asset.market, asset.symbol))
+            )
             .map((asset) => asset.symbol);
 
         expect(missing).toEqual([]);

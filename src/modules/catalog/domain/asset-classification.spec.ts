@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { AssetClassification, classifyAsset } from './asset-classification';
+import { AssetClassification, classifyAsset, suggestedClassOfFund } from './asset-classification';
 import { ASSET_KINDS, AssetKind, CatalogMarket, CLASS_KEYS, MARKETS, TYPE_GROUPS } from './catalog.types';
 
 function classify(market: CatalogMarket, symbol: string, kind: AssetKind, externalId: string = symbol): AssetClassification | null {
-    return classifyAsset(market, { externalId, symbol, kind });
+    return classifyAsset(market, { externalId, symbol, kind, raw: {} });
 }
 
 describe('classifyAsset', () => {
@@ -131,5 +131,45 @@ describe('classifyAsset', () => {
     it('drops an unknown treasury type and non-treasury kinds in the Tesouro market', () => {
         expect(classify(MARKETS.tesouro, 'Tesouro', ASSET_KINDS.treasury, 'desconhecido:2030-01-01')).toBeNull();
         expect(classify(MARKETS.tesouro, 'X', ASSET_KINDS.stock, 'selic:2029-03-01')).toBeNull();
+    });
+});
+
+describe('CVM funds', () => {
+    function fund(classification: string, anbima: string): AssetClassification | null {
+        return classifyAsset(MARKETS.cvm, {
+            externalId: '12345678000190',
+            symbol: '12345678000190',
+            kind: ASSET_KINDS.fund,
+            raw: { classification, anbima }
+        });
+    }
+
+    it('groups a fund under fundos without dollar exposure', () => {
+        expect(fund('Renda Fixa', 'Renda Fixa Simples')).toEqual({
+            kind: 'fund',
+            typeGroup: TYPE_GROUPS.fundos,
+            suggestedClassKey: CLASS_KEYS.rfPos,
+            dollarExposure: false
+        });
+    });
+
+    it('suggests acoes_br only for the Ações classification', () => {
+        expect(fund('Ações', 'Ações Livre')?.suggestedClassKey).toBe(CLASS_KEYS.acoesBr);
+    });
+
+    it.each(['Multimercado', 'Cambial', 'FMP-FGTS', 'Outro', ''])('has no suggestion for %s', (classification: string) => {
+        expect(fund(classification, 'Renda Fixa Simples')?.suggestedClassKey).toBeNull();
+    });
+
+    it.each(['Renda Fixa Investimento no Exterior', 'Previdência RF Duração Livre', 'Ações Índice Ativo', 'Ações Indices'])(
+        'drops the suggestion when the ANBIMA class is %s',
+        (anbima: string) => {
+            expect(suggestedClassOfFund('Renda Fixa', anbima)).toBeNull();
+            expect(suggestedClassOfFund('Ações', anbima)).toBeNull();
+        }
+    );
+
+    it('does not classify anything else in the CVM market', () => {
+        expect(classify(MARKETS.cvm, 'X', ASSET_KINDS.stock)).toBeNull();
     });
 });

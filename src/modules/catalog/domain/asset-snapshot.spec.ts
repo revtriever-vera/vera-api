@@ -26,6 +26,30 @@ describe('buildAssetWrites', () => {
         });
     });
 
+    it('writes a CVM fund series with the CVM quotes provider, 8 decimals and the suggestion from its classification', () => {
+        const fund: SourceAsset = source('12345678000190:SUB1', 'fund', {
+            symbol: '12345678000190',
+            raw: { classification: 'Renda Fixa', anbima: 'Renda Fixa Simples' }
+        });
+
+        const writes: AssetWrite[] = buildAssetWrites('CVM', [fund, source('X', 'stock')]);
+
+        expect(writes).toHaveLength(1);
+        expect(writes[0]).toMatchObject({
+            market: 'CVM',
+            externalId: '12345678000190:SUB1',
+            symbol: '12345678000190',
+            kind: 'fund',
+            typeGroup: 'fundos',
+            suggestedClassKey: 'rf_pos',
+            dollarExposure: false,
+            currency: 'BRL',
+            quotesProvider: 'cvm',
+            quantityDecimals: 8,
+            popularRank: null
+        });
+    });
+
     it('keeps the last occurrence of a duplicated external id', () => {
         const writes: AssetWrite[] = buildAssetWrites('B3', [source('ITUB4', 'stock'), source('ITUB4', 'stock', { name: 'Itau novo' })]);
 

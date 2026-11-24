@@ -6,13 +6,15 @@ export const assetSearchQuerySchema = z.object({
     group: z
         .nativeEnum(TYPE_GROUPS)
         .optional()
-        .describe('Registration type card that narrows the search: acoes_br, fii, acoes_eua, reits, cripto or tesouro'),
+        .describe('Registration type card that narrows the search: acoes_br, fii, acoes_eua, reits, cripto, tesouro or fundos'),
     q: z
         .string()
         .trim()
         .max(SEARCH_MAX_TEXT_LENGTH)
         .optional()
-        .describe('Ticker or name fragment, up to 60 characters; empty or missing lists the popular assets of the group'),
+        .describe(
+            'Ticker, name fragment or CNPJ (with or without punctuation), up to 60 characters; empty or missing lists the popular assets of the group'
+        ),
     limit: z.coerce
         .number()
         .int()
@@ -57,13 +59,13 @@ export const assetSearchResponseSchema = z.object({
 export type AssetSearchResponse = z.infer<typeof assetSearchResponseSchema>;
 
 export const syncTickPayloadSchema = z.object({
-    cadence: z.enum(['weekly', 'tesouro_daily']).optional()
+    cadence: z.enum(['weekly', 'tesouro_daily', 'cvm_funds_daily']).optional()
 });
 
 export type SyncTickPayload = z.infer<typeof syncTickPayloadSchema>;
 
 export const syncSourcePayloadSchema = z.object({
-    source: z.enum(['b3', 'us', 'crypto', 'tesouro'])
+    source: z.enum(['b3', 'us', 'crypto', 'tesouro', 'cvm_funds'])
 });
 
 export type SyncSourcePayload = z.infer<typeof syncSourcePayloadSchema>;

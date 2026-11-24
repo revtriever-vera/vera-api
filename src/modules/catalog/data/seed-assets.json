@@ -786,5 +786,35 @@
     "kind": "treasury",
     "currency": "BRL",
     "maturityDate": "2049-12-15"
+  },
+  {
+    "market": "CVM",
+    "externalId": "11111111000191",
+    "symbol": "11111111000191",
+    "name": "EXEMPLO RENDA FIXA REFERENCIADO DI",
+    "kind": "fund",
+    "currency": "BRL",
+    "fundClassification": "Renda Fixa",
+    "fundAnbima": "Renda Fixa Duração Baixa Grau de Invest."
+  },
+  {
+    "market": "CVM",
+    "externalId": "22222222000191",
+    "symbol": "22222222000191",
+    "name": "EXEMPLO AÇÕES LIVRE",
+    "kind": "fund",
+    "currency": "BRL",
+    "fundClassification": "Ações",
+    "fundAnbima": "Ações Livre"
+  },
+  {
+    "market": "CVM",
+    "externalId": "33333333000191",
+    "symbol": "33333333000191",
+    "name": "EXEMPLO MULTIMERCADO MACRO",
+    "kind": "fund",
+    "currency": "BRL",
+    "fundClassification": "Multimercado",
+    "fundAnbima": "Multimercados Macro"
   }
 ]

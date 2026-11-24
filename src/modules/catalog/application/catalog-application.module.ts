@@ -6,6 +6,7 @@ import { catalogConfig } from '../config/catalog.config';
 import { CatalogDomainModule } from '../domain/catalog-domain.module';
 import { CATALOG_SOURCES, CatalogSource } from '../domain/catalog.types';
 import { CoinGeckoMarketsDriver } from '../drivers/coingecko-markets.driver';
+import { CvmFundCatalogDriver } from '../drivers/cvm-fund-catalog.driver';
 import { CvmInstrumentsDriver } from '../drivers/cvm-instruments.driver';
 import { FinnhubSymbolsDriver } from '../drivers/finnhub-symbols.driver';
 import { TesouroTitlesDriver } from '../drivers/tesouro-titles.driver';
@@ -14,6 +15,7 @@ import { AssetCatalogService } from '../services/asset-catalog.service';
 import { AssetSourceRegistryService, selectAssetSources } from '../services/asset-source-registry.service';
 import { CatalogLogService } from '../services/catalog-log.service';
 import { CatalogMetricsService } from '../services/catalog-metrics.service';
+import { CvmDailyInformeReaderService } from '../services/cvm-daily-informe-reader.service';
 import { TesouroCsvReaderService } from '../services/tesouro-csv-reader.service';
 import { AssetSearchApplication } from './asset-search.application';
 import { CatalogSyncApplication } from './catalog-sync.application';
@@ -28,28 +30,39 @@ import { CatalogSyncApplication } from './catalog-sync.application';
         CatalogLogService,
         CatalogMetricsService,
         TesouroCsvReaderService,
+        CvmDailyInformeReaderService,
         CvmInstrumentsDriver,
         FinnhubSymbolsDriver,
         CoinGeckoMarketsDriver,
         TesouroTitlesDriver,
+        CvmFundCatalogDriver,
         {
             provide: ASSET_SOURCES,
-            inject: [catalogConfig.KEY, CvmInstrumentsDriver, FinnhubSymbolsDriver, CoinGeckoMarketsDriver, TesouroTitlesDriver],
+            inject: [
+                catalogConfig.KEY,
+                CvmInstrumentsDriver,
+                FinnhubSymbolsDriver,
+                CoinGeckoMarketsDriver,
+                TesouroTitlesDriver,
+                CvmFundCatalogDriver
+            ],
             useFactory: (
                 config: ConfigType<typeof catalogConfig>,
                 b3: CvmInstrumentsDriver,
                 us: FinnhubSymbolsDriver,
                 crypto: CoinGeckoMarketsDriver,
-                tesouro: TesouroTitlesDriver
+                tesouro: TesouroTitlesDriver,
+                cvmFunds: CvmFundCatalogDriver
             ): AssetSourcePort[] =>
                 selectAssetSources(config, {
                     [CATALOG_SOURCES.b3]: b3,
                     [CATALOG_SOURCES.us]: us,
                     [CATALOG_SOURCES.crypto]: crypto,
-                    [CATALOG_SOURCES.tesouro]: tesouro
+                    [CATALOG_SOURCES.tesouro]: tesouro,
+                    [CATALOG_SOURCES.cvmFunds]: cvmFunds
                 } satisfies Record<CatalogSource, AssetSourcePort>)
         }
     ],
-    exports: [AssetSearchApplication, CatalogSyncApplication, AssetCatalogService, TesouroCsvReaderService]
+    exports: [AssetSearchApplication, CatalogSyncApplication, AssetCatalogService, TesouroCsvReaderService, CvmDailyInformeReaderService]
 })
 export class CatalogApplicationModule {}
