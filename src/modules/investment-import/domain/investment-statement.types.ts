@@ -34,6 +34,7 @@ export interface ForeignPosition {
     readonly block: ForeignBlock;
     readonly symbol: string;
     readonly quantity: string;
+    readonly price: string | null;
 }
 
 export interface ForeignWithholding {

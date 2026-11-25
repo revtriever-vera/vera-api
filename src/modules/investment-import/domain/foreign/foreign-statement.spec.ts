@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { statementOfModelAnswers } from '../model/model-statement';
 import { IgnoredLine, ParsedInvestmentStatement, ParsedOperation, StatementNote } from '../investment-statement.types';
-import { foreignStatementOf, UsdRateTable } from './foreign-statement';
+import { foreignStatementOf, UsdRateTable, usdDatesOf } from './foreign-statement';
 
 const FIXTURES: string = join(__dirname, '..', '..', '..', '..', '..', 'test', 'fixtures', 'investment-import', 'generated', 'avenue');
 
@@ -109,9 +109,41 @@ describe('foreignStatementOf', () => {
         expect(operationOf(statement, 'MSFT', 'income').dollar?.closingQuantity).toBeNull();
     });
 
-    it('counts summary rows that no trade of the month explains', () => {
-        const statement: ParsedInvestmentStatement = foreignStatementOf(read(answerOf('2026-09')), ratesOf([]));
+    it('proposes a check buy with the summary price for rows that no trade of the month explains', () => {
+        const statement: ParsedInvestmentStatement = foreignStatementOf(
+            read(answerOf('2026-09')),
+            ratesOf([['2026-09-01', '5.00', '2026-09-01']])
+        );
+        const assumed: ParsedOperation = operationOf(statement, 'MSFT', 'buy');
+        expect(assumed).toMatchObject({
+            quantity: '3',
+            unitPrice: '433.00',
+            tradeDate: '2026-09-01',
+            grossMinor: 129900,
+            check: 'assumed_cost'
+        });
+        expect(assumed.dollar).toMatchObject({ fxRate: '5.00', grossBrlMinor: 649500 });
+        expect(noteCount(statement, 'foreign_position_not_applied')).toBe(0);
+    });
+
+    it('counts a summary row without price as not applied', () => {
+        const statement: ParsedInvestmentStatement = foreignStatementOf(
+            read(
+                answerOf('2026-09', (parsed: Record<string, unknown>): void => {
+                    for (const position of parsed['positions'] as Record<string, unknown>[]) {
+                        position['price'] = null;
+                    }
+                })
+            ),
+            ratesOf([])
+        );
         expect(noteCount(statement, 'foreign_position_not_applied')).toBe(1);
+        expect(statement.operations.some((operation: ParsedOperation): boolean => operation.check === 'assumed_cost')).toBe(false);
+    });
+
+    it('asks for the rate of the period start so the proposed buy can be converted', () => {
+        const statement: ParsedInvestmentStatement = read(answerOf('2026-09'));
+        expect(usdDatesOf(statement)).toContain('2026-09-01');
     });
 
     it('dedupes by an external reference that never carries plain text of the security id', () => {

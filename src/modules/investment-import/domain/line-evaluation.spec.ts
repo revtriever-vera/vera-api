@@ -47,6 +47,13 @@ describe('verdictOf', () => {
         expect(verdictOf(facts(flagged, { failure: 'sell_exceeds_position' })).status).toBe('blocked');
     });
 
+    it('a posição proposta pelo resumo do extrato vira check, e é ignorada quando já existe posição', () => {
+        const proposed: EditedLine = edited({}, { check: 'assumed_cost' });
+
+        expect(verdictOf(facts(proposed))).toEqual({ status: 'check', reason: 'assumed_cost' });
+        expect(verdictOf(facts(proposed, { hasPosition: true }))).toEqual({ status: 'ignored', reason: 'skipped' });
+    });
+
     it('orders skip, missing asset, unsupported direction, duplicate and failure', () => {
         expect(verdictOf(facts(edited({ skip: true }), { assetId: null })).reason).toBe('skipped');
         expect(verdictOf(facts(edited(), { assetId: null })).reason).toBe('asset_not_found');

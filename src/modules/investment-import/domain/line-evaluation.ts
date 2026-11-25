@@ -64,6 +64,9 @@ export function verdictOf(facts: LineFacts): LineVerdict {
     if (hasUnsupportedDirection(edited)) {
         return { status: LINE_STATUSES.blocked, reason: LINE_REASONS.unsupportedDirection };
     }
+    if (edited.line.check === LINE_REASONS.assumedCost && facts.hasPosition) {
+        return { status: LINE_STATUSES.ignored, reason: LINE_REASONS.skipped };
+    }
     if (facts.duplicate) {
         return { status: LINE_STATUSES.duplicate, reason: LINE_REASONS.duplicate };
     }

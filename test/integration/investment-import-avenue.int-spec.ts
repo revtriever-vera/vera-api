@@ -39,7 +39,8 @@ const RATES: readonly [string, string][] = [
     ['2026-08-05', '5.00'],
     ['2026-08-12', '5.00'],
     ['2026-08-14', '5.10'],
-    ['2026-08-25', '5.00']
+    ['2026-08-25', '5.00'],
+    ['2026-09-01', '5.20']
 ];
 
 describe('investment import of a monthly Avenue statement', () => {
@@ -53,7 +54,7 @@ describe('investment import of a monthly Avenue statement', () => {
         mock = harness.app.get(MockLlmDriver, { strict: false });
         const address: AddressInfo = (harness.app.getHttpServer() as Server).address() as AddressInfo;
         origin = `http://127.0.0.1:${String(address.port)}`;
-        for (const symbol of ['AAPL', 'MSFT']) {
+        for (const symbol of ['AAPL', 'MSFT', 'KO']) {
             await harness.pg.query(
                 `INSERT INTO "Assets" ("id","market","externalId","symbol","name","kind","typeGroup","suggestedClassKey","currency","quotesProvider","quantityDecimals")
                  VALUES ($1,'US',$2,$2,$2,'stock','acoes_eua','acoes_eua','USD','us_equities',6)`,
@@ -168,6 +169,46 @@ describe('investment import of a monthly Avenue statement', () => {
         expect(lineOf(again, 'AAPL', 'buy').status).toBe('duplicate');
         expect(lineOf(scanned, 'AAPL', 'buy').status).toBe('duplicate');
         expect(lineOf(scanned, 'MSFT', 'buy').status).toBe('duplicate');
+    });
+
+    function summaryOnlyAnswer(): string {
+        return answerOf('2026-09', (answer: Record<string, unknown>): void => {
+            answer['operations'] = [];
+            answer['taxWithholdings'] = [];
+            answer['cashMovements'] = [];
+        });
+    }
+
+    it('creates the positions of a summary with no trade in the month as check lines with the summary price as assumed cost', async () => {
+        const owner: Account = await harness.signUp('avenue-resumo');
+
+        const summary: PreviewBody = await preview(owner, 'avenue-2026-09.pdf', summaryOnlyAnswer());
+
+        expect(summary.notes).not.toContainEqual(expect.objectContaining({ code: 'foreign_position_not_applied' }));
+        for (const ticker of ['AAPL', 'MSFT', 'KO']) {
+            expect(lineOf(summary, ticker, 'buy')).toMatchObject({
+                status: 'check',
+                reason: 'assumed_cost',
+                currency: 'USD',
+                fxRate: '5.2'
+            });
+        }
+        expect(await commit(owner, summary, null)).toBe(3);
+        expect(await positionOf(owner, 'MSFT')).toMatchObject({ quantity: '3.0000000000', averagePrice: '433.00000000' });
+        expect(await positionOf(owner, 'KO')).toMatchObject({ quantity: '8.0000000000', averagePrice: '63.00000000' });
+    });
+
+    it('leaves alone a summary row of an asset that already has a position', async () => {
+        const owner: Account = await harness.signUp('avenue-resumo-existente');
+        await commit(owner, await preview(owner, 'avenue-2026-07.pdf', answerOf('2026-07')), null);
+
+        const summary: PreviewBody = await preview(owner, 'avenue-2026-09.pdf', summaryOnlyAnswer());
+
+        expect(lineOf(summary, 'AAPL', 'buy')).toMatchObject({ status: 'ignored', reason: 'skipped' });
+        expect(lineOf(summary, 'MSFT', 'buy').status).toBe('ignored');
+        expect(lineOf(summary, 'KO', 'buy').reason).toBe('assumed_cost');
+        expect(await commit(owner, summary, null)).toBe(1);
+        expect(await positionOf(owner, 'AAPL')).toMatchObject({ quantity: '10.0000000000', averagePrice: '190.00000000' });
     });
 
     it('warns about a trade that comes before the ones already recorded for the asset', async () => {

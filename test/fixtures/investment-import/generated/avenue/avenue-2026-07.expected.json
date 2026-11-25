@@ -48,17 +48,20 @@
     {
       "block": "equities",
       "symbol": "AAPL",
-      "quantity": "10"
+      "quantity": "10",
+      "price": "192.00"
     },
     {
       "block": "equities",
       "symbol": "MSFT",
-      "quantity": "5"
+      "quantity": "5",
+      "price": "425.00"
     },
     {
       "block": "options",
       "symbol": "AAPL260821C00200000",
-      "quantity": "1"
+      "quantity": "1",
+      "price": "4.80"
     }
   ],
   "taxWithholdings": [],

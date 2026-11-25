@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { assumedOperationsOf } from '../domain/foreign/foreign-summary';
 import { AppContext } from '../../../core/context/app-context.port';
 import { LLM_TASK_CATALOG } from '../../../core/llm/catalog/llm-task.catalog';
 import { LlmTaskSpec } from '../../../core/llm/catalog/llm-task.types';
@@ -94,6 +95,11 @@ async function imageRequestsOf(bytes: Uint8Array, kind: ModelFileKind): Promise<
     ];
 }
 
+function isEmptyReading(statement: ParsedInvestmentStatement): boolean {
+    const readable: number = statement.operations.length + statement.ignored.length + statement.rejected.length;
+    return readable + assumedOperationsOf(statement).length === 0;
+}
+
 @Injectable()
 export class ModelReaderService {
     public constructor(
@@ -185,7 +191,7 @@ export class ModelReaderService {
             today: DateUtil.todayInBrazil(),
             tickersBySpec: await this.resolver.resolve(specsOfModelAnswers(answers.texts))
         });
-        if (statement.operations.length + statement.ignored.length + statement.rejected.length === 0) {
+        if (isEmptyReading(statement)) {
             this.logs.modelFailed('no_operations', { kind, sizeBytes });
             throw new ModelUnreadableError('no_operations');
         }
