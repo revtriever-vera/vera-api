@@ -229,5 +229,6 @@ describe('rodada do copiloto', () => {
         expect(problemsOf([{ ...summary, emptyRate: 0.1, toolRate: 0.5 }], null)).toHaveLength(2);
         expect(problemsOf([{ ...summary, failedRepRate: 0.05 }], null)).toEqual([]);
         expect(problemsOf([{ ...summary, failedRepRate: 0.2 }], null)).toHaveLength(1);
+        expect(problemsOf([{ ...summary, failedRepRate: 0.02, adviceRepRate: 0.02 }], null)).toHaveLength(1);
     });
 });

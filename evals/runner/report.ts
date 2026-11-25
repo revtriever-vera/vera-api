@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CheckFailure, isEmptyCall } from './checks';
 import { CallTrace } from './generate';
-import { CaseRow, RepResult, TaskRun } from './run';
+import { CaseRow, PENDING_INFO_CHECKS, RepResult, TaskRun } from './run';
 
 export interface TaskSummary {
     readonly task: string;
@@ -11,6 +11,7 @@ export interface TaskSummary {
     readonly cases: number;
     readonly failedCases: number;
     readonly failedRepRate: number;
+    readonly adviceRepRate: number;
     readonly emptyRate: number;
     readonly emptyCallRate: number;
     readonly truncatedRate: number;
@@ -41,7 +42,7 @@ export function failuresOf(row: CaseRow): CheckFailure[] {
     return row.reps.flatMap((rep: RepResult): readonly CheckFailure[] => rep.failures);
 }
 
-const PENDING_INFO_CHECKS: ReadonlySet<string> = new Set(['tool_missing', 'tool_unexpected']);
+const ADVICE_CHECKS: ReadonlySet<string> = new Set(['forbidden_term', 'forbidden_text']);
 
 function countedFailuresOf(row: CaseRow): CheckFailure[] {
     return row.pending
@@ -99,6 +100,14 @@ function failedRepRateOf(run: TaskRun): number {
     return outcomes.filter(Boolean).length / Math.max(1, outcomes.length);
 }
 
+function adviceRepRateOf(run: TaskRun): number {
+    const reps: RepResult[] = run.rows.flatMap((row: CaseRow): readonly RepResult[] => row.reps);
+    const advised: number = reps.filter((rep: RepResult): boolean =>
+        rep.failures.some((failure: CheckFailure): boolean => ADVICE_CHECKS.has(failure.check))
+    ).length;
+    return advised / Math.max(1, reps.length);
+}
+
 function ratesOf(
     run: TaskRun,
     model: readonly RepResult[],
@@ -124,6 +133,7 @@ export function summaryOf(run: TaskRun, usdBrl: number): TaskSummary {
         reasoning: run.spec.reasoning,
         cases: run.rows.length,
         failedRepRate: failedRepRateOf(run),
+        adviceRepRate: adviceRepRateOf(run),
         failedCases: run.rows.filter((row: CaseRow): boolean => countedFailuresOf(row).length > 0).length,
         ...ratesOf(run, model, usdBrl),
         judgeAverage: average,

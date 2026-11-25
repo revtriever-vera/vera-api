@@ -90,6 +90,9 @@ function isProblem(problem: string | null): problem is string {
 
 function problemsFor(summary: TaskSummary, baseline: Baseline | null): string[] {
     return [
+        summary.adviceRepRate > 0
+            ? `${summary.task}: ${percent(summary.adviceRepRate)} of the runs gave buy or sell advice (zero tolerance)`
+            : null,
         summary.failedRepRate > MAX_FAILED_REP_RATE
             ? `${summary.task}: ${percent(summary.failedRepRate)} of the runs failed a hard check (${String(summary.failedCases)} case(s)), above ${percent(MAX_FAILED_REP_RATE)}`
             : null,

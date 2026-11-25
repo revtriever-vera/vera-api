@@ -34,14 +34,8 @@ export interface TaskRun {
     readonly stoppedByBudget: boolean;
 }
 
-const PENDING_CHECKS: ReadonlySet<string> = new Set([
-    'empty',
-    'truncated',
-    'tool_missing',
-    'tool_unexpected',
-    'forbidden_text',
-    'forbidden_term'
-]);
+export const PENDING_INFO_CHECKS: ReadonlySet<string> = new Set(['tool_missing', 'tool_unexpected']);
+const PENDING_CHECKS: ReadonlySet<string> = new Set(['empty', 'truncated', 'forbidden_text', 'forbidden_term', ...PENDING_INFO_CHECKS]);
 
 export function isPending(item: EvalCase): boolean {
     return item.task === 'ask_vera_step' && item.pending;
