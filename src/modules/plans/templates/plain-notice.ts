@@ -1,5 +1,5 @@
 import { MailContent } from '../../../core/mail/mail.types';
-import { baseLayout } from '../../../core/mail/templates/base-layout';
+import { baseLayout, textSeal } from '../../../core/mail/templates/base-layout';
 import { TemplateProps } from '../../../core/mail/template.registry';
 import { AppLocale } from '../../../shared/i18n/locale';
 
@@ -37,6 +37,6 @@ export function noticeContent(copy: NoticeCopy, locale: AppLocale, props: Templa
             title: copy.title,
             bodyHtml: `<p>${escapeHtml(greeting)}</p><p>${escapeHtml(copy.body)}</p>`
         }),
-        text: `${greeting}\n\n${copy.body}`
+        text: `${greeting}\n\n${copy.body}\n\n${textSeal(locale)}`
     };
 }

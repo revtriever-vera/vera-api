@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MailContent } from '../../../core/mail/mail.types';
-import { baseLayout } from '../../../core/mail/templates/base-layout';
+import { baseLayout, textSeal } from '../../../core/mail/templates/base-layout';
 import { TemplateProps, TemplateRegistry } from '../../../core/mail/template.registry';
 import { AppLocale } from '../../../shared/i18n/locale';
 
@@ -30,7 +30,7 @@ function renderPtBr(props: TemplateProps): MailContent {
             title: 'Sua conta foi excluída',
             bodyHtml: `<p>${escapeHtml(greeting)}</p><p>${body}</p><p>${closing}</p>`
         }),
-        text: `${greeting}\n\n${body}\n\n${closing}`
+        text: `${greeting}\n\n${body}\n\n${closing}\n\n${textSeal('pt-BR')}`
     };
 }
 
@@ -45,7 +45,7 @@ function renderEn(props: TemplateProps): MailContent {
             title: 'Your account was deleted',
             bodyHtml: `<p>${escapeHtml(greeting)}</p><p>${body}</p><p>${closing}</p>`
         }),
-        text: `${greeting}\n\n${body}\n\n${closing}`
+        text: `${greeting}\n\n${body}\n\n${closing}\n\n${textSeal('en')}`
     };
 }
 

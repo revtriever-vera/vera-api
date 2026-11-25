@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MailContent } from '../../../core/mail/mail.types';
-import { baseLayout } from '../../../core/mail/templates/base-layout';
+import { baseLayout, textSeal } from '../../../core/mail/templates/base-layout';
 import { TemplateProps, TemplateRegistry } from '../../../core/mail/template.registry';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { escapeHtml } from './escape-html.util';
@@ -43,7 +43,7 @@ function invitedPtBr(props: TemplateProps): MailContent {
             ctaLabel: 'Aceitar o convite',
             ctaUrl: escapeHtml(prop(props, 'link'))
         }),
-        text: `${plain(lines)}\n\n${prop(props, 'link')}`
+        text: `${plain(lines)}\n\n${prop(props, 'link')}\n\n${textSeal('pt-BR')}`
     };
 }
 
@@ -62,7 +62,7 @@ function invitedEn(props: TemplateProps): MailContent {
             ctaLabel: 'Accept the invitation',
             ctaUrl: escapeHtml(prop(props, 'link'))
         }),
-        text: `${plain(lines)}\n\n${prop(props, 'link')}`
+        text: `${plain(lines)}\n\n${prop(props, 'link')}\n\n${textSeal('en')}`
     };
 }
 
@@ -70,7 +70,7 @@ function simple(locale: AppLocale, title: string, subject: string, lines: readon
     return {
         subject,
         html: baseLayout({ locale, title, bodyHtml: paragraphs(lines) }),
-        text: plain(lines)
+        text: `${plain(lines)}\n\n${textSeal(locale)}`
     };
 }
 
