@@ -77,6 +77,7 @@ const common = {
 const askCase = z.object({
     ...common,
     task: z.literal('ask_vera_step'),
+    pending: z.boolean().default(false),
     question: z.string().min(1),
     history: z.array(z.object({ role: z.enum(['person', 'vera']), text: z.string() })),
     tools: z.object({ required: z.array(z.string()), allowed: z.array(z.string()) }),

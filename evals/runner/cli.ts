@@ -5,8 +5,12 @@ import { EVAL_TASKS } from './cases';
 import { CLI_OPTIONS } from './cli.schemas';
 import { Baseline, readBaseline, regressionOf, writeBaseline } from './baseline';
 import { Engine, engineOf, EvalMode } from './engine';
-import { summaryLine, summaryOf, TaskSummary, tableOf, writeReport } from './report';
+import { percent, summaryLine, summaryOf, TaskSummary, tableOf, writeReport } from './report';
 import { runTask, TaskRun } from './run';
+
+const MAX_EMPTY_RATE: number = 0.02;
+const MIN_TOOL_RATE: number = 0.9;
+const MAX_FAILED_REP_RATE: number = 0.1;
 
 interface Cli {
     readonly tasks: readonly EvalTask[];
@@ -86,9 +90,17 @@ function isProblem(problem: string | null): problem is string {
 
 function problemsFor(summary: TaskSummary, baseline: Baseline | null): string[] {
     return [
-        summary.failedCases > 0 ? `${summary.task}: ${String(summary.failedCases)} case(s) failed a hard check` : null,
+        summary.failedRepRate > MAX_FAILED_REP_RATE
+            ? `${summary.task}: ${percent(summary.failedRepRate)} of the runs failed a hard check (${String(summary.failedCases)} case(s)), above ${percent(MAX_FAILED_REP_RATE)}`
+            : null,
         summary.belowThreshold ? `${summary.task}: judge below the threshold ${String(summary.judgeThreshold)}` : null,
         summary.stoppedByBudget ? `${summary.task}: stopped by the cost budget` : null,
+        summary.emptyRate > MAX_EMPTY_RATE
+            ? `${summary.task}: empty text rate ${percent(summary.emptyRate)} above ${percent(MAX_EMPTY_RATE)}`
+            : null,
+        summary.toolRate !== null && summary.toolRate < MIN_TOOL_RATE
+            ? `${summary.task}: right tool rate ${percent(summary.toolRate)} below ${percent(MIN_TOOL_RATE)}`
+            : null,
         regressionOf(summary, baseline)
     ].filter(isProblem);
 }

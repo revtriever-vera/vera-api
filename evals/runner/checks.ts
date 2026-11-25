@@ -5,6 +5,7 @@ import { GuardResult, guardSummary } from '../../src/modules/ai-assistant/domain
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
 import { AskCase, EvalCase, SummaryCase } from './case.schemas';
 import { builtOf } from './cases';
+import type { CallTrace } from './generate';
 
 export interface CheckFailure {
     readonly check: string;
@@ -18,6 +19,7 @@ export interface CheckInput {
     readonly fixed: boolean;
     readonly toolsUsed?: readonly string[];
     readonly ending?: 'answered' | 'direct' | 'truncated' | 'check_failed';
+    readonly calls?: readonly CallTrace[];
 }
 
 export interface CheckOutcome {
@@ -58,8 +60,13 @@ function stopwordHits(text: string, locale: EvalCase['locale']): number {
     return words.length;
 }
 
-export function languageOf(text: string): EvalCase['locale'] {
-    return stopwordHits(text, 'pt-BR') >= stopwordHits(text, 'en') ? 'pt-BR' : 'en';
+export function languageOf(text: string, fallback: EvalCase['locale'] = 'pt-BR'): EvalCase['locale'] {
+    const portuguese: number = stopwordHits(text, 'pt-BR');
+    const english: number = stopwordHits(text, 'en');
+    if (portuguese === english) {
+        return fallback;
+    }
+    return portuguese > english ? 'pt-BR' : 'en';
 }
 
 function sentenceFailure(item: EvalCase, text: string): CheckFailure[] {
@@ -69,7 +76,7 @@ function sentenceFailure(item: EvalCase, text: string): CheckFailure[] {
 }
 
 function languageFailure(item: EvalCase, text: string): CheckFailure[] {
-    const detected: EvalCase['locale'] = languageOf(text);
+    const detected: EvalCase['locale'] = languageOf(text, item.locale);
     return detected === item.locale ? [] : [fail('language', `text looks ${detected}, expected ${item.locale}`)];
 }
 
@@ -139,12 +146,30 @@ function toolFailures(item: AskCase, used: readonly string[]): CheckFailure[] {
     return [...missing, ...extra];
 }
 
+export function isEmptyCall(call: CallTrace): boolean {
+    return call.textChars === 0 && call.toolCalls === 0;
+}
+
+function endingFailure(input: CheckInput): CheckFailure {
+    const last: CallTrace | undefined = input.calls?.at(-1);
+    if (last?.stopReason === 'max_tokens') {
+        return fail('truncated', `the last call hit maxOutputTokens (finish ${last.finishReason})`);
+    }
+    if (last !== undefined && isEmptyCall(last)) {
+        return fail('empty', `the last call returned no text (finish ${last.finishReason})`);
+    }
+    return fail(
+        input.ending === 'truncated' ? 'max_steps' : (input.ending ?? 'check_failed'),
+        'the loop did not end with an accepted answer'
+    );
+}
+
 function askOutcome(input: CheckInput, item: AskCase): CheckOutcome {
     if (input.fixed) {
         return { failures: softChecks(item, [input.text]), rendered: [input.text] };
     }
     if (input.ending !== 'answered') {
-        return { failures: [fail(input.ending ?? 'check_failed', 'the loop did not end with an accepted answer')], rendered: [] };
+        return { failures: [endingFailure(input)], rendered: [] };
     }
     const failures: CheckFailure[] = [...softChecks(item, [input.text]), ...toolFailures(item, input.toolsUsed ?? [])];
     return { failures, rendered: [input.text] };

@@ -9,6 +9,7 @@ import { engineOf } from './engine';
 import { isFixed } from './generate';
 import { summaryOf, TaskSummary } from './report';
 import { runTask, TaskRun } from './run';
+import type { CallTrace } from './generate';
 
 const MIN_PT_CASES: number = 8;
 const MIN_EN_CASES: number = 4;
@@ -172,5 +173,61 @@ describe('rodada no modo mock', () => {
         });
 
         expect(run.stoppedByBudget).toBe(true);
+    });
+});
+
+describe('rodada do copiloto', () => {
+    const ask: EvalCase = caseOf('ask_vera_step', 'sonda-mercado-do-mes');
+    const call = (extra: Partial<CallTrace>): CallTrace => ({
+        finishReason: 'stop',
+        stopReason: 'end',
+        outputTokens: 40,
+        reasoningTokens: 0,
+        reasoningChars: 0,
+        textChars: 0,
+        toolCalls: 0,
+        ...extra
+    });
+    const ended = (ending: 'check_failed' | 'truncated', calls: readonly CallTrace[], toolsUsed: readonly string[] = []): CheckOutcome =>
+        checkOutput({ item: ask, text: '', stopReason: 'end', fixed: false, ending, toolsUsed, calls });
+
+    it('o caso que exige ferramenta reprova se a rodada não chamou', () => {
+        const outcome: CheckOutcome = checkOutput({
+            item: ask,
+            text: 'Você gastou **R$ 3.500** com [[cat:groceries]] no mês.',
+            stopReason: 'end',
+            fixed: false,
+            ending: 'answered',
+            toolsUsed: []
+        });
+
+        expect(checksOf(outcome)).toContain('tool_missing');
+    });
+
+    it('separa texto vazio, corte no teto e fim sem resposta aceita', () => {
+        expect(checksOf(ended('check_failed', [call({})]))).toEqual(['empty']);
+        expect(checksOf(ended('check_failed', [call({ stopReason: 'max_tokens', finishReason: 'length' })]))).toEqual(['truncated']);
+        expect(checksOf(ended('check_failed', [call({ textChars: 30 })]))).toEqual(['check_failed']);
+        expect(checksOf(ended('truncated', [call({ toolCalls: 1 })]))).toEqual(['max_steps']);
+    });
+
+    it('caso pending só reprova por ferramenta e recomendação, e o resumo traz as taxas', async () => {
+        const run: TaskRun = await runTask(engineOf({ mode: 'mock', baseUrl: undefined, model: undefined, maxUsd: 1 }), 'ask_vera_step', {
+            reps: 2,
+            judge: false,
+            reasoning: undefined
+        });
+        const pending = run.rows.find((row) => row.id === 'sonda-ativo-petr4');
+        const summary: TaskSummary = summaryOf(run, 5.5);
+
+        expect(pending?.pending).toBe(true);
+        expect(pending?.toolRequired).toBe(true);
+        expect(summary.toolRate).toBe(1);
+        expect(summary.emptyRate).toBe(0);
+        expect(summary.truncatedRate).toBe(0);
+        expect(problemsOf([summary], null)).toEqual([]);
+        expect(problemsOf([{ ...summary, emptyRate: 0.1, toolRate: 0.5 }], null)).toHaveLength(2);
+        expect(problemsOf([{ ...summary, failedRepRate: 0.05 }], null)).toEqual([]);
+        expect(problemsOf([{ ...summary, failedRepRate: 0.2 }], null)).toHaveLength(1);
     });
 });
