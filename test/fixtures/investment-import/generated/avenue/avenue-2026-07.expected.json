@@ -1,0 +1,72 @@
+{
+  "documentType": "foreign_statement",
+  "currency": "USD",
+  "periodStart": "2026-07-01",
+  "periodEnd": "2026-07-31",
+  "operations": [
+    {
+      "kind": "buy",
+      "incomeKind": null,
+      "direction": "credit",
+      "tradeDate": "2026-07-08",
+      "ticker": "AAPL",
+      "market": "equities",
+      "securityId": "AAA111AA0",
+      "quantity": "10",
+      "unitPrice": "190.00",
+      "grossMinor": 190000,
+      "currency": "USD"
+    },
+    {
+      "kind": "buy",
+      "incomeKind": null,
+      "direction": "credit",
+      "tradeDate": "2026-07-15",
+      "ticker": "MSFT",
+      "market": "equities",
+      "securityId": "BBB222BB0",
+      "quantity": "5",
+      "unitPrice": "420.00",
+      "grossMinor": 210000,
+      "currency": "USD"
+    },
+    {
+      "kind": "buy",
+      "incomeKind": null,
+      "direction": "credit",
+      "tradeDate": "2026-07-20",
+      "ticker": "AAPL260821C00200000",
+      "market": "option",
+      "securityId": "DDD444DD0",
+      "quantity": "1",
+      "unitPrice": "4.50",
+      "grossMinor": 450,
+      "currency": "USD"
+    }
+  ],
+  "positions": [
+    {
+      "block": "equities",
+      "symbol": "AAPL",
+      "quantity": "10"
+    },
+    {
+      "block": "equities",
+      "symbol": "MSFT",
+      "quantity": "5"
+    },
+    {
+      "block": "options",
+      "symbol": "AAPL260821C00200000",
+      "quantity": "1"
+    }
+  ],
+  "taxWithholdings": [],
+  "cashMovements": [
+    {
+      "tradeDate": "2026-07-02",
+      "direction": "credit",
+      "amountMinor": 500000
+    }
+  ]
+}

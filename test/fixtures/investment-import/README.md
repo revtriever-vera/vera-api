@@ -26,6 +26,7 @@ Os arquivos de `generated/` ficam versionados: os specs leem eles direto e não 
 - `generated/b3/b3-posicao.pdf`: resumo da posição para o eval de leitura por modelo.
 - `generated/b3/b3-renda-fixa.expected.json`: a taxa declarada de cada título de renda fixa e o preço CURVA esperado (insumo do #317).
 - `generated/prints/*.png`: tela de corretora inventada em sete variações: nítida, foto inclinada, recorte parcial, escura, número ilegível, ativo que não existe e tela em inglês.
+- `generated/avenue/avenue-AAAA-MM.pdf`, `-escaneado.pdf` e `.expected.json`: extrato mensal inventado da Avenue/Apex (#319), três meses seguidos (`2026-07` a `2026-09`) de "PESSOA EXEMPLO", conta `AVN-0009876` e CUSIPs inventados. Tem compra, venda parcial, dividendo com retenção (`NRA TAX WITHHELD` em linha separada), remessas (`FUNDS PAID AND RECEIVED`), uma opção (julho) e um título de renda fixa americana (agosto). O `-escaneado.pdf` é só imagem (sem camada de texto). O `.expected.json` é o gabarito: a resposta que o modelo deve devolver.
 
 ## Notas de corretagem (#305)
 
@@ -43,4 +44,4 @@ Casos-limite na aba `Renda Fixa`: carência (`CDB-EX-CAREN`, tudo indisponível)
 
 ## Reaproveitar
 
-As notas de corretagem (#305) e o extrato Avenue/Apex (#319) entram como novos módulos em `generator/`, registrados em `generate.ts`, escrevendo em `generated/`.
+As notas de corretagem (#305) e o extrato Avenue (#319) entram como novos módulos em `generator/`, registrados em `generate.ts`, escrevendo em `generated/`.

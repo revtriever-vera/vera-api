@@ -1,3 +1,4 @@
+import { buildAvenueStatements } from './avenue-statements';
 import { buildB3Reports } from './b3-reports';
 import { buildCryptoExports } from './crypto-exports';
 import { buildFixedIncomeExpectations } from './b3-fixed-income';
@@ -47,6 +48,7 @@ export async function generateDocumentFixtures(): Promise<GeneratedFiles> {
         ...positionPdf(reports),
         ...expectationFile(),
         ...buildCryptoExports(),
+        ...buildAvenueStatements(),
         ...buildBrokerageNotes()
     ]);
 }

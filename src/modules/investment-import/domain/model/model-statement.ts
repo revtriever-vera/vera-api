@@ -2,7 +2,9 @@ import { SafeParseReturnType } from 'zod';
 import { ModelUnreadableError } from '../investment-import.errors';
 import { LINE_REASONS, NOTE_CODES } from '../investment-import.types';
 import {
+    DOCUMENT_TYPES,
     DocumentType,
+    ForeignExtras,
     IGNORE_REASONS,
     IgnoredLine,
     PARSED_SOURCES,
@@ -12,6 +14,7 @@ import {
     StatementNote
 } from '../investment-statement.types';
 import { readNote, specsOfNote } from './brokerage-note';
+import { foreignExtrasOf, mergedForeignOf } from './model-foreign';
 import { AnswerEnvelope, AnswerOperation, answerEnvelopeSchema, answerOperationSchema } from './model-answer.schema';
 import { totalMatches } from './model-checks';
 import { ignoredOf, operationOf, rejectReasonOf, UNSUPPORTED_MARKET } from './model-operation';
@@ -31,6 +34,7 @@ interface PageReading {
     readonly currency: string;
     readonly totalMinor: number | null;
     readonly noteOperations: ParsedOperation[];
+    readonly foreign: ForeignExtras;
     totalMismatches: number;
     netMismatches: number;
 }
@@ -92,6 +96,7 @@ function readPage(text: string, page: string, input: ModelStatementInput): PageR
         currency: data.currency.toUpperCase(),
         totalMinor: data.totalMinor ?? null,
         noteOperations: [],
+        foreign: foreignExtrasOf(data),
         totalMismatches: 0,
         netMismatches: 0
     };
@@ -163,7 +168,12 @@ export function statementOfModelAnswers(answers: readonly string[], input: Model
     if (first === undefined) {
         throw new ModelUnreadableError('invalid_response');
     }
+    const foreign: Pick<ParsedInvestmentStatement, 'foreign'> =
+        first.documentType === DOCUMENT_TYPES.foreignStatement
+            ? { foreign: mergedForeignOf(readings.map((reading: PageReading): ForeignExtras => reading.foreign)) }
+            : {};
     return {
+        ...foreign,
         source: PARSED_SOURCES.model,
         documentType: first.documentType,
         reportKinds: [],

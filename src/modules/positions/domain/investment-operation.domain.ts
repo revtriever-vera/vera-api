@@ -27,6 +27,10 @@ export class InvestmentOperationDomain {
         return this.operations.listCreatedAfter(assetIds, after);
     }
 
+    public async latestTradeDates(assetIds: readonly string[], holderUserId: string | null): Promise<Map<string, string>> {
+        return this.operations.latestTradeDates(assetIds, holderUserId);
+    }
+
     public async countByImports(importIds: readonly string[]): Promise<Map<string, number>> {
         return this.operations.countByImports(importIds);
     }

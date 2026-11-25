@@ -2,7 +2,7 @@ import { Insertable, Selectable } from 'kysely';
 import { InvestmentImportPreviews } from '../../../core/database/generated/database.types';
 import type { TitleIssuerView } from '../../fixed-income/services/fixed-income-title-importer.service';
 import { FixedIncomeOutcome, StoredFixedIncome } from './fixed-income/fixed-income-import.types';
-import { IncomeKind, OperationDirection, OperationKind } from './investment-statement.types';
+import { DollarFacts, IncomeKind, OperationDirection, OperationKind } from './investment-statement.types';
 
 export type InvestmentImportPreview = Selectable<InvestmentImportPreviews>;
 export type NewInvestmentImportPreview = Insertable<InvestmentImportPreviews>;
@@ -19,6 +19,7 @@ export const MAX_LINES_PER_IMPORT: number = 5000;
 export const PURGE_BATCH: number = 500;
 export const MODEL_READS_PER_HOUR: number = 30;
 export const B3_MARKET = 'B3' as const;
+export const US_MARKET = 'US' as const;
 export const CRYPTO_MARKET = 'CRYPTO' as const;
 export const CRYPTO_QUANTITY_DECIMALS: number = 8;
 
@@ -38,7 +39,9 @@ export const LINE_REASONS = {
     amountMismatch: 'amount_mismatch',
     totalMismatch: 'total_mismatch',
     netMismatch: 'net_mismatch',
-    dateOutOfRange: 'date_out_of_range'
+    dateOutOfRange: 'date_out_of_range',
+    positionMismatch: 'position_mismatch',
+    outOfOrder: 'out_of_order'
 } as const;
 
 export const POSITION_MODES = { add: 'add', historyOnly: 'history_only' } as const;
@@ -54,7 +57,12 @@ export const NOTE_CODES = {
     cryptoFeeNotConverted: 'crypto_fee_not_converted',
     noteTotalMismatch: 'note_total_mismatch',
     noteNetMismatch: 'note_net_mismatch',
-    linesToCheck: 'lines_to_check'
+    linesToCheck: 'lines_to_check',
+    foreignRateFallback: 'foreign_rate_fallback',
+    foreignRateMissing: 'foreign_rate_missing',
+    foreignCashMovement: 'foreign_cash_movement',
+    foreignPositionNotApplied: 'foreign_position_not_applied',
+    foreignTaxUnmatched: 'foreign_tax_unmatched'
 } as const;
 
 export const COMMIT_OUTCOMES = { previewed: 'previewed', committed: 'committed', undone: 'undone', failed: 'failed' } as const;
@@ -76,6 +84,7 @@ export interface StoredLine {
     readonly market: string;
     readonly sourceRef: string;
     readonly check: string | null;
+    readonly dollar?: DollarFacts;
 }
 
 export interface PreviewPayload {
@@ -133,6 +142,9 @@ export interface EvaluatedLine {
     readonly feesMinor: number;
     readonly currency: string;
     readonly positionMode: PositionMode | null;
+    readonly fxRate?: string | null;
+    readonly grossBrlMinor?: number | null;
+    readonly withheldTaxMinor?: number | null;
 }
 
 export interface IgnoredLineView {
@@ -169,6 +181,9 @@ export interface OperationLineView {
     readonly feesMinor: number | null;
     readonly currency: string | null;
     readonly positionMode: PositionMode | null;
+    readonly fxRate?: string | null;
+    readonly grossBrlMinor?: number | null;
+    readonly withheldTaxMinor?: number | null;
 }
 
 export type FixedIncomeLineView = StoredFixedIncome & { readonly issuer: TitleIssuerView | null };

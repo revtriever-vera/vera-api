@@ -11,6 +11,13 @@ const REASON_VALUES = Object.values(FIXED_INCOME_REASONS) as [FixedIncomeReason,
 const TITLE_KIND_VALUES = ['cdb', 'lci', 'lca', 'lc', 'debenture', 'cri', 'cra'] as const;
 const INDEXER_VALUES = ['cdi_percent', 'prefixed', 'ipca_plus'] as const;
 
+const dollarSchema = z.object({
+    fxRate: z.string().nullable(),
+    grossBrlMinor: z.number().int().nullable(),
+    withheldTaxMinor: z.number().int().nullable(),
+    closingQuantity: z.string().nullable()
+});
+
 const storedLineSchema = z.object({
     lineId: z.string(),
     lineNumber: z.number().int(),
@@ -26,7 +33,8 @@ const storedLineSchema = z.object({
     currency: z.string(),
     market: z.string().default('B3'),
     sourceRef: z.string(),
-    check: z.string().nullable().default(null)
+    check: z.string().nullable().default(null),
+    dollar: dollarSchema.optional()
 });
 
 const storedFixedIncomeSchema = z.object({

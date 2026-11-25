@@ -48,7 +48,7 @@ function viewOf(
         operations: [...evaluation.lines.map(operationViewOf), ...ignoredViewsOf(statement).map(ignoredOperationViewOf)],
         effect: evaluation.effects,
         fixedIncome: fixedIncome.map((entry: StoredFixedIncome) => ({ ...entry, issuer: proposals.issuerView(entry.issuerId) })),
-        warnings: warningsOf(evaluation.lines),
+        warnings: warningsOf(evaluation.lines, evaluation.foreignChecks),
         alreadyImportedAt: previous === null ? null : previous.createdAt.toISOString(),
         expiresAt: stored.expiresAt.toISOString()
     };

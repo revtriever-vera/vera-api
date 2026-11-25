@@ -5,7 +5,7 @@ import { ZodError } from 'zod';
 import { AnswerOperation } from './model-answer.schema';
 import { amountCheckOf, dateCheckOf } from './model-checks';
 
-export const UNSUPPORTED_MARKET: RegExp = /op[cç][aã]o|option|termo|forward|futuro|future|swap/i;
+export const UNSUPPORTED_MARKET: RegExp = /op[cç][aã]o|option|termo|forward|futuro|future|swap|fixed.?income/i;
 const FRACTIONAL_SUFFIX: RegExp = /^([A-Z]{4}\d{1,2})F$/;
 const FRACTIONAL_MARKET: RegExp = /fracion/i;
 const NON_TICKER: RegExp = /[^A-Z0-9.\-^=]/g;
@@ -44,7 +44,15 @@ function unitPriceOf(operation: AnswerOperation): string | null {
     return operation.unitPrice ?? derivedPriceOf(operation);
 }
 
-type OperationBase = Omit<ParsedOperation, 'matchKey' | 'alreadyImported' | 'check'>;
+type OperationBase = Omit<ParsedOperation, 'matchKey' | 'alreadyImported' | 'check' | 'dollar'>;
+
+function externalRefOf(raw: AnswerOperation): string | null {
+    const securityId: string = raw.securityId?.trim().toUpperCase() ?? '';
+    if (securityId === '') {
+        return null;
+    }
+    return ['model', securityId, raw.tradeDate, raw.kind, raw.quantity, raw.unitPrice ?? '', String(raw.grossMinor ?? '')].join(':');
+}
 
 function baseOf(raw: AnswerOperation, page: string, line: number): OperationBase {
     return {
@@ -63,7 +71,8 @@ function baseOf(raw: AnswerOperation, page: string, line: number): OperationBase
         grossMinor: raw.grossMinor ?? null,
         currency: raw.currency.toUpperCase(),
         appliedToPosition: AFFECTS_POSITION.has(raw.kind),
-        ...NO_COST_EXTRAS
+        ...NO_COST_EXTRAS,
+        externalRef: externalRefOf(raw)
     };
 }
 
