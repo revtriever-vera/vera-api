@@ -13,6 +13,7 @@ describe('fromEnvironment', () => {
         expect(config.appHost).toBe(`app-dev.${FAKE_DOMAIN}`);
         expect(config.mailpit?.host).toBe(`mail-dev.${FAKE_DOMAIN}`);
         expect(config.offHoursShutdown).toBe(true);
+        expect(config.otlpHeadersParameter).toBe('/vera/otlp-headers');
     });
 
     it('lê a conta de prod e deriva hosts sem sufixo', () => {
@@ -23,6 +24,7 @@ describe('fromEnvironment', () => {
         expect(config.appHost).toBe(`app.${FAKE_DOMAIN}`);
         expect(config.mailpit).toBeNull();
         expect(config.githubSubjects).toEqual(['repo:revtriever-vera@340816926/vera-api@1413885728:environment:production']);
+        expect(config.otlpHeadersParameter).toBeNull();
     });
 
     it('não deixa o subject de dev casar com pull request de fork', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { baseLayout } from './base-layout';
+import { baseLayout, textFooter, textSeal } from './base-layout';
 
 const BASE: { title: string; bodyHtml: string } = { title: 'Olá', bodyHtml: '<p>corpo</p>' };
 
@@ -58,5 +58,26 @@ describe('base layout', () => {
         expect(html).toContain('<html lang="en">');
         expect(html).not.toContain('Este e-mail');
         expect(html).not.toContain('Não quero mais');
+    });
+
+    it('closes the footer with the "Vera, por Revtriever" seal linking to revtriever.com', () => {
+        const html: string = baseLayout(BASE);
+
+        expect(html).toContain('Vera, por Revtriever');
+        expect(html).toContain('href="https://revtriever.com"');
+        expect(html).toContain('<svg');
+    });
+
+    it('writes the seal in English for the English locale', () => {
+        const html: string = baseLayout({ ...BASE, locale: 'en' });
+
+        expect(html).toContain('Vera, by Revtriever');
+        expect(html).not.toContain('Vera, por Revtriever');
+    });
+
+    it('carries the seal in the plain-text footer in both languages', () => {
+        expect(textFooter('pt-BR')).toContain('Vera, por Revtriever: https://revtriever.com');
+        expect(textFooter('en', 'https://app.vera.example/sair/abc')).toContain('Vera, by Revtriever: https://revtriever.com');
+        expect(textSeal('en')).toBe('Vera, by Revtriever: https://revtriever.com');
     });
 });
