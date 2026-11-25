@@ -1,5 +1,12 @@
 import { createHash } from 'node:crypto';
-import { IgnoredLine, PARSED_SOURCES, ParsedInvestmentStatement, ParsedOperation, OperationDirection } from './investment-statement.types';
+import {
+    DOCUMENT_TYPES,
+    IgnoredLine,
+    PARSED_SOURCES,
+    ParsedInvestmentStatement,
+    ParsedOperation,
+    OperationDirection
+} from './investment-statement.types';
 import { B3_MARKET, CRYPTO_MARKET, US_MARKET, IgnoredLineView, NOTE_CODES, NoteView, StoredLine } from './investment-import.types';
 
 const EVENT_KINDS: ReadonlySet<string> = new Set(['split', 'reverse_split']);
@@ -19,7 +26,7 @@ function marketOf(statement: ParsedInvestmentStatement): string {
     if (statement.source === PARSED_SOURCES.cryptoCsv) {
         return CRYPTO_MARKET;
     }
-    return statement.foreign === undefined ? B3_MARKET : US_MARKET;
+    return statement.documentType === DOCUMENT_TYPES.foreignStatement ? US_MARKET : B3_MARKET;
 }
 
 function directionOf(operation: ParsedOperation): OperationDirection {
