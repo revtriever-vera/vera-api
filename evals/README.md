@@ -9,7 +9,9 @@ Teste com mock prova o encanamento, não a qualidade do texto. Os evals rodam os
 - `baseline.json`: notas da última rodada live aprovada.
 - `out/`: relatórios de cada rodada (ignorado pelo git).
 
-Tarefas cobertas: `summary_month`, `summary_cuts` e `summary_portfolio`. A tarefa `ask_vera_step` entra quando o prompt dela existir (#124), junto com as perguntas-armadilha.
+Tarefas cobertas: `summary_month`, `summary_cuts`, `summary_portfolio` e `ask_vera_step` (perguntas do copiloto, armadilhas e sondas).
+
+Nos casos de `ask_vera_step`, `tools.required` lista as ferramentas que a rodada precisa chamar (`tool_missing` reprova) e `tools.allowed` as permitidas (`tool_unexpected`). `pending: true` marca o caso que espera outra entrega: só `empty`, `truncated`, ferramenta e `mustNotMention` contam, e a taxa de ferramenta dele sai à parte (`pending`), fora do portão.
 
 ## Comandos
 
@@ -19,7 +21,9 @@ npm run eval -- --task all --mode mock --judge
 EVALS_SECRETS_FILE=<arquivo local> npm run eval:live -- --task all --reps 3 --judge
 ```
 
-Saída: uma linha por caso (passou ou falhou, com o motivo), uma linha por tarefa (casos, nota do juiz, taxa de texto vazio, tempo, tokens de saída, custo em BRL) e o custo total. Código de saída diferente de zero se uma checagem dura falhar, a nota média do juiz ficar abaixo de `evalThreshold` (do catálogo, em fração de 5) ou cair mais de 0,5 frente à baseline na mesma versão de prompt.
+Sondas de entrada de arquivo: `EVALS_SECRETS_FILE=<arquivo local> npx tsx --tsconfig tsconfig.evals.json evals/probes/brokerage-note.ts <imagem.png> <nota.pdf>` manda uma nota de corretagem sintética ao modelo e confere ativo, quantidade, preço e data.
+
+Saída: uma linha por caso (passou ou falhou, com o motivo), uma linha por tarefa (casos, nota do juiz, taxa de texto vazio, tempo, tokens de saída, custo em BRL) e o custo total. Código de saída diferente de zero se uma checagem dura falhar, a nota média do juiz ficar abaixo de `evalThreshold` (do catálogo, em fração de 5) ou cair mais de 0,5 frente à baseline na mesma versão de prompt. Também reprova: texto vazio acima de 2%, ferramenta certa abaixo de 90% nos casos que exigem ferramenta (fora os `pending`) qualquer rodada com conselho de compra ou venda (`forbidden_term`/`forbidden_text`, tolerância zero) e mais de 10% das rodadas reprovadas numa checagem dura (o modelo varia de uma repetição para outra; abaixo disso o `summary-guard` do produto já cai no texto de reserva). Quando texto vazio, o relatório lista `finishReason`, tokens de saída e de raciocínio e se houve texto de raciocínio (sem conteúdo).
 
 ## Checagens duras
 

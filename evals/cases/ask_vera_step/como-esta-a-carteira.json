@@ -6,7 +6,7 @@
   "question": "como está minha carteira?",
   "history": [],
   "tools": {
-    "required": [],
+    "required": ["portfolio_overview"],
     "allowed": [
       "list_categories",
       "spending_month_summary",

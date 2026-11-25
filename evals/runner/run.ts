@@ -22,6 +22,8 @@ export interface RepResult {
 
 export interface CaseRow {
     readonly id: string;
+    readonly pending: boolean;
+    readonly toolRequired: boolean;
     readonly reps: readonly RepResult[];
 }
 
@@ -30,6 +32,23 @@ export interface TaskRun {
     readonly spec: LlmTaskSpec;
     readonly rows: readonly CaseRow[];
     readonly stoppedByBudget: boolean;
+}
+
+export const PENDING_INFO_CHECKS: ReadonlySet<string> = new Set(['tool_missing', 'tool_unexpected']);
+const PENDING_CHECKS: ReadonlySet<string> = new Set(['empty', 'truncated', 'forbidden_text', 'forbidden_term', ...PENDING_INFO_CHECKS]);
+
+export function isPending(item: EvalCase): boolean {
+    return item.task === 'ask_vera_step' && item.pending;
+}
+
+export function requiresTool(item: EvalCase): boolean {
+    return item.task === 'ask_vera_step' && item.tools.required.length > 0;
+}
+
+function failuresOf(item: EvalCase, outcome: CheckOutcome): readonly CheckFailure[] {
+    return isPending(item)
+        ? outcome.failures.filter((failure: CheckFailure): boolean => PENDING_CHECKS.has(failure.check))
+        : outcome.failures;
 }
 
 const BAD_GATEWAY: CheckFailure = { check: 'provider', detail: 'the provider call failed' };
@@ -52,7 +71,7 @@ async function judged(
     outcome: CheckOutcome,
     enabled: boolean
 ): Promise<JudgeVerdict | null> {
-    if (!enabled || outcome.failures.length > 0) {
+    if (!enabled || outcome.failures.length > 0 || isPending(item)) {
         return null;
     }
     return judge(engine, spec, item, outcome.rendered);
@@ -69,11 +88,13 @@ async function repOf(engine: Engine, spec: LlmTaskSpec, item: EvalCase, withJudg
         stopReason: attempt.stopReason,
         fixed: attempt.fixed,
         toolsUsed: attempt.toolsUsed,
-        ending: attempt.ending
+        ending: attempt.ending,
+        calls: attempt.calls
     });
+    const failures: readonly CheckFailure[] = failuresOf(item, outcome);
     return {
-        failures: outcome.failures,
-        verdict: await judged(engine, spec, item, outcome, withJudge && !attempt.fixed),
+        failures,
+        verdict: await judged(engine, spec, item, { ...outcome, failures }, withJudge && !attempt.fixed),
         generation: attempt
     };
 }
@@ -83,7 +104,7 @@ async function rowOf(engine: Engine, spec: LlmTaskSpec, item: EvalCase, options:
     for (let rep: number = 0; rep < options.reps; rep += 1) {
         reps.push(await repOf(engine, spec, item, options.judge));
     }
-    return { id: item.id, reps };
+    return { id: item.id, pending: isPending(item), toolRequired: requiresTool(item), reps };
 }
 
 export async function runTask(engine: Engine, task: EvalTask, options: RunOptions): Promise<TaskRun> {

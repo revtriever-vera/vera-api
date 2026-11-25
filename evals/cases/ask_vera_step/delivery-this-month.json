@@ -6,7 +6,7 @@
   "question": "how much did I spend on delivery?",
   "history": [],
   "tools": {
-    "required": [],
+    "required": ["spending_by_category"],
     "allowed": [
       "list_categories",
       "spending_month_summary",
@@ -22,8 +22,12 @@
       "input": {}
     },
     {
-      "name": "spending_month_summary",
-      "input": {}
+      "name": "spending_by_category",
+      "input": {
+        "categoryKey": "eating_out",
+        "fromMonth": "2026-03",
+        "toMonth": "2026-03"
+      }
     }
   ],
   "expect": {

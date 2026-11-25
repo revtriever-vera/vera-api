@@ -13,7 +13,7 @@ import { askVeraSystemPromptOf } from '../../src/modules/ai-assistant/domain/pro
 import { ASK_TODAY, fixtureToolsOf } from './ask-fixtures';
 import { AskCase } from './case.schemas';
 import { Engine } from './engine';
-import { Generation, costOf } from './generate';
+import { CallTrace, fixedGeneration, Generation, costOf, traceOf } from './generate';
 
 export function askFixedText(item: AskCase): string | null {
     const verdict: ReturnType<typeof prefilterOf> = prefilterOf(item.question);
@@ -28,6 +28,7 @@ interface Meter {
     outputTokens: number;
     latencyMs: number;
     steps: number;
+    calls: CallTrace[];
 }
 
 function enqueueMock(engine: Engine, item: AskCase): void {
@@ -57,6 +58,7 @@ function generator(engine: Engine, spec: LlmTaskSpec, meter: Meter): (request: L
         meter.outputTokens += result.usage.outputTokens;
         meter.latencyMs += result.latencyMs;
         meter.steps += 1;
+        meter.calls.push(traceOf(result));
         return {
             text: result.text,
             toolUses: result.toolUses,
@@ -84,10 +86,6 @@ function loopInputOf(engine: Engine, spec: LlmTaskSpec, item: AskCase, meter: Me
     };
 }
 
-function fixedGeneration(text: string): Generation {
-    return { text, stopReason: 'end', outputTokens: 0, costUsd: 0, latencyMs: 0, fixed: true, toolsUsed: [], ending: 'answered' };
-}
-
 function generationOf(result: AskLoopResult, meter: Meter): Generation {
     return {
         text: result.text,
@@ -97,7 +95,8 @@ function generationOf(result: AskLoopResult, meter: Meter): Generation {
         latencyMs: meter.latencyMs,
         fixed: false,
         toolsUsed: result.toolsUsed,
-        ending: result.ending
+        ending: result.ending,
+        calls: meter.calls
     };
 }
 
@@ -107,6 +106,6 @@ export async function askGenerate(engine: Engine, spec: LlmTaskSpec, item: AskCa
         return fixedGeneration(fixed);
     }
     enqueueMock(engine, item);
-    const meter: Meter = { costUsd: 0, outputTokens: 0, latencyMs: 0, steps: 0 };
+    const meter: Meter = { costUsd: 0, outputTokens: 0, latencyMs: 0, steps: 0, calls: [] };
     return generationOf(await runAskLoop(loopInputOf(engine, spec, item, meter)), meter);
 }

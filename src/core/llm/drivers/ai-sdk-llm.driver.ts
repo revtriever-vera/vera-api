@@ -123,7 +123,12 @@ export abstract class AiSdkLlmDriver extends LlmDriver {
             servedModelId: this.servedModelIdOf(result),
             providerCostUsd: this.providerCostUsdOf(result),
             attempts,
-            latencyMs
+            latencyMs,
+            diagnostic: {
+                finishReason: result.rawFinishReason ?? result.finishReason,
+                reasoningTokens: result.usage.outputTokenDetails.reasoningTokens ?? 0,
+                reasoningChars: result.finalStep.reasoningText?.length ?? 0
+            }
         };
     }
 

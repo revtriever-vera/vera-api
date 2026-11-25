@@ -6,12 +6,12 @@ const TASK: Readonly<Record<AppLocale, string>> = {
         'Tarefa: como chegar à meta de economia. Escreva a conta da sugestão em texto: (1) quanto falta por mês para a meta (meta_economia_pct, falta_por_mes); ' +
         '(2) o caminho mais leve, que é baixar cada categoria ao limite sugerido (categorias_flexiveis com atual, cortar, limite_sugerido): cite só o valor de limite_sugerido como destino e o de atual como origem, exatamente como estão na tela, e nunca chame o limite de média nem use media_3m como destino; ' +
         '(3) se for escolher uma só categoria, a que tem o maior valor em cortar, dizendo o valor de cortar e o falta_por_mes, sem dizer que esse corte é a maior parte do que falta e sem calcular porcentagem. ' +
-        'Se status for so_cortar_nao_resolve, diga que só cortar gastos flexíveis não fecha a conta e quanto ainda faltaria, sem sugerir investimento.',
+        'Se status for so_cortar_nao_resolve, diga que só cortar gastos flexíveis não fecha a conta e quanto ainda faltaria, sem sugerir investimento. Nunca some os cortes de várias categorias nem escreva um total de cortes: só valores que aparecem no JSON. O total é de 3 ou 4 frases, nunca 5: o aviso entra numa frase que já existe.',
     en:
         'Task: how to reach the savings goal. Write the arithmetic of the suggestion as text: (1) how much is missing per month for the goal (meta_economia_pct, falta_por_mes); ' +
         '(2) the lightest path, which is bringing each category down to its suggested limit (categorias_flexiveis with atual, cortar, limite_sugerido): cite only limite_sugerido as the destination and atual as the origin, exactly as the screen shows them, and never call the limit an average nor use media_3m as the destination; ' +
         '(3) if only one category is picked, the one with the largest cut, stating its cut and falta_por_mes, without saying that cut is most of what is missing and without computing a percentage. ' +
-        'If status is so_cortar_nao_resolve, say that cutting flexible spending alone does not close the gap and how much would still be missing, without suggesting investments.'
+        'If status is so_cortar_nao_resolve, say that cutting flexible spending alone does not close the gap and how much would still be missing, without suggesting investments. Never add up the cuts of several categories and never write a total of cuts: only values that appear in the JSON. The total is 3 or 4 sentences, never 5: the warning goes inside a sentence that already exists.'
 };
 
 const EXAMPLE: Readonly<Record<AppLocale, string>> = {

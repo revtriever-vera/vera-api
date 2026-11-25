@@ -11,7 +11,7 @@ import {
 import { SummaryCase } from './case.schemas';
 import { casesOf, keysOf, numbersOf } from './cases';
 
-export const ASK_TODAY: string = '2026-04-15';
+export const ASK_TODAY: string = '2026-03-20';
 
 const REFERENCE_IDS: Readonly<Record<AppLocale, string>> = { 'pt-BR': 'referencia-prototipo', en: 'reference-prototype' };
 

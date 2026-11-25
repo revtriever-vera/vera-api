@@ -6,7 +6,7 @@
   "question": "how is my portfolio?",
   "history": [],
   "tools": {
-    "required": [],
+    "required": ["portfolio_overview"],
     "allowed": [
       "list_categories",
       "spending_month_summary",
