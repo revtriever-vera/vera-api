@@ -85,13 +85,16 @@ function readNotes(data: AnswerEnvelope, reading: PageReading, page: string, inp
     }
 }
 
-function readPage(text: string, page: string, input: ModelStatementInput): PageReading {
-    const { today } = input;
+function envelopeOf(text: string): AnswerEnvelope {
     const envelope: SafeParseReturnType<unknown, AnswerEnvelope> = answerEnvelopeSchema.safeParse(jsonOf(text));
     if (!envelope.success) {
         throw new ModelUnreadableError('invalid_response');
     }
-    const data: AnswerEnvelope = envelope.data;
+    return envelope.data;
+}
+
+function readPage(text: string, page: string, input: ModelStatementInput): PageReading {
+    const data: AnswerEnvelope = envelopeOf(text);
     const reading: PageReading = {
         operations: [],
         ignored: [],
@@ -104,11 +107,15 @@ function readPage(text: string, page: string, input: ModelStatementInput): PageR
         totalMismatches: 0,
         netMismatches: 0
     };
+    readAll(data, reading, page, input);
+    return reading;
+}
+
+function readAll(data: AnswerEnvelope, reading: PageReading, page: string, input: ModelStatementInput): void {
     data.operations.forEach((item: unknown, index: number): void => {
-        readOperation(item, reading, page, index + 1, today);
+        readOperation(item, reading, page, index + 1, input.today);
     });
     readNotes(data, reading, page, input);
-    return reading;
 }
 
 function flagTotal(operations: readonly ParsedOperation[], totals: readonly (number | null)[]): ParsedOperation[] {
@@ -158,25 +165,16 @@ function snapshotOf(first: PageReading, foreign: ForeignExtras, operations: read
     return isSnapshot ? snapshotOperationsOf(foreign.positions, first.currency, today) : [];
 }
 
-export function specsOfModelAnswers(answers: readonly string[]): string[] {
-    const specs: Set<string> = new Set();
-    for (const text of answers) {
-        const envelope: SafeParseReturnType<unknown, AnswerEnvelope> = answerEnvelopeSchema.safeParse(jsonOf(text));
-        if (envelope.success) {
-            envelope.data.notes.flatMap(specsOfNote).forEach((spec: string): void => void specs.add(spec));
-        }
-    }
-    return [...specs];
+function specsOfAnswer(text: string): string[] {
+    const envelope: SafeParseReturnType<unknown, AnswerEnvelope> = answerEnvelopeSchema.safeParse(jsonOf(text));
+    return envelope.success ? envelope.data.notes.flatMap(specsOfNote) : [];
 }
 
-export function statementOfModelAnswers(answers: readonly string[], input: ModelStatementInput): ParsedInvestmentStatement {
-    const readings: PageReading[] = answers.map((text: string, index: number): PageReading =>
-        readPage(text, input.labels[index] ?? '', input)
-    );
-    const first: PageReading | undefined = readings[0];
-    if (first === undefined) {
-        throw new ModelUnreadableError('invalid_response');
-    }
+export function specsOfModelAnswers(answers: readonly string[]): string[] {
+    return [...new Set(answers.flatMap(specsOfAnswer))];
+}
+
+function assembledOf(readings: readonly PageReading[], first: PageReading, input: ModelStatementInput): ParsedInvestmentStatement {
     const foreign: ForeignExtras = mergedForeignOf(readings.map((reading: PageReading): ForeignExtras => reading.foreign));
     const operations: ParsedOperation[] = operationsOf(readings);
     return {
@@ -192,4 +190,15 @@ export function statementOfModelAnswers(answers: readonly string[], input: Model
         ignored: unreadOf(readings, input.unreadPages),
         rejected: readings.flatMap((reading: PageReading): RejectedLine[] => reading.rejected)
     };
+}
+
+export function statementOfModelAnswers(answers: readonly string[], input: ModelStatementInput): ParsedInvestmentStatement {
+    const readings: PageReading[] = answers.map((text: string, index: number): PageReading =>
+        readPage(text, input.labels[index] ?? '', input)
+    );
+    const first: PageReading | undefined = readings[0];
+    if (first === undefined) {
+        throw new ModelUnreadableError('invalid_response');
+    }
+    return assembledOf(readings, first, input);
 }

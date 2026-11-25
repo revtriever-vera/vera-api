@@ -231,7 +231,7 @@ describe('investment import of a monthly Avenue statement', () => {
         expect(earlier.warnings).toContainEqual({ code: 'out_of_order', count: 1 });
     });
 
-    it('nem CUSIP, nem nome do titular, nem conta aparecem em log', async () => {
+    it('nem CUSIP, nem nome do titular, nem conta aparecem em log', () => {
         expect(logged.join('\n')).not.toMatch(/AAA111AA0|BBB222BB0|PESSOA EXEMPLO|AVN-0009876/);
     });
 });

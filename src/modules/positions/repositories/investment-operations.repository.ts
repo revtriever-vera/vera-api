@@ -68,14 +68,19 @@ export class InvestmentOperationsRepository extends TenantRepository<'Investment
         if (assetIds.length === 0) {
             return new Map();
         }
-        const base = this.selectScoped()
+        const rows: { assetId: string; latest: string | Date }[] = await this.selectScoped()
             .select(['assetId', (builder) => builder.fn.max('tradeDate').as('latest')])
             .where('deletedAt', 'is', null)
-            .where('assetId', 'in', assetIds);
-        const rows = await (holderUserId === null ? base.where('holderUserId', 'is', null) : base.where('holderUserId', '=', holderUserId))
+            .where('assetId', 'in', assetIds)
+            .where('holderUserId', holderUserId === null ? 'is' : '=', holderUserId)
             .groupBy('assetId')
             .execute();
-        return new Map(rows.map((row): [string, string] => [row.assetId, DateUtil.onlyLocalDateString(new Date(row.latest))]));
+        return new Map(
+            rows.map((row: { assetId: string; latest: string | Date }): [string, string] => [
+                row.assetId,
+                DateUtil.onlyLocalDateString(new Date(row.latest))
+            ])
+        );
     }
 
     public async softDeleteByImport(importId: string): Promise<number> {

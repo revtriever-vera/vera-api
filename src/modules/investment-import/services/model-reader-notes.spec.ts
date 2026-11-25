@@ -34,8 +34,8 @@ function catalogOf(): AssetCatalogService {
     return {
         searchByName: vi
             .fn()
-            .mockImplementation(async (_market: string, name: string): Promise<Asset[]> =>
-                entries.filter((entry: Asset): boolean => entry.name.toLowerCase().includes(name.toLowerCase()))
+            .mockImplementation((_market: string, name: string): Promise<Asset[]> =>
+                Promise.resolve(entries.filter((entry: Asset): boolean => entry.name.toLowerCase().includes(name.toLowerCase())))
             )
     } as unknown as AssetCatalogService;
 }
