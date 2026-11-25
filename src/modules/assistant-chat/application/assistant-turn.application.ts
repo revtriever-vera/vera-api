@@ -7,12 +7,12 @@ import { AssistantConversation, AssistantMessage, StartedTurn, TurnMode, MESSAGE
 import { TurnNotFoundError } from '../domain/assistant-chat.errors';
 import { AssistantConversationDomain } from '../domain/assistant-conversation.domain';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
-import { modeOf, sentAvailableOf, splitNotice, toolsOf } from '../domain/turn-view';
+import { modeOf, sentAvailableOf, sentOf, splitNotice, toolsOf } from '../domain/turn-view';
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantChatMetricsService } from '../services/assistant-chat-metrics.service';
 import { AssistantTurnExpiry } from '../services/assistant-turn.expiry';
-import { SendTurnBody, TurnStartedView, TurnView } from '../validation/assistant-chat.schemas';
+import { SendTurnBody, SentView, TurnStartedView, TurnView } from '../validation/assistant-chat.schemas';
 import { TurnRequestedPayload } from '../validation/assistant-chat-jobs.schemas';
 
 const NO_TOOL: string = 'none';
@@ -57,6 +57,11 @@ export class AssistantTurnApplication {
             },
             usage
         };
+    }
+
+    public async sent(turnId: string): Promise<SentView> {
+        const turn: AssistantMessage = await this.ownedTurn(turnId);
+        return { sent: sentOf(turn).map((item) => ({ tool: item.tool, payload: item.payload })) };
     }
 
     public async feedback(turnId: string): Promise<void> {

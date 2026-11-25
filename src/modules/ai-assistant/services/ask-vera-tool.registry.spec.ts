@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { AskRoute } from '../domain/ask-channel-profiles';
 import { AskVeraToolKind } from '../domain/ask-vera.types';
 import { AskVeraToolFeature, AskVeraToolPort, PaidFeature } from './ask-vera-tool.port';
 import { AskVeraToolRegistry } from './ask-vera-tool.registry';
+
+const WHATSAPP_ROUTE: AskRoute = { channel: 'whatsapp', feature: 'whatsapp' };
 
 class FakeTool extends AskVeraToolPort {
     public readonly inputSchema = z.object({});
@@ -36,8 +39,10 @@ describe('AskVeraToolRegistry', () => {
             { allows: (feature: PaidFeature) => Promise.resolve(feature === 'whatsapp') } as never
         );
         const allowed: ReadonlySet<string> = new Set(['a_read', 'reminder_create', 'calendar_list_events']);
-        expect((await registry.available(allowed)).map((tool) => tool.name)).toEqual(['a_read', 'reminder_create']);
-        expect((await registry.available(new Set(['reminder_create']))).map((tool) => tool.name)).toEqual(['reminder_create']);
+        expect((await registry.available(allowed, WHATSAPP_ROUTE)).map((tool) => tool.name)).toEqual(['a_read', 'reminder_create']);
+        expect((await registry.available(new Set(['reminder_create']), WHATSAPP_ROUTE)).map((tool) => tool.name)).toEqual([
+            'reminder_create'
+        ]);
         expect(registry.all().map((tool) => tool.name)).toEqual(['a_read', 'calendar_list_events', 'reminder_create']);
     });
 
@@ -57,8 +62,24 @@ describe('AskVeraToolRegistry', () => {
                 }
             } as never
         );
-        const offered = await registry.available(new Set(['help_search', 'a_read']));
+        const offered = await registry.available(new Set(['help_search', 'a_read']), WHATSAPP_ROUTE);
         expect(offered.map((tool) => tool.name)).toEqual(['help_search']);
         expect(consulted).toEqual(['whatsapp']);
+    });
+
+    it('no app em modo ai, a ferramenta de leitura divide o plano da IA, não o do WhatsApp', async () => {
+        const consulted: string[] = [];
+        const registry: AskVeraToolRegistry = new AskVeraToolRegistry(
+            { getProviders: () => [{ instance: new FakeTool('a_read', 'whatsapp', 'read') }] } as never,
+            {
+                allows: (feature: PaidFeature) => {
+                    consulted.push(feature);
+                    return Promise.resolve(feature === 'ai');
+                }
+            } as never
+        );
+        const offered = await registry.available(new Set(['a_read']), { channel: 'app', feature: 'ai' });
+        expect(offered.map((tool) => tool.name)).toEqual(['a_read']);
+        expect(consulted).toEqual(['ai']);
     });
 });

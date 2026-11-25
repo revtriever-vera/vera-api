@@ -13,7 +13,7 @@ Tarefas cobertas: `summary_month`, `summary_cuts`, `summary_portfolio`, `ask_ver
 
 Nos casos de `ask_vera_step`, `tools.required` lista as ferramentas que a rodada precisa chamar (`tool_missing` reprova) e `tools.allowed` as permitidas (`tool_unexpected`). `pending: true` marca o caso que espera outra entrega: só `empty`, `truncated`, ferramenta e `mustNotMention` contam, e a taxa de ferramenta dele sai à parte (`pending`), fora do portão.
 
-Nos casos de `ask_vera_app_step`, `plan: free` entrega só `help_search` e `where_is` (como o registro faz com o Free), `role` define o papel que `where_is` enxerga, `screen` é a tela em que a pessoa está, e a pergunta e o histórico passam pela mascaragem de dado pessoal antes de ir ao modelo. As ferramentas de ajuda são as reais, sobre o catálogo (`HELP_CATALOG`). Mínimo de 12 casos em pt-BR e 4 em en, com ao menos um caso por família do catálogo (carteira, gastos, configurações e produto).
+Nos casos de `ask_vera_app_step`, `plan: free` entrega só `help_search` e `where_is` (como o registro faz com o Free), `role` define o papel que `where_is` enxerga, `screen` é a tela em que a pessoa está, e a pergunta e o histórico passam pela mascaragem de dado pessoal antes de ir ao modelo. As ferramentas de ajuda são as reais, sobre o catálogo (`HELP_CATALOG`). Mínimo de 12 casos em pt-BR e 4 em en, com ao menos um caso por família do catálogo (carteira, gastos, configurações e produto). No plano `premium`, as ferramentas de leitura do app (inclusive `concentration_overview` e `fixed_income_maturities`, de `appFixtureToolsOf`) devolvem dados inventados no mesmo formato que o modelo recebe; os casos delas exigem a linha do aviso de investimento.
 
 ## Comandos
 

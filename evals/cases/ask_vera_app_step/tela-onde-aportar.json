@@ -1,0 +1,33 @@
+{
+  "id": "tela-onde-aportar",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "o que eu faço nesta tela?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is", "concentration_overview", "fixed_income_maturities", "portfolio_overview"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "onde aportar"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/portfolio/contribution"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Em [Onde aportar](/portfolio/contribution) você informa quanto quer aportar e vê como o valor se divide entre as classes, olhando a meta de cada uma."
+  ],
+  "screen": "/portfolio/contribution"
+}
