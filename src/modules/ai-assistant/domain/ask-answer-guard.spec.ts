@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { AiTextRenderer } from './context/ai-text-renderer';
 import { CHANNEL_PROFILES, ChannelProfile } from './ask-channel-profiles';
+import { HELP_ROUTES } from './help/help-catalog';
 import { AnswerFacts, AnswerVerdict, guardAnswer, sentencesIn } from './ask-answer-guard';
 
 const FACTS: AnswerFacts = {
     numbers: [3200, 18],
     keys: new Map([['cat:eating_out', { kind: 'cat', name: 'Delivery e restaurantes' }]]),
     assets: new Set(['petr4']),
-    links: new Set(['/metas'])
+    links: new Set(['/portfolio/goals', '/spending/cuts'])
 };
 
 function check(text: string, profile: ChannelProfile = CHANNEL_PROFILES.whatsapp): AnswerVerdict {
-    return guardAnswer({ text, facts: FACTS, locale: 'pt-BR', renderer: new AiTextRenderer(), profile });
+    return guardAnswer({ text, facts: FACTS, locale: 'pt-BR', renderer: new AiTextRenderer(), profile, routes: HELP_ROUTES });
 }
 
 describe('guardAnswer', () => {
@@ -76,10 +77,10 @@ describe('guardAnswer no app', () => {
     });
 
     it('aceita o link para uma rota que a ferramenta devolveu e reprova o resto', () => {
-        expect(check('Veja em [Metas](/metas).', APP)).toEqual({ ok: true, text: 'Veja em [Metas](/metas).' });
-        expect(check('Veja em [Metas](/outra).', APP)).toMatchObject({ ok: false, check: 'link' });
-        expect(check('Veja em [Metas](https://x.y).', APP)).toMatchObject({ ok: false, check: 'link' });
-        expect(check('Veja em [Metas](/metas', APP)).toMatchObject({ ok: false, check: 'format' });
+        expect(check('Veja em [Objetivos](/portfolio/goals).', APP)).toEqual({ ok: true, text: 'Veja em [Objetivos](/portfolio/goals).' });
+        expect(check('Veja em [Objetivos](/outra).', APP)).toMatchObject({ ok: false, check: 'link' });
+        expect(check('Veja em [Objetivos](https://x.y).', APP)).toMatchObject({ ok: false, check: 'link' });
+        expect(check('Veja em [Objetivos](/portfolio/goals', APP)).toMatchObject({ ok: false, check: 'format' });
     });
 
     it('continua reprovando lista, título e código', () => {
@@ -94,8 +95,16 @@ describe('guardAnswer no app', () => {
             facts,
             locale: 'pt-BR',
             renderer: new AiTextRenderer(),
-            profile: APP
+            profile: APP,
+            routes: new Set(['/ajuda/passo-9999'])
         });
         expect(verdict).toMatchObject({ ok: true });
+    });
+
+    it('reprova link que a ferramenta devolveu mas não está no catálogo de ajuda', () => {
+        const facts: AnswerFacts = { ...FACTS, links: new Set(['/portfolio/goals', '/fora-do-catalogo']) };
+        const input = { facts, locale: 'pt-BR', renderer: new AiTextRenderer(), profile: APP, routes: HELP_ROUTES } as const;
+        expect(guardAnswer({ ...input, text: 'Veja [Objetivos](/portfolio/goals).' })).toMatchObject({ ok: true });
+        expect(guardAnswer({ ...input, text: 'Veja [Fora](/fora-do-catalogo).' })).toMatchObject({ ok: false, check: 'link' });
     });
 });

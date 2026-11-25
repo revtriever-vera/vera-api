@@ -22,6 +22,7 @@ export interface AnswerGuardInput {
     readonly locale: AppLocale;
     readonly renderer: AiTextRenderer;
     readonly profile: ChannelProfile;
+    readonly routes: ReadonlySet<string>;
 }
 
 const SENTENCE_END: RegExp = /[.!?]$/;
@@ -71,7 +72,9 @@ function linkVerdict(text: string, input: AnswerGuardInput): AnswerVerdict | nul
     if (!input.profile.acceptsLink) {
         return failure('format', 'write plain text: no lists, headings, links or code');
     }
-    const unknown: string | undefined = targets.find((target: string): boolean => !input.facts.links.has(target));
+    const unknown: string | undefined = targets.find(
+        (target: string): boolean => !input.facts.links.has(target) || !input.routes.has(target)
+    );
     return unknown === undefined ? null : failure('link', 'use only links exactly as the help tools returned them');
 }
 

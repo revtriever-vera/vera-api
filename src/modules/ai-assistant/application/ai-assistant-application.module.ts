@@ -31,11 +31,13 @@ import { AskVeraTelemetryService } from '../services/ask-vera-telemetry.service'
 import { AskVeraToolRegistry } from '../services/ask-vera-tool.registry';
 import { AskVeraService } from '../services/ask-vera.service';
 import { ContributionSuggestionTool } from '../services/tools/contribution-suggestion.tool';
+import { HelpSearchTool } from '../services/tools/help-search.tool';
 import { ListCategoriesTool } from '../services/tools/list-categories.tool';
 import { PortfolioOverviewTool } from '../services/tools/portfolio-overview.tool';
 import { SpendingByCategoryTool } from '../services/tools/spending-by-category.tool';
 import { SpendingCutsTool } from '../services/tools/spending-cuts.tool';
 import { SpendingMonthSummaryTool } from '../services/tools/spending-month-summary.tool';
+import { WhereIsTool } from '../services/tools/where-is.tool';
 import { SummaryGeneratorService } from '../services/summary-generator.service';
 import { SummarySubjectService } from '../services/summary-subject.service';
 import { AiConsentApplication } from './ai-consent.application';
@@ -87,7 +89,9 @@ import { SummariesApplication } from './summaries.application';
         SpendingByCategoryTool,
         PortfolioOverviewTool,
         ContributionSuggestionTool,
-        ListCategoriesTool
+        ListCategoriesTool,
+        HelpSearchTool,
+        WhereIsTool
     ],
     exports: [
         AiConsentApplication,
