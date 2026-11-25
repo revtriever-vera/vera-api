@@ -2,6 +2,8 @@ import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
 import { booleanFlag, devOnlySecret } from '../../../shared/config/environment.schema';
 
+const blankAsEmpty = (value: unknown): unknown => (typeof value === 'string' ? value.trim() : value);
+
 const schema = z
     .object({
         JWT_SECRET: devOnlySecret('dev-secret-do-not-use-in-prod', 32),
@@ -10,8 +12,8 @@ const schema = z
         DEPLOYMENT_MODE: z.enum(['hosted', 'self_hosted']).default('hosted'),
         COOKIE_SECURE: booleanFlag(false, true),
         GOOGLE_CLIENT_ID: z.string().default(''),
-        FACEBOOK_APP_ID: z.string().default(''),
-        FACEBOOK_APP_SECRET: z.string().default(''),
+        FACEBOOK_APP_ID: z.preprocess(blankAsEmpty, z.string().default('')),
+        FACEBOOK_APP_SECRET: z.preprocess(blankAsEmpty, z.string().default('')),
         FACEBOOK_GRAPH_VERSION: z
             .string()
             .regex(/^v\d+\.\d+$/)
