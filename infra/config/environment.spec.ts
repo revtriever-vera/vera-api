@@ -22,15 +22,15 @@ describe('fromEnvironment', () => {
         expect(config.apiHost).toBe(`api.${FAKE_DOMAIN}`);
         expect(config.appHost).toBe(`app.${FAKE_DOMAIN}`);
         expect(config.mailpit).toBeNull();
-        expect(config.githubSubjects).toEqual(['repo:revtriever-vera/vera-api:environment:production']);
+        expect(config.githubSubjects).toEqual(['repo:revtriever-vera@340816926/vera-api@1413885728:environment:production']);
     });
 
     it('não deixa o subject de dev casar com pull request de fork', () => {
         const config = fromEnvironment('dev', fakeEnvironment());
 
         expect(config.githubSubjects).toEqual([
-            'repo:revtriever-vera/vera-api:ref:refs/heads/main',
-            'repo:revtriever-vera/vera-api:pull_request'
+            'repo:revtriever-vera@340816926/vera-api@1413885728:ref:refs/heads/main',
+            'repo:revtriever-vera@340816926/vera-api@1413885728:pull_request'
         ]);
     });
 
