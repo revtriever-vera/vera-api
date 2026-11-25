@@ -13,7 +13,7 @@ Tarefas cobertas: `summary_month`, `summary_cuts`, `summary_portfolio`, `ask_ver
 
 Nos casos de `ask_vera_step`, `tools.required` lista as ferramentas que a rodada precisa chamar (`tool_missing` reprova) e `tools.allowed` as permitidas (`tool_unexpected`). `pending: true` marca o caso que espera outra entrega: só `empty`, `truncated`, ferramenta e `mustNotMention` contam, e a taxa de ferramenta dele sai à parte (`pending`), fora do portão.
 
-Nos casos de `ask_vera_app_step`, `plan: free` entrega só `help_search` e `where_is` (como o registro faz com o Free), `role` define o papel que `where_is` enxerga, `screen` é a tela em que a pessoa está, e a pergunta e o histórico passam pela mascaragem de dado pessoal antes de ir ao modelo. As ferramentas de ajuda são as reais, sobre o catálogo (`HELP_CATALOG`). Mínimo de 12 casos em pt-BR e 4 em en, com ao menos um caso por família do catálogo (carteira, gastos, configurações e produto).
+Nos casos de `ask_vera_app_step`, `plan: free` entrega só `help_search` e `where_is` (como o registro faz com o Free), `role` define o papel que `where_is` enxerga, `screen` é a tela em que a pessoa está, e a pergunta e o histórico passam pela mascaragem de dado pessoal antes de ir ao modelo. As ferramentas de ajuda são as reais, sobre o catálogo (`HELP_CATALOG`). Mínimo de 12 casos em pt-BR e 4 em en, com ao menos um caso por família do catálogo (carteira, gastos, configurações e produto). No plano `premium`, as ferramentas de leitura do app (inclusive `concentration_overview` e `fixed_income_maturities`, de `appFixtureToolsOf`) devolvem dados inventados no mesmo formato que o modelo recebe; os casos delas exigem a linha do aviso de investimento.
 
 ## Comandos
 
@@ -22,6 +22,8 @@ npm run eval -- --task <tarefa|all> [--mode mock|live] [--judge] [--reps 3] [--r
 npm run eval -- --task all --mode mock --judge
 EVALS_SECRETS_FILE=<arquivo local> npm run eval:live -- --task all --reps 3 --judge
 ```
+
+Notas de corretagem (`investment_extract`): `cases/investment_extract/*.json` traz o arquivo sintético (`test/fixtures/investment-import/generated/notes`), a resposta de referência do modelo e o gabarito de cada linha (ticker resolvido, quantidade, preço, valor, taxa rateada, `check`), das linhas ignoradas e dos avisos da nota. O gerador de fixtures escreve esses arquivos (`npm run fixtures:investment-import`); não edite à mão. Em mock (specs, sem chave) a resposta de referência passa pelo pós-processamento e pelo `ModelReaderService` e tem de dar o gabarito. Ao vivo: `EVALS_SECRETS_FILE=<arquivo local> npm run eval:notes [-- <id do caso>]` manda cada nota ao modelo pelo `ModelReaderService` de verdade (texto mascarado ou PDF escaneado, prompt e schema do catálogo) e compara com o gabarito.
 
 Sondas de entrada de arquivo: `EVALS_SECRETS_FILE=<arquivo local> npx tsx --tsconfig tsconfig.evals.json evals/probes/brokerage-note.ts <imagem.png> <nota.pdf>` manda uma nota de corretagem sintética ao modelo e confere ativo, quantidade, preço e data.
 

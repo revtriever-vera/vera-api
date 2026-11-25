@@ -4,6 +4,7 @@ import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.
 import { PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
 import { ConcentrationLogService } from '../services/concentration-log.service';
 import { ConcentrationMetricsService } from '../services/concentration-metrics.service';
+import { ConcentrationReaderService } from '../services/concentration-reader.service';
 import { ConcentrationApplication } from './concentration.application';
 
 function build() {
@@ -12,9 +13,12 @@ function build() {
     const computed = vi.fn();
     const requested = vi.fn();
     const unmappedRatio = vi.fn();
-    const application = new ConcentrationApplication(
+    const reader = new ConcentrationReaderService(
         { build: vi.fn().mockResolvedValue(snapshot) } as unknown as PortfolioSnapshotService,
-        { group } as unknown as IssuerDirectoryService,
+        { group } as unknown as IssuerDirectoryService
+    );
+    const application = new ConcentrationApplication(
+        reader,
         { computed } as unknown as ConcentrationLogService,
         { requested, unmappedRatio } as unknown as ConcentrationMetricsService
     );

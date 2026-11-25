@@ -12,7 +12,7 @@ import { maskStatementText } from '../../src/modules/investment-import/domain/mo
 import { PdfContent, readPdfContent } from '../../src/modules/investment-import/domain/pdf-text';
 import { ExtractCase, extractCaseSchema, SectionResult, compareAnswers } from './extract-compare';
 
-const CASES_DIR: string = join(__dirname, '..', 'cases', 'investment_extract');
+const CASES_DIR: string = join(__dirname, '..', 'cases', 'investment_extract', 'avenue');
 const FIXTURES_DIR: string = join(__dirname, '..', '..', 'test', 'fixtures', 'investment-import', 'generated');
 const DEFAULT_MODEL: string = 'meta/muse-spark-1.3-contributor';
 

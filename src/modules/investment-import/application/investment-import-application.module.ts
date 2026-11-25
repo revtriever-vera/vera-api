@@ -13,6 +13,7 @@ import { ImportLineEvaluatorService } from '../services/import-line-evaluator.se
 import { InvestmentImportLogService } from '../services/investment-import-log.service';
 import { InvestmentImportMetricsService } from '../services/investment-import-metrics.service';
 import { ModelReaderService } from '../services/model-reader.service';
+import { NoteAssetResolverService } from '../services/note-asset-resolver.service';
 import { StatementReaderService } from '../services/statement-reader.service';
 import { InvestmentImportCommitApplication } from './investment-import-commit.application';
 import { InvestmentImportListApplication } from './investment-import-list.application';
@@ -38,6 +39,7 @@ import { InvestmentImportPreviewApplication } from './investment-import-preview.
         FixedIncomeProposalService,
         StatementReaderService,
         ModelReaderService,
+        NoteAssetResolverService,
         InvestmentImportLogService,
         InvestmentImportMetricsService
     ],

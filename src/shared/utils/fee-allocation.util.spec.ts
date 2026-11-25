@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocateFees } from './fee-allocation';
+import { allocateFees } from './fee-allocation.util';
 
 describe('allocateFees', () => {
     it('splits proportionally to the volume of each line and keeps the exact total', () => {

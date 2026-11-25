@@ -1,6 +1,6 @@
 import { UsageState } from '../../../core/usage/usage.types';
 import { APP_LOCALES, AppLocale } from '../../../shared/i18n/locale';
-import { investmentNoticeText } from '../../ai-assistant/services/ask-vera.service';
+import { AskVeraSent, investmentNoticeText } from '../../ai-assistant/services/ask-vera.service';
 import type { UsageView } from '../validation/assistant-chat.schemas';
 import { AssistantMessage, TURN_MODES, TurnMode } from './assistant-chat.types';
 
@@ -36,4 +36,8 @@ export function usageViewOf(state: UsageState, mode: TurnMode): UsageView {
 
 export function sentAvailableOf(message: Pick<AssistantMessage, 'sent'>): boolean {
     return Array.isArray(message.sent) && message.sent.length > 0;
+}
+
+export function sentOf(message: Pick<AssistantMessage, 'sent'>): AskVeraSent[] {
+    return Array.isArray(message.sent) ? (message.sent as unknown as AskVeraSent[]) : [];
 }

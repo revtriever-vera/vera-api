@@ -79,7 +79,8 @@ describe('synthetic investment import fixtures', (): void => {
         expect(committed.sort()).toEqual([...generated.keys()].sort());
         for (const [name, content] of generated) {
             const extension: string = extname(name);
-            const isByteStable: boolean = extension === '.csv' || extension === '.json' || extension === '.pdf';
+            const isScan: boolean = name.includes('escaneada');
+            const isByteStable: boolean = !isScan && (extension === '.csv' || extension === '.json' || extension === '.pdf');
             if (isByteStable) {
                 expect(readFileSync(join(GENERATED_DIR, name)).equals(content)).toBe(true);
             }

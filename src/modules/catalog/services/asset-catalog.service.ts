@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AssetProfile, profileOf } from '../domain/asset-profiles';
 import { AssetDomain } from '../domain/asset.domain';
 import { AssetNotFoundError } from '../domain/catalog.errors';
+import { escapeLike } from '../../../shared/utils/like.util';
 import { Asset, CatalogMarket } from '../domain/catalog.types';
 
 export type { Asset, AssetProfile };
@@ -43,6 +44,12 @@ export class AssetCatalogService {
 
     public async findByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         return this.assets.findByMarketAndExternalId(market, externalId);
+    }
+
+    public async searchByName(market: CatalogMarket, name: string, limit: number): Promise<Asset[]> {
+        const text: string = name.trim().toLowerCase();
+        const found: Asset[] = await this.assets.search({ text, likeText: escapeLike(text), limit });
+        return found.filter((asset: Asset): boolean => asset.market === market);
     }
 
     public profileOf(asset: Pick<Asset, 'market' | 'symbol'>): AssetProfile {

@@ -1,0 +1,61 @@
+{
+  "id": "nota-bdr",
+  "description": "Compra de BDR (especificação com DRN)",
+  "file": "test/fixtures/investment-import/generated/notes/nota-bdr.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010011",
+        "tradeDate": "2026-11-17",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "APPLE DRN",
+            "market": "VISTA",
+            "quantity": "50",
+            "unitPrice": "52.20",
+            "grossMinor": 261000,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 261000,
+        "netMinor": -261595,
+        "fees": {
+          "settlementMinor": 72,
+          "exchangeMinor": 8,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 0,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "AAPL34",
+        "kind": "buy",
+        "quantity": "50",
+        "unitPrice": "52.20",
+        "grossMinor": 261000,
+        "feesMinor": 595
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

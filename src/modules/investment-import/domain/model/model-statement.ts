@@ -1,46 +1,29 @@
-import { SafeParseReturnType, ZodError } from 'zod';
-import { currencyExponent, DecimalUtil, divDecimal } from '../../../../shared/utils/decimal.util';
-import type { Decimal } from '../../../../shared/utils/decimal.util';
+import { SafeParseReturnType } from 'zod';
 import { ModelUnreadableError } from '../investment-import.errors';
-import { LINE_REASONS } from '../investment-import.types';
+import { LINE_REASONS, NOTE_CODES } from '../investment-import.types';
 import {
     DOCUMENT_TYPES,
     DocumentType,
     ForeignExtras,
     IGNORE_REASONS,
     IgnoredLine,
-    NO_COST_EXTRAS,
     PARSED_SOURCES,
     ParsedInvestmentStatement,
     ParsedOperation,
-    REJECT_REASONS,
     RejectedLine,
-    RejectReason
+    StatementNote
 } from '../investment-statement.types';
-import { AnswerEnvelope, AnswerOperation, answerEnvelopeSchema, answerOperationSchema } from './model-answer.schema';
+import { readNote, specsOfNote } from './brokerage-note';
 import { foreignExtrasOf, mergedForeignOf } from './model-foreign';
-import { amountCheckOf, dateCheckOf, totalMatches } from './model-checks';
-
-const FRACTIONAL_SUFFIX: RegExp = /^([A-Z]{4}\d{1,2})F$/;
-const UNSUPPORTED_MARKET: RegExp = /op[cç][aã]o|option|termo|forward|futuro|future|swap|fixed.?income/i;
-const FRACTIONAL_MARKET: RegExp = /fracion/i;
-const NON_TICKER: RegExp = /[^A-Z0-9.\-^=]/g;
-const PRICE_SCALE: number = 8;
-const AFFECTS_POSITION: ReadonlySet<string> = new Set(['buy', 'sell', 'split', 'reverse_split', 'bonus']);
-const REJECT_BY_FIELD: Readonly<Record<string, RejectReason>> = {
-    tradeDate: REJECT_REASONS.invalidDate,
-    quantity: REJECT_REASONS.invalidQuantity,
-    unitPrice: REJECT_REASONS.invalidPrice,
-    grossMinor: REJECT_REASONS.invalidAmount,
-    direction: REJECT_REASONS.invalidSide,
-    kind: REJECT_REASONS.invalidSide,
-    ticker: REJECT_REASONS.missingAsset
-};
+import { AnswerEnvelope, AnswerOperation, answerEnvelopeSchema, answerOperationSchema } from './model-answer.schema';
+import { totalMatches } from './model-checks';
+import { ignoredOf, operationOf, rejectReasonOf, UNSUPPORTED_MARKET } from './model-operation';
 
 export interface ModelStatementInput {
     readonly labels: readonly string[];
     readonly unreadPages: readonly string[];
     readonly today: string;
+    readonly tickersBySpec?: ReadonlyMap<string, string>;
 }
 
 interface PageReading {
@@ -50,7 +33,10 @@ interface PageReading {
     readonly documentType: DocumentType;
     readonly currency: string;
     readonly totalMinor: number | null;
+    readonly noteOperations: ParsedOperation[];
     readonly foreign: ForeignExtras;
+    totalMismatches: number;
+    netMismatches: number;
 }
 
 function jsonOf(text: string): unknown {
@@ -59,78 +45,6 @@ function jsonOf(text: string): unknown {
     } catch {
         return null;
     }
-}
-
-function rejectReasonOf(error: ZodError): RejectReason {
-    return REJECT_BY_FIELD[String(error.issues[0]?.path[0] ?? '')] ?? REJECT_REASONS.invalidAmount;
-}
-
-function tickerOf(operation: AnswerOperation): string {
-    const upper: string = operation.ticker.toUpperCase().replace(NON_TICKER, '');
-    const fractional: RegExpExecArray | null = FRACTIONAL_SUFFIX.exec(upper);
-    return FRACTIONAL_MARKET.test(operation.market ?? '') && fractional !== null ? (fractional[1] ?? upper) : upper;
-}
-
-function derivedPriceOf(operation: AnswerOperation): string | null {
-    if (operation.grossMinor === null || operation.grossMinor === undefined || Number(operation.quantity) === 0) {
-        return null;
-    }
-    const unit: Decimal = DecimalUtil.of(10).pow(currencyExponent(operation.currency));
-    return divDecimal(DecimalUtil.of(operation.grossMinor).div(unit).toFixed(), operation.quantity, PRICE_SCALE);
-}
-
-function unitPriceOf(operation: AnswerOperation): string | null {
-    return operation.unitPrice ?? derivedPriceOf(operation);
-}
-
-type OperationBase = Omit<ParsedOperation, 'matchKey' | 'alreadyImported' | 'check' | 'dollar'>;
-
-function externalRefOf(raw: AnswerOperation): string | null {
-    const securityId: string = raw.securityId?.trim().toUpperCase() ?? '';
-    if (securityId === '') {
-        return null;
-    }
-    return ['model', securityId, raw.tradeDate, raw.kind, raw.quantity, raw.unitPrice ?? '', String(raw.grossMinor ?? '')].join(':');
-}
-
-function baseOf(raw: AnswerOperation, page: string, line: number): OperationBase {
-    return {
-        sheet: page,
-        line,
-        kind: raw.kind,
-        incomeKind: raw.incomeKind ?? null,
-        direction: raw.direction,
-        tradeDate: raw.tradeDate,
-        ticker: tickerOf(raw),
-        productName: raw.productName ?? null,
-        institution: raw.institution ?? null,
-        market: raw.market ?? null,
-        quantity: raw.quantity,
-        unitPrice: unitPriceOf(raw),
-        grossMinor: raw.grossMinor ?? null,
-        currency: raw.currency.toUpperCase(),
-        appliedToPosition: AFFECTS_POSITION.has(raw.kind),
-        ...NO_COST_EXTRAS,
-        externalRef: externalRefOf(raw)
-    };
-}
-
-function operationOf(raw: AnswerOperation, page: string, line: number, today: string): ParsedOperation {
-    const base: OperationBase = baseOf(raw, page, line);
-    const check: string | null = dateCheckOf(raw.tradeDate, today) ?? amountCheckOf(base);
-    const matchKey: string = [base.tradeDate, base.ticker, base.kind, base.quantity, base.unitPrice ?? ''].join('|');
-    return { ...base, matchKey, alreadyImported: false, ...(check === null ? {} : { check }) };
-}
-
-function ignoredOf(raw: AnswerOperation, page: string, line: number): IgnoredLine {
-    return {
-        sheet: page,
-        line,
-        reason: IGNORE_REASONS.unsupportedMarket,
-        description: '',
-        tradeDate: raw.tradeDate,
-        productCode: null
-    };
 }
 
 function readOperation(item: unknown, reading: PageReading, page: string, line: number, today: string): void {
@@ -146,7 +60,29 @@ function readOperation(item: unknown, reading: PageReading, page: string, line: 
     reading.operations.push(operationOf(parsed.data, page, line, today));
 }
 
-function readPage(text: string, page: string, today: string): PageReading {
+function readNotes(data: AnswerEnvelope, reading: PageReading, page: string, input: ModelStatementInput): void {
+    let line: number = data.operations.length;
+    const context: Parameters<typeof readNote>[1] = {
+        page,
+        today: input.today,
+        tickersBySpec: input.tickersBySpec ?? new Map<string, string>(),
+        nextLine: (): number => {
+            line += 1;
+            return line;
+        }
+    };
+    for (const item of data.notes) {
+        const note: ReturnType<typeof readNote> = readNote(item, context);
+        reading.noteOperations.push(...note.operations);
+        reading.ignored.push(...note.ignored);
+        reading.rejected.push(...note.rejected);
+        reading.totalMismatches += note.totalMismatches;
+        reading.netMismatches += note.netMismatches;
+    }
+}
+
+function readPage(text: string, page: string, input: ModelStatementInput): PageReading {
+    const { today } = input;
     const envelope: SafeParseReturnType<unknown, AnswerEnvelope> = answerEnvelopeSchema.safeParse(jsonOf(text));
     if (!envelope.success) {
         throw new ModelUnreadableError('invalid_response');
@@ -159,11 +95,15 @@ function readPage(text: string, page: string, today: string): PageReading {
         documentType: data.documentType,
         currency: data.currency.toUpperCase(),
         totalMinor: data.totalMinor ?? null,
-        foreign: foreignExtrasOf(data)
+        noteOperations: [],
+        foreign: foreignExtrasOf(data),
+        totalMismatches: 0,
+        netMismatches: 0
     };
     data.operations.forEach((item: unknown, index: number): void => {
         readOperation(item, reading, page, index + 1, today);
     });
+    readNotes(data, reading, page, input);
     return reading;
 }
 
@@ -188,15 +128,41 @@ function unreadOf(readings: readonly PageReading[], unreadPages: readonly string
 }
 
 function operationsOf(readings: readonly PageReading[]): ParsedOperation[] {
-    return flagTotal(
-        readings.flatMap((reading: PageReading): ParsedOperation[] => reading.operations),
-        readings.map((reading: PageReading): number | null => reading.totalMinor)
-    );
+    return [
+        ...flagTotal(
+            readings.flatMap((reading: PageReading): ParsedOperation[] => reading.operations),
+            readings.map((reading: PageReading): number | null => reading.totalMinor)
+        ),
+        ...readings.flatMap((reading: PageReading): ParsedOperation[] => reading.noteOperations)
+    ];
+}
+
+function sumOf(readings: readonly PageReading[], pick: (reading: PageReading) => number): number {
+    return readings.reduce((total: number, reading: PageReading): number => total + pick(reading), 0);
+}
+
+function notesOf(readings: readonly PageReading[]): StatementNote[] {
+    const candidates: readonly StatementNote[] = [
+        { code: NOTE_CODES.noteTotalMismatch, count: sumOf(readings, (reading: PageReading): number => reading.totalMismatches) },
+        { code: NOTE_CODES.noteNetMismatch, count: sumOf(readings, (reading: PageReading): number => reading.netMismatches) }
+    ];
+    return candidates.filter((note: StatementNote): boolean => note.count > 0);
+}
+
+export function specsOfModelAnswers(answers: readonly string[]): string[] {
+    const specs: Set<string> = new Set();
+    for (const text of answers) {
+        const envelope: SafeParseReturnType<unknown, AnswerEnvelope> = answerEnvelopeSchema.safeParse(jsonOf(text));
+        if (envelope.success) {
+            envelope.data.notes.flatMap(specsOfNote).forEach((spec: string): void => void specs.add(spec));
+        }
+    }
+    return [...specs];
 }
 
 export function statementOfModelAnswers(answers: readonly string[], input: ModelStatementInput): ParsedInvestmentStatement {
     const readings: PageReading[] = answers.map((text: string, index: number): PageReading =>
-        readPage(text, input.labels[index] ?? '', input.today)
+        readPage(text, input.labels[index] ?? '', input)
     );
     const first: PageReading | undefined = readings[0];
     if (first === undefined) {
@@ -215,7 +181,7 @@ export function statementOfModelAnswers(answers: readonly string[], input: Model
         operations: operationsOf(readings),
         positionAdjustments: [],
         fixedIncome: [],
-        notes: [],
+        notes: notesOf(readings),
         ignored: unreadOf(readings, input.unreadPages),
         rejected: readings.flatMap((reading: PageReading): RejectedLine[] => reading.rejected)
     };

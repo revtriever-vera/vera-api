@@ -6,6 +6,7 @@ const CALL: LlmDriverCall = {
     credentials: { driver: 'gateway', apiKey: '', modelId: 'm' },
     spec: {
         task: 'summary_month',
+        model: 'primary',
         maxOutputTokens: 10,
         maxCostMicros: 1,
         temperature: 0,

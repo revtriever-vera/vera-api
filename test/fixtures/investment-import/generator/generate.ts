@@ -3,6 +3,7 @@ import { buildB3Reports } from './b3-reports';
 import { buildCryptoExports } from './crypto-exports';
 import { buildFixedIncomeExpectations } from './b3-fixed-income';
 import { buildB3PositionPdf } from './b3-pdf';
+import { buildBrokerageNotes } from './brokerage-notes';
 import { buildBrokerScreens, ScreenFile } from './broker-screens';
 import { sheetToCsv } from './csv-writer';
 import { encodePng } from './png-writer';
@@ -47,7 +48,8 @@ export async function generateDocumentFixtures(): Promise<GeneratedFiles> {
         ...positionPdf(reports),
         ...expectationFile(),
         ...buildCryptoExports(),
-        ...buildAvenueStatements()
+        ...buildAvenueStatements(),
+        ...buildBrokerageNotes()
     ]);
 }
 

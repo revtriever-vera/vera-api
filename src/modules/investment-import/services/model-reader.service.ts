@@ -19,7 +19,7 @@ import { ParsedInvestmentStatement } from '../domain/investment-statement.types'
 import { modelFileKindOf } from '../domain/model/file-kind';
 import { MODEL_FILE_KINDS, ModelFileKind } from '../domain/model/model-file.types';
 import { PreparedImage, prepareImage } from '../domain/model/image-prepare';
-import { statementOfModelAnswers } from '../domain/model/model-statement';
+import { specsOfModelAnswers, statementOfModelAnswers } from '../domain/model/model-statement';
 import { maskStatementText } from '../domain/model/statement-masking';
 import { MAX_SCANNED_PAGES, PdfContent, readPdfContent, splitPdfPages } from '../domain/pdf-text';
 import {
@@ -28,6 +28,7 @@ import {
     INVESTMENT_EXTRACT_TEXT_INTRO
 } from '../domain/prompts/investment-extract.prompt';
 import { InvestmentImportLogService } from './investment-import-log.service';
+import { NoteAssetResolverService } from './note-asset-resolver.service';
 
 const THROTTLE_KEY: string = 'investment-import-model';
 const TEXT_PAGE_LABEL: string = 'text';
@@ -100,7 +101,8 @@ export class ModelReaderService {
         private readonly availability: LlmAvailabilityService,
         private readonly throttle: ThrottleService,
         private readonly context: AppContext,
-        private readonly logs: InvestmentImportLogService
+        private readonly logs: InvestmentImportLogService,
+        private readonly resolver: NoteAssetResolverService
     ) {}
 
     public accepts(bytes: Uint8Array): boolean {
@@ -115,7 +117,7 @@ export class ModelReaderService {
         await this.assertAllowed(consent);
         const requests: ModelRequest[] = kind === MODEL_FILE_KINDS.pdf ? await pdfRequestsOf(bytes) : await imageRequestsOf(bytes, kind);
         const answers: Answers = await this.ask(requests);
-        const statement: ParsedInvestmentStatement = this.statementOf(answers, kind, bytes.byteLength);
+        const statement: ParsedInvestmentStatement = await this.statementOf(answers, kind, bytes.byteLength);
         this.logs.modelRead({
             kind,
             sizeBytes: bytes.byteLength,
@@ -176,11 +178,12 @@ export class ModelReaderService {
         }
     }
 
-    private statementOf(answers: Answers, kind: ModelFileKind, sizeBytes: number): ParsedInvestmentStatement {
+    private async statementOf(answers: Answers, kind: ModelFileKind, sizeBytes: number): Promise<ParsedInvestmentStatement> {
         const statement: ParsedInvestmentStatement = statementOfModelAnswers(answers.texts, {
             labels: answers.labels,
             unreadPages: answers.unread,
-            today: DateUtil.todayInBrazil()
+            today: DateUtil.todayInBrazil(),
+            tickersBySpec: await this.resolver.resolve(specsOfModelAnswers(answers.texts))
         });
         if (statement.operations.length + statement.ignored.length + statement.rejected.length === 0) {
             this.logs.modelFailed('no_operations', { kind, sizeBytes });

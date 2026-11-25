@@ -17,7 +17,9 @@
       "portfolio_overview",
       "contribution_suggestion",
       "help_search",
-      "where_is"
+      "where_is",
+      "concentration_overview",
+      "fixed_income_maturities"
     ]
   },
   "mockTools": [

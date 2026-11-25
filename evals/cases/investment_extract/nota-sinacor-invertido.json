@@ -1,0 +1,79 @@
+{
+  "id": "nota-sinacor-invertido",
+  "description": "SINACOR com o resumo financeiro antes dos negócios, uma venda e uma compra",
+  "file": "test/fixtures/investment-import/generated/notes/nota-sinacor-invertido.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010002",
+        "tradeDate": "2026-11-04",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "sell",
+            "code": null,
+            "securitySpec": "ITAU UNIBANCO PN N1",
+            "market": "VISTA",
+            "quantity": "200",
+            "unitPrice": "33.45",
+            "grossMinor": 669000,
+            "dayTrade": null
+          },
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "BANCO BRADESCO PN EJ N1",
+            "market": "VISTA",
+            "quantity": "300",
+            "unitPrice": "14.20",
+            "grossMinor": 426000,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 1095000,
+        "netMinor": 242115,
+        "fees": {
+          "settlementMinor": 301,
+          "exchangeMinor": 36,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 33,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "ITUB4",
+        "kind": "sell",
+        "quantity": "200",
+        "unitPrice": "33.45",
+        "grossMinor": 669000,
+        "feesMinor": 521
+      },
+      {
+        "ticker": "BBDC4",
+        "kind": "buy",
+        "quantity": "300",
+        "unitPrice": "14.20",
+        "grossMinor": 426000,
+        "feesMinor": 331
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}
