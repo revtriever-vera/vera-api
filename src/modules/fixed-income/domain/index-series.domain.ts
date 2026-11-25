@@ -19,6 +19,10 @@ export class IndexSeriesDomain {
         return (await this.points.listSeries(series)).map(toPoint);
     }
 
+    public async loadPointsSince(series: IndexSeriesName, from: string): Promise<SeriesPoint[]> {
+        return (await this.points.listSince(series, from)).map(toPoint);
+    }
+
     public async loadCurveSeries(): Promise<CurveSeries> {
         const [cdi, ipca]: [SeriesPoint[], SeriesPoint[]] = await Promise.all([
             this.loadPoints(INDEX_SERIES.cdiDaily),

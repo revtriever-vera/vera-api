@@ -6,7 +6,10 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { PositionsDomainModule } from '../domain/positions-domain.module';
 import { PositionsHolderDepartureHandler } from '../services/holder-departure.handler';
 import { HeldAssetsService } from '../services/held-assets.service';
+import { InvestmentImportReaderService } from '../services/investment-import-reader.service';
 import { PositionReaderService } from '../services/position-reader.service';
+import { InvestmentOperationsAccountExporter } from '../services/investment-operations-account.exporter';
+import { PositionOperationsService } from '../services/position-operations.service';
 import { PositionsAccountExporter } from '../services/positions-account.exporter';
 import { PositionsSampleDataService } from '../services/positions-sample-data.service';
 import { PositionsLogService } from '../services/positions-log.service';
@@ -22,9 +25,12 @@ import { PositionApplication } from './position.application';
         PositionReaderService,
         HeldAssetsService,
         PositionsAccountExporter,
+        InvestmentOperationsAccountExporter,
+        PositionOperationsService,
+        InvestmentImportReaderService,
         PositionsSampleDataService,
         PositionsHolderDepartureHandler
     ],
-    exports: [PositionApplication, PositionReaderService, HeldAssetsService]
+    exports: [PositionApplication, PositionReaderService, HeldAssetsService, PositionOperationsService, InvestmentImportReaderService]
 })
 export class PositionsApplicationModule {}

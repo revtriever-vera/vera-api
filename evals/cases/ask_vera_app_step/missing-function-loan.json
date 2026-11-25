@@ -1,0 +1,30 @@
+{
+  "id": "missing-function-loan",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "can Vera give me a loan?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "loan"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["no"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["No. Vera does not do payments or transfers, and it has no loans: it only reads your data."]
+}

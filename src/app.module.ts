@@ -16,6 +16,7 @@ import { LlmModule } from './core/llm/llm.module';
 import { QueueModule } from './core/queue/queue.module';
 import { UsageModule } from './core/usage/usage.module';
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
+import { AssistantChatModule } from './modules/assistant-chat/assistant-chat.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { BankConnectionsModule } from './modules/bank-connections/bank-connections.module';
 import { BillingModule } from './modules/billing/billing.module';
@@ -41,6 +42,7 @@ import { PortfolioExportModule } from './modules/portfolio-export/portfolio-expo
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { GoalNoticesModule } from './modules/goal-notices/goal-notices.module';
 import { GoalsModule } from './modules/goals/goals.module';
+import { InvestmentImportModule } from './modules/investment-import/investment-import.module';
 import { PositionsModule } from './modules/positions/positions.module';
 import { RecurringModule } from './modules/recurring/recurring.module';
 import { RecurringNoticesModule } from './modules/recurring-notices/recurring-notices.module';
@@ -96,6 +98,7 @@ const REDACTED_PATHS: string[] = [
         IntegrationCredentialsModule,
         AllocationModule,
         AiAssistantModule,
+        AssistantChatModule,
         OnboardingModule,
         CatalogModule,
         IssuersModule,
@@ -107,6 +110,7 @@ const REDACTED_PATHS: string[] = [
         RecurringModule,
         RecurringNoticesModule,
         PositionsModule,
+        InvestmentImportModule,
         MarketDataModule,
         PortfolioModule,
         PortfolioExportModule,

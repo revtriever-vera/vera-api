@@ -1,0 +1,32 @@
+{
+  "id": "ajuda-importar-extrato",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "como importo o extrato do meu banco?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "importar extrato"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/settings/banks"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Abra [Bancos](/settings/banks), em Configurações, e escolha Importar extrato. Envie o arquivo OFX ou CSV, confira a prévia e importe."
+  ]
+}

@@ -6,6 +6,7 @@ import { QuotableAsset } from '../domain/market-data.types';
 import { ExchangeRateReaderService } from '../services/exchange-rate-reader.service';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
+import { MarketIndexSyncService } from '../services/market-index-sync.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
 import { QuoteCollectorService } from '../services/quote-collector.service';
 import { QuoteReaderService } from '../services/quote-reader.service';
@@ -31,12 +32,14 @@ function rig(options: { assets?: QuotableAsset[]; rate?: unknown; rateError?: Er
     rateAge: ReturnType<typeof vi.fn>;
     missing: ReturnType<typeof vi.fn>;
     failed: ReturnType<typeof vi.fn>;
+    syncAll: ReturnType<typeof vi.fn>;
 } {
     const collect: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({ requested: 1, stored: 1, failed: 0 });
     const save: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const rateAge: ReturnType<typeof vi.fn> = vi.fn();
     const missing: ReturnType<typeof vi.fn> = vi.fn();
     const failed: ReturnType<typeof vi.fn> = vi.fn();
+    const syncAll: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const fetch: ReturnType<typeof vi.fn> = options.rateError
         ? vi.fn().mockRejectedValue(options.rateError)
         : vi.fn().mockResolvedValue(options.rate ?? null);
@@ -46,10 +49,11 @@ function rig(options: { assets?: QuotableAsset[]; rate?: unknown; rateError?: Er
         { collect } as unknown as QuoteCollectorService,
         { fetch },
         { save } as unknown as ExchangeRateDomain,
+        { syncAll } as unknown as MarketIndexSyncService,
         { rateAge } as unknown as MarketDataMetricsService,
         { rateStored: vi.fn(), rateMissing: missing, rateFailed: failed } as unknown as MarketDataLogService
     );
-    return { application, collect, save, rateAge, missing, failed };
+    return { application, collect, save, rateAge, missing, failed, syncAll };
 }
 
 describe('ReferenceDataApplication', () => {

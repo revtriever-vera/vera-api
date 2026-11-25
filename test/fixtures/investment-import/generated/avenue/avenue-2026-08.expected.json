@@ -1,0 +1,94 @@
+{
+  "documentType": "foreign_statement",
+  "currency": "USD",
+  "periodStart": "2026-08-01",
+  "periodEnd": "2026-08-31",
+  "operations": [
+    {
+      "kind": "buy",
+      "incomeKind": null,
+      "direction": "credit",
+      "tradeDate": "2026-08-05",
+      "ticker": "AAPL",
+      "market": "equities",
+      "securityId": "AAA111AA0",
+      "quantity": "5",
+      "unitPrice": "200.00",
+      "grossMinor": 100000,
+      "currency": "USD"
+    },
+    {
+      "kind": "sell",
+      "incomeKind": null,
+      "direction": "debit",
+      "tradeDate": "2026-08-12",
+      "ticker": "MSFT",
+      "market": "equities",
+      "securityId": "BBB222BB0",
+      "quantity": "2",
+      "unitPrice": "430.00",
+      "grossMinor": 86000,
+      "currency": "USD"
+    },
+    {
+      "kind": "buy",
+      "incomeKind": null,
+      "direction": "credit",
+      "tradeDate": "2026-08-25",
+      "ticker": "UST4.25-2031",
+      "market": "fixed_income",
+      "securityId": "EEE555EE0",
+      "quantity": "2000",
+      "unitPrice": "99.50",
+      "grossMinor": 199000,
+      "currency": "USD"
+    },
+    {
+      "kind": "income",
+      "incomeKind": "dividend",
+      "direction": "credit",
+      "tradeDate": "2026-08-14",
+      "ticker": "AAPL",
+      "market": "equities",
+      "securityId": "AAA111AA0",
+      "quantity": "0",
+      "unitPrice": null,
+      "grossMinor": 240,
+      "currency": "USD"
+    }
+  ],
+  "positions": [
+    {
+      "block": "equities",
+      "symbol": "AAPL",
+      "quantity": "15",
+      "price": "201.00"
+    },
+    {
+      "block": "equities",
+      "symbol": "MSFT",
+      "quantity": "3",
+      "price": "431.00"
+    },
+    {
+      "block": "fixed_income",
+      "symbol": "UST4.25-2031",
+      "quantity": "2000",
+      "price": "99.60"
+    }
+  ],
+  "taxWithholdings": [
+    {
+      "tradeDate": "2026-08-14",
+      "ticker": "AAPL",
+      "amountMinor": 72
+    }
+  ],
+  "cashMovements": [
+    {
+      "tradeDate": "2026-08-20",
+      "direction": "debit",
+      "amountMinor": 50000
+    }
+  ]
+}

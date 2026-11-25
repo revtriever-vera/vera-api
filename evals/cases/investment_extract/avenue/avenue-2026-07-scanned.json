@@ -1,0 +1,8 @@
+{
+  "id": "avenue-2026-07-scanned",
+  "task": "investment_extract",
+  "mode": "scanned",
+  "file": "avenue/avenue-2026-07-escaneado.pdf",
+  "expected": "avenue/avenue-2026-07.expected.json",
+  "sections": ["period", "operations", "income", "positions", "taxWithholdings", "cashMovements"]
+}

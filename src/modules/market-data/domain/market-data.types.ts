@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely';
-import { AssetQuotes, DB, ExchangeRates, QuoteFetchFailures } from '../../../core/database/generated/database.types';
+import { AssetQuotes, DB, ExchangeRates, MarketIndexPoints, QuoteFetchFailures } from '../../../core/database/generated/database.types';
 
 export const QUOTE_PROVIDER_IDS = {
     brapi: 'brapi',
@@ -92,8 +92,37 @@ export const RATE_LOOKBACK_DAYS: number = 7;
 export const USAGE_RETENTION_DAYS: number = 40;
 export const QUOTES_MAX_IDS: number = 30;
 
+export const MARKET_INDEX_SYMBOLS = { ibovespa: '^BVSP' } as const;
+
+export type MarketIndexSymbol = (typeof MARKET_INDEX_SYMBOLS)[keyof typeof MARKET_INDEX_SYMBOLS];
+
+export const MARKET_INDEX_SOURCES = { brapi: 'brapi', mock: 'mock' } as const;
+
+export const MARKET_INDEX_RANGES = ['1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'max'] as const;
+
+export type MarketIndexRange = (typeof MARKET_INDEX_RANGES)[number];
+
+export const MARKET_INDEX_INCREMENTAL_RANGE: MarketIndexRange = '1mo';
+export const MARKET_INDEX_INCREMENTAL_MAX_GAP_DAYS: number = 25;
+
+export interface MarketIndexClose {
+    readonly date: string;
+    readonly close: string;
+}
+
+export const MARKET_INDEX_READINGS = { ok: 'ok', notConfigured: 'not_configured', noData: 'no_data' } as const;
+
+export type MarketIndexReadingState = (typeof MARKET_INDEX_READINGS)[keyof typeof MARKET_INDEX_READINGS];
+
+export interface MarketIndexReading {
+    readonly state: MarketIndexReadingState;
+    readonly source: string;
+    readonly points: readonly MarketIndexClose[];
+}
+
 export type StoredQuoteRow = Selectable<AssetQuotes>;
 export type StoredRateRow = Selectable<ExchangeRates>;
+export type MarketIndexPointRow = Selectable<MarketIndexPoints>;
 export type QuoteFetchFailureRow = Selectable<QuoteFetchFailures>;
 
 export interface QuotableAsset {
@@ -162,4 +191,4 @@ export interface LatestQuotes {
     readonly pendingAssetIds: readonly string[];
 }
 
-export type MarketDataDatabase = Pick<DB, 'AssetQuotes' | 'ExchangeRates' | 'QuoteFetchFailures' | 'ProviderUsage'>;
+export type MarketDataDatabase = Pick<DB, 'AssetQuotes' | 'ExchangeRates' | 'MarketIndexPoints' | 'QuoteFetchFailures' | 'ProviderUsage'>;

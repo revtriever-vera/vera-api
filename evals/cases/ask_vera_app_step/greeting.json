@@ -1,0 +1,23 @@
+{
+  "id": "greeting",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "hi",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Hi. Ask about your portfolio or spending, or ask me to book a meeting or create a reminder."]
+}

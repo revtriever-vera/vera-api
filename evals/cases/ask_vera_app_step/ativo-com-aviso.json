@@ -1,0 +1,41 @@
+{
+  "id": "ativo-com-aviso",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_br": "Ações Brasil"
+  },
+  "question": "como está a PETR4 na minha carteira?",
+  "history": [],
+  "tools": {
+    "required": ["portfolio_overview"],
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion",
+      "help_search",
+      "where_is",
+      "concentration_overview",
+      "fixed_income_maturities"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "portfolio_overview",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": ["compre PETR4", "venda PETR4"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Sua carteira soma **R$ 412.000**, com [[cls:acoes_br]] em 38% contra 30% da meta."]
+}

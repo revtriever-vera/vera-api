@@ -1,0 +1,30 @@
+{
+  "id": "sem-ativo-sem-aviso",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "onde vejo as metas da carteira?",
+  "history": [],
+  "tools": {
+    "required": ["where_is"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "where_is",
+      "input": {
+        "topic": "metas da carteira"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/portfolio/targets"],
+    "mustNotMention": ["Isto não é uma recomendação"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Elas ficam em [Carteira-alvo](/portfolio/targets). Lá você define quanto de cada classe quer na carteira."]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "concentracao-por-setor",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "e nas ações, em que setor estou mais concentrado?",
+  "history": [],
+  "tools": {
+    "required": ["concentration_overview"],
+    "allowed": ["help_search", "where_is", "concentration_overview", "fixed_income_maturities", "portfolio_overview"]
+  },
+  "mockTools": [
+    {
+      "name": "concentration_overview",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["45%"],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Nas ações, o setor financeiro tem **45%** do que você tem em ações, a maior fatia. Tecnologia vem em seguida, com 25%."]
+}

@@ -6,7 +6,7 @@
   "question": "quanto falta para a minha meta de economia?",
   "history": [],
   "tools": {
-    "required": [],
+    "required": ["spending_cuts"],
     "allowed": [
       "list_categories",
       "spending_month_summary",

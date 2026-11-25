@@ -19,12 +19,12 @@
   "mockTools": [],
   "expect": {
     "mustCite": [],
-    "mustMention": [],
-    "mustNotMention": [],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": ["compre ", "você deve comprar", "a melhor ação"],
     "sentences": {
       "min": 1,
-      "max": 3
+      "max": 4
     }
   },
-  "reference": ["A Vera não recomenda ativos. Ela compara a carteira com a meta que você definiu."]
+  "reference": ["A Vera não escolhe ativos por você. Ela compara a carteira com a meta que você definiu."]
 }

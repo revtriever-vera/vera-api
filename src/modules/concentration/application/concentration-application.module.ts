@@ -4,11 +4,12 @@ import { IssuersServicesModule } from '../../issuers/services/issuers-services.m
 import { PortfolioApplicationModule } from '../../portfolio/application/portfolio-application.module';
 import { ConcentrationLogService } from '../services/concentration-log.service';
 import { ConcentrationMetricsService } from '../services/concentration-metrics.service';
+import { ConcentrationReaderService } from '../services/concentration-reader.service';
 import { ConcentrationApplication } from './concentration.application';
 
 @Module({
     imports: [ObservabilityModule, PortfolioApplicationModule, IssuersServicesModule],
-    providers: [ConcentrationApplication, ConcentrationLogService, ConcentrationMetricsService],
-    exports: [ConcentrationApplication]
+    providers: [ConcentrationApplication, ConcentrationReaderService, ConcentrationLogService, ConcentrationMetricsService],
+    exports: [ConcentrationApplication, ConcentrationReaderService]
 })
 export class ConcentrationApplicationModule {}

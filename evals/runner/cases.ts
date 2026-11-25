@@ -4,7 +4,7 @@ import { AiContext, BuiltContext, LabelSource } from '../../src/modules/ai-assis
 import { figuresIn } from '../../src/modules/ai-assistant/domain/summary-guard';
 import { EvalCase, EvalTask, SummaryCase, evalCaseSchema } from './case.schemas';
 
-export const EVAL_TASKS: readonly EvalTask[] = ['summary_month', 'summary_cuts', 'summary_portfolio', 'ask_vera_step'];
+export const EVAL_TASKS: readonly EvalTask[] = ['summary_month', 'summary_cuts', 'summary_portfolio', 'ask_vera_step', 'ask_vera_app_step'];
 
 const CASES_DIR: string = join(__dirname, '..', 'cases');
 const SKIPPED_FIELDS: ReadonlySet<string> = new Set(['mes', 'chave', 'status', 'situacao', 'moeda_base', 'tipo', 'rotulo_padrao']);

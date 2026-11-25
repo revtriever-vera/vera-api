@@ -1,0 +1,40 @@
+{
+  "id": "free-numbers",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "how much did I spend on delivery this month?",
+  "history": [],
+  "plan": "free",
+  "tools": {
+    "required": [
+      "data_locked"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "data_locked"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "data_locked",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [
+      "Premium",
+      "/settings/plan"
+    ],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "The numbers about your spending in Vera answers are Premium. See how to subscribe in [Plan and usage](/settings/plan)."
+  ]
+}

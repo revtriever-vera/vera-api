@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { flatSeries, makeScheduleTitle, TODAY } from '../../../../test/support/schedule-fixtures';
 import { seriesOf } from '../../../../test/support/fixed-income-fixtures';
+import { MaturitiesReaderService } from '../services/maturities-reader.service';
 import { ScheduleLogService } from '../services/schedule-log.service';
 import { ScheduleMetricsService } from '../services/schedule-metrics.service';
 import { ScheduleSourceService } from '../services/schedule-source.service';
@@ -11,7 +12,7 @@ function build(series = flatSeries()) {
     const referenceMissing = vi.fn();
     const maturities = vi.fn();
     const application = new MaturitiesApplication(
-        { load } as unknown as ScheduleSourceService,
+        new MaturitiesReaderService({ load } as unknown as ScheduleSourceService),
         { referenceMissing } as unknown as ScheduleLogService,
         { maturities } as unknown as ScheduleMetricsService
     );

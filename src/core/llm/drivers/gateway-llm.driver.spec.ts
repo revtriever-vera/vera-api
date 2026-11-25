@@ -18,6 +18,7 @@ function call(overrides: Partial<LlmDriverCall['spec']> = {}, request: Partial<L
         credentials: { driver: 'gateway', apiKey: 'secret-key', modelId: 'meta/muse-spark-1.3-contributor' },
         spec: {
             task: 'summary_month',
+            model: 'primary',
             maxOutputTokens: 100,
             maxCostMicros: 1,
             temperature: 0.2,
@@ -88,6 +89,22 @@ describe('GatewayLlmDriver', () => {
             attempts: 1
         });
         expect(logService.warn).not.toHaveBeenCalled();
+    });
+
+    it('devolve o motivo de parada e o raciocínio da chamada, sem o conteúdo', async () => {
+        generate.mockResolvedValueOnce(
+            answer({
+                text: '',
+                finishReason: 'length',
+                rawFinishReason: 'max_tokens',
+                finalStep: { reasoningText: 'pensando' },
+                usage: { inputTokens: 1, outputTokens: 9, inputTokenDetails: {}, outputTokenDetails: { reasoningTokens: 7 } }
+            })
+        );
+
+        const result = await driver.generate(call());
+
+        expect(result.diagnostic).toEqual({ finishReason: 'max_tokens', reasoningTokens: 7, reasoningChars: 8 });
     });
 
     it('repassa o nível de raciocínio do catálogo ao SDK', async () => {

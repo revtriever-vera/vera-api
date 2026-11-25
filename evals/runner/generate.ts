@@ -8,8 +8,18 @@ import { summarySystemPromptOf } from '../../src/modules/ai-assistant/domain/pro
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
 import { SummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
 import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter';
-import { EvalCase, SummaryCase } from './case.schemas';
+import { EvalCase, isAskCase, SummaryCase } from './case.schemas';
 import { Engine } from './engine';
+
+export interface CallTrace {
+    readonly finishReason: string;
+    readonly stopReason: LlmStopReason;
+    readonly outputTokens: number;
+    readonly reasoningTokens: number;
+    readonly reasoningChars: number;
+    readonly textChars: number;
+    readonly toolCalls: number;
+}
 
 export interface Generation {
     readonly text: string;
@@ -20,6 +30,8 @@ export interface Generation {
     readonly fixed: boolean;
     readonly toolsUsed: readonly string[];
     readonly ending: 'answered' | 'direct' | 'truncated' | 'check_failed';
+    readonly calls: readonly CallTrace[];
+    readonly sent?: readonly string[];
 }
 
 const RESPONSE_SCHEMA: JsonObject = toolInputSchemaOf(summaryOutputSchema);
@@ -38,10 +50,22 @@ export function specOf(task: string, reasoning: LlmReasoning | undefined): LlmTa
 }
 
 export function isFixed(item: EvalCase): boolean {
-    if (item.task === 'ask_vera_step') {
+    if (isAskCase(item)) {
         return prefilterOf(item.question) !== null;
     }
     return item.task === 'summary_cuts' && item.context.status === 'meta_batida';
+}
+
+export function traceOf(result: LlmDriverResult): CallTrace {
+    return {
+        finishReason: result.diagnostic?.finishReason ?? result.stopReason,
+        stopReason: result.stopReason,
+        outputTokens: result.usage.outputTokens,
+        reasoningTokens: result.diagnostic?.reasoningTokens ?? 0,
+        reasoningChars: result.diagnostic?.reasoningChars ?? 0,
+        textChars: result.text.length,
+        toolCalls: result.toolUses.length
+    };
 }
 
 export function costOf(result: LlmDriverResult): number {
@@ -65,9 +89,23 @@ async function callModel(engine: Engine, spec: LlmTaskSpec, item: SummaryCase): 
     return result;
 }
 
+export function fixedGeneration(text: string): Generation {
+    return {
+        text,
+        stopReason: 'end',
+        outputTokens: 0,
+        costUsd: 0,
+        latencyMs: 0,
+        fixed: true,
+        toolsUsed: [],
+        ending: 'answered',
+        calls: []
+    };
+}
+
 export async function generate(engine: Engine, spec: LlmTaskSpec, item: SummaryCase): Promise<Generation> {
     if (isFixed(item)) {
-        return { text: '', stopReason: 'end', outputTokens: 0, costUsd: 0, latencyMs: 0, fixed: true, toolsUsed: [], ending: 'answered' };
+        return fixedGeneration('');
     }
     const result: LlmDriverResult = await callModel(engine, spec, item);
     return {
@@ -78,6 +116,7 @@ export async function generate(engine: Engine, spec: LlmTaskSpec, item: SummaryC
         latencyMs: result.latencyMs,
         fixed: false,
         toolsUsed: [],
-        ending: 'answered'
+        ending: 'answered',
+        calls: [traceOf(result)]
     };
 }

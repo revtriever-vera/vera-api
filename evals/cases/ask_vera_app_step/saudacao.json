@@ -1,0 +1,23 @@
+{
+  "id": "saudacao",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "oi",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["reunião", "lembrete", "carteira", "gastos"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Oi. Pergunte como usar a Vera: onde fica uma tela ou o que cada uma faz."]
+}

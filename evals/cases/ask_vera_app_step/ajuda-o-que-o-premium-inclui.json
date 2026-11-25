@@ -1,0 +1,32 @@
+{
+  "id": "ajuda-o-que-o-premium-inclui",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "o que o Premium inclui?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "o que o premium inclui"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/settings/plan"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "O Premium inclui resumos em texto, a Vera no WhatsApp, o Google Agenda com lembretes e as respostas sobre os seus números em Perguntar à Vera. Veja os detalhes em [Plano e uso](/settings/plan)."
+  ]
+}
