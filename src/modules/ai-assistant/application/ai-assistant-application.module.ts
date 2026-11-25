@@ -35,6 +35,7 @@ import { AskVeraService } from '../services/ask-vera.service';
 import { ConcentrationOverviewTool } from '../services/tools/concentration-overview.tool';
 import { ContributionSuggestionTool } from '../services/tools/contribution-suggestion.tool';
 import { FixedIncomeMaturitiesTool } from '../services/tools/fixed-income-maturities.tool';
+import { DataLockedTool } from '../services/tools/data-locked.tool';
 import { HelpSearchTool } from '../services/tools/help-search.tool';
 import { ListCategoriesTool } from '../services/tools/list-categories.tool';
 import { PortfolioOverviewTool } from '../services/tools/portfolio-overview.tool';
@@ -99,7 +100,8 @@ import { SummariesApplication } from './summaries.application';
         FixedIncomeMaturitiesTool,
         ListCategoriesTool,
         HelpSearchTool,
-        WhereIsTool
+        WhereIsTool,
+        DataLockedTool
     ],
     exports: [
         AiConsentApplication,

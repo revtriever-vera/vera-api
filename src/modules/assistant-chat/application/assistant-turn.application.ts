@@ -7,7 +7,7 @@ import { AssistantConversation, AssistantMessage, StartedTurn, TurnMode, MESSAGE
 import { TurnNotFoundError } from '../domain/assistant-chat.errors';
 import { AssistantConversationDomain } from '../domain/assistant-conversation.domain';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
-import { modeOf, sentAvailableOf, sentOf, splitNotice, toolsOf } from '../domain/turn-view';
+import { accessOf, modeOf, sentAvailableOf, sentOf, splitNotice, toolsOf } from '../domain/turn-view';
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantChatMetricsService } from '../services/assistant-chat-metrics.service';
@@ -53,6 +53,7 @@ export class AssistantTurnApplication {
                 source: mode,
                 toolsUsed: toolsOf(turn),
                 sentAvailable: sentAvailableOf(turn),
+                access: accessOf(turn, await this.access.lockOf()),
                 notice: split.notice
             },
             usage

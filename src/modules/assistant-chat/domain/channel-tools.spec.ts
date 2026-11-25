@@ -3,7 +3,7 @@ import { APP_AI_TOOLS, APP_HELP_TOOLS, appToolsOf } from './channel-tools';
 
 describe('ferramentas do app por modo', () => {
     it('help só recebe as de ajuda, sem nenhuma ferramenta de número', () => {
-        expect([...appToolsOf('help')].sort()).toEqual(['help_search', 'where_is']);
+        expect([...appToolsOf('help')].sort()).toEqual(['data_locked', 'help_search', 'where_is']);
         expect(appToolsOf('help')).toBe(APP_HELP_TOOLS);
     });
 

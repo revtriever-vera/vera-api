@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { AppContext } from '../../../../core/context/app-context.port';
 import { CurrentUserService } from '../../../identity/services/current-user.service';
 import { ASK_VERA_HELP_FEATURE } from '../../domain/ask-vera.types';
+import { PlanGateService } from '../../../plans/services/plan-gate.service';
+import { AiConsentService } from '../ai-consent.service';
+import { DataLockedTool } from './data-locked.tool';
 import { HelpSearchTool } from './help-search.tool';
 import { WhereIsTool } from './where-is.tool';
 
@@ -59,5 +62,27 @@ describe('WhereIsTool', () => {
     it('diz que não há tela', async () => {
         const output = await new WhereIsTool(contextOf('en'), usersOf('owner')).run({ topic: 'cake recipe' });
         expect(output.payload).toMatchObject({ status: 'no_result' });
+    });
+});
+
+describe('DataLockedTool', () => {
+    const gateOf = (allows: boolean): PlanGateService => ({ allows: () => Promise.resolve(allows) }) as unknown as PlanGateService;
+    const consent = {} as unknown as AiConsentService;
+
+    it('é de ajuda e só lê', () => {
+        const tool: DataLockedTool = new DataLockedTool(contextOf('pt-BR'), gateOf(false), consent);
+        expect(tool.name).toBe('data_locked');
+        expect(tool.feature).toBe(ASK_VERA_HELP_FEATURE);
+        expect(tool.kind).toBe('read');
+    });
+
+    it('sem o plano, aponta o Plano e uso', async () => {
+        const output = await new DataLockedTool(contextOf('pt-BR'), gateOf(false), consent).run();
+        expect(output.payload).toMatchObject({ motivo: 'premium', link: '/settings/plan' });
+    });
+
+    it('com o plano e sem permissão, aponta Dados e privacidade', async () => {
+        const output = await new DataLockedTool(contextOf('en'), gateOf(true), consent).run();
+        expect(output.payload).toMatchObject({ motivo: 'permission', link: '/settings/privacy' });
     });
 });
