@@ -344,7 +344,7 @@ export class AppStack extends Stack {
             LLM_PRICE_TABLE: props.config.llm.priceTable,
             APP_URL: `https://${props.config.appHost}`,
             ...this.calendarEnvironment(props),
-            CORS_ORIGINS: `https://${props.config.appHost}`
+            CORS_ORIGINS: this.corsOrigins(props.config)
         };
     }
 
@@ -353,6 +353,13 @@ export class AppStack extends Stack {
             GOOGLE_CALENDAR_REDIRECT_URI: `https://${props.config.apiHost}/calendar/google/callback`
         };
         return props.config.calendar.driver === null ? redirect : { GOOGLE_CALENDAR_DRIVER: props.config.calendar.driver, ...redirect };
+    }
+
+    private corsOrigins(config: EnvironmentConfig): string {
+        return [config.appHost, config.adminHost]
+            .filter((host: string | null): host is string => host !== null)
+            .map((host: string): string => `https://${host}`)
+            .join(',');
     }
 
     private billingEnvironment(billing: BillingEnvironmentConfig): Record<string, string> {

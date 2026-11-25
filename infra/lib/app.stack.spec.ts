@@ -172,6 +172,18 @@ describe('a task do serviço', () => {
         expect(api.Environment).toContainEqual({ Name: 'CORS_ORIGINS', Value: `https://app.${FAKE_DOMAIN}` });
     });
 
+    it('inclui o host do admin no CORS quando definido', () => {
+        const api: ContainerResource = container(
+            taskContainers(appTemplate('prod', { adminHost: `admin-vera.${FAKE_DOMAIN}` }), 'vera-api-prod'),
+            'api'
+        );
+
+        expect(api.Environment).toContainEqual({
+            Name: 'CORS_ORIGINS',
+            Value: `https://app.${FAKE_DOMAIN},https://admin-vera.${FAKE_DOMAIN}`
+        });
+    });
+
     it('declara a porta da api só no container, sem ingresso de security group nesta pilha', () => {
         const template: Template = appTemplate('prod');
         const api: ContainerResource = container(taskContainers(template, 'vera-api-prod'), 'api');

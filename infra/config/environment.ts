@@ -44,6 +44,7 @@ export interface EnvironmentConfig {
     readonly domain: string;
     readonly apiHost: string;
     readonly appHost: string;
+    readonly adminHost: string | null;
     readonly shared: SharedInfrastructureConfig;
     readonly githubRepository: string;
     readonly githubSubjects: readonly string[];
@@ -89,6 +90,7 @@ const SETTINGS: Readonly<Record<EnvironmentName, EnvironmentSettings>> = { dev, 
 const ACCOUNT_PATTERN: RegExp = /^\d{12}$/;
 const HOST_PREFIX_PATTERN: RegExp = /^[a-z0-9-]*$/;
 const HOST_PREFIX_MAX_LENGTH: number = 20;
+const ADMIN_HOST_PATTERN: RegExp = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 const DOMAIN_PATTERN: RegExp = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 
 const nonEmpty: z.ZodString = z.string().min(1);
@@ -146,6 +148,19 @@ function hostPrefix(env: NodeJS.ProcessEnv): string {
         );
     }
     return value;
+}
+
+function adminHost(env: NodeJS.ProcessEnv, hosts: HostNaming): string | null {
+    const value: string = (env['VERA_ADMIN_HOST'] ?? '').trim().toLowerCase();
+    if (value.length === 0) {
+        return null;
+    }
+    if (!ADMIN_HOST_PATTERN.test(value) || value.length > HOST_PREFIX_MAX_LENGTH * 2) {
+        throw new Error(
+            `VERA_ADMIN_HOST inválida: informe só o rótulo do subdomínio (a-z, 0-9 e hífen, sem hífen nas pontas, até ${String(HOST_PREFIX_MAX_LENGTH * 2)} caracteres), por exemplo admin-vera`
+        );
+    }
+    return `${value}.${hosts.domain}`;
 }
 
 function optionalVariable(env: NodeJS.ProcessEnv, variable: string): string | null {
@@ -254,7 +269,18 @@ function operationalSettings(
     hosts: HostNaming
 ): Omit<
     EnvironmentConfig,
-    'billing' | 'calendar' | 'llm' | 'name' | 'account' | 'region' | 'domain' | 'apiHost' | 'appHost' | 'shared' | 'imagePullAccounts'
+    | 'billing'
+    | 'calendar'
+    | 'llm'
+    | 'name'
+    | 'account'
+    | 'region'
+    | 'domain'
+    | 'apiHost'
+    | 'appHost'
+    | 'adminHost'
+    | 'shared'
+    | 'imagePullAccounts'
 > {
     return {
         githubRepository: settings.githubRepository,
@@ -281,6 +307,7 @@ export function fromEnvironment(name: EnvironmentName, env: NodeJS.ProcessEnv): 
         domain: domainName,
         apiHost: hostOf('api', settings, hosts),
         appHost: hostOf('app', settings, hosts),
+        adminHost: adminHost(env, hosts),
         shared: shared(env, `SHARED_INFRA_${suffix}`),
         imagePullAccounts: imagePullAccounts(env),
         billing: billing(env),

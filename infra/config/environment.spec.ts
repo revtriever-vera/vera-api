@@ -83,6 +83,21 @@ describe('fromEnvironment', () => {
         expect(config.appHost).toBe(`vera-app.${FAKE_DOMAIN}`);
     });
 
+    it('não tem host de admin sem VERA_ADMIN_HOST', () => {
+        expect(fromEnvironment('prod', fakeEnvironment()).adminHost).toBeNull();
+        expect(fromEnvironment('prod', fakeEnvironment({ VERA_ADMIN_HOST: '  ' })).adminHost).toBeNull();
+    });
+
+    it('monta o host de admin com VERA_ADMIN_HOST, sem prefixo nem sufixo', () => {
+        const config = fromEnvironment('prod', fakeEnvironment({ VERA_ADMIN_HOST: 'Admin-Vera', VERA_HOST_PREFIX: 'vera-' }));
+
+        expect(config.adminHost).toBe(`admin-vera.${FAKE_DOMAIN}`);
+    });
+
+    it.each(['admin.vera', '-admin', 'admin-', 'admin_vera', 'a'.repeat(41)])('recusa o host de admin inválido %s', (value: string) => {
+        expect(() => fromEnvironment('prod', fakeEnvironment({ VERA_ADMIN_HOST: value }))).toThrow('VERA_ADMIN_HOST inválida');
+    });
+
     it('trata prefixo vazio como ausente', () => {
         expect(fromEnvironment('prod', fakeEnvironment({ VERA_HOST_PREFIX: '  ' })).apiHost).toBe(`api.${FAKE_DOMAIN}`);
     });
