@@ -65,6 +65,31 @@ describe('authConfig', () => {
         expect(authConfig().FACEBOOK_APP_SECRET).toBe('fake-app-secret');
     });
 
+    it('trata valor em branco do Facebook como não configurado', () => {
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('FACEBOOK_APP_ID', '   ');
+        vi.stubEnv('FACEBOOK_APP_SECRET', ' ');
+
+        const config: AuthConfig = authConfig();
+
+        expect(config.FACEBOOK_APP_ID).toBe('');
+        expect(config.FACEBOOK_APP_SECRET).toBe('');
+    });
+
+    it('apara o id e o segredo do Facebook e exige o segredo sobre o valor aparado', () => {
+        vi.stubEnv('IS_LOCAL', 'true');
+        vi.stubEnv('FACEBOOK_APP_ID', ' fake-app-id ');
+        vi.stubEnv('FACEBOOK_APP_SECRET', '  ');
+
+        expect(() => authConfig()).toThrow('FACEBOOK_APP_SECRET');
+
+        vi.stubEnv('FACEBOOK_APP_SECRET', ' fake-app-secret ');
+        const config: AuthConfig = authConfig();
+
+        expect(config.FACEBOOK_APP_ID).toBe('fake-app-id');
+        expect(config.FACEBOOK_APP_SECRET).toBe('fake-app-secret');
+    });
+
     it('recusa versão da Graph API fora do formato vN.M', () => {
         vi.stubEnv('IS_LOCAL', 'true');
         vi.stubEnv('FACEBOOK_GRAPH_VERSION', '23');
