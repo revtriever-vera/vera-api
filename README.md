@@ -146,6 +146,7 @@ AWS_ACCOUNT_ID_DEV=<id da conta de dev>
 AWS_ACCOUNT_ID_PROD=<id da conta de prod>
 VERA_DOMAIN=<seu domínio>
 VERA_HOST_PREFIX=<opcional, por exemplo vera->
+VERA_ADMIN_HOST=<opcional, rótulo do host do admin da plataforma, por exemplo admin-vera>
 SHARED_INFRA_DEV='{"vpcId":"...","availabilityZones":["..."],"publicSubnetIds":["..."],"databaseInstanceId":"...","databaseEndpoint":"...","databaseSecurityGroupId":"...","redisEndpoint":"...","redisSecurityGroupId":"...","openIdConnectProviderArn":"..."}'
 SHARED_INFRA_PROD='<mesmo formato>'
 ```
@@ -159,7 +160,7 @@ npx cdk synth
 
 #### Hosts e prefixo (`VERA_HOST_PREFIX`)
 
-Os hosts saem de `${VERA_HOST_PREFIX}<nome>[-dev].${VERA_DOMAIN}`, com `<nome>` igual a `app`, `api` ou `mail` (o Mailpit existe só em dev). Todos ficam num único nível de subdomínio, compatível com o certificado SSL gratuito do Cloudflare. `VERA_HOST_PREFIX` é opcional e vazio por padrão, então quem clona o repositório continua com `app.<domínio>` e `api.<domínio>`. Quando o domínio já tem esses nomes em uso, defina o prefixo: com `VERA_HOST_PREFIX=vera-` e `VERA_DOMAIN=exemplo.com` saem `vera-app.exemplo.com`, `vera-api.exemplo.com`, `vera-app-dev.exemplo.com`, `vera-api-dev.exemplo.com` e `vera-mail-dev.exemplo.com`. O valor só aceita `a-z`, `0-9` e hífen, até 20 caracteres, e precisa terminar em hífen. Nos workflows ele vem da variável de repositório `VERA_HOST_PREFIX` (deixe sem definir para não usar prefixo) e alimenta o CDK (host da API, `CORS_ORIGINS`, outputs `ApiUrl` e `MailUrl`) e o script do túnel. O front precisa da mesma variável para apontar para a API. O banco lógico `vera` e o papel dele na instância compartilhada são criados à mão, de uma máquina liberada no security group do RDS, e a URL de conexão é gravada no SSM em `/vera/database-url`.
+Os hosts saem de `${VERA_HOST_PREFIX}<nome>[-dev].${VERA_DOMAIN}`, com `<nome>` igual a `app`, `api` ou `mail` (o Mailpit existe só em dev). Todos ficam num único nível de subdomínio, compatível com o certificado SSL gratuito do Cloudflare. `VERA_HOST_PREFIX` é opcional e vazio por padrão, então quem clona o repositório continua com `app.<domínio>` e `api.<domínio>`. Quando o domínio já tem esses nomes em uso, defina o prefixo: com `VERA_HOST_PREFIX=vera-` e `VERA_DOMAIN=exemplo.com` saem `vera-app.exemplo.com`, `vera-api.exemplo.com`, `vera-app-dev.exemplo.com`, `vera-api-dev.exemplo.com` e `vera-mail-dev.exemplo.com`. O valor só aceita `a-z`, `0-9` e hífen, até 20 caracteres, e precisa terminar em hífen. Nos workflows ele vem da variável de repositório `VERA_HOST_PREFIX` (deixe sem definir para não usar prefixo) e alimenta o CDK (host da API, `CORS_ORIGINS`, outputs `ApiUrl` e `MailUrl`) e o script do túnel. O front precisa da mesma variável para apontar para a API. `VERA_ADMIN_HOST` é opcional: é só o rótulo do subdomínio do admin da plataforma (por exemplo `admin-vera`, que vira `admin-vera.<VERA_DOMAIN>`, sem prefixo nem sufixo de ambiente); quando definida, esse host entra no `CORS_ORIGINS` junto do host do app, e sem ela nada muda. O banco lógico `vera` e o papel dele na instância compartilhada são criados à mão, de uma máquina liberada no security group do RDS, e a URL de conexão é gravada no SSM em `/vera/database-url`.
 
 ## Licença
 
