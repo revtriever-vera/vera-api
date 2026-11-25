@@ -68,6 +68,50 @@ describe('statementOfModelAnswers', () => {
         expect(statement.operations).toEqual([]);
     });
 
+    describe('retrato da carteira (print, PDF de posição)', () => {
+        const positions: unknown[] = [
+            { block: 'equities', symbol: 'petr4', quantity: '227', price: '38.52' },
+            { block: 'equities', symbol: 'VALE3', quantity: '100', price: null },
+            { block: 'fixed_income', symbol: 'CDB', quantity: '1', price: '1000' }
+        ];
+
+        function snapshot(extra: Record<string, unknown> = {}): ParsedInvestmentStatement {
+            return read([
+                JSON.stringify({ documentType: 'screenshot', currency: 'BRL', operations: [], notes: null, positions, ...extra })
+            ]);
+        }
+
+        it('posição de ações com preço vira compra de hoje com custo assumido; sem preço fica de fora', () => {
+            const statement: ParsedInvestmentStatement = snapshot();
+
+            expect(statement.operations).toHaveLength(1);
+            expect(statement.operations[0]).toMatchObject({
+                kind: 'buy',
+                ticker: 'PETR4',
+                quantity: '227',
+                unitPrice: '38.52',
+                tradeDate: TODAY,
+                currency: 'BRL',
+                check: 'assumed_cost',
+                grossMinor: 874404
+            });
+        });
+
+        it('PDF da B3 (b3_report) segue o mesmo caminho', () => {
+            expect(snapshot({ documentType: 'b3_report' }).operations).toHaveLength(1);
+        });
+
+        it('moeda que não é real não vira compra', () => {
+            expect(snapshot({ currency: 'USD' }).operations).toEqual([]);
+        });
+
+        it('com operações lidas, a posição não vira compra', () => {
+            const statement: ParsedInvestmentStatement = snapshot({ operations: [operation({ ticker: 'ITUB4' })] });
+
+            expect(statement.operations.map((line: ParsedOperation): string => line.ticker)).toEqual(['ITUB4']);
+        });
+    });
+
     it('conta que não bate vira check e a linha continua', () => {
         const statement: ParsedInvestmentStatement = read([answer([operation({ grossMinor: 390000 })])]);
 

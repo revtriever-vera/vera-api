@@ -10,6 +10,7 @@ import {
 } from '../investment-statement.types';
 
 const USD: string = 'USD';
+const EMPTY_EXTRAS: ForeignExtras = { periodStart: null, periodEnd: null, positions: [], withholdings: [], cashMovements: [] };
 const TRADE_KINDS: ReadonlySet<string> = new Set(['buy', 'sell']);
 
 function tradedSymbolsOf(statement: ParsedInvestmentStatement): ReadonlySet<string> {
@@ -38,16 +39,20 @@ function summaryOnlyOf(extras: ForeignExtras, traded: ReadonlySet<string>): Fore
     });
 }
 
-function pricingOf(position: ForeignPosition, tradeDate: string): Pick<ParsedOperation, 'unitPrice' | 'grossMinor' | 'matchKey'> {
+function pricingOf(
+    position: ForeignPosition,
+    tradeDate: string,
+    currency: string
+): Pick<ParsedOperation, 'unitPrice' | 'grossMinor' | 'matchKey'> {
     const unitPrice: string = position.price ?? '0';
     return {
         unitPrice,
-        grossMinor: toMinor(mulDecimal(position.quantity, unitPrice), USD),
+        grossMinor: toMinor(mulDecimal(position.quantity, unitPrice), currency),
         matchKey: [tradeDate, position.symbol, 'buy', position.quantity, unitPrice].join('|')
     };
 }
 
-function buyOf(position: ForeignPosition, tradeDate: string): ParsedOperation {
+function buyOf(position: ForeignPosition, tradeDate: string, currency: string): ParsedOperation {
     return {
         sheet: '',
         line: 0,
@@ -61,8 +66,8 @@ function buyOf(position: ForeignPosition, tradeDate: string): ParsedOperation {
         market: null,
         quantity: position.quantity,
         ...NO_COST_EXTRAS,
-        ...pricingOf(position, tradeDate),
-        currency: USD,
+        ...pricingOf(position, tradeDate, currency),
+        currency,
         appliedToPosition: true,
         alreadyImported: false,
         check: LINE_REASONS.assumedCost
@@ -80,6 +85,16 @@ export function assumedOperationsOf(statement: ParsedInvestmentStatement): Parse
         return [];
     }
     return summaryOnlyOf(extras, tradedSymbolsOf(statement)).map((position: ForeignPosition): ParsedOperation =>
-        buyOf(position, tradeDate)
+        buyOf(position, tradeDate, USD)
+    );
+}
+
+/**
+ * A portfolio snapshot (a print or a position PDF, no trades at all) becomes one buy per priced equity position, dated
+ * the day of the reading and flagged `assumed_cost`. A position the Vera already holds is ignored when the line is evaluated.
+ */
+export function snapshotOperationsOf(positions: readonly ForeignPosition[], currency: string, today: string): ParsedOperation[] {
+    return summaryOnlyOf({ ...EMPTY_EXTRAS, positions }, new Set()).map((position: ForeignPosition): ParsedOperation =>
+        buyOf(position, today, currency)
     );
 }

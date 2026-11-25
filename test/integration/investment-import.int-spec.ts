@@ -488,6 +488,48 @@ describe('investment import', () => {
             generate.mockRestore();
         });
 
+        function snapshotAnswer(positions: Record<string, unknown>[]): string {
+            return JSON.stringify({ documentType: 'screenshot', currency: 'BRL', operations: null, notes: null, positions });
+        }
+
+        it('print de carteira vira compra com custo assumido e, com a posição já na Vera, a linha é ignorada', async () => {
+            const owner: Account = await harness.signUp('modelo-carteira');
+            const rows: Record<string, unknown>[] = [{ block: 'equities', symbol: 'PETR4', quantity: '227', price: '38.52' }];
+            mock.enqueue(snapshotAnswer(rows));
+
+            const first: Reply = await upload(owner.token, await printOf(403), { modelConsent: 'true' }, 'print.png');
+            const ready: PreviewBody = first.body as never;
+
+            expect(first.status).toBe(200);
+            expect(
+                ready.operations.map((line: LineBody): string => `${String(line.ticker)}:${line.status}:${String(line.reason)}`)
+            ).toEqual(['PETR4:check:assumed_cost']);
+            expect((await commit<CommitBody>(owner, ready.previewId)).body.applied).toBe(1);
+            expect(await positionOf(owner, 'PETR4')).toMatchObject({ quantity: 227 });
+
+            mock.enqueue(snapshotAnswer([{ block: 'equities', symbol: 'PETR4', quantity: '250', price: '40.10' }]));
+            const again: Reply = await upload(owner.token, await printOf(404), { modelConsent: 'true' }, 'print.png');
+
+            expect(
+                (again.body as unknown as PreviewBody).operations.map((line: LineBody): string => `${line.status}:${String(line.reason)}`)
+            ).toEqual(['ignored:skipped']);
+        });
+
+        it('print de carteira sem preço legível devolve model.unreadable com o motivo positions_without_price', async () => {
+            const owner: Account = await harness.signUp('modelo-carteira-sem-preco');
+            mock.enqueue(snapshotAnswer([{ block: 'equities', symbol: 'PETR4', quantity: '227', price: null }]));
+
+            const reply: Reply<ProblemBody> = (await upload(
+                owner.token,
+                await printOf(405),
+                { modelConsent: 'true' },
+                'print.png'
+            )) as unknown as Reply<ProblemBody>;
+
+            expect(reply.status).toBe(422);
+            expect(reply.body).toMatchObject({ type: 'model.unreadable', meta: { reason: 'positions_without_price' } });
+        });
+
         it('resposta fora do esquema devolve model.unreadable e nada fica gravado', async () => {
             const owner: Account = await harness.signUp('modelo-ilegivel');
             mock.enqueue('isto não é JSON');

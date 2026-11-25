@@ -17,6 +17,7 @@ export const INVESTMENT_EXTRACT_SYSTEM_PROMPT: string = [
     '- `kind` income with `incomeKind` dividend or interest for a dividend or interest credit. `grossMinor` is the credit as printed, never net of tax.',
     '- A tax withheld line (for example NRA TAX WITHHELD) is never an operation: put it in `taxWithholdings` with the same date and symbol and a positive `amountMinor`.',
     '- `positions` is the portfolio summary of the statement: one entry per row, `block` equities, options, fixed_income or mutual_fund as the section is printed, with the closing `quantity` and the closing `price` per unit as printed (null when none).',
+    '- A portfolio screen, a screenshot of holdings or a B3 position report (documentType screenshot or b3_report) has no trades: leave `operations` empty and answer every holding in `positions` with its `symbol`, `quantity` and the `price` per unit as printed (null when the price is not readable). `block` is equities for anything traded on an exchange with a ticker (stocks, FIIs, ETFs, BDRs). Never invent a price.',
     '- Options and fixed income rows in the activity: include them with `market` option or fixed_income so they can be set aside.',
     '- `cashMovements`: each line of funds paid and received, `credit` for money received and `debit` for money paid, absolute `amountMinor`. They are not operations.',
     '- `periodStart` and `periodEnd` are the first and last day of the statement period when printed.',
