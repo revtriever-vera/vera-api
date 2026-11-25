@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { AskVeraToolKind } from '../domain/ask-vera.types';
-import { AskVeraToolPort, PaidFeature } from './ask-vera-tool.port';
+import { AskVeraToolFeature, AskVeraToolPort, PaidFeature } from './ask-vera-tool.port';
 import { AskVeraToolRegistry } from './ask-vera-tool.registry';
 
 class FakeTool extends AskVeraToolPort {
@@ -9,7 +9,7 @@ class FakeTool extends AskVeraToolPort {
 
     public constructor(
         public readonly name: string,
-        public readonly feature: PaidFeature,
+        public readonly feature: AskVeraToolFeature,
         public readonly kind: AskVeraToolKind
     ) {
         super();
@@ -39,5 +39,26 @@ describe('AskVeraToolRegistry', () => {
         expect((await registry.available(allowed)).map((tool) => tool.name)).toEqual(['a_read', 'reminder_create']);
         expect((await registry.available(new Set(['reminder_create']))).map((tool) => tool.name)).toEqual(['reminder_create']);
         expect(registry.all().map((tool) => tool.name)).toEqual(['a_read', 'calendar_list_events', 'reminder_create']);
+    });
+
+    it('oferece a ferramenta de ajuda sem consultar o plano', async () => {
+        const consulted: string[] = [];
+        const registry: AskVeraToolRegistry = new AskVeraToolRegistry(
+            {
+                getProviders: () => [
+                    { instance: new FakeTool('help_search', 'help', 'read') },
+                    { instance: new FakeTool('a_read', 'whatsapp', 'read') }
+                ]
+            } as never,
+            {
+                allows: (feature: PaidFeature) => {
+                    consulted.push(feature);
+                    return Promise.resolve(false);
+                }
+            } as never
+        );
+        const offered = await registry.available(new Set(['help_search', 'a_read']));
+        expect(offered.map((tool) => tool.name)).toEqual(['help_search']);
+        expect(consulted).toEqual(['whatsapp']);
     });
 });

@@ -6,6 +6,7 @@ import { guardAnswer } from './ask-answer-guard';
 import { CHANNEL_PROFILES } from './ask-channel-profiles';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from './ask-vera-loop';
 import { AskVeraTool, AskVeraToolOutput, AskVeraTurn } from './ask-vera.types';
+import { HELP_ROUTES } from './help/help-catalog';
 
 function reply(text: string, toolUses: LlmToolUse[] = []): LlmGenerationResponse {
     return {
@@ -56,7 +57,14 @@ function build(responses: (LlmGenerationResponse | Error)[], tools: AskVeraTool[
         maxSteps,
         generate,
         check: (text, facts) =>
-            guardAnswer({ text, facts, locale: 'pt-BR', renderer: new AiTextRenderer(), profile: CHANNEL_PROFILES.whatsapp }),
+            guardAnswer({
+                text,
+                facts,
+                locale: 'pt-BR',
+                renderer: new AiTextRenderer(),
+                profile: CHANNEL_PROFILES.whatsapp,
+                routes: HELP_ROUTES
+            }),
         onToolFailure,
         onCheckFailure
     };

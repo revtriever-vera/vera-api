@@ -9,6 +9,7 @@ import { AnswerFacts, AnswerVerdict } from '../../src/modules/ai-assistant/domai
 import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from '../../src/modules/ai-assistant/domain/ask-vera-loop';
 import { CHANNEL_PROFILES } from '../../src/modules/ai-assistant/domain/ask-channel-profiles';
+import { HELP_ROUTES } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { assetKeysIn } from '../../src/modules/ai-assistant/domain/forbidden-terms';
 import { needsInvestmentNotice, withInvestmentNotice } from '../../src/modules/ai-assistant/domain/ask-notice';
 import { ASK_VERA_MAX_STEPS } from '../../src/modules/ai-assistant/domain/ask-vera.types';
@@ -87,7 +88,7 @@ function loopInputOf(engine: Engine, spec: LlmTaskSpec, item: AskCase, meter: Me
         maxSteps: ASK_VERA_MAX_STEPS,
         generate: generator(engine, spec, meter),
         check: (text: string, facts: AnswerFacts): AnswerVerdict =>
-            guardAnswer({ text, facts, locale: item.locale, renderer, profile: CHANNEL_PROFILES.whatsapp }),
+            guardAnswer({ text, facts, locale: item.locale, renderer, profile: CHANNEL_PROFILES.whatsapp, routes: HELP_ROUTES }),
         onToolFailure: (): void => undefined,
         onCheckFailure: (): void => undefined
     };

@@ -13,6 +13,7 @@ import { needsInvestmentNotice, withInvestmentNotice } from '../domain/ask-notic
 import { ChannelProfile, channelProfileOf } from '../domain/ask-channel-profiles';
 import { redactPersonalData, redactTurns } from '../domain/ask-redaction';
 import { assetKeysIn } from '../domain/forbidden-terms';
+import { HELP_ROUTES } from '../domain/help/help-catalog';
 import { AnswerCheck, AnswerFacts, AnswerVerdict, guardAnswer } from '../domain/ask-answer-guard';
 import { prefilterOf, PrefilterVerdict } from '../domain/ask-prefilter';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from '../domain/ask-vera-loop';
@@ -122,7 +123,7 @@ export class AskVeraService {
             maxSteps: ASK_VERA_MAX_STEPS,
             generate: (request: LlmGenerationRequest): Promise<LlmGenerationResponse> => this.llm.generate(request),
             check: (answer: string, facts: AnswerFacts): AnswerVerdict =>
-                guardAnswer({ text: answer, facts, locale: input.locale, renderer: this.renderer, profile }),
+                guardAnswer({ text: answer, facts, locale: input.locale, renderer: this.renderer, profile, routes: HELP_ROUTES }),
             ...this.hooks()
         };
     }

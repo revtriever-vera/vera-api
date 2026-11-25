@@ -159,3 +159,4 @@ Os scripts estão no `package.json`; o que ele não confessa:
 - O erro da API é um `code` estável em problem+json; a tradução é do front. Texto de interface não nasce no back.
 - Zero comentários, sem `else`, tipos explícitos, sem `any`, sem default export, sem barrel: o `eslint.config.mjs` e `conventions` são a fonte.
 - Segredos e identificadores de infraestrutura vêm de variáveis e secrets do repositório ou do SSM, nunca da árvore.
+- Mudou rota, nome de tela ou o que um plano inclui: o catálogo de ajuda (`src/modules/ai-assistant/domain/help/`) muda no mesmo ciclo. `help-catalog.spec.ts` guarda o formato; o conteúdo se confere contra as telas do `vera-fe`.
