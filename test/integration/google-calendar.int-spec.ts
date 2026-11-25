@@ -253,7 +253,7 @@ describe('Google Agenda (driver mock, hospedada)', () => {
             first,
             async () => ((await harness.app.get(CalendarListEventsTool, { strict: false }).run({})) as { text: string }).text
         );
-        expect(text).toMatch(/^Seus próximos compromissos:\n• \w{3} \d{2}\/\d{2}, \d{2}:\d{2}: Revisão da carteira\n• /);
+        expect(text).toMatch(/^Seus próximos compromissos:\n• \p{L}{3} \d{2}\/\d{2}, \d{2}:\d{2}: Revisão da carteira\n• /u);
     });
 
     it('sem conexão a lista e a criação respondem not_connected com o texto do protótipo', async () => {
@@ -301,7 +301,7 @@ describe('Google Agenda (driver mock, hospedada)', () => {
         const first = await asPerson(account, async () => executor.execute(payload));
         const second = await asPerson(account, async () => executor.execute(payload));
 
-        expect(first).toMatch(/^Reunião criada no Google Agenda: Revisão com a Ana, \w{3} \d{2}\/\d{2} às 15:00\.$/);
+        expect(first).toMatch(/^Reunião criada no Google Agenda: Revisão com a Ana, \p{L}{3} \d{2}\/\d{2} às 15:00\.$/u);
         expect(second).toBe(first);
         expect(mock.storedEvents()).toHaveLength(before + 1);
         expect(mock.storedEvents().at(-1)).toMatchObject({ title: 'Revisão com a Ana', byVera: true });
