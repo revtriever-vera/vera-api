@@ -1,4 +1,5 @@
 import { AppLocale } from '../../../shared/i18n/locale';
+import { AskRoute } from './ask-channel-profiles';
 
 type Replies = Readonly<Record<AppLocale, string>>;
 
@@ -10,6 +11,16 @@ const PIX_REFUSAL: Replies = {
 const GREETING: Replies = {
     'pt-BR': 'Oi. Pergunte sobre a carteira ou os gastos, peça para marcar uma reunião ou criar um lembrete.',
     en: 'Hi. Ask about your portfolio or spending, or ask me to book a meeting or create a reminder.'
+};
+
+const APP_HELP_GREETING: Replies = {
+    'pt-BR': 'Oi. Pergunte como usar a Vera: onde fica uma tela ou o que cada uma faz.',
+    en: 'Hi. Ask how to use Vera: where a screen is or what each one does.'
+};
+
+const APP_AI_GREETING: Replies = {
+    'pt-BR': 'Oi. Pergunte sobre a carteira ou os gastos, ou como usar a Vera.',
+    en: 'Hi. Ask about your portfolio or spending, or how to use Vera.'
 };
 
 const FAILURE: Replies = {
@@ -31,8 +42,11 @@ export function pixRefusalText(locale: AppLocale): string {
     return PIX_REFUSAL[locale];
 }
 
-export function greetingText(locale: AppLocale): string {
-    return GREETING[locale];
+export function greetingText(locale: AppLocale, route: AskRoute): string {
+    if (route.channel === 'whatsapp') {
+        return GREETING[locale];
+    }
+    return route.feature === 'help' ? APP_HELP_GREETING[locale] : APP_AI_GREETING[locale];
 }
 
 export function failureText(locale: AppLocale): string {

@@ -95,6 +95,13 @@ describe('AskVeraService', () => {
         expect(telemetry.finished).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'fixed_greeting' }));
     });
 
+    it('no app a saudação não promete agenda, lembrete nem dados no modo ajuda', async () => {
+        const { service } = build([]);
+        const text: string = (await askApp(service, 'oi', 'help')).text;
+        expect(text).toContain('como usar a Vera');
+        expect(text).not.toMatch(/reunião|lembrete|carteira|gastos/u);
+    });
+
     it('confere a feature e a permissão antes do modelo', async () => {
         const { service, access, generate } = build([reply('Não tenho dados para isso.')]);
         await ask(service, 'quanto gastei?');
