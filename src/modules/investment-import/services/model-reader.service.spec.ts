@@ -9,6 +9,7 @@ import { ThrottleService, TooManyAttemptsError } from '../../../core/throttle/th
 import { ParsedInvestmentStatement } from '../domain/investment-statement.types';
 import { ModelReaderService } from './model-reader.service';
 import { InvestmentImportLogService } from './investment-import-log.service';
+import { NoteAssetResolverService } from './note-asset-resolver.service';
 
 const NOTE_TEXT: string = 'Bovespa C VISTA PETROBRAS PN N2 PETR4 100 38,50 3.850,00 D';
 const SECRETS: readonly string[] = ['PESSOA EXEMPLO', '111.222.333-96', '123456-7'];
@@ -83,7 +84,8 @@ function build(): {
         { enabled } as unknown as LlmAvailabilityService,
         { assertAllowed } as unknown as ThrottleService,
         { get: () => ({ companyId: 'company-1' }) } as unknown as AppContext,
-        logs as unknown as InvestmentImportLogService
+        logs as unknown as InvestmentImportLogService,
+        { resolve: vi.fn().mockResolvedValue(new Map<string, string>()) } as unknown as NoteAssetResolverService
     );
     return { reader, generate, enabled, assertAllowed, logs };
 }

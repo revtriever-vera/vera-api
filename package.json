@@ -34,6 +34,7 @@
     "tick": "tsx scripts/tick.ts",
     "eval": "tsx --tsconfig tsconfig.evals.json evals/runner/cli.ts",
     "eval:live": "bash evals/local.sh",
+    "eval:notes": "tsx --tsconfig tsconfig.evals.json evals/runner/investment-extract-live.ts",
     "usage:simulate": "tsx scripts/usage-simulate.ts",
     "qa:statement-fixture": "tsx scripts/qa-statement-fixture.ts",
     "fixtures:investment-import": "tsx test/fixtures/investment-import/generator/cli.ts",

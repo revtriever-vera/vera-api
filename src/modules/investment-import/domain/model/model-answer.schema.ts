@@ -6,6 +6,7 @@ const PRICE_PATTERN: RegExp = /^\d{1,16}(\.\d{1,8})?$/;
 const DATE_PATTERN: RegExp = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_TEXT: number = 80;
 export const MAX_OPERATIONS_PER_ANSWER: number = 500;
+export const MAX_NOTES_PER_ANSWER: number = 30;
 
 const KINDS = ['buy', 'sell', 'split', 'reverse_split', 'bonus', 'income', 'transfer'] as const;
 const INCOMES = ['dividend', 'jcp', 'fii_income', 'interest', 'staking'] as const;
@@ -15,7 +16,8 @@ export const answerEnvelopeSchema = z.object({
     documentType: z.enum(DOCUMENT_VALUES),
     currency: z.string().trim().length(3),
     totalMinor: z.number().int().nullable().optional(),
-    operations: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER)
+    operations: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).default([]),
+    notes: z.array(z.unknown()).max(MAX_NOTES_PER_ANSWER).default([])
 });
 
 export const answerOperationSchema = z.object({
@@ -35,3 +37,39 @@ export const answerOperationSchema = z.object({
 
 export type AnswerEnvelope = z.infer<typeof answerEnvelopeSchema>;
 export type AnswerOperation = z.infer<typeof answerOperationSchema>;
+
+const MINOR = z.number().int().nullable().optional();
+
+export const answerNoteTradeSchema = z.object({
+    side: z.enum(['buy', 'sell']),
+    code: z.string().trim().max(MAX_TEXT).nullable().optional(),
+    securitySpec: z.string().trim().max(MAX_TEXT).nullable().optional(),
+    market: z.string().max(MAX_TEXT).nullable().optional(),
+    quantity: z.string().regex(QUANTITY_PATTERN),
+    unitPrice: z.string().regex(PRICE_PATTERN).nullable().optional(),
+    grossMinor: z.number().int().nullable().optional(),
+    dayTrade: z.boolean().nullable().optional()
+});
+
+export const answerNoteSchema = z.object({
+    number: z.string().max(MAX_TEXT).nullable().optional(),
+    tradeDate: z.string().regex(DATE_PATTERN),
+    broker: z.string().max(MAX_TEXT).nullable().optional(),
+    trades: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER),
+    operationsTotalMinor: MINOR,
+    netMinor: MINOR,
+    fees: z
+        .object({
+            settlementMinor: MINOR,
+            exchangeMinor: MINOR,
+            brokerageMinor: MINOR,
+            issMinor: MINOR,
+            irrfMinor: MINOR,
+            otherMinor: MINOR
+        })
+        .nullable()
+        .optional()
+});
+
+export type AnswerNoteTrade = z.infer<typeof answerNoteTradeSchema>;
+export type AnswerNote = z.infer<typeof answerNoteSchema>;

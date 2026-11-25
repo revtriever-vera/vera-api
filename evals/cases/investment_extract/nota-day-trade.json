@@ -1,0 +1,97 @@
+{
+  "id": "nota-day-trade",
+  "description": "Day trade: compra e venda da mesma ação no mesmo pregão (marcadas D) e uma compra normal",
+  "file": "test/fixtures/investment-import/generated/notes/nota-day-trade.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010008",
+        "tradeDate": "2026-11-12",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "VALE ON NM",
+            "market": "VISTA",
+            "quantity": "100",
+            "unitPrice": "61.00",
+            "grossMinor": 610000,
+            "dayTrade": true
+          },
+          {
+            "side": "sell",
+            "code": null,
+            "securitySpec": "VALE ON NM",
+            "market": "VISTA",
+            "quantity": "100",
+            "unitPrice": "61.40",
+            "grossMinor": 614000,
+            "dayTrade": true
+          },
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "PETROBRAS PN N2",
+            "market": "VISTA",
+            "quantity": "10",
+            "unitPrice": "38.60",
+            "grossMinor": 38600,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 1262600,
+        "netMinor": -35534,
+        "fees": {
+          "settlementMinor": 347,
+          "exchangeMinor": 41,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 31,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "VALE3",
+        "kind": "buy",
+        "quantity": "100",
+        "unitPrice": "61.00",
+        "grossMinor": 610000,
+        "feesMinor": 436
+      },
+      {
+        "ticker": "VALE3",
+        "kind": "sell",
+        "quantity": "100",
+        "unitPrice": "61.40",
+        "grossMinor": 614000,
+        "feesMinor": 439
+      },
+      {
+        "ticker": "PETR4",
+        "kind": "buy",
+        "quantity": "10",
+        "unitPrice": "38.60",
+        "grossMinor": 38600,
+        "feesMinor": 28
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

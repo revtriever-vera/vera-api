@@ -27,6 +27,14 @@ Os arquivos de `generated/` ficam versionados: os specs leem eles direto e não 
 - `generated/b3/b3-renda-fixa.expected.json`: a taxa declarada de cada título de renda fixa e o preço CURVA esperado (insumo do #317).
 - `generated/prints/*.png`: tela de corretora inventada em sete variações: nítida, foto inclinada, recorte parcial, escura, número ilegível, ativo que não existe e tela em inglês.
 
+## Notas de corretagem (#305)
+
+`generated/notes/*.pdf`: 13 notas inventadas de `CORRETORA EXEMPLO` (titular `PESSOA EXEMPLO`, CPF inválido, cliente `9000001`), em cinco layouts: SINACOR clássico, SINACOR com o resumo financeiro antes dos negócios, layout próprio (com coluna de código de negociação), nota em duas páginas e nota escaneada (PDF só de imagem, sem camada de texto). Os dados de cada nota (negócios, taxas, líquido) ficam em `generator/brokerage-note-data.ts`; o líquido e as taxas são calculados lá, nunca digitados.
+
+Situações: uma nota, várias notas no mesmo PDF, day trade, FII, ETF, BDR, opção, total impresso que não bate, escaneada e "envenenada" (cabeçalho com nome, CPF, código de cliente, conta, agência, telefone e e-mail). O PDF escaneado só existe e abre (zlib pode variar entre versões do Node); os outros são conferidos byte a byte.
+
+O mesmo gerador escreve os casos de eval em `evals/cases/investment_extract/` (gabarito de cada linha e das taxas, com a resposta de referência do modelo) e o catálogo fictício de ativos que eles usam.
+
 ## Renda fixa de taxa conhecida
 
 O preço CURVA é calculado a partir da taxa declarada (`112% do CDI`, `IPCA + 6,5%`, `PRE 12,3% a.a.`) sobre o PU de face de 1.000,00 na data de emissão, até a data de referência `2026-10-30`, com as séries de CDI (a.a., por mês) e IPCA (variação mensal) de `generator/reference-series.ts`. Dias úteis são segunda a sexta, sem feriados, base 252. As séries são inventadas.
