@@ -93,7 +93,7 @@ export class AskVeraService {
     }
 
     private async answer(input: AskVeraInput, question: Question): Promise<AskVeraAnswer> {
-        const tools: readonly AskVeraToolPort[] = await this.registry.available(input.allowedTools);
+        const tools: readonly AskVeraToolPort[] = await this.registry.available(input.allowedTools, input);
         const today: string = await this.timezones.todayInCompany();
         const result: AskLoopResult = await this.loop(input, question, tools, today);
         return this.finish(result, input.locale, question.text);

@@ -51,6 +51,19 @@ export const turnResponseSchema = z.object({
     usage: usageSchema.describe('Usage band, so the panel shows the quota without another call')
 });
 
+export const sentResponseSchema = z.object({
+    sent: z
+        .array(
+            z.object({
+                tool: z.string().describe('Name of the tool whose result went to the language model'),
+                payload: z
+                    .record(z.string(), z.unknown())
+                    .describe('The result exactly as it was serialized to the language model: aggregates, keys and markers only')
+            })
+        )
+        .describe('What went to the language model in this turn, in order; empty when nothing was sent or it was already erased')
+});
+
 export const conversationResponseSchema = z.object({
     conversationId: z.string().uuid().nullable().describe('Current conversation, null when there is none'),
     messages: z
@@ -73,6 +86,7 @@ export const conversationResponseSchema = z.object({
 export type SendTurnBody = z.infer<typeof sendTurnBodySchema>;
 export type TurnView = z.infer<typeof turnResponseSchema>;
 export type TurnStartedView = z.infer<typeof turnStartedResponseSchema>;
+export type SentView = z.infer<typeof sentResponseSchema>;
 export type ConversationView = z.infer<typeof conversationResponseSchema>;
 export type UsageView = z.infer<typeof usageSchema>;
 

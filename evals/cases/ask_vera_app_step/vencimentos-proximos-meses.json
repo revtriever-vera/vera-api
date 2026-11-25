@@ -1,0 +1,32 @@
+{
+  "id": "vencimentos-proximos-meses",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "o que vence na minha renda fixa nos próximos meses?",
+  "history": [],
+  "tools": {
+    "required": ["fixed_income_maturities"],
+    "allowed": ["help_search", "where_is", "concentration_overview", "fixed_income_maturities", "portfolio_overview"]
+  },
+  "mockTools": [
+    {
+      "name": "fixed_income_maturities",
+      "input": {
+        "months": 12
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$ 43.000"],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Nos próximos 12 meses vencem **R$ 43.000** em renda fixa, estimados: R$ 20.000 em CDB, R$ 15.000 em LCI e R$ 8.000 em Tesouro."
+  ]
+}

@@ -72,7 +72,47 @@ export interface AiPortfolioContext {
     readonly aporte_planejado?: AiPlannedContribution;
 }
 
-export type AiContext = AiMonthContext | AiCutsContext | AiPortfolioContext;
+export interface AiIssuerEntry {
+    readonly emissor: string;
+    readonly valor: string;
+    readonly pct: string;
+}
+
+export interface AiSectorEntry {
+    readonly setor: string;
+    readonly valor: string;
+    readonly pct: string;
+}
+
+export interface AiConcentrationContext {
+    readonly moeda_base: string;
+    readonly total: string;
+    readonly total_acoes: string;
+    readonly por_emissor: readonly AiIssuerEntry[];
+    readonly outros_emissores?: { readonly pct: string; readonly grupos: number };
+    readonly por_setor: readonly AiSectorEntry[];
+}
+
+export interface AiMaturityEntry {
+    readonly mes: string;
+    readonly valor: string;
+}
+
+export interface AiMaturityKindEntry {
+    readonly tipo: string;
+    readonly total: string;
+    readonly vencimentos: readonly AiMaturityEntry[];
+}
+
+export interface AiMaturitiesContext {
+    readonly moeda_base: string;
+    readonly ate: string;
+    readonly total: string;
+    readonly estimado: boolean;
+    readonly por_tipo: readonly AiMaturityKindEntry[];
+}
+
+export type AiContext = AiMonthContext | AiCutsContext | AiPortfolioContext | AiConcentrationContext | AiMaturitiesContext;
 
 export interface BuiltContext<T extends AiContext> {
     readonly payload: T;

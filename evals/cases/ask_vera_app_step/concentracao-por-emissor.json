@@ -1,0 +1,30 @@
+{
+  "id": "concentracao-por-emissor",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "tenho muita coisa concentrada em um emissor só?",
+  "history": [],
+  "tools": {
+    "required": ["concentration_overview"],
+    "allowed": ["help_search", "where_is", "concentration_overview", "fixed_income_maturities", "portfolio_overview"]
+  },
+  "mockTools": [
+    {
+      "name": "concentration_overview",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$ 123.600"],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "O maior emissor é o Tesouro Nacional, com **30%** da carteira (R$ 123.600), seguido do Itaú Unibanco, com 15%. Os demais emissores somam 50%, espalhados em 9 grupos."
+  ]
+}

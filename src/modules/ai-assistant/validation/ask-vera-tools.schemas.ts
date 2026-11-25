@@ -38,6 +38,22 @@ export const contributionInputSchema = z
     .object({ amountMinor: z.number().int().min(1).max(MAX_AMOUNT_MINOR).describe('Amount to contribute, in cents (R$ 5,000 is 500000)') })
     .strict();
 
+const MAX_MATURITY_MONTHS: number = 60;
+export const DEFAULT_MATURITY_MONTHS: number = 12;
+
+export const maturitiesInputSchema = z
+    .object({
+        months: z
+            .number()
+            .int()
+            .min(1)
+            .max(MAX_MATURITY_MONTHS)
+            .optional()
+            .describe('How many months ahead to look, from 1 to 60; defaults to 12')
+    })
+    .strict();
+
+export type MaturitiesInput = z.infer<typeof maturitiesInputSchema>;
 export type MonthSummaryInput = z.infer<typeof monthSummaryInputSchema>;
 export type CutsInput = z.infer<typeof cutsInputSchema>;
 export type ByCategoryInput = z.infer<typeof byCategoryInputSchema>;

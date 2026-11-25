@@ -343,7 +343,7 @@ describe('assistant chat', () => {
         await harness.pg.query(`UPDATE "AssistantMessages" SET "createdAt" = now() - interval '31 days' WHERE "id" = $1`, [old.turnId]);
         await harness.pg.query(`UPDATE "AssistantMessages" SET "createdAt" = now() - interval '29 days' WHERE "id" = $1`, [fresh.turnId]);
         await harness.pg.query(
-            `UPDATE "AssistantMessages" SET "sent" = '[{"tool":"portfolio_overview","payload":{}}]'::jsonb WHERE "id" = $1`,
+            `UPDATE "AssistantMessages" SET "sent" = '[{"tool":"portfolio_overview","payload":{}}]'::json WHERE "id" = $1`,
             [fresh.turnId]
         );
         const application: AssistantConversationApplication = harness.app.get(AssistantConversationApplication, { strict: false });

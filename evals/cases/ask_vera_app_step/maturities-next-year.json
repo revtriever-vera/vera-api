@@ -1,0 +1,32 @@
+{
+  "id": "maturities-next-year",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "what matures in my fixed income this year?",
+  "history": [],
+  "tools": {
+    "required": ["fixed_income_maturities"],
+    "allowed": ["help_search", "where_is", "concentration_overview", "fixed_income_maturities", "portfolio_overview"]
+  },
+  "mockTools": [
+    {
+      "name": "fixed_income_maturities",
+      "input": {
+        "months": 12
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$43,000"],
+    "mustMention": ["This is not a recommendation to buy or sell."],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "In the next 12 months R$43,000 of fixed income matures, as an estimate: R$20,000 in CDB, R$15,000 in LCI and R$8,000 in Tesouro."
+  ]
+}
