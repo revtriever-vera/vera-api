@@ -167,6 +167,21 @@ describe('assistant chat', () => {
         expect(used.rows.map((row) => row.feature)).toEqual(['help']);
     });
 
+    it('em help usa help_search, responde com o link da tela e registra a ferramenta usada', async () => {
+        const free: Account = await harness.signUp('chat-help-tool');
+        llm.enqueue({ text: '', toolUses: [{ toolUseId: 'u1', name: 'help_search', input: { query: 'reduzir gastos' } }] });
+        llm.enqueue('Veja os cortes em [Cortes](/spending/cuts).');
+        const started = await harness.call<StartedBody>(free.token, 'POST', '/assistant/turns', { text: 'como reduzir gastos?' });
+        await drain(free);
+
+        const answered = await turn(free, started.body.turnId);
+
+        expect(answered.body).toMatchObject({ status: 'done', answer: { source: 'help' } });
+        expect(answered.body.answer?.text).toContain('/spending/cuts');
+        const current = await harness.call<{ messages: { toolsUsed: string[] }[] }>(free.token, 'GET', '/assistant/conversations/current');
+        expect(current.body.messages.at(-1)?.toolsUsed).toEqual(['help_search']);
+    });
+
     it('Premium sem permissão cai em help; com permissão responde em ai', async () => {
         const without: Account = await premium('chat-noconsent', false);
         const withConsent: Account = await premium('chat-consent', true);
