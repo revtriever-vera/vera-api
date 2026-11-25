@@ -112,7 +112,36 @@ export interface AiMaturitiesContext {
     readonly por_tipo: readonly AiMaturityKindEntry[];
 }
 
-export type AiContext = AiMonthContext | AiCutsContext | AiPortfolioContext | AiConcentrationContext | AiMaturitiesContext;
+export interface AiBenchmarkPeriod {
+    readonly periodo: string;
+    readonly valor: string;
+}
+
+export interface AiBenchmarkSeries {
+    readonly fonte: string;
+    readonly ate: string | null;
+    readonly atrasado: boolean;
+    readonly acumulado: readonly AiBenchmarkPeriod[];
+    readonly sem_historico: readonly string[];
+}
+
+export type AiIbovespaStatus = 'ok' | 'nao_configurado' | 'sem_dados';
+
+export interface AiBenchmarksContext {
+    readonly referencia: string;
+    readonly cdi: AiBenchmarkSeries;
+    readonly ipca: AiBenchmarkSeries;
+    readonly selic_meta: {
+        readonly fonte: string;
+        readonly ate: string | null;
+        readonly atrasado: boolean;
+        readonly valor: string | null;
+    };
+    readonly ibovespa: AiBenchmarkSeries & { readonly status: AiIbovespaStatus };
+}
+
+export type AiContext =
+    AiMonthContext | AiCutsContext | AiPortfolioContext | AiConcentrationContext | AiMaturitiesContext | AiBenchmarksContext;
 
 export interface BuiltContext<T extends AiContext> {
     readonly payload: T;

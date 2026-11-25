@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BENCHMARK_WINDOWS } from '../../market-benchmarks/services/benchmark.service';
 import { MONTH_PATTERN, monthIndexOf } from '../domain/ask-tool-output';
 
 const MAX_MONTHS: number = 12;
@@ -57,6 +58,18 @@ export const maturitiesInputSchema = z
     })
     .strict();
 
+export const benchmarksInputSchema = z
+    .object({
+        windows: z
+            .array(z.enum(BENCHMARK_WINDOWS))
+            .min(1)
+            .max(BENCHMARK_WINDOWS.length)
+            .optional()
+            .describe('Windows to return: m1, m3, m6, m12, m24, m36 (months back) and ytd (the year so far); omit for all of them')
+    })
+    .strict();
+
+export type BenchmarksInput = z.infer<typeof benchmarksInputSchema>;
 export type MaturitiesInput = z.infer<typeof maturitiesInputSchema>;
 export type MonthSummaryInput = z.infer<typeof monthSummaryInputSchema>;
 export type CutsInput = z.infer<typeof cutsInputSchema>;

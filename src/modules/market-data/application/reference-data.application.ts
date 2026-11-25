@@ -8,6 +8,7 @@ import { ExchangeRatePort, FetchedRate } from '../ports/exchange-rate.port';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
+import { MarketIndexSyncService } from '../services/market-index-sync.service';
 import { QuoteCollectorService } from '../services/quote-collector.service';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class ReferenceDataApplication {
         private readonly collector: QuoteCollectorService,
         private readonly rates: ExchangeRatePort,
         private readonly exchangeRates: ExchangeRateDomain,
+        private readonly marketIndexes: MarketIndexSyncService,
         private readonly metrics: MarketDataMetricsService,
         private readonly logs: MarketDataLogService
     ) {}
@@ -25,6 +27,7 @@ export class ReferenceDataApplication {
     public async handleReference(): Promise<void> {
         await this.refreshGroups([QUOTE_GROUPS.tesouro, QUOTE_GROUPS.cvm]);
         await this.refreshRates();
+        await this.marketIndexes.syncAll();
     }
 
     public async handlePtax(): Promise<void> {

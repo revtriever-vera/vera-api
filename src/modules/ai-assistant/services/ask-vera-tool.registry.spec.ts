@@ -82,4 +82,19 @@ describe('AskVeraToolRegistry', () => {
         expect(offered.map((tool) => tool.name)).toEqual(['a_read']);
         expect(consulted).toEqual(['ai']);
     });
+
+    it('no app, a ferramenta de indicadores só sai com o plano da IA e nunca no WhatsApp', async () => {
+        const tool: FakeTool = new FakeTool('market_benchmarks', 'ai', 'read');
+        const app: AskRoute = { channel: 'app', feature: 'ai' };
+        const allowedFor = (plan: boolean) =>
+            new AskVeraToolRegistry(
+                { getProviders: () => [{ instance: tool }] } as never,
+                { allows: (feature: PaidFeature) => Promise.resolve(plan && feature === 'ai') } as never
+            );
+        const allowed: ReadonlySet<string> = new Set(['market_benchmarks']);
+
+        expect((await allowedFor(true).available(allowed, app)).map((offered) => offered.name)).toEqual(['market_benchmarks']);
+        expect(await allowedFor(false).available(allowed, app)).toEqual([]);
+        expect(await allowedFor(true).available(new Set(['help_search']), app)).toEqual([]);
+    });
 });

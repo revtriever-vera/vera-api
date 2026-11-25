@@ -25,3 +25,16 @@ describe('contexto da tela no prompt do app', () => {
         expect(screenLabelOf('en', undefined)).toBeNull();
     });
 });
+
+describe('regra dos indicadores de mercado no prompt do app', () => {
+    it('manda citar a data e a fonte e proíbe calcular acumulado ou diferença', () => {
+        const pt: string = askVeraAppSystemPromptOf('pt-BR', '2026-03-20');
+        const en: string = askVeraAppSystemPromptOf('en', '2026-03-20');
+
+        expect(pt).toContain('market_benchmarks');
+        expect(pt).toContain('Nunca calcule acumulado');
+        expect(pt).toContain('até que data vão');
+        expect(en).toContain('market_benchmarks');
+        expect(en).toContain('Never compute an accumulation');
+    });
+});

@@ -8,6 +8,7 @@ import { ConcentrationApplicationModule } from '../../concentration/application/
 import { ContributionApplicationModule } from '../../contribution/application/contribution-application.module';
 import { FixedIncomeScheduleApplicationModule } from '../../fixed-income-schedule/application/fixed-income-schedule-application.module';
 import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
+import { MarketBenchmarksApplicationModule } from '../../market-benchmarks/application/market-benchmarks-application.module';
 import { PlansApplicationModule } from '../../plans/application/plans-application.module';
 import { PortfolioApplicationModule } from '../../portfolio/application/portfolio-application.module';
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
@@ -38,6 +39,7 @@ import { FixedIncomeMaturitiesTool } from '../services/tools/fixed-income-maturi
 import { DataLockedTool } from '../services/tools/data-locked.tool';
 import { HelpSearchTool } from '../services/tools/help-search.tool';
 import { ListCategoriesTool } from '../services/tools/list-categories.tool';
+import { MarketBenchmarksTool } from '../services/tools/market-benchmarks.tool';
 import { PortfolioOverviewTool } from '../services/tools/portfolio-overview.tool';
 import { SpendingByCategoryTool } from '../services/tools/spending-by-category.tool';
 import { SpendingCutsTool } from '../services/tools/spending-cuts.tool';
@@ -65,6 +67,7 @@ import { SummariesApplication } from './summaries.application';
         ContributionApplicationModule,
         ConcentrationApplicationModule,
         FixedIncomeScheduleApplicationModule,
+        MarketBenchmarksApplicationModule,
         SpendingCategoriesApplicationModule,
         TransactionsApplicationModule
     ],
@@ -98,6 +101,7 @@ import { SummariesApplication } from './summaries.application';
         ContributionSuggestionTool,
         ConcentrationOverviewTool,
         FixedIncomeMaturitiesTool,
+        MarketBenchmarksTool,
         ListCategoriesTool,
         HelpSearchTool,
         WhereIsTool,

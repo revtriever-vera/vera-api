@@ -1,0 +1,45 @@
+{
+  "id": "cdi-12-meses",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "quanto rendeu o CDI em 12 meses?",
+  "history": [],
+  "tools": {
+    "required": [
+      "market_benchmarks"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "market_benchmarks",
+      "input": {
+        "windows": [
+          "m12"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "12,80%"
+    ],
+    "mustMention": [
+      "Isto não é uma recomendação de compra ou venda."
+    ],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Nos 12 meses até 19/03/2026, o CDI rendeu **12,80%**, segundo o Banco Central (série 12)."
+  ]
+}
