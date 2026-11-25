@@ -31,13 +31,19 @@ describe('LlmBootCheck', () => {
         const priced = { 'vendor/visao': { input: 1, output: 2, cacheRead: 0 } };
 
         expect(() => {
-            new LlmBootCheck({ ...base, LLM_VISION_MODEL: 'vendor/visao', LLM_PRICE_TABLE: {} } as LlmConfig, null).onModuleInit();
+            new LlmBootCheck(
+                { ...base, LLM_VISION_MODEL: 'vendor/visao', LLM_PRICE_TABLE: {} } as unknown as LlmConfig,
+                null
+            ).onModuleInit();
         }).toThrow('modelo de visão vendor/visao');
         expect(() => {
-            new LlmBootCheck({ ...base, LLM_VISION_MODEL: 'vendor/visao', LLM_PRICE_TABLE: priced } as LlmConfig, null).onModuleInit();
+            new LlmBootCheck(
+                { ...base, LLM_VISION_MODEL: 'vendor/visao', LLM_PRICE_TABLE: priced } as unknown as LlmConfig,
+                null
+            ).onModuleInit();
         }).not.toThrow();
         expect(() => {
-            new LlmBootCheck({ ...base, LLM_PRICE_TABLE: {} } as LlmConfig, null).onModuleInit();
+            new LlmBootCheck({ ...base, LLM_PRICE_TABLE: {} } as unknown as LlmConfig, null).onModuleInit();
         }).not.toThrow();
     });
 });
