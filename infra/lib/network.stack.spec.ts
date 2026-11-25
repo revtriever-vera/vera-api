@@ -84,8 +84,8 @@ describe('a rede', () => {
             template.findResources('AWS::IAM::Role');
         const trust: string = JSON.stringify(Object.values(roles)[0]?.Properties?.AssumeRolePolicyDocument ?? {});
 
-        expect(trust).toContain('repo:revtriever-vera/vera-api:ref:refs/heads/main');
-        expect(trust).toContain('repo:revtriever-vera/vera-api:pull_request');
+        expect(trust).toContain('repo:revtriever-vera@340816926/vera-api@1413885728:ref:refs/heads/main');
+        expect(trust).toContain('repo:revtriever-vera@340816926/vera-api@1413885728:pull_request');
         expect(trust).not.toMatch(/repo:\*|repo:revtriever-vera\/\*|:sub":"\*/);
         expect(trust).toContain('sts.amazonaws.com');
     });
@@ -96,7 +96,7 @@ describe('a rede', () => {
             template.findResources('AWS::IAM::Role');
         const trust: string = JSON.stringify(Object.values(roles)[0]?.Properties?.AssumeRolePolicyDocument ?? {});
 
-        expect(trust).toContain('repo:revtriever-vera/vera-api:environment:production');
+        expect(trust).toContain('repo:revtriever-vera@340816926/vera-api@1413885728:environment:production');
         expect(trust).not.toContain('pull_request');
     });
 
