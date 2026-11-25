@@ -23,8 +23,8 @@ export function regressionOf(summary: TaskSummary, baseline: Baseline | null): s
         : null;
 }
 
-export function writeBaseline(summaries: readonly TaskSummary[], model: string): void {
-    const tasks: Baseline['tasks'] = Object.fromEntries(
+export function mergedBaselineTasks(previous: Baseline | null, summaries: readonly TaskSummary[]): Baseline['tasks'] {
+    const rewritten: Baseline['tasks'] = Object.fromEntries(
         summaries
             .filter((summary: TaskSummary): boolean => summary.judgeAverage !== null)
             .map((summary: TaskSummary): [string, Baseline['tasks'][string]] => [
@@ -38,6 +38,11 @@ export function writeBaseline(summaries: readonly TaskSummary[], model: string):
                 }
             ])
     );
+    return { ...previous?.tasks, ...rewritten };
+}
+
+export function writeBaseline(summaries: readonly TaskSummary[], model: string): void {
+    const tasks: Baseline['tasks'] = mergedBaselineTasks(readBaseline(), summaries);
     const baseline: Baseline = { updatedAt: new Date().toISOString().slice(0, 10), model, tasks };
     writeFileSync(BASELINE_FILE, `${JSON.stringify(baseline, null, 2)}\n`);
 }
