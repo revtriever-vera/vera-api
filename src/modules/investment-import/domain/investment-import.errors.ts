@@ -106,3 +106,14 @@ export class FixedIncomeIncompleteError extends AppError {
         });
     }
 }
+
+export class DuplicateTitleError extends AppError {
+    public constructor(lineId: string) {
+        super({
+            code: 'import.fixed_income_duplicate',
+            status: 422,
+            detail: 'An equal title already exists: skip the line or send `edits` to create it anyway.',
+            meta: { lineId }
+        });
+    }
+}

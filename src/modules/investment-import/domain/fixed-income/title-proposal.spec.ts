@@ -28,8 +28,12 @@ async function statementOf(): Promise<ParsedInvestmentStatement> {
     return { ...position, ignored: [...position.ignored, ...movements.ignored] };
 }
 
-async function proposals(): Promise<Map<string, StoredFixedIncome>> {
-    const statement: ParsedInvestmentStatement = await statementOf();
+async function proposals(issuePrice: string | null = '1000'): Promise<Map<string, StoredFixedIncome>> {
+    const read: ParsedInvestmentStatement = await statementOf();
+    const statement: ParsedInvestmentStatement = {
+        ...read,
+        fixedIncome: read.fixedIncome.map((entry) => ({ ...entry, unitPrices: { ...entry.unitPrices, issue: issuePrice } }))
+    };
     const list: StoredFixedIncome[] = proposalsOf(statement, {
         positionDate: '2026-10-30',
         series: seriesUntil('2026-10-29', '2026-09'),
@@ -69,6 +73,19 @@ describe('proposalsOf sobre a Posição da B3', () => {
         });
         expect(byName(all, 'IPCA')).toMatchObject({ kind: 'lca', indexer: 'ipca_plus', status: 'inferred' });
         expect(byName(all, 'PRE')).toMatchObject({ indexer: 'prefixed', rateBps: 1230, status: 'inferred' });
+    });
+
+    it('sem preço de emissão na planilha assume a face e avisa antes de confirmar', async () => {
+        const all: Map<string, StoredFixedIncome> = await proposals(null);
+
+        expect(byName(all, '112% CDI')).toMatchObject({
+            status: 'check',
+            reason: 'assumed_face_price',
+            rateBps: 11200,
+            appliedMinor: 1000000
+        });
+        expect(byName(all, '112% CDI').suggestion).toContain('valor de face');
+        expect(byName(all, 'CARENCIA').reason).toBe('grace_period');
     });
 
     it('marca como check a carência e a data de aplicação diferente da emissão', async () => {

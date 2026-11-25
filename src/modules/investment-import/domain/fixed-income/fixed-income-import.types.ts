@@ -16,6 +16,7 @@ export const FIXED_INCOME_REASONS = {
     gracePeriod: 'grace_period',
     applicationDateDiffers: 'application_date_differs',
     estimatedSeries: 'estimated_series',
+    assumedFacePrice: 'assumed_face_price',
     unsupportedKind: 'unsupported_kind',
     incompleteData: 'incomplete_data',
     duplicate: 'duplicate'

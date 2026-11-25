@@ -106,6 +106,9 @@ function verdictOf(entry: ParsedFixedIncome, inference: RateInference, context: 
     if (applied !== undefined && applied !== entry.issueDate) {
         return { ...base, reason: FIXED_INCOME_REASONS.applicationDateDiffers };
     }
+    if (entry.unitPrices.issue === null) {
+        return { ...base, reason: FIXED_INCOME_REASONS.assumedFacePrice };
+    }
     if (inference.estimated) {
         return { ...base, reason: FIXED_INCOME_REASONS.estimatedSeries };
     }

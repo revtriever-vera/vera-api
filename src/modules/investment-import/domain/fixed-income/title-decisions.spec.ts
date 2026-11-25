@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FixedIncomeIncompleteError, InvalidEditError } from '../investment-import.errors';
+import { DuplicateTitleError, FixedIncomeIncompleteError, InvalidEditError } from '../investment-import.errors';
 import { StoredFixedIncome } from './fixed-income-import.types';
 import { outcomesOf, planTitles } from './title-decisions';
 
@@ -40,7 +40,8 @@ describe('planTitles', () => {
                     appliedMinor: 1000000,
                     appliedAt: '2024-03-15',
                     maturityDate: '2028-03-15'
-                }
+                },
+                forced: false
             }
         ]);
     });
@@ -67,7 +68,7 @@ describe('planTitles', () => {
         }
     });
 
-    it('pular, não decidir e confirmar duplicado não criam título', () => {
+    it('pular e não decidir não criam título; confirmar duplicado é recusado', () => {
         const duplicate: StoredFixedIncome = entry({ lineId: 'F3', status: 'duplicate', reason: 'duplicate' });
 
         expect(
@@ -75,10 +76,11 @@ describe('planTitles', () => {
                 [entry({}), NEEDS_INPUT, duplicate],
                 [
                     { lineId: 'F1', skip: true },
-                    { lineId: 'F3', confirm: true }
+                    { lineId: 'F3', skip: true }
                 ]
             )
         ).toEqual([]);
+        expect(() => planTitles([duplicate], [{ lineId: 'F3', confirm: true }])).toThrow(DuplicateTitleError);
     });
 
     it('a correção cria o duplicado de propósito', () => {

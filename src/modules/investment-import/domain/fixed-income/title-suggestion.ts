@@ -12,6 +12,7 @@ const REASON_TEXTS: Readonly<Partial<Record<FixedIncomeReason, string>>> = {
     [FIXED_INCOME_REASONS.gracePeriod]: 'o título está em carência e a curva pode não refletir a taxa contratada',
     [FIXED_INCOME_REASONS.applicationDateDiffers]: 'a data de aplicação é diferente da data de emissão',
     [FIXED_INCOME_REASONS.estimatedSeries]: 'parte do período usa índice estimado',
+    [FIXED_INCOME_REASONS.assumedFacePrice]: 'a planilha não traz o preço de emissão e assumimos o valor de face de R$ 1.000,00',
     [FIXED_INCOME_REASONS.paymentEvent]: 'o título teve pagamento de juros ou amortização e não dá para separar o efeito na curva',
     [FIXED_INCOME_REASONS.missingData]: 'faltam dados na planilha para calcular a taxa',
     [FIXED_INCOME_REASONS.missingSeries]: 'ainda não temos o índice do período',

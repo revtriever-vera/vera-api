@@ -1,5 +1,5 @@
-import type { ImportedTitleDraft } from '../../../fixed-income/services/fixed-income-title-importer.service';
-import { FixedIncomeIncompleteError, InvalidEditError } from '../investment-import.errors';
+import type { ImportedTitleDraft, TitleProbe } from '../../../fixed-income/services/fixed-income-title-importer.service';
+import { DuplicateTitleError, FixedIncomeIncompleteError, InvalidEditError } from '../investment-import.errors';
 import {
     FIXED_INCOME_STATUSES,
     FixedIncomeDecision,
@@ -12,6 +12,7 @@ import { titleNameOf } from './title-proposal';
 export interface PlannedTitle {
     readonly lineId: string;
     readonly draft: ImportedTitleDraft;
+    readonly forced: boolean;
 }
 
 const REQUIRED: readonly (keyof ImportedTitleDraft)[] = ['name', 'kind', 'indexer', 'rateBps', 'appliedMinor', 'appliedAt', 'maturityDate'];
@@ -61,12 +62,12 @@ function planOne(entry: StoredFixedIncome, decision: FixedIncomeDecision): Plann
         return null;
     }
     if (decision.edits !== undefined) {
-        return { lineId: entry.lineId, draft: completed(entry.lineId, fieldsOf(entry, decision.edits)) };
+        return { lineId: entry.lineId, draft: completed(entry.lineId, fieldsOf(entry, decision.edits)), forced: true };
     }
     if (entry.status === FIXED_INCOME_STATUSES.duplicate) {
-        return null;
+        throw new DuplicateTitleError(entry.lineId);
     }
-    return { lineId: entry.lineId, draft: completed(entry.lineId, fieldsOf(entry, {})) };
+    return { lineId: entry.lineId, draft: completed(entry.lineId, fieldsOf(entry, {})), forced: false };
 }
 
 export function planTitles(stored: readonly StoredFixedIncome[], decisions: readonly FixedIncomeDecision[]): PlannedTitle[] {
@@ -87,4 +88,14 @@ export function outcomesOf(planned: readonly PlannedTitle[], ids: readonly strin
         lineId: title.lineId,
         titleId: ids[index] as string
     }));
+}
+
+export function probeOfDraft(draft: ImportedTitleDraft): TitleProbe {
+    return {
+        issuerId: draft.issuerId,
+        name: draft.name,
+        indexer: draft.indexer,
+        maturityDate: draft.maturityDate,
+        appliedMinor: draft.appliedMinor
+    };
 }

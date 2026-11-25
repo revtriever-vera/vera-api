@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
-import { FixedIncomeTitleImporterService } from '../../fixed-income/services/fixed-income-title-importer.service';
+import { FixedIncomeTitleImporterService, TitleProbe } from '../../fixed-income/services/fixed-income-title-importer.service';
 import { ApplyResult, PositionOperationsService } from '../../positions/services/position-operations.service';
 import { FixedIncomeDecision, FixedIncomeOutcome } from '../domain/fixed-income/fixed-income-import.types';
-import { outcomesOf, planTitles, PlannedTitle } from '../domain/fixed-income/title-decisions';
+import { outcomesOf, planTitles, PlannedTitle, probeOfDraft } from '../domain/fixed-income/title-decisions';
 import { InvestmentImportPreviewDomain } from '../domain/investment-import-preview.domain';
-import { BlockedLinesError, PositionModeRequiredError } from '../domain/investment-import.errors';
+import { BlockedLinesError, DuplicateTitleError, PositionModeRequiredError } from '../domain/investment-import.errors';
 import {
     CommitView,
     EvaluatedLine,
@@ -96,11 +96,22 @@ export class InvestmentImportCommitApplication {
         });
     }
 
+    private async assertNotDuplicated(planned: readonly PlannedTitle[]): Promise<void> {
+        const duplicated: boolean[] = await this.titles.duplicates(
+            planned.map((title: PlannedTitle): TitleProbe => probeOfDraft(title.draft))
+        );
+        const clash: number = duplicated.findIndex((flag: boolean, index: number): boolean => flag && planned[index]?.forced === false);
+        if (clash >= 0) {
+            throw new DuplicateTitleError((planned[clash] as PlannedTitle).lineId);
+        }
+    }
+
     private async createTitles(
         planned: readonly PlannedTitle[],
         importId: string,
         holderUserId: string | null
     ): Promise<FixedIncomeOutcome[]> {
+        await this.assertNotDuplicated(planned);
         const ids: readonly string[] = await this.titles.createAll(
             planned.map((title: PlannedTitle) => title.draft),
             importId,

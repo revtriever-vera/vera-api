@@ -129,12 +129,12 @@ describe('investment import: renda fixa da Posição', () => {
         const ready: PreviewBody = await preview(owner);
 
         expect(ready.fixedIncome.map((line: FixedIncomeBody): string => line.status)).toEqual([
-            'inferred',
-            'inferred',
-            'inferred',
             'check',
-            'inferred',
-            'inferred',
+            'check',
+            'check',
+            'check',
+            'check',
+            'check',
             'needs_input',
             'needs_input'
         ]);
@@ -143,8 +143,9 @@ describe('investment import: renda fixa da Posição', () => {
             indexer: 'cdi_percent',
             rateBps: 11200,
             appliedMinor: 1000000,
-            suggestion: 'Achamos: CDB BANCO EXEMPLO, 112% do CDI, vence em 03/2028. Confirmar?'
+            reason: 'assumed_face_price'
         });
+        expect(lineOf(ready, '112% CDI').suggestion).toContain('Achamos: CDB BANCO EXEMPLO, 112% do CDI, vence em 03/2028. Confirmar?');
         expect(lineOf(ready, 'CARENCIA')).toMatchObject({ status: 'check', reason: 'grace_period' });
         expect(await titlesOf(owner)).toEqual([]);
     });
@@ -237,9 +238,26 @@ describe('investment import: renda fixa da Posição', () => {
         const again: PreviewBody = await preview(owner);
 
         expect(lineOf(again, '112% CDI')).toMatchObject({ status: 'duplicate', reason: 'duplicate' });
-        const done: Reply<CommitBody> = await commit(owner, again.previewId, [{ lineId: lineOf(again, '112% CDI').lineId, confirm: true }]);
+        const refused: Reply<ProblemBody> = await commit<ProblemBody>(owner, again.previewId, [
+            { lineId: lineOf(again, '112% CDI').lineId, confirm: true }
+        ]);
+        expect(refused.body.type).toBe('import.fixed_income_duplicate');
+        const stale: PreviewBody = await preview(owner, FIXTURE.subarray(0, FIXTURE.length));
+        const lineId: string = lineOf(stale, 'PRE').lineId;
+        await commit(owner, (await preview(owner)).previewId, [{ lineId, confirm: true }]);
+        const late: Reply<ProblemBody> = await commit<ProblemBody>(owner, stale.previewId, [{ lineId, confirm: true }]);
+        expect(late.body.type).toBe('import.fixed_income_duplicate');
+        const done: Reply<CommitBody> = await commit(owner, again.previewId, [{ lineId: lineOf(again, '112% CDI').lineId, skip: true }]);
         expect(done.body.fixedIncome).toEqual([]);
-        expect(await titlesOf(owner)).toHaveLength(1);
+        expect(await titlesOf(owner)).toHaveLength(2);
+    });
+
+    it('sem preço de emissão na planilha a prévia assume a face e marca check', async () => {
+        const owner: Account = await harness.signUp('rf-face');
+
+        const ready: PreviewBody = await preview(owner);
+
+        expect(lineOf(ready, '112% CDI')).toMatchObject({ status: 'check', reason: 'assumed_face_price' });
     });
 
     it('duas companies ficam isoladas e nada sensível vai para o log', async () => {
@@ -251,7 +269,7 @@ describe('investment import: renda fixa da Posição', () => {
 
         const other: PreviewBody = await preview(second);
 
-        expect(lineOf(other, '112% CDI').status).toBe('inferred');
+        expect(lineOf(other, '112% CDI').status).toBe('check');
         expect((await commit<ProblemBody>(second, ready.previewId, [])).body.type).toBe('preview.expired');
         expect(await titlesOf(second)).toEqual([]);
         const inLogs: string = logged.join('\n');
