@@ -33,12 +33,23 @@ export function ignoredOperationViewOf(line: IgnoredLineView): OperationLineView
     };
 }
 
-export function warningsOf(lines: readonly EvaluatedLine[]): NoteView[] {
+function countOf(foreign: ReadonlyMap<string, string>, code: string): number {
+    return [...foreign.values()].filter((value: string): boolean => value === code).length;
+}
+
+export function warningsOf(lines: readonly EvaluatedLine[], foreign: ReadonlyMap<string, string> = new Map()): NoteView[] {
     const notFound: number = lines.filter((line: EvaluatedLine): boolean => line.reason === LINE_REASONS.assetNotFound).length;
     const blocked: number = idsWithStatus(lines, LINE_STATUSES.blocked).length;
     const choice: number = lines.filter((line: EvaluatedLine): boolean => line.reason === LINE_REASONS.positionModeRequired).length;
-    const check: number = idsWithStatus(lines, LINE_STATUSES.check).length - choice;
+    const mismatch: number = countOf(foreign, LINE_REASONS.positionMismatch);
+    const unordered: number = countOf(foreign, LINE_REASONS.outOfOrder);
+    const named: number = lines.filter(
+        (line: EvaluatedLine): boolean => foreign.get(line.lineId) === line.reason && line.reason !== null
+    ).length;
+    const check: number = idsWithStatus(lines, LINE_STATUSES.check).length - choice - named;
     const candidates: readonly NoteView[] = [
+        { code: LINE_REASONS.positionMismatch, count: mismatch },
+        { code: LINE_REASONS.outOfOrder, count: unordered },
         { code: LINE_REASONS.assetNotFound, count: notFound },
         { code: 'blocked_lines', count: blocked },
         { code: LINE_REASONS.positionModeRequired, count: choice },

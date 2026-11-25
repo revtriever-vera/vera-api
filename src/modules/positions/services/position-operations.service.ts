@@ -106,6 +106,10 @@ export class PositionOperationsService {
         }));
     }
 
+    public async latestTradeDates(holderUserId: string | null, assetIds: readonly string[]): Promise<Map<string, string>> {
+        return this.operations.latestTradeDates(assetIds, holderUserId);
+    }
+
     @UsingTransaction()
     public async apply(importId: string, holderUserId: string | null, operations: readonly OperationInput[]): Promise<ApplyResult> {
         await this.requireOpenImport(importId);

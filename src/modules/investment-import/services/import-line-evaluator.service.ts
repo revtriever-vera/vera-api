@@ -8,21 +8,25 @@ import {
     EffectLine,
     EvaluatedLine,
     LINE_STATUSES,
-    StoredLine
+    StoredLine,
+    US_MARKET
 } from '../domain/investment-import.types';
-import { balanceViewOf, evaluatedOf, hasUnsupportedDirection, LineFacts, verdictOf } from '../domain/line-evaluation';
+import { foreignCheckOf, ForeignCheckInput } from '../domain/foreign/foreign-checks';
+import { balanceViewOf, evaluatedOf, hasUnsupportedDirection, LineFacts, LineVerdict, verdictOf } from '../domain/line-evaluation';
 import { operationOf } from './import-operation.builder';
 
 export interface Evaluation {
     readonly lines: readonly EvaluatedLine[];
     readonly effects: readonly EffectLine[];
     readonly operations: readonly OperationInput[];
+    readonly foreignChecks: ReadonlyMap<string, string>;
 }
 
 interface Simulated {
     readonly failures: ReadonlyMap<number, string>;
     readonly held: ReadonlySet<string>;
     readonly effects: readonly EffectLine[];
+    readonly afterQuantities: ReadonlyMap<string, string>;
 }
 
 function tickerKeyOf(market: string, ticker: string): string {
@@ -60,18 +64,32 @@ function summarize(simulations: readonly AssetSimulation[], assets: ReadonlyMap<
     const effects: EffectLine[] = simulations.map((simulation: AssetSimulation): EffectLine =>
         effectOf(simulation, assets.get(simulation.effect.assetId))
     );
-    return { failures, held, effects };
+    const afterQuantities: Map<string, string> = new Map(
+        effects.map((effect: EffectLine): [string, string] => [effect.assetId, effect.after?.quantity ?? '0'])
+    );
+    return { failures, held, effects, afterQuantities };
 }
 
-function factsOf(item: EditedLine, asset: Asset | undefined, duplicates: ReadonlySet<number>, simulated: Simulated): LineFacts {
+function factsOf(
+    item: EditedLine,
+    asset: Asset | undefined,
+    duplicates: ReadonlySet<number>,
+    simulated: Simulated,
+    latest: ReadonlyMap<string, string>
+): LineFacts {
     const assetId: string | null = asset?.id ?? null;
     return {
         edited: item,
         assetId,
         duplicate: duplicates.has(item.line.lineNumber),
         failure: simulated.failures.get(item.line.lineNumber) ?? null,
-        hasPosition: assetId !== null && simulated.held.has(assetId)
+        hasPosition: assetId !== null && simulated.held.has(assetId),
+        foreignCheck: assetId === null ? null : foreignCheckOf(item.line, foreignInputOf(assetId, simulated, latest))
     };
+}
+
+function foreignInputOf(assetId: string, simulated: Simulated, latest: ReadonlyMap<string, string>): ForeignCheckInput {
+    return { afterQuantity: simulated.afterQuantities.get(assetId) ?? '0', latestTradeDate: latest.get(assetId) ?? null };
 }
 
 @Injectable()
@@ -96,11 +114,26 @@ export class ImportLineEvaluatorService {
         const live: OperationInput[] = [...inputs.values()].filter((input: OperationInput): boolean => !duplicates.has(input.lineNumber));
         const assets: Map<string, Asset> = new Map([...matched.values()].map((asset: Asset): [string, Asset] => [asset.id, asset]));
         const simulated: Simulated = summarize(await this.operations.simulate(holderUserId, live), assets);
+        const latest: Map<string, string> = await this.latestDatesOf(holderUserId, edited, assets);
+        const foreignChecks: Map<string, string> = new Map();
         const lines: EvaluatedLine[] = edited.map((item: EditedLine): EvaluatedLine => {
-            const facts: LineFacts = factsOf(item, matched.get(item.line.lineId), duplicates, simulated);
-            return evaluatedOf(facts, verdictOf(facts));
+            const facts: LineFacts = factsOf(item, matched.get(item.line.lineId), duplicates, simulated, latest);
+            const verdict: LineVerdict = verdictOf(facts);
+            if (facts.foreignCheck !== null && APPLICABLE.has(verdict.status)) {
+                foreignChecks.set(item.line.lineId, facts.foreignCheck);
+            }
+            return evaluatedOf(facts, verdict);
         });
-        return { lines, effects: simulated.effects, operations: appliedOf(lines, inputs) };
+        return { lines, effects: simulated.effects, operations: appliedOf(lines, inputs), foreignChecks };
+    }
+
+    private async latestDatesOf(
+        holderUserId: string | null,
+        edited: readonly EditedLine[],
+        assets: ReadonlyMap<string, Asset>
+    ): Promise<Map<string, string>> {
+        const foreign: boolean = edited.some((item: EditedLine): boolean => item.line.dollar !== undefined);
+        return foreign ? this.operations.latestTradeDates(holderUserId, [...assets.keys()]) : new Map();
     }
 
     private async resolveAssets(edited: readonly EditedLine[]): Promise<ReadonlyMap<string, Asset>> {
@@ -122,9 +155,11 @@ export class ImportLineEvaluatorService {
             .filter((item: EditedLine): boolean => item.assetId === null)
             .map((item: EditedLine): StoredLine => item.line);
         const b3: Asset[] = await this.catalog.findManyByMarketAndExternalIds(B3_MARKET, tickersOf(unresolved, B3_MARKET));
+        const us: Asset[] = await this.catalog.findManyByMarketAndExternalIds(US_MARKET, tickersOf(unresolved, US_MARKET));
         const crypto: Asset[] = await this.catalog.findBestByMarketAndSymbols(CRYPTO_MARKET, tickersOf(unresolved, CRYPTO_MARKET));
         return new Map([
             ...b3.map((asset: Asset): [string, Asset] => [tickerKeyOf(B3_MARKET, asset.externalId), asset]),
+            ...us.map((asset: Asset): [string, Asset] => [tickerKeyOf(US_MARKET, asset.externalId), asset]),
             ...crypto.map((asset: Asset): [string, Asset] => [tickerKeyOf(CRYPTO_MARKET, asset.symbol), asset])
         ]);
     }

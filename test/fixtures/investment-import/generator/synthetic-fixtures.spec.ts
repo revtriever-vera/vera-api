@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 import ExcelJS from 'exceljs';
 import { describe, expect, it } from 'vitest';
+import { readPdfContent, PdfContent } from '../../../../src/modules/investment-import/domain/pdf-text';
 import { FIXED_INCOME_CASES } from './b3-fixed-income';
 import { findCpfLikeNumbers, isValidCnpj, isValidCpf } from './document-validation';
 import { curveUnitPrice } from './fixed-income-pricing';
@@ -109,5 +110,16 @@ describe('synthetic investment import fixtures', (): void => {
         expect(codes).toEqual(expect.arrayContaining(['CDB-EX-CAREN', 'DEB-EX-JUROS', 'CDB-EX-APLIC', 'CDB-EX-SEMIDX', 'CDB-EX-SEMCURVA']));
         expect(FIXED_INCOME_CASES.filter((item: (typeof FIXED_INCOME_CASES)[number]): boolean => item.indexer === null)).toHaveLength(1);
         expect(FIXED_INCOME_CASES.filter((item: (typeof FIXED_INCOME_CASES)[number]): boolean => !item.curveVisible)).toHaveLength(1);
+    });
+
+    it('the Avenue statements have a text layer, the scanned versions have none, and nothing real is in them', async (): Promise<void> => {
+        for (const month of ['2026-07', '2026-08', '2026-09']) {
+            const text: PdfContent = await readPdfContent(readFileSync(join(GENERATED_DIR, 'avenue', `avenue-${month}.pdf`)));
+            const scanned: PdfContent = await readPdfContent(readFileSync(join(GENERATED_DIR, 'avenue', `avenue-${month}-escaneado.pdf`)));
+            expect(text.hasTextLayer).toBe(true);
+            expect(text.pages.join('\n')).toContain('PESSOA EXEMPLO');
+            expect(text.pages.join('\n')).toContain('PORTFOLIO SUMMARY');
+            expect(scanned.hasTextLayer).toBe(false);
+        }
     });
 });

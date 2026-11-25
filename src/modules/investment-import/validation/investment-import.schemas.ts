@@ -135,7 +135,24 @@ const lineViewSchema = z.object({
     grossMinor: z.number().int().nullable().describe('Gross amount in minor units of the currency'),
     feesMinor: z.number().int().nullable().describe('Fees in minor units of the currency'),
     currency: z.string().nullable().describe('ISO 4217 currency'),
-    positionMode: z.enum(POSITION_MODE_VALUES).nullable().describe('Chosen or default position mode; null when the person must choose')
+    positionMode: z.enum(POSITION_MODE_VALUES).nullable().describe('Chosen or default position mode; null when the person must choose'),
+    fxRate: z
+        .string()
+        .nullable()
+        .optional()
+        .describe('Exchange rate (PTAX, BRL per USD) applied to a foreign statement line; absent for other sources'),
+    grossBrlMinor: z
+        .number()
+        .int()
+        .nullable()
+        .optional()
+        .describe('Gross amount converted to BRL minor units, foreign statement lines only'),
+    withheldTaxMinor: z
+        .number()
+        .int()
+        .nullable()
+        .optional()
+        .describe('Tax withheld on an income line, in minor units of the line currency, foreign statement lines only')
 });
 
 const effectSchema = z.object({

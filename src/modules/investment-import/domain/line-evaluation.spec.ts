@@ -25,7 +25,7 @@ function edited(extra: Partial<EditedLine> = {}, line: Partial<StoredLine> = {})
 }
 
 function facts(item: EditedLine, extra: Partial<LineFacts> = {}): LineFacts {
-    return { edited: item, assetId: 'a1', duplicate: false, failure: null, hasPosition: false, ...extra };
+    return { edited: item, assetId: 'a1', duplicate: false, failure: null, hasPosition: false, foreignCheck: null, ...extra };
 }
 
 describe('verdictOf', () => {

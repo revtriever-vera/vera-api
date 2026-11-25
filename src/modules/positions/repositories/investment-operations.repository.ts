@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
+import { DateUtil } from '../../../shared/utils/date.util';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { OrderBy } from '../../../shared/pagination/pagination.types';
 import { InvestmentOperation, MAX_OPERATIONS_PER_IMPORT, NewInvestmentOperation } from '../domain/investment-operations.types';
@@ -61,6 +62,20 @@ export class InvestmentOperationsRepository extends TenantRepository<'Investment
             .groupBy('importId')
             .execute();
         return new Map(rows.map((row): [string, number] => [row.importId, Number(row.total)]));
+    }
+
+    public async latestTradeDates(assetIds: readonly string[], holderUserId: string | null): Promise<Map<string, string>> {
+        if (assetIds.length === 0) {
+            return new Map();
+        }
+        const base = this.selectScoped()
+            .select(['assetId', (builder) => builder.fn.max('tradeDate').as('latest')])
+            .where('deletedAt', 'is', null)
+            .where('assetId', 'in', assetIds);
+        const rows = await (holderUserId === null ? base.where('holderUserId', 'is', null) : base.where('holderUserId', '=', holderUserId))
+            .groupBy('assetId')
+            .execute();
+        return new Map(rows.map((row): [string, string] => [row.assetId, DateUtil.onlyLocalDateString(new Date(row.latest))]));
     }
 
     public async softDeleteByImport(importId: string): Promise<number> {

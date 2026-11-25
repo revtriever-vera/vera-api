@@ -36,3 +36,27 @@ describe('operationOf', () => {
         expect(operationOf(edited({ positionMode: 'history_only' }), 'a1').historyOnly).toBe(true);
     });
 });
+
+describe('operationOf with dollar facts', () => {
+    const DOLLAR: StoredLine['dollar'] = { fxRate: '5.40', grossBrlMinor: 1026000, withheldTaxMinor: 72, closingQuantity: null };
+
+    it('sends the rate, the BRL gross and the withheld tax to the operation', () => {
+        const input: ReturnType<typeof operationOf> = operationOf(
+            edited({}, { currency: 'USD', grossMinor: 190000, dollar: DOLLAR }),
+            'a1'
+        );
+        expect(input).toMatchObject({ fxRate: '5.40', grossBrlMinor: 1026000, withheldTaxMinor: 72, currency: 'USD' });
+    });
+
+    it('converts the BRL gross again by the same rate when the line was repriced', () => {
+        const input: ReturnType<typeof operationOf> = operationOf(
+            edited({ repriced: true }, { currency: 'USD', quantity: '5', unitPrice: '200', dollar: DOLLAR }),
+            'a1'
+        );
+        expect(input.grossBrlMinor).toBe(540000);
+    });
+
+    it('leaves the foreign fields empty for other sources', () => {
+        expect(operationOf(edited(), 'a1')).toMatchObject({ fxRate: null, grossBrlMinor: null, withheldTaxMinor: null });
+    });
+});

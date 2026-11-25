@@ -15,7 +15,30 @@ export const answerEnvelopeSchema = z.object({
     documentType: z.enum(DOCUMENT_VALUES),
     currency: z.string().trim().length(3),
     totalMinor: z.number().int().nullable().optional(),
-    operations: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER)
+    periodStart: z.string().regex(DATE_PATTERN).nullable().optional().catch(null),
+    periodEnd: z.string().regex(DATE_PATTERN).nullable().optional().catch(null),
+    operations: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER),
+    positions: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).optional().catch([]),
+    taxWithholdings: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).optional().catch([]),
+    cashMovements: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).optional().catch([])
+});
+
+export const answerPositionSchema = z.object({
+    block: z.enum(['equities', 'options', 'fixed_income', 'mutual_fund']),
+    symbol: z.string().trim().min(1).max(MAX_TEXT),
+    quantity: z.string().regex(QUANTITY_PATTERN)
+});
+
+export const answerWithholdingSchema = z.object({
+    tradeDate: z.string().regex(DATE_PATTERN),
+    ticker: z.string().trim().min(1).max(MAX_TEXT),
+    amountMinor: z.number().int().positive()
+});
+
+export const answerCashMovementSchema = z.object({
+    tradeDate: z.string().regex(DATE_PATTERN),
+    direction: z.enum(['credit', 'debit']),
+    amountMinor: z.number().int().positive()
 });
 
 export const answerOperationSchema = z.object({
@@ -27,6 +50,7 @@ export const answerOperationSchema = z.object({
     productName: z.string().max(MAX_TEXT).nullable().optional(),
     institution: z.string().max(MAX_TEXT).nullable().optional(),
     market: z.string().max(MAX_TEXT).nullable().optional(),
+    securityId: z.string().trim().max(MAX_TEXT).nullable().optional(),
     quantity: z.string().regex(QUANTITY_PATTERN),
     unitPrice: z.string().regex(PRICE_PATTERN).nullable().optional(),
     grossMinor: z.number().int().nullable().optional(),
@@ -34,4 +58,7 @@ export const answerOperationSchema = z.object({
 });
 
 export type AnswerEnvelope = z.infer<typeof answerEnvelopeSchema>;
+export type AnswerPosition = z.infer<typeof answerPositionSchema>;
+export type AnswerWithholding = z.infer<typeof answerWithholdingSchema>;
+export type AnswerCashMovement = z.infer<typeof answerCashMovementSchema>;
 export type AnswerOperation = z.infer<typeof answerOperationSchema>;

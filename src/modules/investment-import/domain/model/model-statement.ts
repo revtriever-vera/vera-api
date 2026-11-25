@@ -4,7 +4,9 @@ import type { Decimal } from '../../../../shared/utils/decimal.util';
 import { ModelUnreadableError } from '../investment-import.errors';
 import { LINE_REASONS } from '../investment-import.types';
 import {
+    DOCUMENT_TYPES,
     DocumentType,
+    ForeignExtras,
     IGNORE_REASONS,
     IgnoredLine,
     NO_COST_EXTRAS,
@@ -16,10 +18,11 @@ import {
     RejectReason
 } from '../investment-statement.types';
 import { AnswerEnvelope, AnswerOperation, answerEnvelopeSchema, answerOperationSchema } from './model-answer.schema';
+import { foreignExtrasOf, mergedForeignOf } from './model-foreign';
 import { amountCheckOf, dateCheckOf, totalMatches } from './model-checks';
 
 const FRACTIONAL_SUFFIX: RegExp = /^([A-Z]{4}\d{1,2})F$/;
-const UNSUPPORTED_MARKET: RegExp = /op[cç][aã]o|option|termo|forward|futuro|future|swap/i;
+const UNSUPPORTED_MARKET: RegExp = /op[cç][aã]o|option|termo|forward|futuro|future|swap|fixed.?income/i;
 const FRACTIONAL_MARKET: RegExp = /fracion/i;
 const NON_TICKER: RegExp = /[^A-Z0-9.\-^=]/g;
 const PRICE_SCALE: number = 8;
@@ -47,6 +50,7 @@ interface PageReading {
     readonly documentType: DocumentType;
     readonly currency: string;
     readonly totalMinor: number | null;
+    readonly foreign: ForeignExtras;
 }
 
 function jsonOf(text: string): unknown {
@@ -79,7 +83,15 @@ function unitPriceOf(operation: AnswerOperation): string | null {
     return operation.unitPrice ?? derivedPriceOf(operation);
 }
 
-type OperationBase = Omit<ParsedOperation, 'matchKey' | 'alreadyImported' | 'check'>;
+type OperationBase = Omit<ParsedOperation, 'matchKey' | 'alreadyImported' | 'check' | 'dollar'>;
+
+function externalRefOf(raw: AnswerOperation): string | null {
+    const securityId: string = raw.securityId?.trim().toUpperCase() ?? '';
+    if (securityId === '') {
+        return null;
+    }
+    return ['model', securityId, raw.tradeDate, raw.kind, raw.quantity, raw.unitPrice ?? '', String(raw.grossMinor ?? '')].join(':');
+}
 
 function baseOf(raw: AnswerOperation, page: string, line: number): OperationBase {
     return {
@@ -98,7 +110,8 @@ function baseOf(raw: AnswerOperation, page: string, line: number): OperationBase
         grossMinor: raw.grossMinor ?? null,
         currency: raw.currency.toUpperCase(),
         appliedToPosition: AFFECTS_POSITION.has(raw.kind),
-        ...NO_COST_EXTRAS
+        ...NO_COST_EXTRAS,
+        externalRef: externalRefOf(raw)
     };
 }
 
@@ -145,7 +158,8 @@ function readPage(text: string, page: string, today: string): PageReading {
         rejected: [],
         documentType: data.documentType,
         currency: data.currency.toUpperCase(),
-        totalMinor: data.totalMinor ?? null
+        totalMinor: data.totalMinor ?? null,
+        foreign: foreignExtrasOf(data)
     };
     data.operations.forEach((item: unknown, index: number): void => {
         readOperation(item, reading, page, index + 1, today);
@@ -188,7 +202,12 @@ export function statementOfModelAnswers(answers: readonly string[], input: Model
     if (first === undefined) {
         throw new ModelUnreadableError('invalid_response');
     }
+    const foreign: Pick<ParsedInvestmentStatement, 'foreign'> =
+        first.documentType === DOCUMENT_TYPES.foreignStatement
+            ? { foreign: mergedForeignOf(readings.map((reading: PageReading): ForeignExtras => reading.foreign)) }
+            : {};
     return {
+        ...foreign,
         source: PARSED_SOURCES.model,
         documentType: first.documentType,
         reportKinds: [],

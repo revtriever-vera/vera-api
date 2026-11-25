@@ -1,6 +1,7 @@
 import { OperationInput } from '../../positions/services/position-operations.service';
 import { EditedLine, POSITION_MODES } from '../domain/investment-import.types';
 import { grossOf } from '../domain/line-evaluation';
+import { grossBrlOf } from '../domain/foreign/foreign-dollar';
 
 const NO_PRICE: string = '0';
 const EVENT_KINDS: ReadonlySet<string> = new Set(['split', 'reverse_split']);
@@ -27,9 +28,9 @@ export function operationOf(edited: EditedLine, assetId: string): OperationInput
         tradeDate: line.tradeDate,
         settlementDate: null,
         lineNumber: line.lineNumber,
-        withheldTaxMinor: null,
-        fxRate: null,
-        grossBrlMinor: null,
+        withheldTaxMinor: line.dollar?.withheldTaxMinor ?? null,
+        fxRate: line.dollar?.fxRate ?? null,
+        grossBrlMinor: grossBrlOf(edited, grossOf(edited)),
         dayTrade: false,
         historyOnly: edited.positionMode === POSITION_MODES.historyOnly,
         sourceRef: line.sourceRef

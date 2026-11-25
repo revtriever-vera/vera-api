@@ -176,13 +176,13 @@ export const PORTFOLIO_HELP_ENTRIES: readonly HelpEntry[] = [
     helpEntry({
         id: 'portfolio-import-operations',
         pt: {
-            title: 'Importar operações da B3',
-            body: 'Envie o relatório da B3 em Excel (.xlsx) ou CSV, de até 10 MB. A Vera mostra cada linha, os proventos e o efeito na carteira, e você confirma antes de gravar. Proventos entram no histórico e não mudam a posição. Importações anteriores ficam listadas.',
+            title: 'Importar operações',
+            body: 'Envie o relatório da B3 (.xlsx ou CSV), o CSV de cripto da Binance, Mercado Bitcoin ou Coinbase, ou, lidos por modelo de linguagem com sua confirmação, nota de corretagem em PDF, print da corretora ou extrato mensal da Avenue em PDF. Até 10 MB. Você confere as linhas e o efeito na carteira antes de gravar. Na Avenue, tudo entra em dólar, com o valor em real pelo PTAX do dia; opções e renda fixa ficam de fora. Importe os meses em ordem. Proventos não mudam a posição.',
             steps: ['Abra Meus ativos.', 'Escolha Importar operações.', 'Envie o relatório, confira as linhas e confirme.']
         },
         en: {
-            title: 'Import B3 trades',
-            body: 'Send the B3 report as an Excel (.xlsx) or CSV file, up to 10 MB. Vera shows each line, the income and the effect on the portfolio, and you confirm before anything is saved. Income goes to the history and does not change the position. Earlier imports stay listed.',
+            title: 'Import trades',
+            body: 'Send the B3 report (.xlsx or CSV), the crypto CSV from Binance, Mercado Bitcoin or Coinbase, or, read by a language model with your confirmation, a brokerage note as PDF, a broker screenshot or the monthly Avenue statement as PDF. Up to 10 MB. You check the lines and the effect on the portfolio before saving. For Avenue, everything comes in dollars with the value in reais at the day PTAX rate; options and fixed income are left out. Import the months in order. Income does not change the position.',
             steps: ['Open My assets.', 'Choose Import trades.', 'Send the report, check the lines and confirm.']
         },
         screen: { path: '/portfolio/assets', pt: 'Meus ativos', en: 'My assets' },
@@ -193,11 +193,31 @@ export const PORTFOLIO_HELP_ENTRIES: readonly HelpEntry[] = [
             'b3',
             'relatório da b3',
             'b3 report',
+            'extrato avenue',
+            'avenue statement',
+            'nota de corretagem',
+            'brokerage note',
+            'pdf',
+            'print',
+            'screenshot',
+            'csv de cripto',
+            'crypto csv',
+            'binance',
             'proventos',
             'income',
             'dividendos',
             'dividends'
         ],
-        synonyms: ['importar carteira', 'import portfolio', 'subir planilha da b3', 'upload b3', 'xlsx', 'excel']
+        synonyms: [
+            'importar carteira',
+            'import portfolio',
+            'subir planilha da b3',
+            'upload b3',
+            'xlsx',
+            'excel',
+            'importar extrato da avenue',
+            'import avenue statement',
+            'foto da tela da corretora'
+        ]
     })
 ];
