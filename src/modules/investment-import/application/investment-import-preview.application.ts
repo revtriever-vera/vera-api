@@ -29,6 +29,7 @@ import { StatementReaderService } from '../services/statement-reader.service';
 export interface PreviewInput {
     readonly holderUserId?: string;
     readonly positionDate?: string;
+    readonly modelConsent?: boolean;
 }
 
 function viewOf(
@@ -42,6 +43,7 @@ function viewOf(
     return {
         previewId: stored.id,
         source: statement.source,
+        documentType: statement.documentType ?? null,
         notes: notesOf(statement),
         operations: [...evaluation.lines.map(operationViewOf), ...ignoredViewsOf(statement).map(ignoredOperationViewOf)],
         effect: evaluation.effects,
@@ -68,7 +70,7 @@ export class InvestmentImportPreviewApplication {
     public async preview(upload: UploadedReport, input: PreviewInput): Promise<PreviewView> {
         const startedAt: number = Date.now();
         const holderUserId: string | null = input.holderUserId ?? null;
-        const statement: ParsedInvestmentStatement = await this.reader.read(upload.buffer);
+        const statement: ParsedInvestmentStatement = await this.reader.read(upload.buffer, input.modelConsent === true);
         if (statement.operations.length > MAX_LINES_PER_IMPORT) {
             throw new ReportTooLargeError(MAX_LINES_PER_IMPORT);
         }

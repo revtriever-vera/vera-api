@@ -297,6 +297,25 @@ describe('MeteredLlmDriver', () => {
             );
         });
 
+        it('a leitura de importação não é barrada pela cota mensal e não lança custo nela', async () => {
+            const { metered, ledger } = buildExtract();
+            ledger.assertRoom.mockRejectedValue(new CapReachedError('ai', '2026-12-01T00:00:00.000Z'));
+
+            await expect(metered.generate(EXTRACT)).resolves.toMatchObject({ costMicros: 1234 });
+
+            expect(ledger.assertRoom).not.toHaveBeenCalled();
+            expect(ledger.record).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'answered', outsideCap: true }));
+        });
+
+        it('as tarefas de resumo seguem sob a cota', async () => {
+            const { metered, ledger } = build();
+
+            await metered.generate(REQUEST);
+
+            expect(ledger.assertRoom).toHaveBeenCalled();
+            expect(ledger.record).toHaveBeenCalledWith(expect.objectContaining({ outsideCap: false }));
+        });
+
         it('o hash e o razão não carregam os bytes, só tipo e tamanho', async () => {
             const { metered, ledger } = buildExtract();
             const other: LlmGenerationRequest = {

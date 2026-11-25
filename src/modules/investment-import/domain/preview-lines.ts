@@ -45,7 +45,8 @@ function lineOf(statement: ParsedInvestmentStatement, operation: ParsedOperation
         feesMinor: operation.feesMinor,
         currency: operation.currency,
         market: marketOf(statement.source),
-        sourceRef: `${statement.source}:${reference}`
+        sourceRef: `${statement.source}:${reference}`,
+        check: operation.check ?? null
     };
 }
 

@@ -16,7 +16,8 @@ const LINE: StoredLine = {
     feesMinor: 0,
     currency: 'BRL',
     market: 'B3',
-    sourceRef: 'b3:x:1'
+    sourceRef: 'b3:x:1',
+    check: null
 };
 
 describe('applyEdits', () => {
@@ -41,6 +42,15 @@ describe('applyEdits', () => {
             repriced: true,
             positionMode: 'history_only'
         });
+    });
+
+    it('corrigir quantidade, preço ou data limpa o check do modelo; outras edições não', () => {
+        const flagged: StoredLine = { ...LINE, check: 'amount_mismatch' };
+
+        expect(applyEdits([flagged], [{ lineId: 'L1', unitPrice: '6' }])[0]?.line.check).toBeNull();
+        expect(applyEdits([flagged], [{ lineId: 'L1', tradeDate: '2026-01-11' }])[0]?.line.check).toBeNull();
+        expect(applyEdits([flagged], [{ lineId: 'L1', feesMinor: 3 }])[0]?.line.check).toBe('amount_mismatch');
+        expect(applyEdits([flagged], [])[0]?.line.check).toBe('amount_mismatch');
     });
 
     it('refuses an unknown or repeated line', () => {

@@ -16,7 +16,8 @@ const LINE: StoredLine = {
     feesMinor: 0,
     currency: 'BRL',
     market: 'B3',
-    sourceRef: 'b3:x:1'
+    sourceRef: 'b3:x:1',
+    check: null
 };
 
 function edited(extra: Partial<EditedLine> = {}, line: Partial<StoredLine> = {}): EditedLine {

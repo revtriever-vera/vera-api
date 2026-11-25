@@ -25,7 +25,8 @@ const storedLineSchema = z.object({
     feesMinor: z.number().int().default(0),
     currency: z.string(),
     market: z.string().default('B3'),
-    sourceRef: z.string()
+    sourceRef: z.string(),
+    check: z.string().nullable().default(null)
 });
 
 const storedFixedIncomeSchema = z.object({

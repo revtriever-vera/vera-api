@@ -72,6 +72,6 @@ describe('catálogo de tarefas', () => {
         );
 
         expect(vision).toEqual(['investment_extract']);
-        expect(byTask(LLM_TASKS.investmentExtract).responseSchema).toMatchObject({ required: ['currency', 'operations'] });
+        expect(byTask(LLM_TASKS.investmentExtract).responseSchema).toMatchObject({ required: ['documentType', 'currency', 'operations'] });
     });
 });

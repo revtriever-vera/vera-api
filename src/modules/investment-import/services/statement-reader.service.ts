@@ -5,12 +5,19 @@ import { readCryptoCsv } from '../domain/crypto/crypto-csv.reader';
 import { CryptoReading, UsdRates } from '../domain/crypto/crypto-events.types';
 import { cryptoStatementOf, usdDatesOf } from '../domain/crypto/crypto-statement';
 import { ParsedInvestmentStatement } from '../domain/investment-statement.types';
+import { ModelReaderService } from './model-reader.service';
 
 @Injectable()
 export class StatementReaderService {
-    public constructor(private readonly rates: ExchangeRateReaderService) {}
+    public constructor(
+        private readonly rates: ExchangeRateReaderService,
+        private readonly model: ModelReaderService
+    ) {}
 
-    public async read(bytes: Buffer): Promise<ParsedInvestmentStatement> {
+    public async read(bytes: Buffer, modelConsent: boolean): Promise<ParsedInvestmentStatement> {
+        if (this.model.accepts(bytes)) {
+            return this.model.read(bytes, modelConsent);
+        }
         const reading: CryptoReading | null = readCryptoCsv(bytes);
         return reading === null ? readB3Report(bytes) : cryptoStatementOf(reading, await this.usdRatesOf(reading));
     }

@@ -5,7 +5,7 @@ import { GuardResult, guardSummary } from '../../src/modules/ai-assistant/domain
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
 import { HELP_CATALOG, HELP_ROUTES } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { HelpEntry } from '../../src/modules/ai-assistant/domain/help/help.types';
-import { redactPersonalData } from '../../src/modules/ai-assistant/domain/ask-redaction';
+import { redactPersonalData } from '../../src/shared/utils/personal-data-redaction';
 import { INVESTMENT_NOTICE_PHRASES } from '../../src/modules/ai-assistant/domain/ask-fixed-replies';
 import { mentionsAsset } from '../../src/modules/ai-assistant/domain/asset-mention';
 import { INVESTMENT_NOTICE_TOOLS } from '../../src/modules/ai-assistant/domain/ask-vera.types';
