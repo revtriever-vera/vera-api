@@ -56,9 +56,18 @@ export class BcbSgsSeriesDriver extends IndexSeriesSourcePort {
     }
 
     private urlFor(series: IndexSeriesName, from: string, to: string): string {
-        const code: number = series === INDEX_SERIES.cdiDaily ? this.config.SGS_CDI_SERIES_CODE : this.config.SGS_IPCA_SERIES_CODE;
+        const code: number = this.codeOf(series);
         const base: string = stripTrailing(this.config.SGS_BASE_URL, '/');
         return `${base}/dados/serie/bcdata.sgs.${String(code)}/dados?formato=json&dataInicial=${toSgsDate(from)}&dataFinal=${toSgsDate(to)}`;
+    }
+
+    private codeOf(series: IndexSeriesName): number {
+        const codes: Readonly<Record<IndexSeriesName, number>> = {
+            [INDEX_SERIES.cdiDaily]: this.config.SGS_CDI_SERIES_CODE,
+            [INDEX_SERIES.ipcaMonthly]: this.config.SGS_IPCA_SERIES_CODE,
+            [INDEX_SERIES.selicTargetDaily]: this.config.SGS_SELIC_TARGET_SERIES_CODE
+        };
+        return codes[series];
     }
 
     private async attempt(url: string): Promise<Attempt> {

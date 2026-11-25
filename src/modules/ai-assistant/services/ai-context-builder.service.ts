@@ -6,10 +6,12 @@ import { LlmTask } from '../../../core/llm/llm.types';
 import type { ContributionSuggestion } from '../../contribution/services/contribution-planner.service';
 import type { ConcentrationResponse } from '../../concentration/services/concentration-reader.service';
 import type { MaturityItem } from '../../fixed-income-schedule/services/maturities-reader.service';
+import type { BenchmarkWindow, BenchmarkWindows } from '../../market-benchmarks/services/benchmark.service';
 import type { PortfolioSnapshot } from '../../portfolio/services/portfolio-snapshot.service';
 import type { CutsResult } from '../../spending-cuts/services/spending-cuts.service';
 import type { MonthlySummary } from '../../spending-summary/services/spending-summary.service';
 import {
+    AiBenchmarksContext,
     AiConcentrationContext,
     AiContext,
     AiCutsContext,
@@ -19,6 +21,7 @@ import {
     BuiltContext
 } from '../domain/context/ai-context.types';
 import { contextHash } from '../domain/context/context-hash';
+import { buildBenchmarksContext } from '../domain/context/benchmarks.context';
 import { buildConcentrationContext } from '../domain/context/concentration.context';
 import { buildCutsContext } from '../domain/context/cuts.context';
 import { buildMaturitiesContext } from '../domain/context/maturities.context';
@@ -47,6 +50,10 @@ export class AiContextBuilderService {
 
     public maturities(items: readonly MaturityItem[], untilMonth: string): BuiltContext<AiMaturitiesContext> {
         return buildMaturitiesContext(items, untilMonth, this.context.get().locale);
+    }
+
+    public benchmarks(windows: BenchmarkWindows, shown: readonly BenchmarkWindow[] | undefined): BuiltContext<AiBenchmarksContext> {
+        return buildBenchmarksContext(windows, shown, this.context.get().locale);
     }
 
     public hash(context: AiContext, task: LlmTask): string {

@@ -18,7 +18,8 @@ export const APP_AI_TOOLS: ReadonlySet<string> = new Set([
     'goals_overview',
     'recurring_overview',
     'concentration_overview',
-    'fixed_income_maturities'
+    'fixed_income_maturities',
+    'market_benchmarks'
 ]);
 
 export function appToolsOf(mode: TurnMode): ReadonlySet<string> {

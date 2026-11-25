@@ -3,6 +3,7 @@ import { JsonObject } from '../../src/core/llm/llm.types';
 import { AppLocale } from '../../src/shared/i18n/locale';
 import { AskVeraTool, AskVeraToolOutput } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import {
+    benchmarksInputSchema,
     byCategoryInputSchema,
     contributionInputSchema,
     cutsInputSchema,
@@ -10,6 +11,7 @@ import {
     maturitiesInputSchema,
     noInputSchema
 } from '../../src/modules/ai-assistant/validation/ask-vera-tools.schemas';
+import { buildBenchmarksContext } from '../../src/modules/ai-assistant/domain/context/benchmarks.context';
 import { buildConcentrationContext } from '../../src/modules/ai-assistant/domain/context/concentration.context';
 import { buildMaturitiesContext } from '../../src/modules/ai-assistant/domain/context/maturities.context';
 import { HELP_CATALOG } from '../../src/modules/ai-assistant/domain/help/help-catalog';
@@ -21,6 +23,7 @@ import type { AiConsentService } from '../../src/modules/ai-assistant/services/a
 import { WhereIsTool } from '../../src/modules/ai-assistant/services/tools/where-is.tool';
 import type { CurrentUserService } from '../../src/modules/identity/services/current-user.service';
 import type { ConcentrationResponse } from '../../src/modules/concentration/services/concentration-reader.service';
+import type { BenchmarkWindows } from '../../src/modules/market-benchmarks/services/benchmark.service';
 import type { MaturityItem } from '../../src/modules/fixed-income-schedule/services/maturities-reader.service';
 import { AskCase, SummaryCase } from './case.schemas';
 import { casesOf, keysOf, numbersOf } from './cases';
@@ -53,6 +56,11 @@ const DESCRIPTIONS: Readonly<Record<string, Readonly<Record<AppLocale, string>>>
     fixed_income_maturities: {
         'pt-BR': 'Vencimentos da renda fixa nos próximos meses, por tipo de título.',
         en: 'Fixed income maturities in the coming months, per kind of security.'
+    },
+    market_benchmarks: {
+        'pt-BR':
+            'Indicadores de referência do mercado já acumulados: CDI e IPCA, Selic meta e Ibovespa, com a data até onde vão e a fonte.',
+        en: 'Ready-made market reference figures: CDI and IPCA, the Selic target and the Ibovespa, with the date they run to and the source.'
     },
     portfolio_overview: {
         'pt-BR': 'Total da carteira, exposição ao dólar e cada classe de ativo contra a meta.',
@@ -170,9 +178,36 @@ const MATURITIES_FIXTURE: readonly MaturityItem[] = [
     maturityOf(null, '2026-11-15', 800_000)
 ];
 
+const NO_WINDOWS: BenchmarkWindows['cdi']['windows'] = { m1: null, m3: null, m6: null, m12: null, m24: null, m36: null, ytd: null };
+
+const BENCHMARKS_FIXTURE: BenchmarkWindows = {
+    asOf: '2026-03-20',
+    cdi: {
+        source: 'Banco Central, série 12',
+        lastDate: '2026-03-19',
+        stale: false,
+        windows: { m1: 105, m3: 310, m6: 620, m12: 1280, m24: 2540, m36: 3900, ytd: 290 }
+    },
+    ipca: {
+        source: 'Banco Central, série 433',
+        lastDate: '2026-02-01',
+        stale: false,
+        windows: { m1: 45, m3: 120, m6: 240, m12: 480, m24: 980, m36: 1500, ytd: 90 }
+    },
+    selicTarget: { source: 'Banco Central, série 432', lastDate: '2026-03-19', stale: false, bps: 1475 },
+    ibovespa: {
+        state: 'ok',
+        source: 'brapi',
+        lastDate: '2026-03-19',
+        stale: false,
+        windows: { ...NO_WINDOWS, m1: -220, m3: 340, m6: 780, m12: 1650, ytd: 410 }
+    }
+};
+
 export function appFixtureToolsOf(locale: AppLocale): readonly AskVeraTool[] {
     const concentration: ReturnType<typeof buildConcentrationContext> = buildConcentrationContext(CONCENTRATION_FIXTURE, locale);
     const maturities: ReturnType<typeof buildMaturitiesContext> = buildMaturitiesContext(MATURITIES_FIXTURE, '2027-03', locale);
+    const benchmarks: ReturnType<typeof buildBenchmarksContext> = buildBenchmarksContext(BENCHMARKS_FIXTURE, undefined, locale);
     return [
         toolOf('concentration_overview', noInputSchema, locale, (): AskVeraToolOutput => ({
             payload: jsonOf(concentration.payload),
@@ -183,6 +218,11 @@ export function appFixtureToolsOf(locale: AppLocale): readonly AskVeraTool[] {
             payload: jsonOf(maturities.payload),
             numbers: maturities.numbers,
             keys: maturities.keys
+        })),
+        toolOf('market_benchmarks', benchmarksInputSchema, locale, (): AskVeraToolOutput => ({
+            payload: jsonOf(benchmarks.payload),
+            numbers: benchmarks.numbers,
+            keys: benchmarks.keys
         }))
     ];
 }

@@ -1,6 +1,13 @@
 import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
-import { BUDGET_WINDOWS, BudgetLimits, BudgetWindow, QUOTE_PROVIDER_IDS, QuoteProviderId } from '../domain/market-data.types';
+import {
+    BUDGET_WINDOWS,
+    BudgetLimits,
+    BudgetWindow,
+    MARKET_INDEX_RANGES,
+    QUOTE_PROVIDER_IDS,
+    QuoteProviderId
+} from '../domain/market-data.types';
 
 const optionalText = z
     .string()
@@ -35,6 +42,7 @@ const schema = z.object({
     US_QUOTE_PROVIDERS: usProviderList,
     BRAPI_TOKEN: optionalText,
     BRAPI_BASE_URL: withDefault('https://brapi.dev/api').pipe(z.string().url()),
+    BRAPI_INDEX_HISTORY_RANGE: withDefault('3mo').pipe(z.enum(MARKET_INDEX_RANGES)),
     BRAPI_MAX_TICKERS_PER_REQUEST: withDefault('1').pipe(positiveInteger),
     FINNHUB_API_KEY: optionalText,
     FINNHUB_BASE_URL: withDefault('https://finnhub.io/api/v1').pipe(z.string().url()),
