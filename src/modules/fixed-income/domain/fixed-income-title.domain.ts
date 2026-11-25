@@ -22,6 +22,16 @@ export class FixedIncomeTitleDomain {
         return (await this.titles.listByImport(importId)).map(toFixedIncomeTitle);
     }
 
+    public async countByImports(importIds: readonly string[]): Promise<ReadonlyMap<string, number>> {
+        const counts: Map<string, number> = new Map();
+        for (const row of await this.titles.listByImports(importIds)) {
+            if (row.importId !== null) {
+                counts.set(row.importId, (counts.get(row.importId) ?? 0) + 1);
+            }
+        }
+        return counts;
+    }
+
     public async createSample(draft: TitleDraft): Promise<FixedIncomeTitle> {
         return toFixedIncomeTitle(await this.titles.insertSample({ ...draft, taxRegime: TAX_REGIME_BY_KIND[draft.kind] }));
     }

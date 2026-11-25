@@ -201,6 +201,7 @@ const importRecordSchema = z.object({
     fileName: z.string().describe('Base name of the file that was uploaded'),
     status: z.enum(['completed', 'undone']).describe('`undone` imports had their operations reverted'),
     operations: z.number().int().describe('Operations the import recorded'),
+    fixedIncomeTitles: z.number().int().describe('Fixed income titles the import created and that still exist; 0 once undone'),
     createdAt: z.string().datetime().describe('Creation instant, ISO 8601 UTC')
 });
 

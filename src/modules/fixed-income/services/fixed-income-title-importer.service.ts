@@ -131,6 +131,10 @@ export class FixedIncomeTitleImporterService {
         return ids;
     }
 
+    public async countByImports(importIds: readonly string[]): Promise<ReadonlyMap<string, number>> {
+        return this.titles.countByImports(importIds);
+    }
+
     public async removeByImport(importId: string): Promise<number> {
         const created: FixedIncomeTitle[] = await this.titles.listByImport(importId);
         for (const title of created) {
