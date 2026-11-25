@@ -13,11 +13,11 @@
   "expect": {
     "mustCite": [],
     "mustMention": [],
-    "mustNotMention": [],
+    "mustNotMention": ["reunião", "lembrete", "carteira", "gastos"],
     "sentences": {
       "min": 1,
       "max": 5
     }
   },
-  "reference": ["Oi. Pergunte sobre a carteira ou os gastos, peça para marcar uma reunião ou criar um lembrete."]
+  "reference": ["Oi. Pergunte como usar a Vera: onde fica uma tela ou o que cada uma faz."]
 }

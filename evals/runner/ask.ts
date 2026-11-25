@@ -42,7 +42,9 @@ export function askFixedText(item: AskCase): string | null {
     if (verdict === null) {
         return null;
     }
-    return verdict === 'refusal' ? pixRefusalText(item.locale) : greetingText(item.locale);
+    return verdict === 'refusal'
+        ? pixRefusalText(item.locale)
+        : greetingText(item.locale, isApp(item) ? { channel: 'app', feature: 'help' } : { channel: 'whatsapp', feature: 'whatsapp' });
 }
 
 interface Meter {

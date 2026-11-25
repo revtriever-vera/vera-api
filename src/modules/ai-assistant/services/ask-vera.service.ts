@@ -73,7 +73,7 @@ export class AskVeraService {
         };
         const verdict: PrefilterVerdict = prefilterOf(question.text);
         if (verdict !== null) {
-            return this.prefiltered(verdict, input.locale);
+            return this.prefiltered(verdict, input);
         }
         await this.access.assertAllowed(input);
         return this.context.run({ ...this.context.get(), locale: input.locale }, async (): Promise<AskVeraAnswer> =>
@@ -81,9 +81,9 @@ export class AskVeraService {
         );
     }
 
-    private async prefiltered(verdict: 'refusal' | 'greeting', locale: AppLocale): Promise<AskVeraAnswer> {
+    private async prefiltered(verdict: 'refusal' | 'greeting', input: AskVeraInput): Promise<AskVeraAnswer> {
         const outcome: AskVeraOutcome = verdict === 'refusal' ? 'fixed_refusal' : 'fixed_greeting';
-        const text: string = verdict === 'refusal' ? pixRefusalText(locale) : greetingText(locale);
+        const text: string = verdict === 'refusal' ? pixRefusalText(input.locale) : greetingText(input.locale, input);
         this.telemetry.finished({
             outcome,
             meta: { source: 'fixed', steps: 0, toolsUsed: [], truncated: false, proposals: 0, costMicros: 0 }
