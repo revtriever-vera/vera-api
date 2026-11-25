@@ -7,6 +7,7 @@ import {
     EditedLine,
     EffectLine,
     EvaluatedLine,
+    LINE_REASONS,
     LINE_STATUSES,
     StoredLine,
     US_MARKET
@@ -70,6 +71,19 @@ function summarize(simulations: readonly AssetSimulation[], assets: ReadonlyMap<
     return { failures, held, effects, afterQuantities };
 }
 
+function withoutDropped(first: Simulated, second: Simulated): Simulated {
+    const rebuilt: ReadonlyMap<string, EffectLine> = new Map(
+        second.effects.map((effect: EffectLine): [string, EffectLine] => [effect.assetId, effect])
+    );
+    const effects: EffectLine[] = first.effects.map(
+        (effect: EffectLine): EffectLine => rebuilt.get(effect.assetId) ?? { ...effect, after: effect.before }
+    );
+    const afterQuantities: Map<string, string> = new Map(
+        effects.map((effect: EffectLine): [string, string] => [effect.assetId, effect.after?.quantity ?? '0'])
+    );
+    return { failures: first.failures, held: first.held, effects, afterQuantities };
+}
+
 function factsOf(
     item: EditedLine,
     asset: Asset | undefined,
@@ -104,16 +118,10 @@ export class ImportLineEvaluatorService {
         const candidates: EditedLine[] = edited.filter(
             (item: EditedLine): boolean => !item.skip && matched.has(item.line.lineId) && !hasUnsupportedDirection(item)
         );
-        const inputs: Map<string, OperationInput> = new Map(
-            candidates.map((item: EditedLine): [string, OperationInput] => [
-                item.line.lineId,
-                operationOf(item, matched.get(item.line.lineId)?.id ?? '')
-            ])
-        );
+        const inputs: Map<string, OperationInput> = inputsOf(candidates, matched);
         const duplicates: ReadonlySet<number> = await this.operations.duplicateLines(holderUserId, [...inputs.values()]);
-        const live: OperationInput[] = [...inputs.values()].filter((input: OperationInput): boolean => !duplicates.has(input.lineNumber));
         const assets: Map<string, Asset> = new Map([...matched.values()].map((asset: Asset): [string, Asset] => [asset.id, asset]));
-        const simulated: Simulated = summarize(await this.operations.simulate(holderUserId, live), assets);
+        const simulated: Simulated = await this.simulateApplied(holderUserId, candidates, inputs, duplicates, assets);
         const latest: Map<string, string> = await this.latestDatesOf(holderUserId, edited, assets);
         const foreignChecks: Map<string, string> = new Map();
         const lines: EvaluatedLine[] = edited.map((item: EditedLine): EvaluatedLine => {
@@ -125,6 +133,29 @@ export class ImportLineEvaluatorService {
             return evaluatedOf(facts, verdict);
         });
         return { lines, effects: simulated.effects, operations: appliedOf(lines, inputs), foreignChecks };
+    }
+
+    private async simulateApplied(
+        holderUserId: string | null,
+        candidates: readonly EditedLine[],
+        inputs: ReadonlyMap<string, OperationInput>,
+        duplicates: ReadonlySet<number>,
+        assets: ReadonlyMap<string, Asset>
+    ): Promise<Simulated> {
+        const live: OperationInput[] = [...inputs.values()].filter((input: OperationInput): boolean => !duplicates.has(input.lineNumber));
+        const first: Simulated = summarize(await this.operations.simulate(holderUserId, live), assets);
+        const dropped: ReadonlySet<number> = new Set(
+            candidates
+                .filter((item: EditedLine): boolean => item.line.check === LINE_REASONS.assumedCost)
+                .filter((item: EditedLine): boolean => first.held.has(inputs.get(item.line.lineId)?.assetId ?? ''))
+                .map((item: EditedLine): number => item.line.lineNumber)
+        );
+        if (dropped.size === 0) {
+            return first;
+        }
+        const kept: OperationInput[] = live.filter((input: OperationInput): boolean => !dropped.has(input.lineNumber));
+        const second: Simulated = summarize(await this.operations.simulate(holderUserId, kept), assets);
+        return withoutDropped(first, second);
     }
 
     private async latestDatesOf(
@@ -169,6 +200,15 @@ export class ImportLineEvaluatorService {
         const found: Asset[] = await this.catalog.findManyByIds(ids);
         return new Map(found.map((asset: Asset): [string, Asset] => [asset.id, asset]));
     }
+}
+
+function inputsOf(candidates: readonly EditedLine[], matched: ReadonlyMap<string, Asset>): Map<string, OperationInput> {
+    return new Map(
+        candidates.map((item: EditedLine): [string, OperationInput] => [
+            item.line.lineId,
+            operationOf(item, matched.get(item.line.lineId)?.id ?? '')
+        ])
+    );
 }
 
 function appliedOf(lines: readonly EvaluatedLine[], inputs: ReadonlyMap<string, OperationInput>): OperationInput[] {

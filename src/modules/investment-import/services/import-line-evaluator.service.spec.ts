@@ -83,3 +83,43 @@ describe('ImportLineEvaluatorService with a statement from a broker abroad', () 
         expect(first?.reason).toBe('asset_not_found');
     });
 });
+
+describe('ImportLineEvaluatorService with an assumed-cost line on an asset that already has a position', () => {
+    it('leaves the line out of the simulated effect', async () => {
+        const simulate = vi.fn((_holder: string | null, ops: readonly { lineNumber: number }[]): Promise<AssetSimulation[]> =>
+            Promise.resolve(
+                ops.length === 0
+                    ? []
+                    : [
+                          {
+                              effect: {
+                                  assetId: 'a-aapl',
+                                  before: { quantity: '3', averagePrice: '420' },
+                                  after: { quantity: '6', averagePrice: '426.5' }
+                              },
+                              hasPosition: true,
+                              failures: []
+                          }
+                      ]
+            )
+        );
+        const catalog = {
+            findManyByMarketAndExternalIds: vi.fn((m: string): Promise<Asset[]> => Promise.resolve(m === 'US' ? [APPLE] : [])),
+            findBestByMarketAndSymbols: vi.fn((): Promise<Asset[]> => Promise.resolve([])),
+            findManyByIds: vi.fn((): Promise<Asset[]> => Promise.resolve([]))
+        };
+        const operations = {
+            duplicateLines: vi.fn((): Promise<ReadonlySet<number>> => Promise.resolve(new Set())),
+            latestTradeDates: vi.fn((): Promise<Map<string, string>> => Promise.resolve(new Map())),
+            simulate
+        };
+        const service = new ImportLineEvaluatorService(
+            catalog as unknown as AssetCatalogService,
+            operations as unknown as PositionOperationsService
+        );
+        const evaluation: Evaluation = await service.evaluate(null, applyEdits([line({ check: 'assumed_cost', dollar: undefined })], []));
+        expect(evaluation.lines[0]).toMatchObject({ status: 'ignored', reason: 'skipped' });
+        expect(evaluation.effects[0]?.after).toEqual({ quantity: '3', averagePrice: '420' });
+        expect(evaluation.operations).toHaveLength(0);
+    });
+});
