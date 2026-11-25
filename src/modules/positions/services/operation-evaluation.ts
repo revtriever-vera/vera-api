@@ -22,6 +22,7 @@ export interface Evaluation {
 }
 
 const NO_FACTOR: string = '1';
+const FACTOR_PRECISION: number = 40;
 
 function eventKey(operation: OperationInput): string {
     return `${operation.tradeDate}|${operation.kind}`;
@@ -79,9 +80,16 @@ function resolveEvent(cursor: Cursor, operation: OperationInput, nets: ReadonlyM
         cursor.failures.push(failureOf(operation, FAILURE_REASONS.eventFactor));
         return null;
     }
-    const text: string = factor.toDecimalPlaces(QUANTITY_SCALE, Decimal.ROUND_HALF_UP).toFixed();
     cursor.resolvedEvents.add(key);
-    return withQuantity(operation, text);
+    return withQuantity(operation, factor.toDecimalPlaces(FACTOR_PRECISION, Decimal.ROUND_HALF_UP).toFixed());
+}
+
+function storedAs(effective: OperationInput, original: OperationInput): OperationInput {
+    if (original.direction === null) {
+        return effective;
+    }
+    const rounded: string = DecimalUtil.of(effective.quantity).toDecimalPlaces(QUANTITY_SCALE, Decimal.ROUND_HALF_UP).toFixed();
+    return { ...effective, quantity: rounded };
 }
 
 function step(cursor: Cursor, operation: OperationInput, nets: ReadonlyMap<string, Decimal>): void {
@@ -95,7 +103,7 @@ function step(cursor: Cursor, operation: OperationInput, nets: ReadonlyMap<strin
         return;
     }
     cursor.balance = result.balance;
-    cursor.resolved.push({ raw: operation, effective });
+    cursor.resolved.push({ raw: operation, effective: storedAs(effective, operation) });
 }
 
 export function evaluateOperations(before: BalanceState | null, group: readonly OperationInput[]): Evaluation {
