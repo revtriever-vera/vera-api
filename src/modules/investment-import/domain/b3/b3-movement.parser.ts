@@ -104,20 +104,19 @@ function buildMovement(parts: MovementParts): RowResult<ParsedOperation> {
 
 function parseMovement(row: RawRow, match: HeaderMatch<MovementColumn>, sheet: string): RowResult<ParsedOperation> {
     const movement: string = normalizeText(textAt(row, match, 'movement'));
-    const product: string = textAt(row, match, 'product');
+    const ticker: string = productCodeOf(textAt(row, match, 'product'));
     const tradeDate: string | null = dateOf(cellAt(row, match, 'date'));
     if (tradeDate === null) {
         return reject(sheet, row, REJECT_REASONS.invalidDate);
     }
     if (movement === SETTLEMENT) {
-        return ignore(sheet, row, IGNORE_REASONS.settlement, productCodeOf(product), tradeDate);
+        return ignore(sheet, row, IGNORE_REASONS.settlement, ticker, tradeDate, nullIfEmpty(ticker));
     }
     const rule: MovementRule | undefined = RULES[movement];
     if (rule === undefined) {
-        return ignore(sheet, row, IGNORE_REASONS.unsupportedMovement, textAt(row, match, 'movement'), tradeDate);
+        return ignore(sheet, row, IGNORE_REASONS.unsupportedMovement, textAt(row, match, 'movement'), tradeDate, nullIfEmpty(ticker));
     }
     const direction: OperationDirection | undefined = DIRECTIONS[normalizeText(textAt(row, match, 'direction'))];
-    const ticker: string = productCodeOf(product);
     if (direction === undefined || ticker === '') {
         return reject(sheet, row, direction === undefined ? REJECT_REASONS.invalidSide : REJECT_REASONS.missingAsset);
     }

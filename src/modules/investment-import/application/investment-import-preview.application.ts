@@ -1,12 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
+import { DateUtil } from '../../../shared/utils/date.util';
 import { AppContext } from '../../../core/context/app-context.port';
+import { FixedIncomeTitleImporterService } from '../../fixed-income/services/fixed-income-title-importer.service';
+import { IndexSeriesReaderService } from '../../fixed-income/services/index-series-reader.service';
 import { InvestmentImportReaderService, InvestmentImportRecord } from '../../positions/services/investment-import-reader.service';
+import { StoredFixedIncome } from '../domain/fixed-income/fixed-income-import.types';
+import {
+    applicationDatesOf,
+    asDuplicate,
+    countByProposalStatus,
+    defaultPositionDate,
+    paymentEventCodesOf,
+    probeOf,
+    proposalsOf
+} from '../domain/fixed-income/title-proposal';
 import { InvestmentImportPreviewDomain } from '../domain/investment-import-preview.domain';
 import { ReportTooLargeError } from '../domain/investment-import.errors';
-import { InvestmentImportPreview, MAX_LINES_PER_IMPORT, PreviewView, StoredLine, UploadedReport } from '../domain/investment-import.types';
+import {
+    InvestmentImportPreview,
+    MAX_LINES_PER_IMPORT,
+    PreviewPayload,
+    PreviewView,
+    StoredLine,
+    UploadedReport
+} from '../domain/investment-import.types';
 import { sanitizeFileName } from '../domain/file-name';
-import { ParsedInvestmentStatement } from '../domain/investment-statement.types';
+import { ParsedInvestmentStatement, ParsedSource } from '../domain/investment-statement.types';
 import { applyEdits } from '../domain/line-edits';
 import { countByStatus } from '../domain/line-counts';
 import { ignoredOperationViewOf, operationViewOf, warningsOf } from '../domain/preview-view';
@@ -18,12 +38,14 @@ import { InvestmentImportMetricsService } from '../services/investment-import-me
 
 export interface PreviewInput {
     readonly holderUserId?: string;
+    readonly positionDate?: string;
 }
 
 function viewOf(
     statement: ParsedInvestmentStatement,
     evaluation: Evaluation,
     stored: InvestmentImportPreview,
+    fixedIncome: readonly StoredFixedIncome[],
     previous: InvestmentImportRecord | null
 ): PreviewView {
     return {
@@ -32,7 +54,7 @@ function viewOf(
         notes: notesOf(statement),
         operations: [...evaluation.lines.map(operationViewOf), ...ignoredViewsOf(statement).map(ignoredOperationViewOf)],
         effect: evaluation.effects,
-        fixedIncome: [],
+        fixedIncome,
         warnings: warningsOf(evaluation.lines),
         alreadyImportedAt: previous === null ? null : previous.createdAt.toISOString(),
         expiresAt: stored.expiresAt.toISOString()
@@ -45,6 +67,8 @@ export class InvestmentImportPreviewApplication {
         private readonly evaluator: ImportLineEvaluatorService,
         private readonly previews: InvestmentImportPreviewDomain,
         private readonly records: InvestmentImportReaderService,
+        private readonly series: IndexSeriesReaderService,
+        private readonly titles: FixedIncomeTitleImporterService,
         private readonly context: AppContext,
         private readonly logs: InvestmentImportLogService,
         private readonly metrics: InvestmentImportMetricsService
@@ -59,18 +83,11 @@ export class InvestmentImportPreviewApplication {
         }
         const lines: StoredLine[] = storedLinesOf(statement);
         const evaluation: Evaluation = await this.evaluator.evaluate(holderUserId, applyEdits(lines, []));
-        const sha256: string = createHash('sha256').update(upload.buffer).digest('hex');
-        const stored: InvestmentImportPreview = await this.previews.create({
-            createdBy: this.context.getOrNull()?.userId ?? null,
-            holderUserId,
-            source: statement.source,
-            fileSha256: sha256,
-            fileName: sanitizeFileName(upload.originalname),
-            payload: { lines }
-        });
-        const previous: InvestmentImportRecord | null = await this.records.findCompletedByHash(sha256);
-        this.report(statement.source, evaluation, upload.size, Date.now() - startedAt);
-        return viewOf(statement, evaluation, stored, previous);
+        const fixedIncome: StoredFixedIncome[] = await this.proposeFixedIncome(statement, input.positionDate);
+        const stored: InvestmentImportPreview = await this.store(upload, statement.source, holderUserId, { lines, fixedIncome });
+        const previous: InvestmentImportRecord | null = await this.records.findCompletedByHash(stored.fileSha256);
+        this.report(statement.source, evaluation, upload.size, Date.now() - startedAt, countByProposalStatus(fixedIncome));
+        return viewOf(statement, evaluation, stored, fixedIncome, previous);
     }
 
     public async purgeExpired(): Promise<number> {
@@ -79,8 +96,47 @@ export class InvestmentImportPreviewApplication {
         return removed;
     }
 
-    private report(source: string, evaluation: Evaluation, sizeBytes: number, durationMs: number): void {
-        this.logs.record('previewed', { source, lines: evaluation.lines.length, durationMs, sizeBytes });
+    private async store(
+        upload: UploadedReport,
+        source: ParsedSource,
+        holderUserId: string | null,
+        payload: PreviewPayload
+    ): Promise<InvestmentImportPreview> {
+        return this.previews.create({
+            createdBy: this.context.getOrNull()?.userId ?? null,
+            holderUserId,
+            source,
+            fileSha256: createHash('sha256').update(upload.buffer).digest('hex'),
+            fileName: sanitizeFileName(upload.originalname),
+            payload
+        });
+    }
+
+    private async proposeFixedIncome(statement: ParsedInvestmentStatement, positionDate: string | undefined): Promise<StoredFixedIncome[]> {
+        if (statement.fixedIncome.length === 0) {
+            return [];
+        }
+        const proposals: StoredFixedIncome[] = proposalsOf(statement, {
+            positionDate: positionDate ?? defaultPositionDate(DateUtil.todayInBrazil()),
+            series: await this.series.loadCurveSeries(),
+            paymentEventCodes: paymentEventCodesOf(statement),
+            applicationDates: applicationDatesOf(statement),
+            matchIssuer: this.titles.matchIssuer.bind(this.titles)
+        });
+        const duplicates: boolean[] = await this.titles.duplicates(proposals.map(probeOf));
+        return proposals.map((proposal: StoredFixedIncome, index: number): StoredFixedIncome =>
+            duplicates[index] === true ? asDuplicate(proposal) : proposal
+        );
+    }
+
+    private report(
+        source: string,
+        evaluation: Evaluation,
+        sizeBytes: number,
+        durationMs: number,
+        fixedIncome: Readonly<Record<string, number>>
+    ): void {
+        this.logs.record('previewed', { source, lines: evaluation.lines.length, durationMs, sizeBytes, fixedIncome });
         this.metrics.outcome(source, 'previewed', durationMs);
         this.metrics.lines(source, countByStatus(evaluation.lines));
         this.metrics.fileSize(source, sizeBytes);

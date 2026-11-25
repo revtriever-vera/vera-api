@@ -1,5 +1,11 @@
 import { createZodDto, zodToOpenAPI } from 'nestjs-zod';
 import { z, ZodTypeAny } from 'zod';
+import {
+    FIXED_INCOME_REASONS,
+    FIXED_INCOME_STATUSES,
+    FixedIncomeReason,
+    FixedIncomeStatus
+} from '../domain/fixed-income/fixed-income-import.types';
 import { LINE_STATUSES, MAX_FILE_BYTES, POSITION_MODES } from '../domain/investment-import.types';
 
 const MAX_PAGE_SIZE: number = 200;
@@ -11,12 +17,24 @@ const PRICE_PATTERN: RegExp = /^\d{1,16}(\.\d{1,8})?$/;
 const DATE_PATTERN: RegExp = /^\d{4}-\d{2}-\d{2}$/;
 const LINE_STATUS_VALUES = Object.values(LINE_STATUSES) as [string, ...string[]];
 const POSITION_MODE_VALUES = [POSITION_MODES.add, POSITION_MODES.historyOnly] as const;
+const FI_STATUS_VALUES = Object.values(FIXED_INCOME_STATUSES) as [FixedIncomeStatus, ...FixedIncomeStatus[]];
+const FI_REASON_VALUES = Object.values(FIXED_INCOME_REASONS) as [FixedIncomeReason, ...FixedIncomeReason[]];
+const TITLE_KIND_VALUES = ['cdb', 'lci', 'lca', 'lc', 'debenture', 'cri', 'cra'] as const;
+const INDEXER_VALUES = ['cdi_percent', 'prefixed', 'ipca_plus'] as const;
+const MAX_RATE_BPS: number = 30000;
+const MAX_APPLIED_MINOR: number = 9_000_000_000_000_000;
+const MAX_TITLE_NAME: number = 80;
 const SOURCE_VALUES = ['b3', 'crypto_csv', 'model'] as const;
 const KIND_VALUES = ['buy', 'sell', 'split', 'reverse_split', 'bonus', 'income', 'transfer'] as const;
 const INCOME_VALUES = ['dividend', 'jcp', 'fii_income', 'interest', 'staking'] as const;
 
 export const previewBodySchema = z.object({
-    holderUserId: z.string().uuid().optional().describe('Member of the company that holds the investments; omit for the whole account')
+    holderUserId: z.string().uuid().optional().describe('Member of the company that holds the investments; omit for the whole account'),
+    positionDate: z
+        .string()
+        .regex(DATE_PATTERN)
+        .optional()
+        .describe('Date of the position report, YYYY-MM-DD, used to infer fixed income rates; defaults to the last business day')
 });
 
 const lineEditSchema = z
@@ -35,9 +53,41 @@ const lineEditSchema = z
     })
     .strict();
 
+const titleEditsSchema = z
+    .object({
+        name: z.string().min(1).max(MAX_TITLE_NAME).optional().describe('Title name'),
+        kind: z.enum(TITLE_KIND_VALUES).optional().describe('Kind of security'),
+        issuerId: z.string().min(1).max(MAX_TITLE_NAME).nullable().optional().describe('Issuer id of the issuers directory; null for none'),
+        indexer: z.enum(INDEXER_VALUES).optional().describe('`cdi_percent`, `ipca_plus` or `prefixed`'),
+        rateBps: z.number().int().min(0).max(MAX_RATE_BPS).optional().describe('Rate in basis points (112% of the CDI is 11200)'),
+        appliedMinor: z.number().int().min(1).max(MAX_APPLIED_MINOR).optional().describe('Amount applied, in cents'),
+        appliedAt: z.string().regex(DATE_PATTERN).optional().describe('Application date, YYYY-MM-DD'),
+        maturityDate: z.string().regex(DATE_PATTERN).optional().describe('Maturity date, YYYY-MM-DD')
+    })
+    .strict();
+
+const fixedIncomeDecisionSchema = z
+    .object({
+        lineId: z.string().min(1).max(20).describe('Fixed income line id returned by the preview (F1, F2...)'),
+        confirm: z.literal(true).optional().describe('True to create the title as proposed'),
+        edits: titleEditsSchema.optional().describe('Fields of the title to correct or complete; creates the title with them'),
+        skip: z.literal(true).optional().describe('True to leave the title out of the import')
+    })
+    .strict()
+    .refine(
+        (decision): boolean =>
+            [decision.confirm, decision.edits, decision.skip].filter((value: unknown): boolean => value !== undefined).length === 1,
+        { message: 'send exactly one of confirm, edits or skip' }
+    );
+
 export const commitBodySchema = z.object({
     previewId: z.string().uuid().describe('Preview id returned by POST /investment-imports/preview'),
-    edits: z.array(lineEditSchema).max(MAX_EDITS).default([]).describe('Corrections by line; lines without edit are imported as read')
+    edits: z.array(lineEditSchema).max(MAX_EDITS).default([]).describe('Corrections by line; lines without edit are imported as read'),
+    fixedIncome: z
+        .array(fixedIncomeDecisionSchema)
+        .max(MAX_EDITS)
+        .default([])
+        .describe('Decision by fixed income line; lines without a decision create no title and the rate is never saved without one')
 });
 
 export const importIdParamsSchema = z.object({ id: z.string().uuid().describe('Import id') });
@@ -81,6 +131,22 @@ const effectSchema = z.object({
     after: balanceSchema.describe('Position after the import; null when the position would be closed')
 });
 
+const fixedIncomeViewSchema = z.object({
+    lineId: z.string().describe('Stable id of the fixed income line inside the preview (F1, F2...)'),
+    product: z.string().describe('Product as read from the report'),
+    issuerName: z.string().nullable().describe('Issuer as read from the report'),
+    issuerId: z.string().nullable().describe('Issuer of the issuers directory matched; null when none matched'),
+    kind: z.enum(TITLE_KIND_VALUES).nullable().describe('Kind of security; null when not recognized'),
+    indexer: z.enum(INDEXER_VALUES).nullable().describe('Indexer of the title; null when unknown'),
+    rateBps: z.number().int().nullable().describe('Inferred rate in basis points; null when it could not be calculated'),
+    appliedMinor: z.number().int().nullable().describe('Quantity times the issue unit price, in cents'),
+    appliedAt: z.string().nullable().describe('Issue date, YYYY-MM-DD'),
+    maturityDate: z.string().nullable().describe('Maturity date, YYYY-MM-DD'),
+    status: z.enum(FI_STATUS_VALUES).describe('inferred, check (confirm with care), needs_input (complete the title) or duplicate'),
+    reason: z.enum(FI_REASON_VALUES).nullable().describe('Why the status is not inferred; null when inferred'),
+    suggestion: z.string().describe('Text proposing the title to the person')
+});
+
 const noteSchema = z.object({
     code: z.string().describe('Stable code of the note'),
     count: z.number().int().describe('How many rows the note refers to')
@@ -92,7 +158,9 @@ export const importPreviewSchema = z.object({
     notes: z.array(noteSchema).describe('Informational notes about what was left out of the import'),
     operations: z.array(lineViewSchema).describe('Every line of the report with its status and reason'),
     effect: z.array(effectSchema).describe('Position of each asset before and after the import'),
-    fixedIncome: z.array(z.unknown()).describe('Fixed income titles found; filled by the fixed income reader'),
+    fixedIncome: z
+        .array(fixedIncomeViewSchema)
+        .describe('Fixed income titles found, each with the proposal to confirm, correct or complete'),
     warnings: z.array(noteSchema).describe('Attention points: unmatched assets, lines to choose, blocked lines'),
     alreadyImportedAt: z.string().datetime().nullable().describe('When the exact same file was imported before'),
     expiresAt: z.string().datetime().describe('When the preview stops being valid, 30 minutes after creation')
@@ -102,7 +170,10 @@ export const importCommitSchema = z.object({
     importId: z.string().uuid().describe('Id of the import, used to undo it'),
     applied: z.number().int().describe('Operations recorded'),
     skipped: z.number().int().describe('Lines left out: skipped by the person, duplicates and ignored rows'),
-    positions: z.array(effectSchema).describe('Position of each asset after the import')
+    positions: z.array(effectSchema).describe('Position of each asset after the import'),
+    fixedIncome: z
+        .array(z.object({ lineId: z.string().describe('Fixed income line'), titleId: z.string().uuid().describe('Title created') }))
+        .describe('Titles created by the import; undoing the import removes them')
 });
 
 const importRecordSchema = z.object({

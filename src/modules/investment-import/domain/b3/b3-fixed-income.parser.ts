@@ -17,6 +17,7 @@ export type FixedIncomeColumn =
     | 'available'
     | 'unavailable'
     | 'reason'
+    | 'issuePrice'
     | 'priceMtm'
     | 'valueMtm'
     | 'priceCurve'
@@ -37,6 +38,7 @@ export const FIXED_INCOME_SPEC: ColumnSpec<FixedIncomeColumn> = {
     available: column(false, 'Quantidade Disponível'),
     unavailable: column(false, 'Quantidade Indisponível'),
     reason: column(false, 'Motivo'),
+    issuePrice: column(false, 'Preço de Emissão'),
     priceMtm: column(false, 'Preço Atualizado MTM'),
     valueMtm: column(false, 'Valor Atualizado MTM'),
     priceCurve: column(false, 'Preço Atualizado CURVA'),
@@ -60,6 +62,7 @@ function upperOrNull(text: string): string | null {
 
 function pricesOf(row: RawRow, match: HeaderMatch<FixedIncomeColumn>): ParsedFixedIncomePrices {
     return {
+        issue: priceAt(row, match, 'issuePrice'),
         mtm: priceAt(row, match, 'priceMtm'),
         curve: priceAt(row, match, 'priceCurve'),
         closing: priceAt(row, match, 'priceClosing')

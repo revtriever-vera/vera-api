@@ -63,7 +63,23 @@ export const PREVIEW_EXAMPLE: Record<string, unknown> = {
         }
     ],
     effect: [EFFECT_EXAMPLE],
-    fixedIncome: [],
+    fixedIncome: [
+        {
+            lineId: 'F1',
+            product: 'CDB - CDB EXEMPLO 112% CDI',
+            issuerName: 'BANCO EXEMPLO',
+            issuerId: null,
+            kind: 'cdb',
+            indexer: 'cdi_percent',
+            rateBps: 11200,
+            appliedMinor: 1000000,
+            appliedAt: '2024-03-15',
+            maturityDate: '2028-03-15',
+            status: 'inferred',
+            reason: null,
+            suggestion: 'Achamos: CDB BANCO EXEMPLO, 112% do CDI, vence em 03/2028. Confirmar?'
+        }
+    ],
     warnings: [{ code: 'position_mode_required', count: 1 }],
     alreadyImportedAt: null,
     expiresAt: '2026-10-12T10:30:00.000Z'
@@ -73,7 +89,8 @@ export const COMMIT_EXAMPLE: Record<string, unknown> = {
     importId: EXAMPLE_IDS.import,
     applied: 1,
     skipped: 0,
-    positions: [EFFECT_EXAMPLE]
+    positions: [EFFECT_EXAMPLE],
+    fixedIncome: [{ lineId: 'F1', titleId: '0198a2f4-7c11-7d3a-9e55-4b1f6a2c8d90' }]
 };
 
 export const IMPORT_RECORD_EXAMPLE: Record<string, unknown> = {

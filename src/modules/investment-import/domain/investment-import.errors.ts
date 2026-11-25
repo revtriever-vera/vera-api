@@ -95,3 +95,14 @@ export class InvalidEditError extends AppError {
         });
     }
 }
+
+export class FixedIncomeIncompleteError extends AppError {
+    public constructor(lineId: string, missing: readonly string[]) {
+        super({
+            code: 'import.fixed_income_incomplete',
+            status: 422,
+            detail: 'The fixed income title lacks fields: send them in `edits` or skip the line.',
+            meta: { lineId, missing }
+        });
+    }
+}

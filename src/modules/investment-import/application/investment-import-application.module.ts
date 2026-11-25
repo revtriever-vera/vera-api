@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ContextModule } from '../../../core/context/context.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
+import { FixedIncomeApplicationModule } from '../../fixed-income/application/fixed-income-application.module';
 import { PositionsApplicationModule } from '../../positions/application/positions-application.module';
 import { InvestmentImportDomainModule } from '../domain/investment-import-domain.module';
 import { ImportLineEvaluatorService } from '../services/import-line-evaluator.service';
@@ -12,7 +13,14 @@ import { InvestmentImportListApplication } from './investment-import-list.applic
 import { InvestmentImportPreviewApplication } from './investment-import-preview.application';
 
 @Module({
-    imports: [InvestmentImportDomainModule, PositionsApplicationModule, CatalogApplicationModule, ObservabilityModule, ContextModule],
+    imports: [
+        InvestmentImportDomainModule,
+        PositionsApplicationModule,
+        CatalogApplicationModule,
+        FixedIncomeApplicationModule,
+        ObservabilityModule,
+        ContextModule
+    ],
     providers: [
         InvestmentImportPreviewApplication,
         InvestmentImportCommitApplication,

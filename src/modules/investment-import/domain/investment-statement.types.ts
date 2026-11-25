@@ -51,6 +51,7 @@ export interface ParsedPositionAdjustment {
 }
 
 export interface ParsedFixedIncomePrices {
+    readonly issue: string | null;
     readonly mtm: string | null;
     readonly curve: string | null;
     readonly closing: string | null;
@@ -104,6 +105,7 @@ export interface IgnoredLine {
     readonly reason: IgnoreReason;
     readonly description: string;
     readonly tradeDate: string | null;
+    readonly productCode: string | null;
 }
 
 export interface RejectedLine {

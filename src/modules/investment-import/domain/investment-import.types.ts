@@ -1,5 +1,6 @@
 import { Insertable, Selectable } from 'kysely';
 import { InvestmentImportPreviews } from '../../../core/database/generated/database.types';
+import { FixedIncomeOutcome, StoredFixedIncome } from './fixed-income/fixed-income-import.types';
 import { IncomeKind, OperationDirection, OperationKind } from './investment-statement.types';
 
 export type InvestmentImportPreview = Selectable<InvestmentImportPreviews>;
@@ -62,6 +63,7 @@ export interface StoredLine {
 
 export interface PreviewPayload {
     readonly lines: readonly StoredLine[];
+    readonly fixedIncome: readonly StoredFixedIncome[];
 }
 
 export interface LineEdit {
@@ -158,7 +160,7 @@ export interface PreviewView {
     readonly notes: readonly NoteView[];
     readonly operations: readonly OperationLineView[];
     readonly effect: readonly EffectLine[];
-    readonly fixedIncome: readonly unknown[];
+    readonly fixedIncome: readonly StoredFixedIncome[];
     readonly warnings: readonly NoteView[];
     readonly alreadyImportedAt: string | null;
     readonly expiresAt: string;
@@ -169,6 +171,7 @@ export interface CommitView {
     readonly applied: number;
     readonly skipped: number;
     readonly positions: readonly EffectLine[];
+    readonly fixedIncome: readonly FixedIncomeOutcome[];
 }
 
 export interface ImportRecordView {

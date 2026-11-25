@@ -12,6 +12,7 @@ import { BcbSgsSeriesDriver } from '../drivers/bcb-sgs-series.driver';
 import { MockIndexSeriesDriver } from '../drivers/mock-index-series.driver';
 import { IndexSeriesSourcePort } from '../ports/index-series-source.port';
 import { FixedIncomeServicesModule } from '../services/fixed-income-services.module';
+import { FixedIncomeTitleImporterService } from '../services/fixed-income-title-importer.service';
 import { FixedIncomePreviewApplication } from './fixed-income-preview.application';
 import { FixedIncomeSampleApplication } from './fixed-income-sample.application';
 import { FixedIncomeTitleApplication } from './fixed-income-title.application';
@@ -44,8 +45,15 @@ import { IndexSyncApplication } from './index-sync.application';
         FixedIncomeTitleApplication,
         FixedIncomePreviewApplication,
         FixedIncomeSampleApplication,
-        IndexSyncApplication
+        IndexSyncApplication,
+        FixedIncomeTitleImporterService
     ],
-    exports: [FixedIncomeTitleApplication, FixedIncomePreviewApplication, IndexSyncApplication, FixedIncomeServicesModule]
+    exports: [
+        FixedIncomeTitleApplication,
+        FixedIncomePreviewApplication,
+        IndexSyncApplication,
+        FixedIncomeTitleImporterService,
+        FixedIncomeServicesModule
+    ]
 })
 export class FixedIncomeApplicationModule {}

@@ -14,6 +14,8 @@ export interface ImportLogFields {
     readonly skipped?: number;
     readonly durationMs: number;
     readonly sizeBytes?: number;
+    readonly fixedIncome?: Readonly<Record<string, number>>;
+    readonly titles?: number;
 }
 
 @Injectable()
