@@ -1,0 +1,31 @@
+{
+  "id": "free-numeros",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "quanto gastei com delivery este mês?",
+  "history": [],
+  "plan": "free",
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "premium respostas sobre meus números"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["Premium", "/settings/plan"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Os números dos seus gastos nas respostas da Vera são do Premium. Veja como assinar em [Plano e uso](/settings/plan)."]
+}

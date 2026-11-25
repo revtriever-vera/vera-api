@@ -1,0 +1,23 @@
+{
+  "id": "saudacao",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "oi",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Oi. Pergunte sobre a carteira ou os gastos, peça para marcar uma reunião ou criar um lembrete."]
+}

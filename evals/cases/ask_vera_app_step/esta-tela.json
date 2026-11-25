@@ -1,0 +1,34 @@
+{
+  "id": "esta-tela",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "pra que serve esta tela?",
+  "history": [],
+  "screen": "/spending/cuts",
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "onde cortar"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/spending/cuts"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Esta tela é [Onde cortar](/spending/cuts). Ela mostra quanto falta para a meta de economia e onde cortar gastos flexíveis."
+  ],
+  "plan": "free"
+}

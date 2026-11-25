@@ -1,0 +1,30 @@
+{
+  "id": "onde-fica-regras",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "onde fica a tela de regras de categoria?",
+  "history": [],
+  "tools": {
+    "required": ["where_is"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "where_is",
+      "input": {
+        "topic": "regras de categoria"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/spending/rules"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Ela fica em [Regras](/spending/rules). Lá você vê e muda as regras que categorizam suas transações."]
+}

@@ -3,7 +3,7 @@ import { LlmDriverResult } from '../../src/core/llm/drivers/llm-driver';
 import { parseJsonObject } from '../../src/core/llm/structured-output';
 import { serializeContext } from '../../src/modules/ai-assistant/domain/context/context-hash';
 import { evidenceOf } from './ask-fixtures';
-import { EvalCase } from './case.schemas';
+import { EvalCase, isAskCase } from './case.schemas';
 import { Engine } from './engine';
 import { costOf } from './generate';
 
@@ -37,8 +37,8 @@ function verdictOf(text: string, costUsd: number): JudgeVerdict {
 }
 
 async function evidenceFor(item: EvalCase): Promise<string> {
-    if (item.task === 'ask_vera_step') {
-        return `Question from the person: ${item.question}\nData the tools can return: ${await evidenceOf(item.locale)}`;
+    if (isAskCase(item)) {
+        return `Question from the person: ${item.question}\nData the tools can return: ${await evidenceOf(item)}`;
     }
     return `${serializeContext(item.context)}\nThe system replaces each marker [[kind:key]] with the name: ${JSON.stringify(item.labels)}`;
 }

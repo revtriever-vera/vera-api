@@ -8,19 +8,37 @@ import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter
 import { AnswerFacts, AnswerVerdict } from '../../src/modules/ai-assistant/domain/ask-answer-guard';
 import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from '../../src/modules/ai-assistant/domain/ask-vera-loop';
-import { CHANNEL_PROFILES } from '../../src/modules/ai-assistant/domain/ask-channel-profiles';
+import { askVeraAppSystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/ask-vera-app.prompt';
+import { redactPersonalData, redactTurns } from '../../src/modules/ai-assistant/domain/ask-redaction';
+import { CHANNEL_PROFILES, ChannelProfile } from '../../src/modules/ai-assistant/domain/ask-channel-profiles';
 import { HELP_ROUTES } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { assetKeysIn } from '../../src/modules/ai-assistant/domain/forbidden-terms';
 import { needsInvestmentNotice, withInvestmentNotice } from '../../src/modules/ai-assistant/domain/ask-notice';
 import { ASK_VERA_MAX_STEPS } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import { askVeraSystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/ask-vera.prompt';
-import { ASK_TODAY, fixtureToolsOf } from './ask-fixtures';
+import { ASK_TODAY, appToolsOf, fixtureToolsOf } from './ask-fixtures';
 import { AskCase } from './case.schemas';
+import type { AskVeraTurn } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import { Engine } from './engine';
 import { CallTrace, fixedGeneration, Generation, costOf, traceOf } from './generate';
 
+function isApp(item: AskCase): boolean {
+    return item.task === 'ask_vera_app_step';
+}
+
+interface Question {
+    readonly text: string;
+    readonly history: readonly AskVeraTurn[];
+}
+
+function questionOf(item: AskCase): Question {
+    return isApp(item)
+        ? { text: redactPersonalData(item.question), history: redactTurns(item.history) }
+        : { text: item.question, history: item.history };
+}
+
 export function askFixedText(item: AskCase): string | null {
-    const verdict: ReturnType<typeof prefilterOf> = prefilterOf(item.question);
+    const verdict: ReturnType<typeof prefilterOf> = prefilterOf(questionOf(item).text);
     if (verdict === null) {
         return null;
     }
@@ -33,6 +51,7 @@ interface Meter {
     latencyMs: number;
     steps: number;
     calls: CallTrace[];
+    sent: string[];
 }
 
 function enqueueMock(engine: Engine, item: AskCase): void {
@@ -53,9 +72,20 @@ function enqueueMock(engine: Engine, item: AskCase): void {
     mock.enqueue(item.reference.join(' '));
 }
 
+function userTextsOf(request: LlmGenerationRequest): string[] {
+    return request.messages
+        .filter((message): boolean => message.role === 'user')
+        .flatMap((message): string[] =>
+            typeof message.content === 'string'
+                ? [message.content]
+                : message.content.flatMap((block): string[] => (block.kind === 'text' ? [block.text] : []))
+        );
+}
+
 function generator(engine: Engine, spec: LlmTaskSpec, meter: Meter): (request: LlmGenerationRequest) => Promise<LlmGenerationResponse> {
     return async (request: LlmGenerationRequest): Promise<LlmGenerationResponse> => {
         engine.assertBudget();
+        meter.sent.push(...userTextsOf(request));
         const result: LlmDriverResult = await engine.driver.generate({ credentials: engine.credentials, spec, request });
         engine.spentUsd += costOf(result);
         meter.costUsd += costOf(result);
@@ -74,21 +104,31 @@ function generator(engine: Engine, spec: LlmTaskSpec, meter: Meter): (request: L
     };
 }
 
+function systemOf(item: AskCase): string {
+    if (!isApp(item)) {
+        return askVeraSystemPromptOf(item.locale, ASK_TODAY);
+    }
+    return askVeraAppSystemPromptOf(item.locale, ASK_TODAY, item.screen === undefined ? undefined : { path: item.screen });
+}
+
 function loopInputOf(engine: Engine, spec: LlmTaskSpec, item: AskCase, meter: Meter): AskLoopInput {
     const renderer: AiTextRenderer = new AiTextRenderer();
+    const app: boolean = isApp(item);
+    const question: Question = questionOf(item);
+    const profile: ChannelProfile = app ? CHANNEL_PROFILES.app : CHANNEL_PROFILES.whatsapp;
     return {
-        system: askVeraSystemPromptOf(item.locale, ASK_TODAY),
-        messages: messagesOf(item.history, item.question),
-        tools: fixtureToolsOf(item.locale),
+        system: systemOf(item),
+        messages: messagesOf(question.history, question.text),
+        tools: app ? appToolsOf(item) : fixtureToolsOf(item.locale),
         locale: item.locale,
-        task: 'ask_vera_step',
-        feature: 'whatsapp',
-        knownAssets: new Set<string>([...item.history.map((turn) => turn.text), item.question].flatMap(assetKeysIn)),
+        task: profile.task,
+        feature: app ? 'help' : 'whatsapp',
+        knownAssets: new Set<string>([...question.history.map((turn) => turn.text), question.text].flatMap(assetKeysIn)),
         messageId: item.id,
         maxSteps: ASK_VERA_MAX_STEPS,
         generate: generator(engine, spec, meter),
         check: (text: string, facts: AnswerFacts): AnswerVerdict =>
-            guardAnswer({ text, facts, locale: item.locale, renderer, profile: CHANNEL_PROFILES.whatsapp, routes: HELP_ROUTES }),
+            guardAnswer({ text, facts, locale: item.locale, renderer, profile, routes: HELP_ROUTES }),
         onToolFailure: (): void => undefined,
         onCheckFailure: (): void => undefined
     };
@@ -104,7 +144,8 @@ function generationOf(result: AskLoopResult, meter: Meter, item: AskCase): Gener
         fixed: false,
         toolsUsed: result.toolsUsed,
         ending: result.ending,
-        calls: meter.calls
+        calls: meter.calls,
+        sent: meter.sent
     };
 }
 
@@ -114,6 +155,6 @@ export async function askGenerate(engine: Engine, spec: LlmTaskSpec, item: AskCa
         return fixedGeneration(fixed);
     }
     enqueueMock(engine, item);
-    const meter: Meter = { costUsd: 0, outputTokens: 0, latencyMs: 0, steps: 0, calls: [] };
+    const meter: Meter = { costUsd: 0, outputTokens: 0, latencyMs: 0, steps: 0, calls: [], sent: [] };
     return generationOf(await runAskLoop(loopInputOf(engine, spec, item, meter)), meter, item);
 }

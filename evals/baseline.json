@@ -29,6 +29,13 @@
       "judgeAverage": 4.46,
       "averageLatencyMs": 4663,
       "costBrlPerRun": 0.179
+    },
+    "ask_vera_app_step": {
+      "promptVersion": "v2",
+      "reasoning": "minimal",
+      "judgeAverage": 4.14,
+      "averageLatencyMs": 5592,
+      "costBrlPerRun": 0.2205
     }
   }
 }

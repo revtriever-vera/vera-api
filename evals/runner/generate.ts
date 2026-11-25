@@ -8,7 +8,7 @@ import { summarySystemPromptOf } from '../../src/modules/ai-assistant/domain/pro
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
 import { SummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
 import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter';
-import { EvalCase, SummaryCase } from './case.schemas';
+import { EvalCase, isAskCase, SummaryCase } from './case.schemas';
 import { Engine } from './engine';
 
 export interface CallTrace {
@@ -31,6 +31,7 @@ export interface Generation {
     readonly toolsUsed: readonly string[];
     readonly ending: 'answered' | 'direct' | 'truncated' | 'check_failed';
     readonly calls: readonly CallTrace[];
+    readonly sent?: readonly string[];
 }
 
 const RESPONSE_SCHEMA: JsonObject = toolInputSchemaOf(summaryOutputSchema);
@@ -49,7 +50,7 @@ export function specOf(task: string, reasoning: LlmReasoning | undefined): LlmTa
 }
 
 export function isFixed(item: EvalCase): boolean {
-    if (item.task === 'ask_vera_step') {
+    if (isAskCase(item)) {
         return prefilterOf(item.question) !== null;
     }
     return item.task === 'summary_cuts' && item.context.status === 'meta_batida';
