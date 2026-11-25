@@ -18,6 +18,7 @@ function call(overrides: Partial<LlmDriverCall['spec']> = {}, request: Partial<L
         credentials: { driver: 'gateway', apiKey: 'secret-key', modelId: 'meta/muse-spark-1.3-contributor' },
         spec: {
             task: 'summary_month',
+            model: 'primary',
             maxOutputTokens: 100,
             maxCostMicros: 1,
             temperature: 0.2,

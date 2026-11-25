@@ -49,3 +49,14 @@ export class LlmUnknownTaskError extends AppError {
         super({ code: 'ai.unknown_task', status: 500, detail: 'The task is not in the language model catalog.', meta: { task } });
     }
 }
+
+export class LlmUnsupportedContentError extends AppError {
+    public constructor(task: string, mediaType: string) {
+        super({
+            code: 'ai.unsupported_content',
+            status: 422,
+            detail: 'The configured language model driver cannot receive this kind of content.',
+            meta: { task, mediaType }
+        });
+    }
+}

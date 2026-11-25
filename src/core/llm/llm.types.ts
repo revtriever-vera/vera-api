@@ -7,11 +7,15 @@ export const LLM_TASKS = {
     summaryCuts: 'summary_cuts',
     summaryPortfolio: 'summary_portfolio',
     askVeraStep: 'ask_vera_step',
-    askVeraAppStep: 'ask_vera_app_step'
+    askVeraAppStep: 'ask_vera_app_step',
+    investmentExtract: 'investment_extract'
 } as const;
 
 export const LLM_REASONING_LEVELS = ['provider-default', 'minimal'] as const;
 export type LlmReasoning = (typeof LLM_REASONING_LEVELS)[number];
+
+export const LLM_MODEL_ROLES = ['primary', 'vision'] as const;
+export type LlmModelRole = (typeof LLM_MODEL_ROLES)[number];
 
 export type LlmTask = (typeof LLM_TASKS)[keyof typeof LLM_TASKS];
 
@@ -54,7 +58,26 @@ export interface LlmToolResultBlock {
     readonly isError: boolean;
 }
 
-export type LlmContentBlock = LlmTextBlock | LlmToolUseBlock | LlmToolResultBlock;
+export const LLM_IMAGE_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'] as const;
+export type LlmImageMediaType = (typeof LLM_IMAGE_MEDIA_TYPES)[number];
+
+export const LLM_FILE_MEDIA_TYPE = 'application/pdf' as const;
+
+export interface LlmImageBlock {
+    readonly kind: 'image';
+    readonly mediaType: LlmImageMediaType;
+    readonly data: Uint8Array;
+}
+
+export interface LlmFileBlock {
+    readonly kind: 'file';
+    readonly mediaType: typeof LLM_FILE_MEDIA_TYPE;
+    readonly data: Uint8Array;
+}
+
+export type LlmMediaBlock = LlmImageBlock | LlmFileBlock;
+
+export type LlmContentBlock = LlmTextBlock | LlmToolUseBlock | LlmToolResultBlock | LlmImageBlock | LlmFileBlock;
 
 export interface LlmMessage {
     readonly role: 'user' | 'assistant';
