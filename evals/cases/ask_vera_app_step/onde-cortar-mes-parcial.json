@@ -1,0 +1,30 @@
+{
+  "id": "onde-cortar-mes-parcial",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "onde posso cortar gastos para bater minha meta de economia?",
+  "history": [],
+  "tools": {
+    "required": ["spending_cuts"],
+    "allowed": ["help_search", "where_is", "list_categories", "spending_month_summary", "spending_cuts", "spending_by_category"]
+  },
+  "mockTools": [
+    {
+      "name": "spending_cuts",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["sem renda", "no income"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Para guardar 25% da renda, faltam **R$ 1.400** por mês. O caminho mais leve é baixar ao limite sugerido: [[cat:eating_out]] (de R$ 1.300 para R$ 900) e [[cat:leisure]] (de R$ 800 para R$ 600)."
+  ]
+}

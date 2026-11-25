@@ -1,0 +1,30 @@
+{
+  "id": "where-to-cut-partial-month",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "where can I cut spending to hit my savings goal?",
+  "history": [],
+  "tools": {
+    "required": ["spending_cuts"],
+    "allowed": ["help_search", "where_is", "list_categories", "spending_month_summary", "spending_cuts", "spending_by_category"]
+  },
+  "mockTools": [
+    {
+      "name": "spending_cuts",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["sem renda", "no income"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "To save 25% of income, **R$1,400** per month is missing. The lightest path is bringing spending down to the suggested limit: [[cat:eating_out]] (from R$1,300 to R$900) and [[cat:leisure]] (from R$800 to R$600)."
+  ]
+}

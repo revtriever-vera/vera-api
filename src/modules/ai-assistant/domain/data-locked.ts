@@ -14,12 +14,13 @@ const PRIVACY_LINK: string = '/settings/privacy';
 
 const TEXTS: Readonly<Record<DataLock, Readonly<Record<AppLocale, string>>>> = {
     premium: {
-        'pt-BR': 'Responder com os números da conta e do mercado é do Premium. Aponte a tela do plano.',
-        en: 'Answering with the account and market numbers is Premium. Point to the plan screen.'
+        'pt-BR': 'Responder com os números da conta e do mercado é do Premium. Diga para ver o plano e dê o link.',
+        en: 'Answering with the account and market numbers is Premium. Tell them to see the plan and give the link.'
     },
     permission: {
-        'pt-BR': 'O plano permite, mas falta a pessoa permitir o envio dos números à IA. Aponte a tela de dados e privacidade.',
-        en: 'The plan allows it, but the person has not allowed sending the figures to the AI. Point to the data and privacy screen.'
+        'pt-BR':
+            'O plano permite, mas falta a pessoa permitir o envio dos números à IA. Diga para permitir em dados e privacidade e dê o link.',
+        en: 'The plan allows it, but the person has not allowed sending the figures to the AI. Tell them to allow it in data and privacy and give the link.'
     }
 };
 

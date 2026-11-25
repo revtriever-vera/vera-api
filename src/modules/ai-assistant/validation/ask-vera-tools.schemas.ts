@@ -20,7 +20,11 @@ export const monthSummaryInputSchema = z
 
 export const cutsInputSchema = z
     .object({
-        month: month.optional().describe('Month, YYYY-MM; defaults to the last closed month'),
+        month: month
+            .optional()
+            .describe(
+                'Month, YYYY-MM; omit it unless the person names a month: defaults to the last closed month, and the current month is partial and may have no income'
+            ),
         goalBps: z.number().int().min(0).max(MAX_GOAL_BPS).optional().describe('Savings goal to simulate, in basis points of income')
     })
     .strict();
