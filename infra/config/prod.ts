@@ -5,7 +5,7 @@ export const prod: EnvironmentSettings = {
     region: 'us-east-1',
     hostSuffix: '',
     githubRepository: 'revtriever-vera/vera-api',
-    githubSubjects: ['repo:revtriever-vera/vera-api:environment:production'],
+    githubSubjects: ['repo:revtriever-vera@340816926/vera-api@1413885728:environment:production'],
     imageRetentionCount: 50,
     architecture: 'x86_64',
     spotCompute: false,
