@@ -1,0 +1,95 @@
+[
+  {
+    "code": "CDB-EX-POS112",
+    "indexer": "DI",
+    "rate": {
+      "kind": "cdi-percent",
+      "percent": 112
+    },
+    "issueDate": "2024-03-15",
+    "dueDate": "2028-03-15",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1458.65
+  },
+  {
+    "code": "LCA-EX-IPCA65",
+    "indexer": "IPCA",
+    "rate": {
+      "kind": "ipca-spread",
+      "annualPercent": 6.5
+    },
+    "issueDate": "2023-08-10",
+    "dueDate": "2029-08-10",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1412.72
+  },
+  {
+    "code": "CDB-EX-PRE123",
+    "indexer": "PRE",
+    "rate": {
+      "kind": "pre",
+      "annualPercent": 12.3
+    },
+    "issueDate": "2025-01-20",
+    "dueDate": "2027-01-20",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1238.12
+  },
+  {
+    "code": "CDB-EX-CAREN",
+    "indexer": "DI",
+    "rate": {
+      "kind": "cdi-percent",
+      "percent": 100
+    },
+    "issueDate": "2026-05-04",
+    "dueDate": "2028-05-04",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1070.69
+  },
+  {
+    "code": "DEB-EX-JUROS",
+    "indexer": "IPCA",
+    "rate": {
+      "kind": "ipca-spread",
+      "annualPercent": 7.1
+    },
+    "issueDate": "2023-02-15",
+    "dueDate": "2032-11-15",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1526.19
+  },
+  {
+    "code": "CDB-EX-APLIC",
+    "indexer": "DI",
+    "rate": {
+      "kind": "cdi-percent",
+      "percent": 105
+    },
+    "issueDate": "2024-02-01",
+    "dueDate": "2027-02-01",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1443.94
+  },
+  {
+    "code": "CDB-EX-SEMIDX",
+    "indexer": null,
+    "rate": null,
+    "issueDate": "2025-06-02",
+    "dueDate": "2027-06-02",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": 1043.17
+  },
+  {
+    "code": "CDB-EX-SEMCURVA",
+    "indexer": "DI",
+    "rate": {
+      "kind": "cdi-percent",
+      "percent": 110
+    },
+    "issueDate": "2025-09-01",
+    "dueDate": "2027-09-01",
+    "referenceDate": "2026-10-30",
+    "curveUnitPrice": null
+  }
+]
