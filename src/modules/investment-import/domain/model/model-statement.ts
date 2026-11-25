@@ -7,6 +7,7 @@ import {
     DocumentType,
     IGNORE_REASONS,
     IgnoredLine,
+    NO_COST_EXTRAS,
     PARSED_SOURCES,
     ParsedInvestmentStatement,
     ParsedOperation,
@@ -96,7 +97,8 @@ function baseOf(raw: AnswerOperation, page: string, line: number): OperationBase
         unitPrice: unitPriceOf(raw),
         grossMinor: raw.grossMinor ?? null,
         currency: raw.currency.toUpperCase(),
-        appliedToPosition: AFFECTS_POSITION.has(raw.kind)
+        appliedToPosition: AFFECTS_POSITION.has(raw.kind),
+        ...NO_COST_EXTRAS
     };
 }
 
@@ -194,6 +196,7 @@ export function statementOfModelAnswers(answers: readonly string[], input: Model
         operations: operationsOf(readings),
         positionAdjustments: [],
         fixedIncome: [],
+        notes: [],
         ignored: unreadOf(readings, input.unreadPages),
         rejected: readings.flatMap((reading: PageReading): RejectedLine[] => reading.rejected)
     };

@@ -74,7 +74,8 @@ function statementOf(accumulator: Accumulator): ParsedInvestmentStatement {
         positionAdjustments: accumulator.positionAdjustments,
         fixedIncome: accumulator.fixedIncome,
         ignored: accumulator.ignored,
-        rejected: accumulator.rejected
+        rejected: accumulator.rejected,
+        notes: []
     };
 }
 

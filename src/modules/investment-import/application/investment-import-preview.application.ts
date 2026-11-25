@@ -1,20 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { DateUtil } from '../../../shared/utils/date.util';
 import { AppContext } from '../../../core/context/app-context.port';
-import { FixedIncomeTitleImporterService } from '../../fixed-income/services/fixed-income-title-importer.service';
-import { IndexSeriesReaderService } from '../../fixed-income/services/index-series-reader.service';
 import { InvestmentImportReaderService, InvestmentImportRecord } from '../../positions/services/investment-import-reader.service';
 import { StoredFixedIncome } from '../domain/fixed-income/fixed-income-import.types';
-import {
-    applicationDatesOf,
-    asDuplicate,
-    countByProposalStatus,
-    defaultPositionDate,
-    paymentEventCodesOf,
-    probeOf,
-    proposalsOf
-} from '../domain/fixed-income/title-proposal';
+import { countByProposalStatus } from '../domain/fixed-income/title-proposal';
 import { InvestmentImportPreviewDomain } from '../domain/investment-import-preview.domain';
 import { ReportTooLargeError } from '../domain/investment-import.errors';
 import {
@@ -28,12 +17,14 @@ import {
 import { sanitizeFileName } from '../domain/file-name';
 import { ParsedInvestmentStatement, ParsedSource } from '../domain/investment-statement.types';
 import { applyEdits } from '../domain/line-edits';
+import { countByStatus } from '../domain/line-counts';
 import { ignoredOperationViewOf, operationViewOf, warningsOf } from '../domain/preview-view';
 import { ignoredViewsOf, notesOf, storedLinesOf } from '../domain/preview-lines';
-import { readB3Report } from '../domain/b3/b3-file.reader';
+import { FixedIncomeProposalService } from '../services/fixed-income-proposal.service';
 import { Evaluation, ImportLineEvaluatorService } from '../services/import-line-evaluator.service';
-import { InvestmentImportReporterService } from '../services/investment-import-reporter.service';
-import { ModelReaderService } from '../services/model-reader.service';
+import { InvestmentImportLogService } from '../services/investment-import-log.service';
+import { InvestmentImportMetricsService } from '../services/investment-import-metrics.service';
+import { StatementReaderService } from '../services/statement-reader.service';
 
 export interface PreviewInput {
     readonly holderUserId?: string;
@@ -46,7 +37,7 @@ function viewOf(
     evaluation: Evaluation,
     stored: InvestmentImportPreview,
     fixedIncome: readonly StoredFixedIncome[],
-    titles: FixedIncomeTitleImporterService,
+    proposals: FixedIncomeProposalService,
     previous: InvestmentImportRecord | null
 ): PreviewView {
     return {
@@ -56,7 +47,7 @@ function viewOf(
         notes: notesOf(statement),
         operations: [...evaluation.lines.map(operationViewOf), ...ignoredViewsOf(statement).map(ignoredOperationViewOf)],
         effect: evaluation.effects,
-        fixedIncome: fixedIncome.map((entry: StoredFixedIncome) => ({ ...entry, issuer: titles.issuerView(entry.issuerId) })),
+        fixedIncome: fixedIncome.map((entry: StoredFixedIncome) => ({ ...entry, issuer: proposals.issuerView(entry.issuerId) })),
         warnings: warningsOf(evaluation.lines),
         alreadyImportedAt: previous === null ? null : previous.createdAt.toISOString(),
         expiresAt: stored.expiresAt.toISOString()
@@ -69,42 +60,32 @@ export class InvestmentImportPreviewApplication {
         private readonly evaluator: ImportLineEvaluatorService,
         private readonly previews: InvestmentImportPreviewDomain,
         private readonly records: InvestmentImportReaderService,
-        private readonly series: IndexSeriesReaderService,
-        private readonly titles: FixedIncomeTitleImporterService,
+        private readonly reader: StatementReaderService,
+        private readonly proposals: FixedIncomeProposalService,
         private readonly context: AppContext,
-        private readonly reporter: InvestmentImportReporterService,
-        private readonly model: ModelReaderService
+        private readonly logs: InvestmentImportLogService,
+        private readonly metrics: InvestmentImportMetricsService
     ) {}
 
     public async preview(upload: UploadedReport, input: PreviewInput): Promise<PreviewView> {
         const startedAt: number = Date.now();
         const holderUserId: string | null = input.holderUserId ?? null;
-        const statement: ParsedInvestmentStatement = await this.read(upload, input.modelConsent === true);
+        const statement: ParsedInvestmentStatement = await this.reader.read(upload.buffer, input.modelConsent === true);
         if (statement.operations.length > MAX_LINES_PER_IMPORT) {
             throw new ReportTooLargeError(MAX_LINES_PER_IMPORT);
         }
         const lines: StoredLine[] = storedLinesOf(statement);
         const evaluation: Evaluation = await this.evaluator.evaluate(holderUserId, applyEdits(lines, []));
-        const fixedIncome: StoredFixedIncome[] = await this.proposeFixedIncome(statement, input.positionDate);
+        const fixedIncome: StoredFixedIncome[] = await this.proposals.propose(statement, input.positionDate);
         const stored: InvestmentImportPreview = await this.store(upload, statement.source, holderUserId, { lines, fixedIncome });
         const previous: InvestmentImportRecord | null = await this.records.findCompletedByHash(stored.fileSha256);
-        this.reporter.previewed({
-            source: statement.source,
-            evaluation,
-            sizeBytes: upload.size,
-            durationMs: Date.now() - startedAt,
-            fixedIncome: countByProposalStatus(fixedIncome)
-        });
-        return viewOf(statement, evaluation, stored, fixedIncome, this.titles, previous);
-    }
-
-    private async read(upload: UploadedReport, consent: boolean): Promise<ParsedInvestmentStatement> {
-        return this.model.accepts(upload.buffer) ? this.model.read(upload.buffer, consent) : readB3Report(upload.buffer);
+        this.report(statement.source, evaluation, upload.size, Date.now() - startedAt, countByProposalStatus(fixedIncome));
+        return viewOf(statement, evaluation, stored, fixedIncome, this.proposals, previous);
     }
 
     public async purgeExpired(): Promise<number> {
         const removed: number = await this.previews.purgeExpired();
-        this.reporter.purged(removed);
+        this.logs.purged(removed);
         return removed;
     }
 
@@ -124,20 +105,16 @@ export class InvestmentImportPreviewApplication {
         });
     }
 
-    private async proposeFixedIncome(statement: ParsedInvestmentStatement, positionDate: string | undefined): Promise<StoredFixedIncome[]> {
-        if (statement.fixedIncome.length === 0) {
-            return [];
-        }
-        const proposals: StoredFixedIncome[] = proposalsOf(statement, {
-            positionDate: positionDate ?? defaultPositionDate(DateUtil.todayInBrazil()),
-            series: await this.series.loadCurveSeries(),
-            paymentEventCodes: paymentEventCodesOf(statement),
-            applicationDates: applicationDatesOf(statement),
-            matchIssuer: this.titles.matchIssuer.bind(this.titles)
-        });
-        const duplicates: boolean[] = await this.titles.duplicates(proposals.map(probeOf));
-        return proposals.map((proposal: StoredFixedIncome, index: number): StoredFixedIncome =>
-            duplicates[index] === true ? asDuplicate(proposal) : proposal
-        );
+    private report(
+        source: string,
+        evaluation: Evaluation,
+        sizeBytes: number,
+        durationMs: number,
+        fixedIncome: Readonly<Record<string, number>>
+    ): void {
+        this.logs.record('previewed', { source, lines: evaluation.lines.length, durationMs, sizeBytes, fixedIncome });
+        this.metrics.outcome(source, 'previewed', durationMs);
+        this.metrics.lines(source, countByStatus(evaluation.lines));
+        this.metrics.fileSize(source, sizeBytes);
     }
 }

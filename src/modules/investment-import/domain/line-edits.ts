@@ -1,8 +1,6 @@
 import { InvalidEditError } from './investment-import.errors';
 import { EditedLine, LineEdit, StoredLine } from './investment-import.types';
 
-const NO_FEES: number = 0;
-
 const NO_EDIT: LineEdit = { lineId: '' };
 
 function touchesFacts(edit: LineEdit): boolean {
@@ -24,7 +22,7 @@ function editedOf(line: StoredLine, edit: LineEdit | undefined): EditedLine {
     return {
         line: correctedOf(line, given),
         assetId: given.assetId ?? null,
-        feesMinor: given.feesMinor ?? NO_FEES,
+        feesMinor: given.feesMinor ?? line.feesMinor,
         skip: given.skip ?? false,
         repriced: given.quantity !== undefined || given.unitPrice !== undefined,
         positionMode: given.positionMode ?? null

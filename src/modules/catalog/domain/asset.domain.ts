@@ -27,6 +27,10 @@ export class AssetDomain {
         return this.assets.findAssetsByMarketAndExternalIds(market, externalIds);
     }
 
+    public async findActiveByMarketAndSymbols(market: CatalogMarket, symbols: readonly string[]): Promise<Asset[]> {
+        return this.assets.findActiveAssetsByMarketAndSymbols(market, symbols);
+    }
+
     public async findByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         return this.assets.findAssetByMarketAndExternalId(market, externalId);
     }

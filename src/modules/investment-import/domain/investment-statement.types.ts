@@ -34,12 +34,16 @@ export interface ParsedOperation {
     readonly quantity: string;
     readonly unitPrice: string | null;
     readonly grossMinor: number | null;
+    readonly feesMinor: number;
     readonly currency: string;
     readonly appliedToPosition: boolean;
+    readonly externalRef: string | null;
     readonly matchKey: string;
     readonly alreadyImported: boolean;
     readonly check?: string;
 }
+
+export const NO_COST_EXTRAS: Pick<ParsedOperation, 'feesMinor' | 'externalRef'> = { feesMinor: 0, externalRef: null };
 
 export interface ParsedPositionAdjustment {
     readonly sheet: string;
@@ -131,6 +135,11 @@ export const B3_REPORT_KINDS = {
 } as const;
 export type B3ReportKind = (typeof B3_REPORT_KINDS)[keyof typeof B3_REPORT_KINDS];
 
+export interface StatementNote {
+    readonly code: string;
+    readonly count: number;
+}
+
 export interface ParsedInvestmentStatement {
     readonly source: ParsedSource;
     readonly documentType?: DocumentType;
@@ -141,4 +150,5 @@ export interface ParsedInvestmentStatement {
     readonly fixedIncome: readonly ParsedFixedIncome[];
     readonly ignored: readonly IgnoredLine[];
     readonly rejected: readonly RejectedLine[];
+    readonly notes: readonly StatementNote[];
 }

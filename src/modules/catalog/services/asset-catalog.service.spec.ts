@@ -21,6 +21,21 @@ describe('AssetCatalogService', () => {
         expect(byMarket).toHaveBeenCalledWith('B3', 'ITUB4');
     });
 
+    it('keeps the best ranked asset of each symbol', async () => {
+        const ranked: Asset[] = [
+            { id: 'btc', symbol: 'BTC' },
+            { id: 'wrapped-btc', symbol: 'BTC' },
+            { id: 'eth', symbol: 'ETH' }
+        ] as Asset[];
+        const findActiveByMarketAndSymbols: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(ranked);
+        const service: AssetCatalogService = new AssetCatalogService({ findActiveByMarketAndSymbols } as unknown as AssetDomain);
+
+        const found: Asset[] = await service.findBestByMarketAndSymbols('CRYPTO', ['BTC', 'ETH']);
+
+        expect(found.map((asset: Asset): string => asset.id)).toEqual(['btc', 'eth']);
+        expect(findActiveByMarketAndSymbols).toHaveBeenCalledWith('CRYPTO', ['BTC', 'ETH']);
+    });
+
     it('requireById devolve o ativo e lança catalog.asset_not_found quando não existe', async () => {
         const asset: Asset = { id: 'a' } as Asset;
         const findById: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValueOnce(asset).mockResolvedValueOnce(null);
