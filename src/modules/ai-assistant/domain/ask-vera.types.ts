@@ -10,6 +10,7 @@ export const ASK_VERA_MAX_HISTORY: number = 6;
 export const ASK_VERA_MAX_QUESTION_CHARS: number = 1000;
 export const ASK_VERA_MAX_TOOL_BYTES: number = 8192;
 export const ASK_VERA_FEATURE = 'whatsapp' as const;
+export const ASK_VERA_HELP_FEATURE = 'help' as const;
 
 export const ASK_VERA_TOOL_KINDS = { read: 'read', proposal: 'proposal', direct: 'direct' } as const;
 
