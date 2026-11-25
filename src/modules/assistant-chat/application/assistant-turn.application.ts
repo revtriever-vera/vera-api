@@ -11,11 +11,14 @@ import { accessOf, modeOf, sentAvailableOf, sentOf, splitNotice, toolsOf } from 
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantChatMetricsService } from '../services/assistant-chat-metrics.service';
+import { actionSummaryOf } from '../domain/action-view';
 import { AssistantTurnExpiry } from '../services/assistant-turn.expiry';
-import { SendTurnBody, SentView, TurnStartedView, TurnView } from '../validation/assistant-chat.schemas';
+import { ActionSummaryView, SendTurnBody, SentView, TurnStartedView, TurnView } from '../validation/assistant-chat.schemas';
 import { TurnRequestedPayload } from '../validation/assistant-chat-jobs.schemas';
 
 const NO_TOOL: string = 'none';
+
+type TurnActionView = ActionSummaryView | null;
 
 @Injectable()
 export class AssistantTurnApplication {
@@ -54,10 +57,16 @@ export class AssistantTurnApplication {
                 toolsUsed: toolsOf(turn),
                 sentAvailable: sentAvailableOf(turn),
                 access: accessOf(turn, await this.access.lockOf()),
-                notice: split.notice
+                notice: split.notice,
+                action: await this.actionOf(turn.id)
             },
             usage
         };
+    }
+
+    private async actionOf(turnId: string): Promise<TurnActionView> {
+        const [action] = await this.messages.actionsOfTurns([turnId]);
+        return action === undefined ? null : actionSummaryOf(action, new Date());
     }
 
     public async sent(turnId: string): Promise<SentView> {

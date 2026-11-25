@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
+import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
 import { CapReachedError } from '../../../core/usage/usage.errors';
 import { AppError } from '../../../shared/errors/app.error';
-import { AskVeraAnswer, AskVeraService, AskVeraTurn } from '../../ai-assistant/services/ask-vera.service';
+import { MemberDirectoryService } from '../../identity/services/member-directory.service';
+import { AskVeraAnswer, AskVeraProposal, AskVeraService, AskVeraTurn } from '../../ai-assistant/services/ask-vera.service';
 import { AssistantMessage, MESSAGE_STATUSES, TURN_MODES, TurnMode } from '../domain/assistant-chat.types';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
 import { appToolsOf } from '../domain/channel-tools';
+import { AssistantActionService } from '../services/assistant-action.service';
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantChatMetricsService, TURN_OUTCOMES, TurnOutcome } from '../services/assistant-chat-metrics.service';
@@ -20,6 +23,8 @@ export class AssistantAnswerApplication {
         private readonly messages: AssistantMessageDomain,
         private readonly access: AssistantAccessService,
         private readonly ask: AskVeraService,
+        private readonly actions: AssistantActionService,
+        private readonly members: MemberDirectoryService,
         private readonly context: AppContext,
         private readonly logs: AssistantChatLogService,
         private readonly metrics: AssistantChatMetricsService
@@ -65,21 +70,36 @@ export class AssistantAnswerApplication {
             })),
             locale: request.locale,
             messageId: request.turnId,
-            allowedTools: appToolsOf(mode),
+            allowedTools: appToolsOf(mode, await this.members.canEdit(request.userId)),
             ...(request.screenPath === undefined ? {} : { screen: { path: request.screenPath } })
         });
     }
 
     private async finish(turn: AssistantMessage, mode: TurnMode, answer: AskVeraAnswer, startedAt: number): Promise<void> {
+        const proposal: AskVeraProposal | undefined = mode === TURN_MODES.ai ? answer.proposals[0] : undefined;
+        const stored: boolean = await this.settle(turn, mode, answer, proposal);
+        if (stored) {
+            this.report(turn.id, mode, answer.source === 'model' ? TURN_OUTCOMES.answered : TURN_OUTCOMES.fixed, startedAt);
+        }
+    }
+
+    @UsingTransaction()
+    private async settle(
+        turn: AssistantMessage,
+        mode: TurnMode,
+        answer: AskVeraAnswer,
+        proposal: AskVeraProposal | undefined
+    ): Promise<boolean> {
         const stored: boolean = await this.messages.finish(turn.id, {
-            text: answer.text,
+            text: proposal?.summary ?? answer.text,
             mode,
             toolsUsed: answer.toolsUsed,
             sent: mode === TURN_MODES.ai ? answer.sent : null
         });
-        if (stored) {
-            this.report(turn.id, mode, answer.source === 'model' ? TURN_OUTCOMES.answered : TURN_OUTCOMES.fixed, startedAt);
+        if (stored && proposal !== undefined) {
+            await this.actions.propose(turn, proposal);
         }
+        return stored;
     }
 
     private async failed(turn: AssistantMessage, mode: TurnMode, error: unknown, startedAt: number): Promise<void> {

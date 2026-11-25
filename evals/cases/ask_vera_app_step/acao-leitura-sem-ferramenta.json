@@ -1,0 +1,40 @@
+{
+  "id": "acao-leitura-sem-ferramenta",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "Cria um objetivo de viagem pra mim: R$ 12.000 até dezembro de 2027.",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": [
+      "help_search",
+      "where_is"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "where_is",
+      "input": {
+        "topic": "objetivos"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": [
+      "criei",
+      "criado",
+      "foi criado"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Seu acesso é só de leitura, então não consigo criar objetivos por aqui. Peça a quem edita a conta."
+  ],
+  "role": "viewer"
+}

@@ -56,6 +56,12 @@ const APP_RULES: Readonly<Record<AppLocale, readonly string[]>> = {
     ]
 };
 
+const PROPOSAL_RULES: Readonly<Record<AppLocale, string>> = {
+    'pt-BR':
+        'Quando a pessoa pede que VOCÊ crie um objetivo ou categorize uma transação, chame a ferramenta (goal_create, transaction_categorize) assim que tiver o necessário; "como eu crio..." é uso da Vera e se responde com help_search; se faltar valor, mês ou categoria, pergunte em uma frase; o nome do objetivo pode ser o assunto que a pessoa disse ("viagem" vira "Viagem"). Nunca escreva que criou ou categorizou, nem peça "Confirma?": o app mostra o cartão de confirmação e quem executa é o sistema. Em goal_create o valor vai em centavos e o mês em YYYY-MM. Em transaction_categorize use a chave de list_categories; a pessoa escolhe a transação no cartão, então nunca peça nem escreva a descrição de uma transação.',
+    en: 'When the person asks YOU to create a goal or categorize a transaction, call the tool (goal_create, transaction_categorize) as soon as you have what it needs; "how do I create..." is about using Vera and is answered with help_search; if the amount, month or category is missing, ask in one sentence; the goal name can be the subject the person said ("trip" becomes "Trip"). Never write that you created or categorized it, and never ask "Confirm?": the app shows the confirmation card and the system runs it. In goal_create the amount is in cents and the month is YYYY-MM. In transaction_categorize use the key from list_categories; the person picks the transaction on the card, so never ask for or write a transaction description.'
+};
+
 const SCREEN_LABELS: ReadonlyMap<string, Readonly<Record<AppLocale, string>>> = new Map(
     HELP_CATALOG.flatMap((entry: HelpEntry): [string, Readonly<Record<AppLocale, string>>][] =>
         entry.screen === undefined ? [] : [[entry.screen.path, entry.screen.label]]
@@ -81,8 +87,11 @@ function screenRuleOf(locale: AppLocale, screen: AskVeraScreen | undefined): str
     ];
 }
 
-export function askVeraAppSystemPromptOf(locale: AppLocale, today: string, screen?: AskVeraScreen): string {
+export function askVeraAppSystemPromptOf(locale: AppLocale, today: string, screen: AskVeraScreen | undefined, canPropose: boolean): string {
     const date: string = locale === 'pt-BR' ? `Hoje é ${today}.` : `Today is ${today}.`;
-    const rules: string = [...APP_RULES[locale], ...screenRuleOf(locale, screen)].map((rule: string): string => `- ${rule}`).join('\n');
+    const proposal: string[] = canPropose ? [PROPOSAL_RULES[locale]] : [];
+    const rules: string = [...APP_RULES[locale], ...proposal, ...screenRuleOf(locale, screen)]
+        .map((rule: string): string => `- ${rule}`)
+        .join('\n');
     return `${date}\n\n${rules}`;
 }

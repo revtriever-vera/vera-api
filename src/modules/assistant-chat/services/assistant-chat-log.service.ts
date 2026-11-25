@@ -28,6 +28,14 @@ export class AssistantChatLogService {
         this.logService.error({ message: 'assistant turn publish failed', identifier: LOG_IDENTIFIER, meta: { turnId }, error });
     }
 
+    public actionConfirmed(actionId: string, tool: string): void {
+        this.logService.info({ message: 'assistant action confirmed', identifier: LOG_IDENTIFIER, meta: { actionId, tool } });
+    }
+
+    public actionStale(actionId: string, tool: string): void {
+        this.logService.warn({ message: 'assistant action stale', identifier: LOG_IDENTIFIER, meta: { actionId, tool } });
+    }
+
     public retention(conversations: number, messages: number): void {
         this.logService.info({ message: 'assistant retention purged', identifier: LOG_IDENTIFIER, meta: { conversations, messages } });
     }
