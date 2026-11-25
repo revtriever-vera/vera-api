@@ -15,7 +15,7 @@ function stateOf(overrides: Partial<UsageState>): UsageState {
         capMicros: 4_000_000,
         usedMicros: 0,
         usedBps: 0,
-        byFeature: { ai: 0, whatsapp: 0 },
+        byFeature: { ai: 0, whatsapp: 0, help: 0 },
         state: 'ok',
         resetsAt: '2026-11-01T03:00:00.000Z',
         ...overrides

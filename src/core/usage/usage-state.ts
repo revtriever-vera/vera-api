@@ -23,7 +23,7 @@ function keyOf(used: number, cap: number, warningBps: number, minRoomMicros: num
 }
 
 function featureBps(byFeatureMicros: FeatureMicros, cap: number | null): Record<UsageFeature, number> {
-    const result: Record<UsageFeature, number> = { ai: 0, whatsapp: 0 };
+    const result: Record<UsageFeature, number> = { ai: 0, whatsapp: 0, help: 0 };
     for (const feature of USAGE_FEATURES) {
         result[feature] = cap === null ? 0 : bpsOf(byFeatureMicros[feature], cap);
     }
@@ -31,7 +31,7 @@ function featureBps(byFeatureMicros: FeatureMicros, cap: number | null): Record<
 }
 
 export function usageStateOf(input: UsageStateInput): UsageState {
-    const used: number = input.byFeatureMicros.ai + input.byFeatureMicros.whatsapp;
+    const used: number = USAGE_FEATURES.reduce((sum: number, feature: UsageFeature): number => sum + input.byFeatureMicros[feature], 0);
     const cap: number | null = input.capMicros === null || input.capMicros === 0 ? null : input.capMicros;
     return {
         period: input.period,

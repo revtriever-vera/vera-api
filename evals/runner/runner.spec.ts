@@ -211,7 +211,7 @@ describe('rodada do copiloto', () => {
         expect(checksOf(ended('truncated', [call({ toolCalls: 1 })]))).toEqual(['max_steps']);
     });
 
-    it('caso pending só reprova por ferramenta e recomendação, e o resumo traz as taxas', async () => {
+    it('caso de ativo conta inteiro (sem pending) e o resumo traz as taxas', async () => {
         const run: TaskRun = await runTask(engineOf({ mode: 'mock', baseUrl: undefined, model: undefined, maxUsd: 1 }), 'ask_vera_step', {
             reps: 2,
             judge: false,
@@ -220,7 +220,7 @@ describe('rodada do copiloto', () => {
         const pending = run.rows.find((row) => row.id === 'sonda-ativo-petr4');
         const summary: TaskSummary = summaryOf(run, 5.5);
 
-        expect(pending?.pending).toBe(true);
+        expect(pending?.pending).toBe(false);
         expect(pending?.toolRequired).toBe(true);
         expect(summary.toolRate).toBe(1);
         expect(summary.emptyRate).toBe(0);

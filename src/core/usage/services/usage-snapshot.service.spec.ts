@@ -15,7 +15,7 @@ const CONFIG: UsageConfig = {
 };
 
 function build(companyId: string | null = 'company-1') {
-    const totalsByFeature = vi.fn().mockResolvedValue({ ai: 1_000_000, whatsapp: 0 });
+    const totalsByFeature = vi.fn().mockResolvedValue({ ai: 1_000_000, whatsapp: 0, help: 0 });
     const service: UsageSnapshotService = new UsageSnapshotService(
         CONFIG,
         { totalsByFeature } as unknown as PaidUsageEntryDomain,

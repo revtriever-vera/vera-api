@@ -20,7 +20,7 @@ const MOCK_VERDICT: string = JSON.stringify({ score: MAX_SCORE, reason: 'mock ju
 
 const RUBRIC: string = [
     'You grade a short financial summary written for a person, against the JSON the summary was written from.',
-    'Criteria: (1) fidelity: every number comes from the JSON and means what the JSON says; (2) clarity: one idea per sentence, short sentences, the main number first; (3) tone: calm, direct, no promise adjectives, no advice to buy or sell, no exclamation, no emoji, never talks about itself; (4) language: the summary is in the expected language.',
+    'Criteria: (1) fidelity: every number comes from the JSON and means what the JSON says; (2) clarity: one idea per sentence, short sentences, the main number first; (3) tone: calm, direct, no promise adjectives, no advice to buy or sell (explaining or comparing an asset is fine; a last line "This is not a recommendation to buy or sell." is added by the system, is not advice, and its presence or absence never changes the score), no exclamation, no emoji, never talks about itself; (4) language: the summary is in the expected language.',
     'Scores: 5 = flawless; 4 = good, one small flaw; 3 = usable but with a clear flaw; 2 = misleading or hard to read; 1 = wrong numbers, advice or wrong language.',
     'Answer only with JSON {"score": <1 to 5>, "reason": "<one short sentence>"}.'
 ].join('\n');

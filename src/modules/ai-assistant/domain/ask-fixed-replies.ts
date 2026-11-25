@@ -17,10 +17,15 @@ const FAILURE: Replies = {
     en: 'I could not answer that right now. Try asking in a different way.'
 };
 
-const CVM_NOTICE: Replies = {
-    'pt-BR': 'Isto não é recomendação de investimento. A Vera compara a carteira com a meta que você definiu.',
-    en: 'This is not investment advice. Vera compares your portfolio with the target you set.'
+const INVESTMENT_NOTICE: Replies = {
+    'pt-BR': 'Isto não é uma recomendação de compra ou venda.',
+    en: 'This is not a recommendation to buy or sell.'
 };
+
+export const INVESTMENT_NOTICE_PHRASES: readonly RegExp[] = [
+    /isto n[aã]o [eé] uma recomenda[çc][ãa]o de compra ou venda\.?/giu,
+    /this is not a recommendation to buy or sell\.?/giu
+];
 
 export function pixRefusalText(locale: AppLocale): string {
     return PIX_REFUSAL[locale];
@@ -34,6 +39,6 @@ export function failureText(locale: AppLocale): string {
     return FAILURE[locale];
 }
 
-export function cvmNoticeText(locale: AppLocale): string {
-    return CVM_NOTICE[locale];
+export function investmentNoticeText(locale: AppLocale): string {
+    return INVESTMENT_NOTICE[locale];
 }

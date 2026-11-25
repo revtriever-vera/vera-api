@@ -44,6 +44,17 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 45_000,
         maxRetries: 2,
         evalThreshold: 0.8,
-        promptVersion: 'v3'
+        promptVersion: 'v4'
+    },
+    {
+        task: LLM_TASKS.askVeraAppStep,
+        maxOutputTokens: 8192,
+        maxCostMicros: 59_000,
+        temperature: 0.3,
+        reasoning: 'minimal',
+        timeoutMs: 45_000,
+        maxRetries: 2,
+        evalThreshold: 0.8,
+        promptVersion: 'v1'
     }
 ];
