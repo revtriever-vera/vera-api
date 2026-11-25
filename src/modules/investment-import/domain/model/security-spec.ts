@@ -64,8 +64,14 @@ export function parseSecuritySpec(spec: string): ParsedSecuritySpec | null {
     return words.length === 0 ? null : { words, numbers: rule.numbers, kinds: rule.kinds };
 }
 
+const DIGIT: RegExp = /^\d$/;
+
 function numberOf(symbol: string): string {
-    return /(\d+)$/.exec(symbol)?.[1] ?? '';
+    let start: number = symbol.length;
+    while (start > 0 && DIGIT.test(symbol.charAt(start - 1))) {
+        start -= 1;
+    }
+    return symbol.slice(start);
 }
 
 function matchOf(specWord: string, nameWords: readonly string[]): number | null {

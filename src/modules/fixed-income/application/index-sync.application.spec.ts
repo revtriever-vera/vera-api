@@ -36,24 +36,28 @@ describe('IndexSyncApplication', () => {
         const ipca = payloads.filter((payload) => payload.series === 'ipca_monthly');
         expect(cdi).toHaveLength(17);
         expect(ipca).toHaveLength(17);
+        expect(payloads.filter((payload) => payload.series === 'selic_target_daily')).toHaveLength(17);
+        expect(payloads).toHaveLength(51);
         expect(cdi[0]).toEqual({ series: 'cdi_daily', from: '2010-01-01', to: '2010-12-31' });
         expect(cdi.at(-1)).toEqual({ series: 'cdi_daily', from: '2026-01-01', to: '2026-10-11' });
         expect(doubles.metrics.indexAge).not.toHaveBeenCalled();
     });
 
     it('rodadas seguintes: uma janela do último ponto até hoje, com jobId determinístico', async () => {
-        const doubles = build({ cdi_daily: '2026-10-08', ipca_monthly: '2026-09-01' });
+        const doubles = build({ cdi_daily: '2026-10-08', ipca_monthly: '2026-09-01', selic_target_daily: '2026-10-09' });
 
         await doubles.application.requestSync(NOW);
         await doubles.application.requestSync(NOW);
 
-        expect(doubles.publish).toHaveBeenCalledTimes(4);
+        expect(doubles.publish).toHaveBeenCalledTimes(6);
         const first = doubles.publish.mock.calls[0];
         expect(first?.[2]).toEqual({ series: 'cdi_daily', from: '2026-10-08', to: '2026-10-11' });
         expect(first?.[3]).toEqual({ jobId: 'fixed-income-index-sync-cdi-daily-2026-10-08-2026-10-11' });
-        expect(doubles.publish.mock.calls[0]?.[3]).toEqual(doubles.publish.mock.calls[2]?.[3]);
+        expect(doubles.publish.mock.calls[0]?.[3]).toEqual(doubles.publish.mock.calls[3]?.[3]);
+        expect(doubles.publish.mock.calls[2]?.[2]).toEqual({ series: 'selic_target_daily', from: '2026-10-09', to: '2026-10-11' });
         expect(doubles.metrics.indexAge).toHaveBeenCalledWith('cdi_daily', 3);
         expect(doubles.metrics.indexAge).toHaveBeenCalledWith('ipca_monthly', 40);
+        expect(doubles.metrics.indexAge).toHaveBeenCalledWith('selic_target_daily', 2);
     });
 
     it('o jobId não tem dois-pontos', () => {

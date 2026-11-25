@@ -7,20 +7,25 @@ import { IndexSeriesSourcePort } from '../ports/index-series-source.port';
 
 export const MOCK_DAILY_CDI: string = '0.04016754';
 export const MOCK_MONTHLY_IPCA: string = '0.40000000';
+export const MOCK_SELIC_TARGET: string = '13.75000000';
 
 @Injectable()
 export class MockIndexSeriesDriver extends IndexSeriesSourcePort {
     public readonly source: string = 'mock';
 
     public fetch(series: IndexSeriesName, from: string, to: string): Promise<SeriesPoint[]> {
-        return Promise.resolve(series === INDEX_SERIES.cdiDaily ? this.dailyCdi(from, to) : this.monthlyIpca(from, to));
+        if (series === INDEX_SERIES.ipcaMonthly) {
+            return Promise.resolve(this.monthlyIpca(from, to));
+        }
+        return Promise.resolve(this.daily(series, from, to));
     }
 
-    private dailyCdi(from: string, to: string): SeriesPoint[] {
+    private daily(series: IndexSeriesName, from: string, to: string): SeriesPoint[] {
+        const value: string = series === INDEX_SERIES.cdiDaily ? MOCK_DAILY_CDI : MOCK_SELIC_TARGET;
         const points: SeriesPoint[] = [];
         for (let date: string = from; date <= to; date = addDays(date, 1)) {
             if (isWeekday(date)) {
-                points.push({ date, value: MOCK_DAILY_CDI });
+                points.push({ date, value });
             }
         }
         return points;

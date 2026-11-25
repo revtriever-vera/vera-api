@@ -60,8 +60,8 @@ class LiveLlm extends LlmPort {
 function catalogOf(): AssetCatalogService {
     const entries: Asset[] = noteCatalogOf().map((entry): Asset => ({ ...entry, market: 'B3' }) as unknown as Asset);
     return {
-        searchByName: async (_market: string, name: string): Promise<Asset[]> =>
-            entries.filter((entry: Asset): boolean => entry.name.toLowerCase().includes(name.toLowerCase()))
+        searchByName: (_market: string, name: string): Promise<Asset[]> =>
+            Promise.resolve(entries.filter((entry: Asset): boolean => entry.name.toLowerCase().includes(name.toLowerCase())))
     } as unknown as AssetCatalogService;
 }
 
@@ -74,25 +74,34 @@ async function runCase(reader: ModelReaderService, item: NoteCase): Promise<stri
     }
 }
 
-async function main(): Promise<number> {
-    loadEnvFile(process.env['EVALS_SECRETS_FILE']);
-    const llm: LiveLlm = new LiveLlm(process.env['EVALS_MODEL'] ?? DEFAULT_MODEL_ID);
-    const reader: ModelReaderService = new ModelReaderService(
+function readerOf(llm: LiveLlm): ModelReaderService {
+    return new ModelReaderService(
         llm,
-        { enabled: async (): Promise<boolean> => true } as unknown as LlmAvailabilityService,
-        { assertAllowed: async (): Promise<void> => undefined } as unknown as ThrottleService,
+        { enabled: (): Promise<boolean> => Promise.resolve(true) } as unknown as LlmAvailabilityService,
+        { assertAllowed: (): Promise<void> => Promise.resolve() } as unknown as ThrottleService,
         { get: (): { readonly companyId: string } => ({ companyId: 'evals' }) } as unknown as AppContext,
         { modelRead: (): void => undefined, modelFailed: (): void => undefined } as unknown as InvestmentImportLogService,
         new NoteAssetResolverService(catalogOf())
     );
-    const only: string | undefined = process.argv[2];
+}
+
+function casesOf(only: string | undefined): NoteCase[] {
+    return noteCasesOf().filter((candidate: NoteCase): boolean => only === undefined || candidate.id === only);
+}
+
+function lineOf(item: NoteCase, problems: readonly string[]): string {
+    return `${problems.length === 0 ? 'PASS' : 'FAIL'} ${item.id}${problems.length === 0 ? '' : `\n  ${problems.join('\n  ')}`}\n`;
+}
+
+async function main(): Promise<number> {
+    loadEnvFile(process.env['EVALS_SECRETS_FILE']);
+    const llm: LiveLlm = new LiveLlm(process.env['EVALS_MODEL'] ?? DEFAULT_MODEL_ID);
+    const reader: ModelReaderService = readerOf(llm);
     let failed: number = 0;
-    for (const item of noteCasesOf().filter((candidate: NoteCase): boolean => only === undefined || candidate.id === only)) {
+    for (const item of casesOf(process.argv[2])) {
         const problems: string[] = await runCase(reader, item);
         failed += problems.length === 0 ? 0 : 1;
-        process.stdout.write(
-            `${problems.length === 0 ? 'PASS' : 'FAIL'} ${item.id}${problems.length === 0 ? '' : `\n  ${problems.join('\n  ')}`}\n`
-        );
+        process.stdout.write(lineOf(item, problems));
     }
     process.stdout.write(`cost: US$ ${llm.costUsd.toFixed(4)}; failed cases: ${String(failed)}\n`);
     return failed === 0 ? 0 : 1;

@@ -1,0 +1,46 @@
+{
+  "id": "cdi-contra-ipca",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "CDI contra IPCA, quem ganhou em 12 meses?",
+  "history": [],
+  "tools": {
+    "required": [
+      "market_benchmarks"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "market_benchmarks",
+      "input": {
+        "windows": [
+          "m12"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "12,80%",
+      "4,80%"
+    ],
+    "mustMention": [
+      "Isto não é uma recomendação de compra ou venda."
+    ],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Em 12 meses o CDI rendeu **12,80%** e o IPCA, 4,80%: o CDI ficou acima. O CDI vai até 19/03/2026 e o IPCA até fevereiro de 2026, ambos do Banco Central."
+  ]
+}

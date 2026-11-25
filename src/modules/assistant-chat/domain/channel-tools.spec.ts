@@ -5,9 +5,10 @@ describe('ferramentas do app por modo', () => {
     it('help só recebe as de ajuda, sem nenhuma ferramenta de número', () => {
         expect([...appToolsOf('help', true)].sort()).toEqual(['data_locked', 'help_search', 'where_is']);
         expect(appToolsOf('help', true)).toBe(APP_HELP_TOOLS);
+        expect(appToolsOf('help', true).has('market_benchmarks')).toBe(false);
     });
 
-    it('ai recebe as de ajuda e as de leitura, com as duas novas, e nada de agenda nem lembrete', () => {
+    it('ai recebe as de ajuda e as de leitura, com as ferramentas de concentração, vencimentos e indicadores de mercado, e nada de agenda nem lembrete', () => {
         expect([...appToolsOf('ai', false)].sort()).toEqual([
             'concentration_overview',
             'contribution_suggestion',
@@ -15,6 +16,7 @@ describe('ferramentas do app por modo', () => {
             'goals_overview',
             'help_search',
             'list_categories',
+            'market_benchmarks',
             'portfolio_overview',
             'recurring_overview',
             'spending_by_category',

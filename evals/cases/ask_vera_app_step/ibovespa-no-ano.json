@@ -1,0 +1,45 @@
+{
+  "id": "ibovespa-no-ano",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "como foi o Ibovespa no ano?",
+  "history": [],
+  "tools": {
+    "required": [
+      "market_benchmarks"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "market_benchmarks",
+      "input": {
+        "windows": [
+          "ytd"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "4,10%"
+    ],
+    "mustMention": [
+      "Isto não é uma recomendação de compra ou venda."
+    ],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "O Ibovespa sobe **4,10%** no ano, até 19/03/2026, segundo a brapi."
+  ]
+}

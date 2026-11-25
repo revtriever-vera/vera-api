@@ -17,6 +17,16 @@ export class IndexSeriesPointsRepository extends BareGlobalRepository<'IndexSeri
         return this.findMany({ series }, { limit: SERIES_LIMIT, orderBy: [{ property: 'date', direction: 'asc' }] });
     }
 
+    public async listSince(series: string, from: string): Promise<IndexSeriesPointRow[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('series', '=', series)
+            .where('date', '>=', this.rawSql<Date>`${from}::date`)
+            .orderBy('date', 'asc')
+            .limit(SERIES_LIMIT)
+            .execute();
+    }
+
     public async findLast(series: string): Promise<IndexSeriesPointRow | null> {
         const rows: IndexSeriesPointRow[] = await this.findMany(
             { series },

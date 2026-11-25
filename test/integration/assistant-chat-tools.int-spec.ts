@@ -4,7 +4,9 @@ import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
 import { JsonObject, LlmContentBlock, LlmMessage, LlmToolUse } from '../../src/core/llm/llm.types';
 import { QueueEnvelope } from '../../src/core/queue/queue.types';
 import { AssistantTurnRequestedHandler } from '../../src/modules/assistant-chat/access/queue/assistant-turn.handler';
+import { IndexSyncApplication } from '../../src/modules/fixed-income/application/index-sync.application';
 import { addDays } from '../../src/modules/fixed-income/domain/curve/business-days';
+import { MarketIndexSyncService } from '../../src/modules/market-data/services/market-index-sync.service';
 import { PlanContractService } from '../../src/modules/plans/services/plan-contract.service';
 import { IncomingTransaction } from '../../src/modules/transactions/domain/transactions.types';
 import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
@@ -41,6 +43,7 @@ const READ_TOOLS: readonly string[] = [
     'goals_overview',
     'help_search',
     'list_categories',
+    'market_benchmarks',
     'portfolio_overview',
     'recurring_overview',
     'spending_by_category',
@@ -282,6 +285,36 @@ describe('assistant chat: ferramentas de leitura no app', () => {
         const maturities = sent.body.sent[1]?.payload as { por_tipo: { tipo: string }[] };
         expect(maturities.por_tipo.map((row) => row.tipo)).toEqual(['cdb', 'lci']);
         expect(JSON.stringify(finalRequest.request.system)).toContain('A pessoa está em Onde aportar');
+    });
+
+    it('indicadores de mercado: só no modo ai, com a data de referência e a fonte, e o aviso de investimento', async () => {
+        const owner: Account = await richAccount('tools-benchmarks');
+        const sync: IndexSyncApplication = harness.app.get(IndexSyncApplication, { strict: false });
+        for (const series of ['cdi_daily', 'ipca_monthly', 'selic_target_daily'] as const) {
+            await sync.syncWindow({ series, from: addDays(TODAY, -800), to: TODAY });
+        }
+        await harness.app.get(MarketIndexSyncService, { strict: false }).syncAll();
+
+        const started: StartedBody = await askWithTools(owner, 'quanto rendeu o CDI em 12 meses?', [
+            toolUse('market_benchmarks', { windows: ['m1', 'm12', 'ytd'] })
+        ]);
+
+        const answered: TurnBody = await turn(owner, started.turnId);
+        expect(answered).toMatchObject({ status: 'done', answer: { source: 'ai', sentAvailable: true } });
+        expect(answered.answer?.notice).toContain('Isto não é uma recomendação');
+        const sent = await sentOf(owner, started.turnId);
+        const payload = sent.body.sent[0]?.payload as {
+            referencia: string;
+            cdi: { fonte: string; ate: string; atrasado: boolean; acumulado: { periodo: string }[] };
+            selic_meta: { valor: string };
+            ibovespa: { status: string; fonte: string };
+        };
+        expect(sent.body.sent.map((item) => item.tool)).toEqual(['market_benchmarks']);
+        expect(payload.referencia).toBe(TODAY);
+        expect(payload.cdi).toMatchObject({ fonte: 'Banco Central, série 12', atrasado: false });
+        expect(payload.cdi.acumulado.map((item) => item.periodo)).toEqual(['1 mês', '12 meses', 'no ano']);
+        expect(payload.selic_meta.valor).toBe('13,75%');
+        expect(payload.ibovespa).toMatchObject({ status: 'ok', fonte: 'brapi' });
     });
 
     it('fixtures envenenadas (nome de título, e-mail, descrição, contraparte, uuid, ativo) não aparecem em requisição nenhuma', async () => {

@@ -9,6 +9,7 @@ const schema = z.object({
     SGS_BASE_URL: z.string().url().default('https://api.bcb.gov.br'),
     SGS_CDI_SERIES_CODE: z.coerce.number().int().positive().default(DEFAULT_SGS_CODES[INDEX_SERIES.cdiDaily]),
     SGS_IPCA_SERIES_CODE: z.coerce.number().int().positive().default(DEFAULT_SGS_CODES[INDEX_SERIES.ipcaMonthly]),
+    SGS_SELIC_TARGET_SERIES_CODE: z.coerce.number().int().positive().default(DEFAULT_SGS_CODES[INDEX_SERIES.selicTargetDaily]),
     SGS_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
     SGS_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(5).default(3),
     SGS_RETRY_BASE_DELAY_MS: z.coerce.number().int().min(0).default(500)

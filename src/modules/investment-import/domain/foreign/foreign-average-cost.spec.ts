@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+// eslint-disable-next-line boundaries/dependencies -- o spec confere o extrato lido contra o preço médio real do módulo de posições (contrato entre os dois)
 import { applyOperations, AverageCostResult } from '../../../positions/domain/average-cost';
+// eslint-disable-next-line boundaries/dependencies -- o spec confere o extrato lido contra o preço médio real do módulo de posições (contrato entre os dois)
 import { CostOperation } from '../../../positions/domain/investment-operations.types';
 import { statementOfModelAnswers } from '../model/model-statement';
 import { ParsedOperation } from '../investment-statement.types';

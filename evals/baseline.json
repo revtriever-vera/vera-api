@@ -31,11 +31,11 @@
       "costBrlPerRun": 0.179
     },
     "ask_vera_app_step": {
-      "promptVersion": "v4",
+      "promptVersion": "v5",
       "reasoning": "minimal",
-      "judgeAverage": 4.2,
-      "averageLatencyMs": 4792,
-      "costBrlPerRun": 0.2827
+      "judgeAverage": 4.49,
+      "averageLatencyMs": 4549,
+      "costBrlPerRun": 0.4944
     }
   }
 }

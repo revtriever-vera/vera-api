@@ -15,15 +15,20 @@ import { CvmQuoteDriver } from '../drivers/cvm-quote.driver';
 import { CoinGeckoQuoteDriver } from '../drivers/coingecko-quote.driver';
 import { EmptyHeldAssetsDriver } from '../drivers/empty-held-assets.driver';
 import { FinnhubQuoteDriver } from '../drivers/finnhub-quote.driver';
+import { BrapiIndexDriver } from '../drivers/brapi-index.driver';
 import { MockExchangeRateDriver } from '../drivers/mock-exchange-rate.driver';
+import { MockIndexDriver } from '../drivers/mock-index.driver';
 import { TesouroQuoteDriver } from '../drivers/tesouro-quote.driver';
 import { TwelveDataQuoteDriver } from '../drivers/twelvedata-quote.driver';
 import { ExchangeRatePort } from '../ports/exchange-rate.port';
+import { MarketIndexSourcePort } from '../ports/market-index-source.port';
 import { QUOTE_PROVIDERS, QuoteProviderPort } from '../ports/quote-provider.port';
 import { ExchangeRateReaderService } from '../services/exchange-rate-reader.service';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
+import { MarketIndexReaderService } from '../services/market-index-reader.service';
+import { MarketIndexSyncService } from '../services/market-index-sync.service';
 import { PtaxUsdRateAdapter } from '../services/ptax-usd-rate.adapter';
 import { ProviderBudgetService } from '../services/provider-budget.service';
 import { QuoteCollectorService } from '../services/quote-collector.service';
@@ -61,6 +66,8 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         ReferenceDataApplication,
         QuoteReaderService,
         ExchangeRateReaderService,
+        MarketIndexReaderService,
+        MarketIndexSyncService,
         PtaxUsdRateAdapter,
         ProviderBudgetService,
         QuoteProviderRegistryService,
@@ -78,6 +85,8 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         CvmQuoteDriver,
         BcbPtaxDriver,
         MockExchangeRateDriver,
+        BrapiIndexDriver,
+        MockIndexDriver,
         {
             provide: QUOTE_PROVIDERS,
             inject: [marketDataConfig.KEY, ...LIVE_QUOTE_DRIVERS],
@@ -97,6 +106,15 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
                 live: BcbPtaxDriver,
                 mock: MockExchangeRateDriver
             ): ExchangeRatePort => (config.DRIVER === 'mock' ? mock : live)
+        },
+        {
+            provide: MarketIndexSourcePort,
+            inject: [marketDataConfig.KEY, BrapiIndexDriver, MockIndexDriver],
+            useFactory: (
+                config: ConfigType<typeof marketDataConfig>,
+                live: BrapiIndexDriver,
+                mock: MockIndexDriver
+            ): MarketIndexSourcePort => (config.DRIVER === 'mock' ? mock : live)
         }
     ],
     exports: [
@@ -106,6 +124,7 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         ReferenceDataApplication,
         QuoteReaderService,
         ExchangeRateReaderService,
+        MarketIndexReaderService,
         ProviderBudgetService
     ]
 })

@@ -69,7 +69,8 @@ export const INVESTMENT_NOTICE_TOOLS: ReadonlySet<string> = new Set([
     'contribution_suggestion',
     'goals_overview',
     'concentration_overview',
-    'fixed_income_maturities'
+    'fixed_income_maturities',
+    'market_benchmarks'
 ]);
 
 export interface AskVeraToolProposal {

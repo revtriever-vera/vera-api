@@ -690,6 +690,14 @@ export interface LlmCalls {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface MarketIndexPoints {
+    close: Numeric;
+    date: Timestamp;
+    fetchedAt: Generated<Timestamp>;
+    source: string;
+    symbol: string;
+}
+
 export interface NoticePreferences {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1302,6 +1310,7 @@ export interface DB {
     InvestmentImports: InvestmentImports;
     InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;
+    MarketIndexPoints: MarketIndexPoints;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;
     OnboardingStates: OnboardingStates;
