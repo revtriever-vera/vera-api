@@ -13,8 +13,11 @@ const LINE: StoredLine = {
     quantity: '10',
     unitPrice: '5.5',
     grossMinor: 5500,
+    feesMinor: 0,
     currency: 'BRL',
-    sourceRef: 'b3:x:1'
+    market: 'B3',
+    sourceRef: 'b3:x:1',
+    check: null
 };
 
 function edited(extra: Partial<EditedLine> = {}, line: Partial<StoredLine> = {}): EditedLine {
@@ -34,6 +37,14 @@ describe('verdictOf', () => {
         expect(verdictOf(facts(edited(), { hasPosition: true }))).toEqual({ status: 'check', reason: 'position_mode_required' });
         expect(verdictOf(facts(edited({ positionMode: 'add' }), { hasPosition: true })).status).toBe('ok');
         expect(verdictOf(facts(edited({}, { kind: 'income', incomeKind: 'dividend' }), { hasPosition: true })).status).toBe('ok');
+    });
+
+    it('a linha lida pelo modelo com conta que não bate vem como check com o motivo', () => {
+        const flagged: EditedLine = edited({}, { check: 'amount_mismatch' });
+
+        expect(verdictOf(facts(flagged))).toEqual({ status: 'check', reason: 'amount_mismatch' });
+        expect(verdictOf(facts(flagged, { hasPosition: true })).reason).toBe('position_mode_required');
+        expect(verdictOf(facts(flagged, { failure: 'sell_exceeds_position' })).status).toBe('blocked');
     });
 
     it('orders skip, missing asset, unsupported direction, duplicate and failure', () => {

@@ -1,5 +1,6 @@
 import { mulDecimal, toMinor } from '../../../../shared/utils/decimal.util';
 import {
+    NO_COST_EXTRAS,
     IGNORE_REASONS,
     IncomeKind,
     OperationDirection,
@@ -86,7 +87,8 @@ function operationOf(parts: MovementParts, quantity: string, amounts: Amounts): 
         unitPrice: amounts.unitPrice,
         grossMinor: amounts.grossMinor,
         currency: 'BRL',
-        appliedToPosition: parts.rule.appliedToPosition
+        appliedToPosition: parts.rule.appliedToPosition,
+        ...NO_COST_EXTRAS
     };
     return { ...operation, matchKey: matchKeyOf(operation), alreadyImported: false };
 }

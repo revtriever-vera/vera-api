@@ -17,8 +17,10 @@ function parsed(extra: Partial<ParsedOperation> = {}): ParsedOperation {
         quantity: '10',
         unitPrice: '5',
         grossMinor: 5000,
+        feesMinor: 0,
         currency: 'BRL',
         appliedToPosition: true,
+        externalRef: null,
         matchKey: '2026-01-10|ITUB4|buy|10|5',
         alreadyImported: false,
         ...extra
@@ -34,7 +36,8 @@ function statement(operations: ParsedOperation[]): ParsedInvestmentStatement {
         positionAdjustments: [],
         fixedIncome: [],
         ignored: [{ sheet: '', line: 5, reason: 'settlement', description: 'SECRET TEXT', tradeDate: '2026-01-11', productCode: null }],
-        rejected: [{ sheet: '', line: 6, reason: 'invalid_date' }]
+        rejected: [{ sheet: '', line: 6, reason: 'invalid_date' }],
+        notes: []
     };
 }
 

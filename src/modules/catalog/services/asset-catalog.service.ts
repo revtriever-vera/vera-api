@@ -30,6 +30,17 @@ export class AssetCatalogService {
         return this.assets.findManyByMarketAndExternalIds(market, externalIds);
     }
 
+    public async findBestByMarketAndSymbols(market: CatalogMarket, symbols: readonly string[]): Promise<Asset[]> {
+        const ranked: Asset[] = await this.assets.findActiveByMarketAndSymbols(market, symbols);
+        const best: Map<string, Asset> = new Map();
+        for (const asset of ranked) {
+            if (!best.has(asset.symbol)) {
+                best.set(asset.symbol, asset);
+            }
+        }
+        return [...best.values()];
+    }
+
     public async findByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         return this.assets.findByMarketAndExternalId(market, externalId);
     }

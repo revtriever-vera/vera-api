@@ -42,6 +42,15 @@ export interface LineFacts {
     readonly hasPosition: boolean;
 }
 
+function settledVerdictOf(facts: LineFacts): LineVerdict {
+    const { edited } = facts;
+    if (facts.hasPosition && affectsPositionByKind(edited.line.kind) && edited.positionMode === null) {
+        return { status: LINE_STATUSES.check, reason: LINE_REASONS.positionModeRequired };
+    }
+    const { check } = edited.line;
+    return check === null ? { status: LINE_STATUSES.ok, reason: null } : { status: LINE_STATUSES.check, reason: check };
+}
+
 export function verdictOf(facts: LineFacts): LineVerdict {
     const { edited } = facts;
     if (edited.skip) {
@@ -59,10 +68,7 @@ export function verdictOf(facts: LineFacts): LineVerdict {
     if (facts.failure !== null) {
         return { status: LINE_STATUSES.blocked, reason: facts.failure };
     }
-    const needsChoice: boolean = facts.hasPosition && affectsPositionByKind(edited.line.kind) && edited.positionMode === null;
-    return needsChoice
-        ? { status: LINE_STATUSES.check, reason: LINE_REASONS.positionModeRequired }
-        : { status: LINE_STATUSES.ok, reason: null };
+    return settledVerdictOf(facts);
 }
 
 export function modeOf(edited: EditedLine, hasPosition: boolean): PositionMode | null {

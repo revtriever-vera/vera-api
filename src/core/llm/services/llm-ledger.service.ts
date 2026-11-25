@@ -24,6 +24,7 @@ export interface LlmLedgerEntry {
     readonly outcome: LlmOutcome;
     readonly requestHash: string;
     readonly referenceId: string | null;
+    readonly outsideCap?: boolean;
 }
 
 @Injectable()
@@ -60,6 +61,9 @@ export class LlmLedgerService {
         this.metrics.tokens(entry.task, entry.usage);
         this.metrics.cost(entry.task, entry.feature, entry.costMicros);
         this.reportDivergence(entry);
+        if (entry.outsideCap === true) {
+            return;
+        }
         await this.guarded(entry.task, 'usage', async () => this.recordUsage(entry));
     }
 

@@ -9,7 +9,8 @@ import { AnswerFacts, AnswerVerdict } from '../../src/modules/ai-assistant/domai
 import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from '../../src/modules/ai-assistant/domain/ask-vera-loop';
 import { askVeraAppSystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/ask-vera-app.prompt';
-import { redactPersonalData, redactTurns } from '../../src/modules/ai-assistant/domain/ask-redaction';
+import { redactTurns } from '../../src/modules/ai-assistant/domain/ask-redaction';
+import { redactPersonalData } from '../../src/shared/utils/personal-data-redaction';
 import { CHANNEL_PROFILES, ChannelProfile } from '../../src/modules/ai-assistant/domain/ask-channel-profiles';
 import { HELP_ROUTES } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { assetKeysIn } from '../../src/modules/ai-assistant/domain/forbidden-terms';

@@ -13,8 +13,11 @@ const LINE: StoredLine = {
     quantity: '10',
     unitPrice: '5.5',
     grossMinor: 5500,
+    feesMinor: 0,
     currency: 'BRL',
-    sourceRef: 'b3:x:1'
+    market: 'B3',
+    sourceRef: 'b3:x:1',
+    check: null
 };
 
 function edited(extra: Partial<EditedLine> = {}, line: Partial<StoredLine> = {}): EditedLine {
