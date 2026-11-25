@@ -15,13 +15,14 @@ const UNDO_BLOCK_REASONS: Readonly<Record<string, 'later_import' | 'position_cha
     'positions.changed_since_import': 'position_changed'
 };
 
-function viewOf(record: InvestmentImportRecord): ImportRecordView {
+function viewOf(record: InvestmentImportRecord, fixedIncomeTitles: number): ImportRecordView {
     return {
         id: record.id,
         source: record.source,
         fileName: record.fileName,
         status: record.status,
         operations: record.operations,
+        fixedIncomeTitles,
         createdAt: record.createdAt.toISOString()
     };
 }
@@ -38,7 +39,8 @@ export class InvestmentImportListApplication {
 
     public async list(page: number, pageSize: number): Promise<Page<ImportRecordView>> {
         const result: Page<InvestmentImportRecord> = await this.records.page(page, pageSize);
-        return { data: result.data.map(viewOf), pagination: result.pagination };
+        const counts: ReadonlyMap<string, number> = await this.titles.countByImports(result.data.map((record) => record.id));
+        return { data: result.data.map((record) => viewOf(record, counts.get(record.id) ?? 0)), pagination: result.pagination };
     }
 
     public async undo(id: string): Promise<{ undone: boolean }> {

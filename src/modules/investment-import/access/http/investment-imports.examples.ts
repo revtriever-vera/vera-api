@@ -100,5 +100,6 @@ export const IMPORT_RECORD_EXAMPLE: Record<string, unknown> = {
     fileName: 'negociacao-2026.xlsx',
     status: 'completed',
     operations: 1,
+    fixedIncomeTitles: 0,
     createdAt: '2026-10-12T10:00:00.000Z'
 };

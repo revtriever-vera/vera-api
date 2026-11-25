@@ -183,5 +183,6 @@ export interface ImportRecordView {
     readonly fileName: string;
     readonly status: string;
     readonly operations: number;
+    readonly fixedIncomeTitles: number;
     readonly createdAt: string;
 }

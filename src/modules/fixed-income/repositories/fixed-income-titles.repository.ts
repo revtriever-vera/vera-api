@@ -43,6 +43,10 @@ export class FixedIncomeTitlesRepository extends TenantRepository<'FixedIncomeTi
         return this.findMany({ importId }, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
     }
 
+    public async listByImports(importIds: readonly string[]): Promise<FixedIncomeTitleRow[]> {
+        return this.findManyWhereIn('importId', importIds);
+    }
+
     public async listReal(): Promise<FixedIncomeTitleRow[]> {
         return this.findMany({ isSample: false }, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
     }

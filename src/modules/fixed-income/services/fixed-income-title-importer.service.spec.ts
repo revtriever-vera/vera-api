@@ -157,3 +157,12 @@ describe('FixedIncomeTitleImporterService.removeByImport', () => {
         expect(assignments.release).toHaveBeenCalledTimes(2);
     });
 });
+
+describe('FixedIncomeTitleImporterService.countByImports', () => {
+    it('delega ao domínio a contagem de títulos por lote', async () => {
+        const { service, titles } = build();
+        (titles as unknown as { countByImports: unknown }).countByImports = vi.fn().mockResolvedValue(new Map([['imp-1', 2]]));
+
+        expect((await service.countByImports(['imp-1', 'imp-2'])).get('imp-1')).toBe(2);
+    });
+});
