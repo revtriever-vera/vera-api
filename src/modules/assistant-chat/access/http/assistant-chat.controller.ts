@@ -66,7 +66,8 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             createdAt: '2026-11-25T12:00:00.001Z'
         }
     ],
-    usage: USAGE_EXAMPLE
+    usage: USAGE_EXAMPLE,
+    enabled: true
 };
 
 const UNAUTHORIZED: ProblemDoc = {
