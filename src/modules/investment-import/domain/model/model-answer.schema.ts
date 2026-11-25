@@ -12,14 +12,19 @@ const KINDS = ['buy', 'sell', 'split', 'reverse_split', 'bonus', 'income', 'tran
 const INCOMES = ['dividend', 'jcp', 'fii_income', 'interest', 'staking'] as const;
 const DOCUMENT_VALUES = Object.values(DOCUMENT_TYPES) as [DocumentType, ...DocumentType[]];
 
+/** The model answers `null` for a list the document does not have (a print has no notes): the same as absent. */
+function emptyWhenNull(list: z.ZodArray<z.ZodUnknown>): z.ZodEffects<z.ZodDefault<z.ZodArray<z.ZodUnknown>>, unknown[], unknown> {
+    return z.preprocess((value: unknown): unknown => value ?? undefined, list.default([]));
+}
+
 export const answerEnvelopeSchema = z.object({
     documentType: z.enum(DOCUMENT_VALUES),
     currency: z.string().trim().length(3),
     totalMinor: z.number().int().nullable().optional(),
     periodStart: z.string().regex(DATE_PATTERN).nullable().optional().catch(null),
     periodEnd: z.string().regex(DATE_PATTERN).nullable().optional().catch(null),
-    operations: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).default([]),
-    notes: z.array(z.unknown()).max(MAX_NOTES_PER_ANSWER).default([]),
+    operations: emptyWhenNull(z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER)),
+    notes: emptyWhenNull(z.array(z.unknown()).max(MAX_NOTES_PER_ANSWER)),
     positions: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).optional().catch([]),
     taxWithholdings: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).optional().catch([]),
     cashMovements: z.array(z.unknown()).max(MAX_OPERATIONS_PER_ANSWER).optional().catch([])

@@ -55,6 +55,19 @@ describe('statementOfModelAnswers', () => {
         expect(checkOf(statement)).toBeUndefined();
     });
 
+    it('operations e notes null (print, PDF de posição) valem como lista vazia', () => {
+        const text: string = JSON.stringify({
+            documentType: 'screenshot',
+            currency: 'BRL',
+            operations: null,
+            notes: null,
+            positions: []
+        });
+        const statement: ParsedInvestmentStatement = read([text]);
+        expect(statement.documentType).toBe('screenshot');
+        expect(statement.operations).toEqual([]);
+    });
+
     it('conta que não bate vira check e a linha continua', () => {
         const statement: ParsedInvestmentStatement = read([answer([operation({ grossMinor: 390000 })])]);
 
