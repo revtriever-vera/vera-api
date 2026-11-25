@@ -79,12 +79,19 @@ describe('a task do serviço', () => {
         const secretNames: string[] = (api.Secrets ?? []).map((secret): string => secret.Name);
         const plainNames: string[] = (api.Environment ?? []).map((entry): string => entry.Name);
 
-        expect(secretNames).toEqual(expect.arrayContaining(['DATABASE_URL', 'CRYPTO_KEY_HEX', 'OTEL_EXPORTER_OTLP_HEADERS']));
+        expect(secretNames).toEqual(expect.arrayContaining(['DATABASE_URL', 'CRYPTO_KEY_HEX']));
+        expect(secretNames).not.toContain('OTEL_EXPORTER_OTLP_HEADERS');
         for (const name of secretNames) {
             expect(plainNames).not.toContain(name);
         }
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/database-url');
         expect(JSON.stringify(api.Secrets)).toContain('parameter/vera/crypto-key-hex');
+    });
+
+    it('em dev entrega OTEL_EXPORTER_OTLP_HEADERS por segredo do SSM', () => {
+        const api: ContainerResource = container(taskContainers(appTemplate('dev'), 'vera-api-dev'), 'api');
+
+        expect((api.Secrets ?? []).map((secret): string => secret.Name)).toContain('OTEL_EXPORTER_OTLP_HEADERS');
     });
 
     it('liga o modelo ao vivo com a tabela de preço e entrega a chave do gateway pelo SSM', () => {

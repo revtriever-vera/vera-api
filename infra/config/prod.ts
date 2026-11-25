@@ -12,5 +12,5 @@ export const prod: EnvironmentSettings = {
     offHoursShutdown: false,
     mailpit: null,
     otlpEndpointParameter: '/vera/observability/otlp-endpoint',
-    otlpHeadersParameter: '/vera/otlp-headers'
+    otlpHeadersParameter: null
 };
