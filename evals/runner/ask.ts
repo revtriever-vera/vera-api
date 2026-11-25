@@ -8,6 +8,9 @@ import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter
 import { AnswerFacts, AnswerVerdict } from '../../src/modules/ai-assistant/domain/ask-answer-guard';
 import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from '../../src/modules/ai-assistant/domain/ask-vera-loop';
+import { CHANNEL_PROFILES } from '../../src/modules/ai-assistant/domain/ask-channel-profiles';
+import { assetKeysIn } from '../../src/modules/ai-assistant/domain/forbidden-terms';
+import { needsInvestmentNotice, withInvestmentNotice } from '../../src/modules/ai-assistant/domain/ask-notice';
 import { ASK_VERA_MAX_STEPS } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import { askVeraSystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/ask-vera.prompt';
 import { ASK_TODAY, fixtureToolsOf } from './ask-fixtures';
@@ -77,18 +80,22 @@ function loopInputOf(engine: Engine, spec: LlmTaskSpec, item: AskCase, meter: Me
         messages: messagesOf(item.history, item.question),
         tools: fixtureToolsOf(item.locale),
         locale: item.locale,
+        task: 'ask_vera_step',
+        feature: 'whatsapp',
+        knownAssets: new Set<string>([...item.history.map((turn) => turn.text), item.question].flatMap(assetKeysIn)),
         messageId: item.id,
         maxSteps: ASK_VERA_MAX_STEPS,
         generate: generator(engine, spec, meter),
-        check: (text: string, facts: AnswerFacts): AnswerVerdict => guardAnswer({ text, facts, locale: item.locale, renderer }),
+        check: (text: string, facts: AnswerFacts): AnswerVerdict =>
+            guardAnswer({ text, facts, locale: item.locale, renderer, profile: CHANNEL_PROFILES.whatsapp }),
         onToolFailure: (): void => undefined,
         onCheckFailure: (): void => undefined
     };
 }
 
-function generationOf(result: AskLoopResult, meter: Meter): Generation {
+function generationOf(result: AskLoopResult, meter: Meter, item: AskCase): Generation {
     return {
-        text: result.text,
+        text: withInvestmentNotice(result.text, needsInvestmentNotice(result, item.question), item.locale),
         stopReason: 'end',
         outputTokens: meter.outputTokens,
         costUsd: meter.costUsd,
@@ -107,5 +114,5 @@ export async function askGenerate(engine: Engine, spec: LlmTaskSpec, item: AskCa
     }
     enqueueMock(engine, item);
     const meter: Meter = { costUsd: 0, outputTokens: 0, latencyMs: 0, steps: 0, calls: [] };
-    return generationOf(await runAskLoop(loopInputOf(engine, spec, item, meter)), meter);
+    return generationOf(await runAskLoop(loopInputOf(engine, spec, item, meter)), meter, item);
 }

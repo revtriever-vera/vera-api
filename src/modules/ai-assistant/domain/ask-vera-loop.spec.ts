@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { LlmGenerationRequest, LlmGenerationResponse, LlmToolUse } from '../../../core/llm/llm.types';
 import { AiTextRenderer } from './context/ai-text-renderer';
 import { guardAnswer } from './ask-answer-guard';
+import { CHANNEL_PROFILES } from './ask-channel-profiles';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from './ask-vera-loop';
 import { AskVeraTool, AskVeraToolOutput, AskVeraTurn } from './ask-vera.types';
 
@@ -48,10 +49,14 @@ function build(responses: (LlmGenerationResponse | Error)[], tools: AskVeraTool[
         messages: [{ role: 'user', content: 'quanto gastei com delivery?' }],
         tools,
         locale: 'pt-BR',
+        task: 'ask_vera_step',
+        feature: 'whatsapp',
+        knownAssets: new Set<string>(),
         messageId: 'm1',
         maxSteps,
         generate,
-        check: (text, facts) => guardAnswer({ text, facts, locale: 'pt-BR', renderer: new AiTextRenderer() }),
+        check: (text, facts) =>
+            guardAnswer({ text, facts, locale: 'pt-BR', renderer: new AiTextRenderer(), profile: CHANNEL_PROFILES.whatsapp }),
         onToolFailure,
         onCheckFailure
     };
@@ -242,5 +247,23 @@ describe('messagesOf', () => {
             text: String(index)
         }));
         expect(messagesOf(history, 'q').map((message) => message.content as string)).toEqual(['4', '5', '6', '7', '8', '9', 'q']);
+    });
+
+    it('guarda o que foi enviado ao modelo, sem a saída que passou de 8 KB', async () => {
+        const spending: AskVeraTool = tool('spending_by_category', 'read', SPENDING);
+        const big: AskVeraTool = tool('big', 'read', { payload: { text: 'x'.repeat(9000) }, numbers: [] });
+        const loop = build([reply('', [use('spending_by_category', {}), use('big', {}, 'u2')]), reply(GOOD)], [spending, big]);
+        expect((await loop.run()).sent).toEqual([{ tool: 'spending_by_category', payload: { total: 'R$ 3.200' } }]);
+    });
+
+    it('aceita o ativo que veio da ferramenta e reprova o que ninguém citou', async () => {
+        const portfolio: AskVeraTool = tool('portfolio_overview', 'read', { payload: { top: 'PETR4 com 18%' }, numbers: [18] });
+        const accepted = build([reply('', [use('portfolio_overview', {})]), reply('PETR4 pesa 18% da carteira.')], [portfolio]);
+        expect((await accepted.run()).ending).toBe('answered');
+        const invented = build(
+            [reply('', [use('portfolio_overview', {})]), reply('VALE3 pesa 18%.'), reply('VALE3 pesa 18%.')],
+            [portfolio]
+        );
+        expect((await invented.run()).ending).toBe('check_failed');
     });
 });

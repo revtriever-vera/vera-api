@@ -321,7 +321,7 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
         expect(markRead).toHaveBeenCalledWith(expect.anything(), wamid);
         const reply: MockSentMessage | undefined = sentTo(phone).at(-1);
         expect(reply).toMatchObject({ kind: 'text', body: 'Você ainda não tem gastos para comparar.' });
-        expect(JSON.stringify(sentTo(phone))).not.toContain('Isto não é recomendação');
+        expect(JSON.stringify(sentTo(phone))).not.toContain('Isto não é uma recomendação');
         const turnJob: PublishedMessage | undefined = publisher.ofType('whatsapp.turn.requested').at(-1);
         expect(turnJob?.options).toMatchObject({ jobId: `wa-turn-${wamid}` });
         expect(JSON.stringify(turnJob?.payload)).not.toContain('delivery');
@@ -337,9 +337,7 @@ describe('whatsapp chat (hospedada, drivers mock)', () => {
 
         await say(phone, 'Como está minha carteira?');
 
-        expect(bodiesTo(phone).at(-1)).toBe(
-            'Você ainda não cadastrou uma carteira.\nIsto não é recomendação de investimento. A Vera compara a carteira com a meta que você definiu.'
-        );
+        expect(bodiesTo(phone).at(-1)).toBe('Você ainda não cadastrou uma carteira.\nIsto não é uma recomendação de compra ou venda.');
     });
 
     it('"VINCULAR <código>" é consumido pelo vínculo e não chega ao roteador', async () => {

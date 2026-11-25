@@ -14,7 +14,7 @@ function stateOf(
         period: '2026-10',
         resetsAt: RESETS_AT,
         capMicros,
-        byFeatureMicros: { ai, whatsapp },
+        byFeatureMicros: { ai, whatsapp, help: 0 },
         warningBps,
         minRoomMicros
     });

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../../shared/errors/app.error';
 import type { ResolvedSender } from '../../whatsapp-link/services/link-resolver.service';
-import { AskVeraAnswer, AskVeraService, CVM_NOTICE_TOOLS } from '../../ai-assistant/services/ask-vera.service';
+import { AskVeraAnswer, AskVeraService } from '../../ai-assistant/services/ask-vera.service';
 import { CapReachedError } from '../../../core/usage/usage.errors';
 import { WHATSAPP_CHANNEL_TOOLS } from '../domain/channel-tools';
 import { chatTextsFor } from '../domain/fixed-replies';
@@ -32,6 +32,8 @@ export class ChatAnswerComposer {
                 history: turn.history,
                 locale: sender.locale,
                 messageId: turn.wamid,
+                channel: 'whatsapp',
+                feature: 'whatsapp',
                 allowedTools: WHATSAPP_CHANNEL_TOOLS
             });
             return await this.answered(sender, answer);
@@ -48,9 +50,7 @@ export class ChatAnswerComposer {
                 proposals.push(proposed);
             }
         }
-        const portfolio: boolean =
-            answer.source === 'model' && answer.toolsUsed.some((tool: string): boolean => CVM_NOTICE_TOOLS.has(tool));
-        return { text: answer.text, portfolio, proposals };
+        return { text: answer.text, portfolio: answer.source === 'model' && answer.notice, proposals };
     }
 
     private async failed(sender: ResolvedSender, error: unknown): Promise<ComposedAnswer> {

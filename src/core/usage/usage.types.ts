@@ -1,7 +1,7 @@
 import { Insertable, Selectable } from 'kysely';
 import { PaidUsageEntries, PaidUsageNotices } from '../database/generated/database.types';
 
-export const USAGE_FEATURES = ['ai', 'whatsapp'] as const;
+export const USAGE_FEATURES = ['ai', 'whatsapp', 'help'] as const;
 export type UsageFeature = (typeof USAGE_FEATURES)[number];
 
 export const USAGE_OUTCOMES = ['answered', 'unanswered'] as const;

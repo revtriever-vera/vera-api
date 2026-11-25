@@ -6,7 +6,8 @@ export const LLM_TASKS = {
     summaryMonth: 'summary_month',
     summaryCuts: 'summary_cuts',
     summaryPortfolio: 'summary_portfolio',
-    askVeraStep: 'ask_vera_step'
+    askVeraStep: 'ask_vera_step',
+    askVeraAppStep: 'ask_vera_app_step'
 } as const;
 
 export const LLM_REASONING_LEVELS = ['provider-default', 'minimal'] as const;
@@ -14,7 +15,7 @@ export type LlmReasoning = (typeof LLM_REASONING_LEVELS)[number];
 
 export type LlmTask = (typeof LLM_TASKS)[keyof typeof LLM_TASKS];
 
-export const LLM_FEATURES = ['ai', 'whatsapp'] as const;
+export const LLM_FEATURES = ['ai', 'whatsapp', 'help'] as const;
 export type LlmFeature = (typeof LLM_FEATURES)[number];
 
 export const LLM_DRIVERS = { gateway: 'gateway', openaiCompatible: 'openai_compatible', mock: 'mock' } as const;
