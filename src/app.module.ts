@@ -36,6 +36,7 @@ import { MarketDataModule } from './modules/market-data/market-data.module';
 import { NoticesModule } from './modules/notices/notices.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { PortfolioWatchModule } from './modules/portfolio-watch/portfolio-watch.module';
 import { PortfolioExportModule } from './modules/portfolio-export/portfolio-export.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { GoalNoticesModule } from './modules/goal-notices/goal-notices.module';
@@ -109,6 +110,7 @@ const REDACTED_PATHS: string[] = [
         MarketDataModule,
         PortfolioModule,
         PortfolioExportModule,
+        PortfolioWatchModule,
         ConcentrationModule,
         ContributionModule,
         SpendingCategoriesModule,

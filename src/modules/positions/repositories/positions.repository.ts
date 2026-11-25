@@ -81,4 +81,15 @@ export class PositionsRepository extends TenantRepository<'Positions'> {
             .execute();
         return rows.map((row: { assetId: string }): string => row.assetId);
     }
+
+    public async listCompanyIdsWithRealAcrossTenants(): Promise<string[]> {
+        const rows: { companyId: string }[] = await this.selectSkipConstraint()
+            .select('companyId')
+            .distinct()
+            .where('deletedAt', 'is', null)
+            .where('isSample', '=', false)
+            .orderBy('companyId')
+            .execute();
+        return rows.map((row: { companyId: string }): string => row.companyId);
+    }
 }

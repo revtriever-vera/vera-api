@@ -13,6 +13,7 @@ export const QUEUES = {
     recurring: 'vera-recurring',
     goalNotices: 'vera-goal-notices',
     recurringNotices: 'vera-recurring-notices',
+    portfolioWatch: 'vera-portfolio-watch',
     billing: 'vera-billing'
 } as const;
 
@@ -54,6 +55,8 @@ export const MESSAGE_TYPES = {
     recurringDailyRequested: 'recurring.daily.requested',
     goalNoticesDailyRequested: 'goal-notices.daily.requested',
     goalNoticesEvaluateRequested: 'goal-notices.evaluate.requested',
+    portfolioWatchMonthlySnapshotRequested: 'portfolio-watch.monthly-snapshot.requested',
+    portfolioWatchMonthlySnapshotCompanyRequested: 'portfolio-watch.monthly-snapshot.company.requested',
     recurringNoticesDailyRequested: 'recurring-notices.daily.requested',
     recurringNoticesScheduleRequested: 'recurring-notices.schedule.requested',
     recurringWeekDue: 'recurring-notices.week.due',
