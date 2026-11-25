@@ -17,6 +17,7 @@ export const USAGE_STATES = { ok: 'ok', warning: 'warning', paused: 'paused' } a
 export type UsageStateKey = (typeof USAGE_STATES)[keyof typeof USAGE_STATES];
 
 export const BPS_FULL: number = 10_000;
+export const HELP_CAP_MICROS: number = 500_000;
 export const MICROS_PER_UNIT: number = 1_000_000;
 export const EXPORT_MONTHS_BACK: number = 12;
 export const RETENTION_MONTHS: number = 13;
@@ -32,6 +33,14 @@ export interface UsageDetail {
     readonly category?: SendCategory;
 }
 
+export interface HelpUsage {
+    readonly separate: boolean;
+    readonly capMicros: number | null;
+    readonly usedMicros: number;
+    readonly usedBps: number;
+    readonly state: UsageStateKey;
+}
+
 export interface UsageState {
     readonly period: string;
     readonly capMicros: number | null;
@@ -40,6 +49,7 @@ export interface UsageState {
     readonly byFeature: Readonly<Record<UsageFeature, number>>;
     readonly state: UsageStateKey;
     readonly resetsAt: string;
+    readonly help: HelpUsage;
 }
 
 export type FeatureMicros = Readonly<Record<UsageFeature, number>>;

@@ -31,7 +31,7 @@ import { AskVeraTelemetryService } from './ask-vera-telemetry.service';
 import { AskVeraToolPort } from './ask-vera-tool.port';
 import { AskVeraToolRegistry } from './ask-vera-tool.registry';
 
-export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraTurn } from '../domain/ask-vera.types';
+export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraSent, AskVeraTurn } from '../domain/ask-vera.types';
 export { INVESTMENT_NOTICE_TOOLS } from '../domain/ask-vera.types';
 export { investmentNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
 export { isReminderRequest } from '../domain/ask-prefilter';

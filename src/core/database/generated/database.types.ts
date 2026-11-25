@@ -145,6 +145,29 @@ export interface Assets {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssistantConversations {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    lastMessageAt: Generated<Timestamp>;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
+export interface AssistantMessages {
+    companyId: string;
+    conversationId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    mode: string | null;
+    role: string;
+    sent: Json | null;
+    status: string;
+    text: Generated<string>;
+    toolsUsed: Generated<Json>;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AuthIdentities {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1220,6 +1243,8 @@ export interface DB {
     AssetClasses: AssetClasses;
     AssetQuotes: AssetQuotes;
     Assets: Assets;
+    AssistantConversations: AssistantConversations;
+    AssistantMessages: AssistantMessages;
     AuthIdentities: AuthIdentities;
     BankConnectionAccounts: BankConnectionAccounts;
     BankConnections: BankConnections;

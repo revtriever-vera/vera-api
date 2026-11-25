@@ -14,6 +14,7 @@ function stateOf(
         period: '2026-10',
         resetsAt: RESETS_AT,
         capMicros,
+        helpCapMicros: null,
         byFeatureMicros: { ai, whatsapp, help: 0 },
         warningBps,
         minRoomMicros
@@ -60,5 +61,35 @@ describe('usageStateOf', () => {
     it('o piso nunca pausa antes da faixa de aviso, mesmo com teto menor que o piso', () => {
         expect(stateOf(10_000, 0, 0, 8000, 20_000).state).toBe('ok');
         expect(stateOf(10_000, 8_000, 0, 8000, 20_000).state).toBe('paused');
+    });
+
+    it('com teto separado da ajuda, a ajuda sai do total e tem o próprio estado', () => {
+        const state = usageStateOf({
+            period: '2026-10',
+            resetsAt: RESETS_AT,
+            capMicros: 4_000_000,
+            helpCapMicros: 500_000,
+            byFeatureMicros: { ai: 1_000_000, whatsapp: 0, help: 450_000 },
+            warningBps: 8000,
+            minRoomMicros: 0
+        });
+
+        expect(state).toMatchObject({ usedMicros: 1_000_000, usedBps: 2500, state: 'ok' });
+        expect(state.help).toEqual({ separate: true, capMicros: 500_000, usedMicros: 450_000, usedBps: 9000, state: 'warning' });
+    });
+
+    it('sem teto separado, a ajuda soma no total e herda o estado dele', () => {
+        const state = usageStateOf({
+            period: '2026-10',
+            resetsAt: RESETS_AT,
+            capMicros: 4_000_000,
+            helpCapMicros: null,
+            byFeatureMicros: { ai: 2_000_000, whatsapp: 0, help: 1_200_000 },
+            warningBps: 8000,
+            minRoomMicros: 0
+        });
+
+        expect(state).toMatchObject({ usedMicros: 3_200_000, state: 'warning' });
+        expect(state.help).toEqual({ separate: false, capMicros: 4_000_000, usedMicros: 1_200_000, usedBps: 8000, state: 'warning' });
     });
 });

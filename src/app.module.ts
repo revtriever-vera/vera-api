@@ -16,6 +16,7 @@ import { LlmModule } from './core/llm/llm.module';
 import { QueueModule } from './core/queue/queue.module';
 import { UsageModule } from './core/usage/usage.module';
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
+import { AssistantChatModule } from './modules/assistant-chat/assistant-chat.module';
 import { AllocationModule } from './modules/allocation/allocation.module';
 import { BankConnectionsModule } from './modules/bank-connections/bank-connections.module';
 import { BillingModule } from './modules/billing/billing.module';
@@ -96,6 +97,7 @@ const REDACTED_PATHS: string[] = [
         IntegrationCredentialsModule,
         AllocationModule,
         AiAssistantModule,
+        AssistantChatModule,
         OnboardingModule,
         CatalogModule,
         IssuersModule,

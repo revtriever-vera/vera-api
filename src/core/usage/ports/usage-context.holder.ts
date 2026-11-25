@@ -21,6 +21,14 @@ export class UsageContextHolder {
         return this.configuredCapMicros();
     }
 
+    public async helpCapMicros(): Promise<number | null> {
+        return this.port === null ? null : this.port.helpCapMicros();
+    }
+
+    public configuredHelpCapMicros(): number | null {
+        return this.config.PAID_HELP_CAP_MICROS === 0 ? null : this.config.PAID_HELP_CAP_MICROS;
+    }
+
     public configuredCapMicros(): number | null {
         return this.config.PAID_USAGE_CAP_MICROS === 0 ? null : this.config.PAID_USAGE_CAP_MICROS;
     }

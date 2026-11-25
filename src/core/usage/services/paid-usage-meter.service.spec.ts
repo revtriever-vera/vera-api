@@ -18,6 +18,7 @@ function stateOf(overrides: Partial<UsageState>): UsageState {
         byFeature: { ai: 0, whatsapp: 0, help: 0 },
         state: 'ok',
         resetsAt: '2026-11-01T03:00:00.000Z',
+        help: { separate: false, capMicros: 4_000_000, usedMicros: 0, usedBps: 0, state: 'ok' },
         ...overrides
     };
 }
@@ -69,6 +70,34 @@ describe('PaidUsageMeter.assertRoom', () => {
         await expect(tight.meter.assertRoom({ feature: 'whatsapp', task: 't', estimateMicros: 1000 })).resolves.toBeUndefined();
         expect(full.logs.capReached).toHaveBeenCalledWith('ai', 't', '2026-10');
         expect(full.metrics.capReached).toHaveBeenCalledWith('ai');
+    });
+});
+
+describe('PaidUsageMeter.assertRoom da ajuda', () => {
+    const SEPARATE = { separate: true, capMicros: 500_000, usedMicros: 499_000, usedBps: 9980, state: 'warning' } as const;
+
+    it('barra a ajuda pelo teto próprio, mesmo com o total longe do teto', async () => {
+        const meter = build(stateOf({ usedMicros: 0, help: SEPARATE })).meter;
+
+        await expect(meter.assertRoom({ feature: 'help', task: 't', estimateMicros: 1001 })).rejects.toMatchObject({
+            code: 'usage.cap_reached',
+            meta: { feature: 'help' }
+        });
+        await expect(meter.assertRoom({ feature: 'help', task: 't', estimateMicros: 1000 })).resolves.toBeUndefined();
+    });
+
+    it('a ajuda esgotada não trava a função paga', async () => {
+        const meter = build(stateOf({ help: { ...SEPARATE, usedMicros: 500_000 } })).meter;
+
+        await expect(meter.assertRoom({ feature: 'ai', task: 't', estimateMicros: 1000 })).resolves.toBeUndefined();
+    });
+
+    it('sem teto separado a ajuda divide o teto do total', async () => {
+        const meter = build(stateOf({ usedMicros: 4_000_000 })).meter;
+
+        await expect(meter.assertRoom({ feature: 'help', task: 't', estimateMicros: 0 })).rejects.toMatchObject({
+            code: 'usage.cap_reached'
+        });
     });
 });
 

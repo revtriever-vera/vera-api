@@ -14,6 +14,7 @@ export const COMMAND_KEYS = {
     investmentImportPreviewsPurge: 'investment-import-previews-purge-command',
     usageGauge: 'usage-gauge-command',
     aiSummariesRetention: 'ai-summaries-retention-command',
+    assistantChatRetention: 'assistant-chat-retention-command',
     whatsappTemplatesSync: 'whatsapp-templates-sync-command',
     whatsappHealth: 'whatsapp-health-command',
     whatsappRetention: 'whatsapp-retention-command',
