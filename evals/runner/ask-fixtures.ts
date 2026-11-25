@@ -15,6 +15,9 @@ import { buildMaturitiesContext } from '../../src/modules/ai-assistant/domain/co
 import { HELP_CATALOG } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { HelpRole } from '../../src/modules/ai-assistant/domain/help/help.types';
 import { HelpSearchTool } from '../../src/modules/ai-assistant/services/tools/help-search.tool';
+import { DataLockedTool } from '../../src/modules/ai-assistant/services/tools/data-locked.tool';
+import type { PlanGateService } from '../../src/modules/plans/services/plan-gate.service';
+import type { AiConsentService } from '../../src/modules/ai-assistant/services/ai-consent.service';
 import { WhereIsTool } from '../../src/modules/ai-assistant/services/tools/where-is.tool';
 import type { CurrentUserService } from '../../src/modules/identity/services/current-user.service';
 import type { ConcentrationResponse } from '../../src/modules/concentration/services/concentration-reader.service';
@@ -122,7 +125,15 @@ const CONCENTRATION_FIXTURE: ConcentrationResponse = {
     totalMinor: 41_200_000,
     equityTotalMinor: 20_000_000,
     byIssuer: [
-        { key: 'tesouro-nacional', kind: 'group', name: 'Tesouro Nacional', valueMinor: 12_360_000, shareBps: 3000, assets: [], moreCount: 0 },
+        {
+            key: 'tesouro-nacional',
+            kind: 'group',
+            name: 'Tesouro Nacional',
+            valueMinor: 12_360_000,
+            shareBps: 3000,
+            assets: [],
+            moreCount: 0
+        },
         { key: 'itau-unibanco', kind: 'group', name: 'Itaú Unibanco', valueMinor: 6_180_000, shareBps: 1500, assets: [], moreCount: 0 },
         { key: 'crypto', kind: 'bucket', name: null, valueMinor: 2_060_000, shareBps: 500, assets: [], moreCount: 0 }
     ],
@@ -210,9 +221,17 @@ export function helpToolsOf(locale: AppLocale, role: HelpRole): readonly AskVera
     return [new HelpSearchTool(context), new WhereIsTool(context, users)];
 }
 
+export function freeToolsOf(locale: AppLocale, role: HelpRole): readonly AskVeraTool[] {
+    const gate: PlanGateService = { allows: (): Promise<boolean> => Promise.resolve(false) } as unknown as PlanGateService;
+    const consent: AiConsentService = {} as unknown as AiConsentService;
+    return [...helpToolsOf(locale, role), new DataLockedTool(new EvalContext(locale), gate, consent)];
+}
+
 export function appToolsOf(item: AskCase): readonly AskVeraTool[] {
-    const help: readonly AskVeraTool[] = helpToolsOf(item.locale, item.role);
-    return item.plan === 'free' ? help : [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale), ...help];
+    if (item.plan === 'free') {
+        return freeToolsOf(item.locale, item.role);
+    }
+    return [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale), ...helpToolsOf(item.locale, item.role)];
 }
 
 function helpEvidenceOf(locale: AppLocale): JsonObject[] {
@@ -226,7 +245,9 @@ function helpEvidenceOf(locale: AppLocale): JsonObject[] {
 
 export async function evidenceOf(item: AskCase): Promise<string> {
     const tools: readonly AskVeraTool[] =
-        item.task === 'ask_vera_app_step' ? [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale)] : fixtureToolsOf(item.locale);
+        item.task === 'ask_vera_app_step'
+            ? [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale)]
+            : fixtureToolsOf(item.locale);
     const outputs: AskVeraToolOutput[] = await Promise.all(tools.map((tool: AskVeraTool): Promise<AskVeraToolOutput> => tool.run({})));
     const data: JsonObject[] = outputs.map((output: AskVeraToolOutput): JsonObject => output.payload);
     return JSON.stringify(item.task === 'ask_vera_app_step' ? [...data, ...helpEvidenceOf(item.locale)] : data);
