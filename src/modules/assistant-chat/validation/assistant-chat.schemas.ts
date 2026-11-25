@@ -25,6 +25,12 @@ export const feedbackBodySchema = z
     .object({ helpful: z.literal(false).describe('Only the negative signal is collected; nothing of the text is kept') })
     .strict();
 
+const accessSchema = z
+    .enum(['ok', 'premium_required', 'permission_required'])
+    .describe(
+        'Whether the answer was held back: premium_required when the plan lacks the feature, permission_required when the plan has it but the person did not allow sending the figures to the language model, ok otherwise. For a held-back answer, it reflects the state at read time'
+    );
+
 const usageSchema = z.object({
     state: z.enum(['ok', 'warning', 'paused']).describe('State of the usage band that applies to the next turn'),
     usedBps: z.number().int().describe('Share of that band used, in basis points'),
@@ -44,11 +50,25 @@ export const turnResponseSchema = z.object({
             source: z.enum(['help', 'ai']).describe('help: from the help content; ai: from the language model with the account figures'),
             toolsUsed: z.array(z.string()).describe('Names of the tools the answer used'),
             sentAvailable: z.boolean().describe('The figures sent to the language model are still stored'),
+            access: accessSchema,
             notice: z.string().nullable().describe('Investment notice line, when the answer needs one')
         })
         .optional()
         .describe('Present when the status is done'),
     usage: usageSchema.describe('Usage band, so the panel shows the quota without another call')
+});
+
+export const sentResponseSchema = z.object({
+    sent: z
+        .array(
+            z.object({
+                tool: z.string().describe('Name of the tool whose result went to the language model'),
+                payload: z
+                    .record(z.string(), z.unknown())
+                    .describe('The result exactly as it was serialized to the language model: aggregates, keys and markers only')
+            })
+        )
+        .describe('What went to the language model in this turn, in order; empty when nothing was sent or it was already erased')
 });
 
 export const conversationResponseSchema = z.object({
@@ -61,6 +81,8 @@ export const conversationResponseSchema = z.object({
                 text: z.string().describe('The text'),
                 status: z.enum(['pending', 'done', 'failed']).describe('Status of the message'),
                 toolsUsed: z.array(z.string()).describe('Tools the answer used'),
+                access: accessSchema,
+                sentAvailable: z.boolean().describe('The figures sent to the language model are still stored'),
                 notice: z.string().nullable().describe('Investment notice line, when the answer needs one'),
                 createdAt: z.string().describe('ISO 8601')
             })
@@ -73,6 +95,7 @@ export const conversationResponseSchema = z.object({
 export type SendTurnBody = z.infer<typeof sendTurnBodySchema>;
 export type TurnView = z.infer<typeof turnResponseSchema>;
 export type TurnStartedView = z.infer<typeof turnStartedResponseSchema>;
+export type SentView = z.infer<typeof sentResponseSchema>;
 export type ConversationView = z.infer<typeof conversationResponseSchema>;
 export type UsageView = z.infer<typeof usageSchema>;
 

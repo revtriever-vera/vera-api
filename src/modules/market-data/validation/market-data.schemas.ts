@@ -73,6 +73,20 @@ export const brapiResponseSchema = z.object({
 
 export type BrapiResponse = z.infer<typeof brapiResponseSchema>;
 
+export const brapiHistoryResponseSchema = z.object({
+    results: z.array(
+        z.object({
+            symbol: z.string().min(1),
+            historicalDataPrice: z
+                .array(z.object({ date: z.number().int(), close: z.number().nullable().optional() }))
+                .nullable()
+                .optional()
+        })
+    )
+});
+
+export type BrapiHistoryResponse = z.infer<typeof brapiHistoryResponseSchema>;
+
 export const finnhubQuoteSchema = z.object({
     c: z.number(),
     pc: z.number().optional(),

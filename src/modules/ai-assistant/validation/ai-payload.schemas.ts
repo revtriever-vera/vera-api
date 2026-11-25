@@ -1,6 +1,12 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { AiCutsContext, AiMonthContext, AiPortfolioContext } from '../domain/context/ai-context.types';
+import {
+    AiConcentrationContext,
+    AiCutsContext,
+    AiMaturitiesContext,
+    AiMonthContext,
+    AiPortfolioContext
+} from '../domain/context/ai-context.types';
 
 const MAX_GOAL_BPS: number = 9000;
 const MAX_CONTRIBUTION_MINOR: number = 100_000_000_000;
@@ -83,6 +89,64 @@ export const portfolioContextSchema: z.ZodType<AiPortfolioContext> = z
             })
             .strict()
             .optional()
+    })
+    .strict();
+
+export const concentrationContextSchema: z.ZodType<AiConcentrationContext> = z
+    .object({
+        moeda_base: text('Base currency'),
+        total: text('Total counted, formatted'),
+        total_acoes: text('Total of the equity classes, formatted'),
+        por_emissor: z
+            .array(
+                z
+                    .object({
+                        emissor: text('Issuer group from the curated list, or the label of a fixed bucket'),
+                        valor: text('Value, formatted'),
+                        pct: text('Share of the total, formatted')
+                    })
+                    .strict()
+            )
+            .describe('Largest issuers'),
+        outros_emissores: z
+            .object({ pct: text('Share beyond the largest issuers'), grupos: z.number().int().describe('How many groups') })
+            .strict()
+            .optional(),
+        por_setor: z
+            .array(
+                z
+                    .object({
+                        setor: text('Sector key from the closed list'),
+                        valor: text('Value, formatted'),
+                        pct: text('Share of the equities, formatted')
+                    })
+                    .strict()
+            )
+            .describe('Sectors of the equity holdings')
+    })
+    .strict();
+
+export const maturitiesContextSchema: z.ZodType<AiMaturitiesContext> = z
+    .object({
+        moeda_base: text('Currency of every value'),
+        ate: text('Last month covered, YYYY-MM'),
+        total: text('Estimated value maturing in the period, formatted'),
+        estimado: z.boolean().describe('Some value rests on an assumption'),
+        por_tipo: z
+            .array(
+                z
+                    .object({
+                        tipo: text('Kind of security: cdb, lci, lca, tesouro...'),
+                        total: text('Estimated value of the kind, formatted'),
+                        vencimentos: z
+                            .array(
+                                z.object({ mes: text('Month of maturity, YYYY-MM'), valor: text('Estimated value, formatted') }).strict()
+                            )
+                            .describe('Maturities by month')
+                    })
+                    .strict()
+            )
+            .describe('Maturities by kind of security')
     })
     .strict();
 

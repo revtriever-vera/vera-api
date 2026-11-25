@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { UsageState } from '../../../core/usage/usage.types';
 import { investmentNoticeText } from '../../ai-assistant/services/ask-vera.service';
-import { retentionCutoffOf, sentAvailableOf, splitNotice, toolsOf, usageViewOf } from './turn-view';
+import { accessOf, retentionCutoffOf, sentAvailableOf, sentOf, splitNotice, toolsOf, usageViewOf } from './turn-view';
 
 const STATE: UsageState = {
     period: '2026-11',
@@ -37,5 +37,19 @@ describe('turn-view', () => {
 
     it('calcula o corte da retenção em dias', () => {
         expect(retentionCutoffOf(new Date('2026-12-01T00:00:00.000Z'), 30).toISOString()).toBe('2026-11-01T00:00:00.000Z');
+    });
+
+    it('devolve o que foi enviado como está, e lista vazia sem nada gravado', () => {
+        const sent = [{ tool: 'portfolio_overview', payload: { total: 'R$ 1.000' } }];
+
+        expect(sentOf({ sent })).toEqual(sent);
+        expect(sentOf({ sent: null })).toEqual([]);
+    });
+
+    it('só marca acesso travado na resposta que usou data_locked; as demais são ok', () => {
+        expect(accessOf({ toolsUsed: ['data_locked'] }, 'premium_required')).toBe('premium_required');
+        expect(accessOf({ toolsUsed: ['data_locked'] }, 'permission_required')).toBe('permission_required');
+        expect(accessOf({ toolsUsed: ['help_search'] }, 'premium_required')).toBe('ok');
+        expect(accessOf({ toolsUsed: [] }, 'permission_required')).toBe('ok');
     });
 });

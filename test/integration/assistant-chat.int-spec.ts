@@ -34,13 +34,26 @@ interface StartedBody {
 
 interface TurnBody {
     readonly status: string;
-    readonly answer?: { readonly text: string; readonly source: string; readonly sentAvailable: boolean; readonly notice: string | null };
+    readonly answer?: {
+        readonly text: string;
+        readonly source: string;
+        readonly sentAvailable: boolean;
+        readonly access: string;
+        readonly notice: string | null;
+    };
     readonly usage: { readonly state: string; readonly usedBps: number; readonly resetsAt: string };
 }
 
 interface ConversationBody {
     readonly conversationId: string | null;
-    readonly messages: { readonly id: string; readonly role: string; readonly text: string; readonly status: string }[];
+    readonly messages: {
+        readonly id: string;
+        readonly role: string;
+        readonly text: string;
+        readonly status: string;
+        readonly access: string;
+        readonly sentAvailable: boolean;
+    }[];
 }
 
 interface ProblemBody {
@@ -197,6 +210,34 @@ describe('assistant chat', () => {
         expect(calls.rows.map((row) => row.feature)).toEqual(['ai']);
     });
 
+    it('estado de acesso por resposta: Free vê premium_required, Premium sem permissão permission_required, e pergunta sobre o plano fica ok', async () => {
+        const free: Account = await harness.signUp('chat-access-free');
+        const without: Account = await premium('chat-access-noconsent', false);
+        const withConsent: Account = await premium('chat-access-consent', true);
+        const lockedTurn = async (account: Account, text: string): Promise<StartedBody> => {
+            llm.enqueue({ text: '', toolUses: [{ toolUseId: 'u1', name: 'data_locked', input: {} }] });
+            llm.enqueue(text);
+            const started = await harness.call<StartedBody>(account.token, 'POST', '/assistant/turns', { text: 'quanto gastei no mês?' });
+            await drain(account);
+            return started.body;
+        };
+
+        const freeTurn: StartedBody = await lockedTurn(free, 'Isso é do Premium: veja o [Plano e uso](/settings/plan).');
+        const withoutTurn: StartedBody = await lockedTurn(without, 'Falta permitir em [Dados e privacidade](/settings/privacy).');
+        const planTurn: StartedBody = await ask(without, 'o que o Premium inclui?', 'Veja o [Plano e uso](/settings/plan).');
+        const okTurn: StartedBody = await ask(withConsent, 'como adiciono um ativo?');
+
+        expect((await turn(free, freeTurn.turnId)).body.answer).toMatchObject({ access: 'premium_required', sentAvailable: false });
+        expect((await turn(without, withoutTurn.turnId)).body.answer).toMatchObject({ access: 'permission_required' });
+        expect((await turn(without, planTurn.turnId)).body.answer?.access).toBe('ok');
+        expect((await turn(withConsent, okTurn.turnId)).body.answer?.access).toBe('ok');
+        const history = await harness.call<ConversationBody>(without.token, 'GET', '/assistant/conversations/current');
+        expect(history.body.messages.filter((message) => message.role === 'vera').map((message) => message.access)).toEqual([
+            'permission_required',
+            'ok'
+        ]);
+    });
+
     it('a conversa é de quem pergunta: outra pessoa da conta e outra conta recebem 404, e a lista da outra conta vem vazia', async () => {
         const owner: Account = await harness.signUp('chat-private');
         const colleague: Account = await memberOf(owner);
@@ -343,7 +384,7 @@ describe('assistant chat', () => {
         await harness.pg.query(`UPDATE "AssistantMessages" SET "createdAt" = now() - interval '31 days' WHERE "id" = $1`, [old.turnId]);
         await harness.pg.query(`UPDATE "AssistantMessages" SET "createdAt" = now() - interval '29 days' WHERE "id" = $1`, [fresh.turnId]);
         await harness.pg.query(
-            `UPDATE "AssistantMessages" SET "sent" = '[{"tool":"portfolio_overview","payload":{}}]'::jsonb WHERE "id" = $1`,
+            `UPDATE "AssistantMessages" SET "sent" = '[{"tool":"portfolio_overview","payload":{}}]'::json WHERE "id" = $1`,
             [fresh.turnId]
         );
         const application: AssistantConversationApplication = harness.app.get(AssistantConversationApplication, { strict: false });

@@ -61,7 +61,7 @@ function askApp(service: AskVeraService, text: string, feature: 'ai' | 'help' = 
         messageId: 'm2',
         channel: 'app',
         feature,
-        screen: { path: '/metas' },
+        screen: { path: '/portfolio/goals' },
         allowedTools: new Set()
     });
 }
@@ -170,7 +170,7 @@ describe('AskVeraService', () => {
         const request = sentRequest(generate);
         expect(request).toMatchObject({ task: 'ask_vera_app_step', feature: 'help' });
         expect(request.system).toContain('dentro do app');
-        expect(request.system).toContain('/metas');
+        expect(request.system).toContain('A pessoa está em Objetivos');
     });
 
     it('não põe o aviso em resposta sobre gastos', async () => {

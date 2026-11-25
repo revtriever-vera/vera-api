@@ -1,0 +1,45 @@
+{
+  "id": "ibovespa-ytd-en",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "how has the Ibovespa done this year?",
+  "history": [],
+  "tools": {
+    "required": [
+      "market_benchmarks"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "market_benchmarks",
+      "input": {
+        "windows": [
+          "ytd"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "4.10%"
+    ],
+    "mustMention": [
+      "This is not a recommendation to buy or sell."
+    ],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "The Ibovespa is up **4.10%** so far this year, as of 03/19/2026, according to brapi."
+  ]
+}

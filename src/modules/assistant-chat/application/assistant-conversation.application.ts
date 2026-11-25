@@ -3,6 +3,8 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { LlmAvailabilityService } from '../../../core/llm/services/llm-availability.service';
 import { TurnNotFoundError } from '../domain/assistant-chat.errors';
 import {
+    ACCESS_STATES,
+    AccessState,
     AssistantConversation,
     AssistantMessage,
     CURRENT_MESSAGES_LIMIT,
@@ -12,7 +14,7 @@ import {
 } from '../domain/assistant-chat.types';
 import { AssistantConversationDomain } from '../domain/assistant-conversation.domain';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
-import { retentionCutoffOf, splitNotice, toolsOf } from '../domain/turn-view';
+import { accessOf, retentionCutoffOf, sentAvailableOf, splitNotice, toolsOf } from '../domain/turn-view';
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantTurnExpiry } from '../services/assistant-turn.expiry';
@@ -42,9 +44,14 @@ export class AssistantConversationApplication {
         }
         const rows: AssistantMessage[] = await this.messages.latestOf(conversation.id, CURRENT_MESSAGES_LIMIT);
         const settled: AssistantMessage[] = await Promise.all(rows.map(async (row: AssistantMessage) => this.expiry.settled(row)));
+        const lock: AccessState = settled.some(
+            (row: AssistantMessage): boolean => accessOf(row, ACCESS_STATES.premiumRequired) !== ACCESS_STATES.ok
+        )
+            ? await this.access.lockOf()
+            : ACCESS_STATES.ok;
         return {
             conversationId: conversation.id,
-            messages: settled.map((row: AssistantMessage): MessageView => this.viewOf(row)),
+            messages: settled.map((row: AssistantMessage): MessageView => this.viewOf(row, lock)),
             usage,
             enabled
         };
@@ -66,7 +73,7 @@ export class AssistantConversationApplication {
         return conversations + messages;
     }
 
-    private viewOf(row: AssistantMessage): MessageView {
+    private viewOf(row: AssistantMessage, lock: AccessState): MessageView {
         const split: { text: string; notice: string | null } = splitNotice(row.text);
         const done: boolean = row.status === MESSAGE_STATUSES.done;
         return {
@@ -75,6 +82,8 @@ export class AssistantConversationApplication {
             text: split.text,
             status: row.status as MessageView['status'],
             toolsUsed: toolsOf(row),
+            access: accessOf(row, lock),
+            sentAvailable: sentAvailableOf(row),
             notice: done ? split.notice : null,
             createdAt: row.createdAt.toISOString()
         };

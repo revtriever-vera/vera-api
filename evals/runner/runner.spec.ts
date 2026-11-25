@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LLM_TASK_CATALOG } from '../../src/core/llm/catalog/llm-task.catalog';
-import { Baseline } from './baseline';
+import { Baseline, mergedBaselineTasks } from './baseline';
 import { EvalCase, EvalTask } from './case.schemas';
 import { casesOf, EVAL_TASKS } from './cases';
 import { HELP_ROUTES } from '../../src/modules/ai-assistant/domain/help/help-catalog';
@@ -178,6 +178,27 @@ describe('rodada no modo mock', () => {
         expect(problems).toHaveLength(2);
         expect(problems[0]).toContain('below the threshold');
         expect(problems[1]).toContain('baseline');
+    });
+
+    it('regrava só a tarefa rodada e preserva as outras da baseline', async () => {
+        const run: TaskRun = await runTask(engineOf({ mode: 'mock', baseUrl: undefined, model: undefined, maxUsd: 1 }), 'summary_month', {
+            reps: 1,
+            judge: true,
+            reasoning: undefined
+        });
+        const entry: Baseline['tasks'][string] = {
+            promptVersion: 'v1',
+            reasoning: 'minimal',
+            judgeAverage: 4,
+            averageLatencyMs: 1,
+            costBrlPerRun: 0
+        };
+        const previous: Baseline = { updatedAt: '2026-11-23', model: 'm', tasks: { summary_month: entry, summary_cuts: entry } };
+
+        const tasks: Baseline['tasks'] = mergedBaselineTasks(previous, [summaryOf(run, 5.5)]);
+
+        expect(tasks['summary_cuts']).toEqual(entry);
+        expect(tasks['summary_month']?.judgeAverage).toBe(5);
     });
 
     it('para quando o custo passa do orçamento', async () => {

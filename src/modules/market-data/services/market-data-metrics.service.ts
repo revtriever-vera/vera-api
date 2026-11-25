@@ -6,6 +6,7 @@ const FETCH_TOTAL: string = 'vera_quotes_fetch_total';
 const STALE_ASSETS: string = 'vera_quotes_stale_assets';
 const BUDGET_RATIO: string = 'vera_provider_budget_used_ratio';
 const RATE_AGE: string = 'vera_exchange_rate_age_days';
+const INDEX_AGE: string = 'vera_market_index_age_days';
 
 @Injectable()
 export class MarketDataMetricsService {
@@ -27,5 +28,9 @@ export class MarketDataMetricsService {
 
     public rateAge(currency: string, days: number): void {
         this.metrics.gauge(RATE_AGE, days, { currency });
+    }
+
+    public indexAge(symbol: string, days: number): void {
+        this.metrics.gauge(INDEX_AGE, days, { symbol });
     }
 }

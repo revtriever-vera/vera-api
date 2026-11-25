@@ -18,6 +18,17 @@ export interface ImportLogFields {
     readonly titles?: number;
 }
 
+export interface ModelReadLogFields {
+    readonly kind: string;
+    readonly sizeBytes: number;
+    readonly calls: number;
+    readonly pagesNotRead: number;
+    readonly costMicros: number;
+    readonly operations: number;
+    readonly rejected: number;
+    readonly documentType: string | null;
+}
+
 @Injectable()
 export class InvestmentImportLogService {
     public constructor(private readonly logService: LogService) {}
@@ -32,5 +43,21 @@ export class InvestmentImportLogService {
 
     public purged(removed: number): void {
         this.logService.info({ message: 'investment import previews purged', identifier: IDENTIFIER, meta: { action: 'purged', removed } });
+    }
+
+    public modelRead(fields: ModelReadLogFields): void {
+        this.logService.info({
+            message: 'investment import model read',
+            identifier: IDENTIFIER,
+            meta: { action: 'model_read', ...fields }
+        });
+    }
+
+    public modelFailed(reason: string, fields: Pick<ModelReadLogFields, 'kind' | 'sizeBytes'>): void {
+        this.logService.warn({
+            message: 'investment import model read failed',
+            identifier: IDENTIFIER,
+            meta: { action: 'model_failed', reason, ...fields }
+        });
     }
 }

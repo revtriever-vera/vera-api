@@ -1,0 +1,76 @@
+{
+  "id": "nota-opcao",
+  "description": "Nota com opção: a linha da opção é ignorada com o motivo, a ação entra",
+  "file": "test/fixtures/investment-import/generated/notes/nota-opcao.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010012",
+        "tradeDate": "2026-11-18",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "PETROBRAS PN N2",
+            "market": "VISTA",
+            "quantity": "100",
+            "unitPrice": "38.50",
+            "grossMinor": 385000,
+            "dayTrade": null
+          },
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "PETRK400 PETROBRAS PN N2 E 40,00",
+            "market": "OPCAO DE COMPRA",
+            "quantity": "1000",
+            "unitPrice": "0.85",
+            "grossMinor": 85000,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 470000,
+        "netMinor": -470659,
+        "fees": {
+          "settlementMinor": 129,
+          "exchangeMinor": 15,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 0,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "PETR4",
+        "kind": "buy",
+        "quantity": "100",
+        "unitPrice": "38.50",
+        "grossMinor": 385000,
+        "feesMinor": 540
+      }
+    ],
+    "ignored": [
+      {
+        "description": "PETRK400 PETROBRAS PN N2 E 40,00",
+        "reason": "unsupported_market"
+      }
+    ],
+    "notes": []
+  }
+}

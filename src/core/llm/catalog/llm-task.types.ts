@@ -12,4 +12,5 @@ export interface LlmTaskSpec {
     readonly maxRetries: number;
     readonly evalThreshold: number;
     readonly promptVersion: string;
+    readonly outsideCap?: boolean;
 }

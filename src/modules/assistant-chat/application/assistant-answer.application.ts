@@ -5,7 +5,7 @@ import { AppError } from '../../../shared/errors/app.error';
 import { AskVeraAnswer, AskVeraService, AskVeraTurn } from '../../ai-assistant/services/ask-vera.service';
 import { AssistantMessage, MESSAGE_STATUSES, TURN_MODES, TurnMode } from '../domain/assistant-chat.types';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
-import { APP_CHANNEL_TOOLS } from '../domain/channel-tools';
+import { appToolsOf } from '../domain/channel-tools';
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantChatMetricsService, TURN_OUTCOMES, TurnOutcome } from '../services/assistant-chat-metrics.service';
@@ -65,7 +65,7 @@ export class AssistantAnswerApplication {
             })),
             locale: request.locale,
             messageId: request.turnId,
-            allowedTools: APP_CHANNEL_TOOLS,
+            allowedTools: appToolsOf(mode),
             ...(request.screenPath === undefined ? {} : { screen: { path: request.screenPath } })
         });
     }

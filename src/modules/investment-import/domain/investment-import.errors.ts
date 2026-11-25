@@ -117,3 +117,52 @@ export class DuplicateTitleError extends AppError {
         });
     }
 }
+
+export class ModelUnavailableError extends AppError {
+    public constructor() {
+        super({
+            code: 'model.unavailable',
+            status: 503,
+            detail: 'No language model is configured: notes, statements and prints cannot be read; the B3 Excel report still works.'
+        });
+    }
+}
+
+export class ModelConfirmationRequiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'model.confirmation_required',
+            status: 428,
+            detail: 'The file would be sent to a language model: resend it with `modelConsent=true` after the person agrees.',
+            meta: { sentTo: 'language_model', provider: 'vercel' }
+        });
+    }
+}
+
+export class ModelUnreadableError extends AppError {
+    public constructor(reason: 'invalid_response' | 'no_operations' | 'positions_without_price') {
+        super({
+            code: 'model.unreadable',
+            status: 422,
+            detail: 'The file could not be read: try a sharper image or the PDF file.',
+            meta: { reason }
+        });
+    }
+}
+
+export class FileTooManyPagesError extends AppError {
+    public constructor(limit: number) {
+        super({
+            code: 'file.too_many_pages',
+            status: 422,
+            detail: 'The document has more pages than the reader accepts.',
+            meta: { limit }
+        });
+    }
+}
+
+export class FileUnreadableError extends AppError {
+    public constructor(reason: 'corrupt' | 'timeout' | 'too_much_text') {
+        super({ code: 'file.unreadable', status: 422, detail: 'The file is damaged or too heavy to be read.', meta: { reason } });
+    }
+}

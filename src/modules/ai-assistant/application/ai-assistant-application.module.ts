@@ -4,8 +4,11 @@ import { ContextModule } from '../../../core/context/context.module';
 import { LlmModule } from '../../../core/llm/llm.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { UsageModule } from '../../../core/usage/usage.module';
+import { ConcentrationApplicationModule } from '../../concentration/application/concentration-application.module';
 import { ContributionApplicationModule } from '../../contribution/application/contribution-application.module';
+import { FixedIncomeScheduleApplicationModule } from '../../fixed-income-schedule/application/fixed-income-schedule-application.module';
 import { IdentityApplicationModule } from '../../identity/application/identity-application.module';
+import { MarketBenchmarksApplicationModule } from '../../market-benchmarks/application/market-benchmarks-application.module';
 import { PlansApplicationModule } from '../../plans/application/plans-application.module';
 import { PortfolioApplicationModule } from '../../portfolio/application/portfolio-application.module';
 import { SpendingCategoriesApplicationModule } from '../../spending-categories/application/spending-categories-application.module';
@@ -30,9 +33,13 @@ import { AskVeraAccessService } from '../services/ask-vera-access.service';
 import { AskVeraTelemetryService } from '../services/ask-vera-telemetry.service';
 import { AskVeraToolRegistry } from '../services/ask-vera-tool.registry';
 import { AskVeraService } from '../services/ask-vera.service';
+import { ConcentrationOverviewTool } from '../services/tools/concentration-overview.tool';
 import { ContributionSuggestionTool } from '../services/tools/contribution-suggestion.tool';
+import { FixedIncomeMaturitiesTool } from '../services/tools/fixed-income-maturities.tool';
+import { DataLockedTool } from '../services/tools/data-locked.tool';
 import { HelpSearchTool } from '../services/tools/help-search.tool';
 import { ListCategoriesTool } from '../services/tools/list-categories.tool';
+import { MarketBenchmarksTool } from '../services/tools/market-benchmarks.tool';
 import { PortfolioOverviewTool } from '../services/tools/portfolio-overview.tool';
 import { SpendingByCategoryTool } from '../services/tools/spending-by-category.tool';
 import { SpendingCutsTool } from '../services/tools/spending-cuts.tool';
@@ -58,6 +65,9 @@ import { SummariesApplication } from './summaries.application';
         SpendingCutsApplicationModule,
         PortfolioApplicationModule,
         ContributionApplicationModule,
+        ConcentrationApplicationModule,
+        FixedIncomeScheduleApplicationModule,
+        MarketBenchmarksApplicationModule,
         SpendingCategoriesApplicationModule,
         TransactionsApplicationModule
     ],
@@ -89,9 +99,13 @@ import { SummariesApplication } from './summaries.application';
         SpendingByCategoryTool,
         PortfolioOverviewTool,
         ContributionSuggestionTool,
+        ConcentrationOverviewTool,
+        FixedIncomeMaturitiesTool,
+        MarketBenchmarksTool,
         ListCategoriesTool,
         HelpSearchTool,
-        WhereIsTool
+        WhereIsTool,
+        DataLockedTool
     ],
     exports: [
         AiConsentApplication,

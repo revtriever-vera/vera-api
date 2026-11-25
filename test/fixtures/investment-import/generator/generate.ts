@@ -1,6 +1,9 @@
+import { buildAvenueStatements } from './avenue-statements';
 import { buildB3Reports } from './b3-reports';
+import { buildCryptoExports } from './crypto-exports';
 import { buildFixedIncomeExpectations } from './b3-fixed-income';
 import { buildB3PositionPdf } from './b3-pdf';
+import { buildBrokerageNotes } from './brokerage-notes';
 import { buildBrokerScreens, ScreenFile } from './broker-screens';
 import { sheetToCsv } from './csv-writer';
 import { encodePng } from './png-writer';
@@ -40,7 +43,14 @@ function screenFiles(): [string, Buffer][] {
 export async function generateDocumentFixtures(): Promise<GeneratedFiles> {
     const reports: ReportFile[] = buildB3Reports();
     const perReport: [string, Buffer][][] = await Promise.all(reports.map(reportFiles));
-    return new Map<string, Buffer>([...perReport.flat(), ...positionPdf(reports), ...expectationFile()]);
+    return new Map<string, Buffer>([
+        ...perReport.flat(),
+        ...positionPdf(reports),
+        ...expectationFile(),
+        ...buildCryptoExports(),
+        ...buildAvenueStatements(),
+        ...buildBrokerageNotes()
+    ]);
 }
 
 export async function generateAllFixtures(): Promise<GeneratedFiles> {

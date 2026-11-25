@@ -64,7 +64,14 @@ export interface AskVeraAnswer {
 
 export type AskVeraOutcome = 'model' | 'fixed_refusal' | 'fixed_greeting' | 'fallback' | 'cap_reached';
 
-export const INVESTMENT_NOTICE_TOOLS: ReadonlySet<string> = new Set(['portfolio_overview', 'contribution_suggestion', 'goals_overview']);
+export const INVESTMENT_NOTICE_TOOLS: ReadonlySet<string> = new Set([
+    'portfolio_overview',
+    'contribution_suggestion',
+    'goals_overview',
+    'concentration_overview',
+    'fixed_income_maturities',
+    'market_benchmarks'
+]);
 
 export interface AskVeraToolProposal {
     readonly summary: string;

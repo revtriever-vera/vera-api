@@ -1,0 +1,79 @@
+{
+  "id": "nota-escaneada",
+  "description": "Nota SINACOR escaneada: PDF só com imagem, sem camada de texto",
+  "file": "test/fixtures/investment-import/generated/notes/nota-escaneada.pdf",
+  "input": "image",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010005",
+        "tradeDate": "2026-11-09",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "PETROBRAS PN N2",
+            "market": "VISTA",
+            "quantity": "100",
+            "unitPrice": "38.50",
+            "grossMinor": 385000,
+            "dayTrade": null
+          },
+          {
+            "side": "sell",
+            "code": null,
+            "securitySpec": "VALE ON NM",
+            "market": "VISTA",
+            "quantity": "50",
+            "unitPrice": "62.10",
+            "grossMinor": 310500,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 695500,
+        "netMinor": -75245,
+        "fees": {
+          "settlementMinor": 191,
+          "exchangeMinor": 23,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 16,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "PETR4",
+        "kind": "buy",
+        "quantity": "100",
+        "unitPrice": "38.50",
+        "grossMinor": 385000,
+        "feesMinor": 404
+      },
+      {
+        "ticker": "VALE3",
+        "kind": "sell",
+        "quantity": "50",
+        "unitPrice": "62.10",
+        "grossMinor": 310500,
+        "feesMinor": 325
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

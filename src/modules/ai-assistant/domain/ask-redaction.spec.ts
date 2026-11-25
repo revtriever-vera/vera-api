@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { luhnValid, redactPersonalData, redactTurns, REDACTED } from './ask-redaction';
+import { luhnValid, redactPersonalData, REDACTED } from '../../../shared/utils/personal-data-redaction';
+import { redactTurns } from './ask-redaction';
 
 describe('redactPersonalData', () => {
     it.each([

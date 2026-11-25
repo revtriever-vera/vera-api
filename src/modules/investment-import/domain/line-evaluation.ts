@@ -1,3 +1,4 @@
+import { grossBrlOf } from './foreign/foreign-dollar';
 import { mulDecimal, toMinor } from '../../../shared/utils/decimal.util';
 import {
     BalanceView,
@@ -40,6 +41,16 @@ export interface LineFacts {
     readonly duplicate: boolean;
     readonly failure: string | null;
     readonly hasPosition: boolean;
+    readonly foreignCheck: string | null;
+}
+
+function settledVerdictOf(facts: LineFacts): LineVerdict {
+    const { edited } = facts;
+    if (facts.hasPosition && affectsPositionByKind(edited.line.kind) && edited.positionMode === null) {
+        return { status: LINE_STATUSES.check, reason: LINE_REASONS.positionModeRequired };
+    }
+    const check: string | null = edited.line.check ?? facts.foreignCheck;
+    return check === null ? { status: LINE_STATUSES.ok, reason: null } : { status: LINE_STATUSES.check, reason: check };
 }
 
 export function verdictOf(facts: LineFacts): LineVerdict {
@@ -53,16 +64,16 @@ export function verdictOf(facts: LineFacts): LineVerdict {
     if (hasUnsupportedDirection(edited)) {
         return { status: LINE_STATUSES.blocked, reason: LINE_REASONS.unsupportedDirection };
     }
+    if (edited.line.check === LINE_REASONS.assumedCost && facts.hasPosition) {
+        return { status: LINE_STATUSES.ignored, reason: LINE_REASONS.skipped };
+    }
     if (facts.duplicate) {
         return { status: LINE_STATUSES.duplicate, reason: LINE_REASONS.duplicate };
     }
     if (facts.failure !== null) {
         return { status: LINE_STATUSES.blocked, reason: facts.failure };
     }
-    const needsChoice: boolean = facts.hasPosition && affectsPositionByKind(edited.line.kind) && edited.positionMode === null;
-    return needsChoice
-        ? { status: LINE_STATUSES.check, reason: LINE_REASONS.positionModeRequired }
-        : { status: LINE_STATUSES.ok, reason: null };
+    return settledVerdictOf(facts);
 }
 
 export function modeOf(edited: EditedLine, hasPosition: boolean): PositionMode | null {
@@ -70,6 +81,14 @@ export function modeOf(edited: EditedLine, hasPosition: boolean): PositionMode |
         return null;
     }
     return edited.positionMode ?? (hasPosition ? null : POSITION_MODES.add);
+}
+
+function dollarViewOf(edited: EditedLine): Pick<EvaluatedLine, 'fxRate' | 'grossBrlMinor' | 'withheldTaxMinor'> {
+    const { dollar } = edited.line;
+    if (dollar === undefined) {
+        return {};
+    }
+    return { fxRate: dollar.fxRate, grossBrlMinor: grossBrlOf(edited, grossOf(edited)), withheldTaxMinor: dollar.withheldTaxMinor };
 }
 
 export function evaluatedOf(facts: LineFacts, verdict: LineVerdict): EvaluatedLine {
@@ -89,7 +108,8 @@ export function evaluatedOf(facts: LineFacts, verdict: LineVerdict): EvaluatedLi
         grossMinor: facts.edited.repriced ? grossOf(facts.edited) : line.grossMinor,
         feesMinor: facts.edited.feesMinor,
         currency: line.currency,
-        positionMode: modeOf(facts.edited, facts.hasPosition)
+        positionMode: modeOf(facts.edited, facts.hasPosition),
+        ...dollarViewOf(facts.edited)
     };
 }
 

@@ -2,6 +2,7 @@ import {
     B3_REPORT_KINDS,
     B3ReportKind,
     IgnoredLine,
+    DOCUMENT_TYPES,
     PARSED_SOURCES,
     ParsedFixedIncome,
     ParsedInvestmentStatement,
@@ -66,13 +67,15 @@ function emptyAccumulator(): Accumulator {
 function statementOf(accumulator: Accumulator): ParsedInvestmentStatement {
     return {
         source: PARSED_SOURCES.b3,
+        documentType: DOCUMENT_TYPES.b3Report,
         reportKinds: [...accumulator.kinds],
         currency: 'BRL',
         operations: accumulator.operations,
         positionAdjustments: accumulator.positionAdjustments,
         fixedIncome: accumulator.fixedIncome,
         ignored: accumulator.ignored,
-        rejected: accumulator.rejected
+        rejected: accumulator.rejected,
+        notes: []
     };
 }
 

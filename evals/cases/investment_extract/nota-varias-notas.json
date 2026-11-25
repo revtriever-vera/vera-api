@@ -1,0 +1,114 @@
+{
+  "id": "nota-varias-notas",
+  "description": "Duas notas de pregões diferentes no mesmo PDF",
+  "file": "test/fixtures/investment-import/generated/notes/nota-varias-notas.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010006",
+        "tradeDate": "2026-11-10",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "PETROBRAS PN N2",
+            "market": "VISTA",
+            "quantity": "100",
+            "unitPrice": "38.50",
+            "grossMinor": 385000,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 385000,
+        "netMinor": -385634,
+        "fees": {
+          "settlementMinor": 106,
+          "exchangeMinor": 13,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 0,
+          "otherMinor": 0
+        }
+      },
+      {
+        "number": "1010007",
+        "tradeDate": "2026-11-11",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "VALE ON NM",
+            "market": "VISTA",
+            "quantity": "50",
+            "unitPrice": "62.10",
+            "grossMinor": 310500,
+            "dayTrade": null
+          },
+          {
+            "side": "sell",
+            "code": null,
+            "securitySpec": "ITAU UNIBANCO PN N1",
+            "market": "VISTA",
+            "quantity": "100",
+            "unitPrice": "33.50",
+            "grossMinor": 335000,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 645500,
+        "netMinor": 23769,
+        "fees": {
+          "settlementMinor": 178,
+          "exchangeMinor": 21,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 17,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "PETR4",
+        "kind": "buy",
+        "quantity": "100",
+        "unitPrice": "38.50",
+        "grossMinor": 385000,
+        "feesMinor": 634
+      },
+      {
+        "ticker": "VALE3",
+        "kind": "buy",
+        "quantity": "50",
+        "unitPrice": "62.10",
+        "grossMinor": 310500,
+        "feesMinor": 343
+      },
+      {
+        "ticker": "ITUB4",
+        "kind": "sell",
+        "quantity": "100",
+        "unitPrice": "33.50",
+        "grossMinor": 335000,
+        "feesMinor": 371
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

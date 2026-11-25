@@ -17,10 +17,12 @@ import {
     TurnIdParamsDto,
     TurnStartedView,
     TurnView,
+    SentView,
     UsageView,
     conversationResponseSchema,
     feedbackBodySchema,
     sendTurnBodySchema,
+    sentResponseSchema,
     turnResponseSchema,
     turnStartedResponseSchema
 } from '../../validation/assistant-chat.schemas';
@@ -40,9 +42,22 @@ const TURN_EXAMPLE: TurnView = {
         source: 'help',
         toolsUsed: ['help_search'],
         sentAvailable: false,
+        access: 'ok',
         notice: null
     },
     usage: USAGE_EXAMPLE
+};
+const SENT_EXAMPLE: SentView = {
+    sent: [
+        {
+            tool: 'portfolio_overview',
+            payload: {
+                moeda_base: 'BRL',
+                total: 'R$ 120.000',
+                carteira_pct: [{ chave: 'rf_pos', atual: '40%', meta: '35%', situacao: 'acima' }]
+            }
+        }
+    ]
 };
 const CONVERSATION_EXAMPLE: ConversationView = {
     conversationId: CONVERSATION_ID,
@@ -53,6 +68,8 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             text: 'Onde vejo meus gastos?',
             status: 'done',
             toolsUsed: [],
+            access: 'ok',
+            sentAvailable: false,
             notice: null,
             createdAt: '2026-11-25T12:00:00.000Z'
         },
@@ -62,6 +79,8 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             text: 'Para ver os gastos do mês, abra **Gastos** no menu lateral.',
             status: 'done',
             toolsUsed: ['help_search'],
+            access: 'ok',
+            sentAvailable: false,
             notice: null,
             createdAt: '2026-11-25T12:00:00.001Z'
         }
@@ -146,6 +165,22 @@ export class AssistantChatController {
     @problems(INVALID, UNAUTHORIZED, NOT_FOUND)
     public async turn(@Param() params: TurnIdParamsDto): Promise<TurnView> {
         return this.turns.get(params.id);
+    }
+
+    @Get('turns/:id/sent')
+    @RequiresRole('viewer')
+    @Header('Cache-Control', NO_STORE)
+    @ApiOperation({
+        summary: 'See what was sent to the language model in a turn',
+        description:
+            'The tool results of the turn, as they were serialized to the language model. Only the person who asked sees them. ' +
+            'Empty for a `help` turn, and emptied for good when the person turns off the permission to send figures.'
+    })
+    @ApiParam({ name: 'id', description: 'Turn id' })
+    @ApiZodResponse({ status: 200, description: 'What was sent', schema: sentResponseSchema, example: SENT_EXAMPLE })
+    @problems(INVALID, UNAUTHORIZED, NOT_FOUND)
+    public async sent(@Param() params: TurnIdParamsDto): Promise<SentView> {
+        return this.turns.sent(params.id);
     }
 
     @Post('turns/:id/feedback')
