@@ -27,7 +27,11 @@ const POSITION_SCHEMA: JsonObject = {
     properties: {
         block: { type: 'string', enum: ['equities', 'options', 'fixed_income', 'mutual_fund'] },
         symbol: { type: 'string' },
-        quantity: { type: 'string', description: 'decimal number as text, dot separator' }
+        quantity: { type: 'string', description: 'decimal number as text, dot separator' },
+        price: {
+            type: ['string', 'null'],
+            description: 'closing price per unit as printed in the summary, decimal text, null when none is printed'
+        }
     },
     required: ['block', 'symbol', 'quantity']
 };

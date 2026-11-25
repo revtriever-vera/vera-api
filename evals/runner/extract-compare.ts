@@ -43,7 +43,8 @@ function normalized(item: Record<string, unknown>): Record<string, unknown> {
         ticker: String(item['ticker'] ?? item['symbol'] ?? '').toUpperCase(),
         symbol: String(item['symbol'] ?? '').toUpperCase(),
         quantity: numberOf(item['quantity']),
-        unitPrice: numberOf(item['unitPrice'])
+        unitPrice: numberOf(item['unitPrice']),
+        price: numberOf(item['price'])
     };
 }
 
@@ -62,7 +63,7 @@ function listOf(
                 fields: OPERATION_FIELDS
             };
         case 'positions':
-            return { items: answer.positions ?? [], fields: ['block', 'symbol', 'quantity'] };
+            return { items: answer.positions ?? [], fields: ['block', 'symbol', 'quantity', 'price'] };
         case 'taxWithholdings':
             return { items: answer.taxWithholdings ?? [], fields: ['tradeDate', 'ticker', 'amountMinor'] };
         default:

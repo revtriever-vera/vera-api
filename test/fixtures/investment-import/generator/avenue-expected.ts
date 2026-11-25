@@ -20,7 +20,7 @@ export interface ExpectedAnswer {
     readonly periodStart: string;
     readonly periodEnd: string;
     readonly operations: readonly ExpectedOperation[];
-    readonly positions: readonly { readonly block: string; readonly symbol: string; readonly quantity: string }[];
+    readonly positions: readonly { readonly block: string; readonly symbol: string; readonly quantity: string; readonly price: string }[];
     readonly taxWithholdings: readonly { readonly tradeDate: string; readonly ticker: string; readonly amountMinor: number }[];
     readonly cashMovements: readonly { readonly tradeDate: string; readonly direction: 'credit' | 'debit'; readonly amountMinor: number }[];
 }
@@ -78,7 +78,12 @@ export function expectedAnswerOf(month: AvenueMonth): ExpectedAnswer {
         periodStart: month.start,
         periodEnd: month.end,
         operations: [...month.trades.map(tradeOf), ...month.dividends.map(dividendOf)],
-        positions: month.positions.map((item: AvenuePosition) => ({ block: item.block, symbol: item.symbol, quantity: item.quantity })),
+        positions: month.positions.map((item: AvenuePosition) => ({
+            block: item.block,
+            symbol: item.symbol,
+            quantity: item.quantity,
+            price: item.price
+        })),
         taxWithholdings: month.dividends.map((item: AvenueDividend) => ({
             tradeDate: item.date,
             ticker: item.symbol,

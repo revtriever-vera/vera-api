@@ -41,7 +41,8 @@ export const LINE_REASONS = {
     netMismatch: 'net_mismatch',
     dateOutOfRange: 'date_out_of_range',
     positionMismatch: 'position_mismatch',
-    outOfOrder: 'out_of_order'
+    outOfOrder: 'out_of_order',
+    assumedCost: 'assumed_cost'
 } as const;
 
 export const POSITION_MODES = { add: 'add', historyOnly: 'history_only' } as const;

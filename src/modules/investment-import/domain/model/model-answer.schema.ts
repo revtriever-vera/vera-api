@@ -28,7 +28,8 @@ export const answerEnvelopeSchema = z.object({
 export const answerPositionSchema = z.object({
     block: z.enum(['equities', 'options', 'fixed_income', 'mutual_fund']),
     symbol: z.string().trim().min(1).max(MAX_TEXT),
-    quantity: z.string().regex(QUANTITY_PATTERN)
+    quantity: z.string().regex(QUANTITY_PATTERN),
+    price: z.string().regex(QUANTITY_PATTERN).nullable().optional().catch(null)
 });
 
 export const answerWithholdingSchema = z.object({

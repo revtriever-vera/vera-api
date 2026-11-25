@@ -18,7 +18,7 @@ function validOf<T>(items: readonly unknown[] | undefined, parse: (item: unknown
 }
 
 function positionOf(item: AnswerPosition): ForeignPosition {
-    return { block: item.block, symbol: item.symbol.toUpperCase(), quantity: item.quantity };
+    return { block: item.block, symbol: item.symbol.toUpperCase(), quantity: item.quantity, price: item.price ?? null };
 }
 
 function withholdingOf(item: AnswerWithholding): ForeignWithholding {

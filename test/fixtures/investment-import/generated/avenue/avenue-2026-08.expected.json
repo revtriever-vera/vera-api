@@ -61,17 +61,20 @@
     {
       "block": "equities",
       "symbol": "AAPL",
-      "quantity": "15"
+      "quantity": "15",
+      "price": "201.00"
     },
     {
       "block": "equities",
       "symbol": "MSFT",
-      "quantity": "3"
+      "quantity": "3",
+      "price": "431.00"
     },
     {
       "block": "fixed_income",
       "symbol": "UST4.25-2031",
-      "quantity": "2000"
+      "quantity": "2000",
+      "price": "99.60"
     }
   ],
   "taxWithholdings": [

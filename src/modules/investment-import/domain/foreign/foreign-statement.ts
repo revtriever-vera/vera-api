@@ -1,5 +1,6 @@
 import { currencyExponent, DecimalUtil, mulDecimal, toMinor } from '../../../../shared/utils/decimal.util';
 import { NOTE_CODES } from '../investment-import.types';
+import { assumedOperationsOf } from './foreign-summary';
 import {
     DOCUMENT_TYPES,
     DollarFacts,
@@ -39,7 +40,10 @@ export function isForeignStatement(statement: ParsedInvestmentStatement): boolea
 }
 
 export function usdDatesOf(statement: ParsedInvestmentStatement): string[] {
-    return [...new Set(statement.operations.map((operation: ParsedOperation): string => operation.tradeDate))];
+    const dates: string[] = [...statement.operations, ...assumedOperationsOf(statement)].map(
+        (operation: ParsedOperation): string => operation.tradeDate
+    );
+    return [...new Set(dates)];
 }
 
 export function rateIsUsable(tradeDate: string, rateDate: string): boolean {
@@ -164,20 +168,24 @@ function unappliedOf(operations: readonly ParsedOperation[], closing: ReadonlyMa
     return [...closing.keys()].filter((symbol: string): boolean => !traded.has(symbol)).length;
 }
 
+function contextOf(rates: UsdRateTable, extras: ForeignExtras, operations: readonly ParsedOperation[]): Context {
+    return {
+        rates,
+        tally: { fallback: 0, missing: 0, unmatchedTax: 0 },
+        withheld: withholdingsByKey(extras.withholdings),
+        closing: closingQuantitiesOf(extras),
+        lastTrade: lastTradeIndexes(operations)
+    };
+}
+
 export function foreignStatementOf(statement: ParsedInvestmentStatement, rates: UsdRateTable): ParsedInvestmentStatement {
     const extras: ForeignExtras | undefined = statement.foreign;
     if (extras === undefined || !isForeignStatement(statement)) {
         return statement;
     }
-    const closing: Map<string, string> = closingQuantitiesOf(extras);
-    const context: Context = {
-        rates,
-        tally: { fallback: 0, missing: 0, unmatchedTax: 0 },
-        withheld: withholdingsByKey(extras.withholdings),
-        closing,
-        lastTrade: lastTradeIndexes(statement.operations)
-    };
-    const operations: ParsedOperation[] = statement.operations.map((operation: ParsedOperation, index: number): ParsedOperation => ({
+    const all: ParsedOperation[] = [...statement.operations, ...assumedOperationsOf(statement)];
+    const context: Context = contextOf(rates, extras, all);
+    const operations: ParsedOperation[] = all.map((operation: ParsedOperation, index: number): ParsedOperation => ({
         ...operation,
         dollar: dollarOf(context, operation, index)
     }));
@@ -186,6 +194,6 @@ export function foreignStatementOf(statement: ParsedInvestmentStatement, rates: 
         ...statement,
         operations,
         ignored: [...statement.ignored, ...cashIgnoredOf(extras)],
-        notes: [...statement.notes, ...notesOf(context.tally, extras, unappliedOf(operations, closing))]
+        notes: [...statement.notes, ...notesOf(context.tally, extras, unappliedOf(operations, context.closing))]
     };
 }
