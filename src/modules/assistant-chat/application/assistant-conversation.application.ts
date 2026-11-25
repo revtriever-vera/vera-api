@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
+import { LlmAvailabilityService } from '../../../core/llm/services/llm-availability.service';
 import { TurnNotFoundError } from '../domain/assistant-chat.errors';
 import {
     AssistantConversation,
@@ -27,19 +28,26 @@ export class AssistantConversationApplication {
         private readonly access: AssistantAccessService,
         private readonly expiry: AssistantTurnExpiry,
         private readonly context: AppContext,
-        private readonly logs: AssistantChatLogService
+        private readonly logs: AssistantChatLogService,
+        private readonly availability: LlmAvailabilityService
     ) {}
 
     public async current(): Promise<ConversationView> {
         const mode: TurnMode = await this.access.modeOf();
         const usage: ConversationView['usage'] = await this.access.usageOf(mode);
+        const enabled: boolean = await this.availability.enabled();
         const conversation: AssistantConversation | null = await this.conversations.latestOfUser(this.userId());
         if (conversation === null) {
-            return { conversationId: null, messages: [], usage };
+            return { conversationId: null, messages: [], usage, enabled };
         }
         const rows: AssistantMessage[] = await this.messages.latestOf(conversation.id, CURRENT_MESSAGES_LIMIT);
         const settled: AssistantMessage[] = await Promise.all(rows.map(async (row: AssistantMessage) => this.expiry.settled(row)));
-        return { conversationId: conversation.id, messages: settled.map((row: AssistantMessage): MessageView => this.viewOf(row)), usage };
+        return {
+            conversationId: conversation.id,
+            messages: settled.map((row: AssistantMessage): MessageView => this.viewOf(row)),
+            usage,
+            enabled
+        };
     }
 
     public async remove(conversationId: string): Promise<void> {

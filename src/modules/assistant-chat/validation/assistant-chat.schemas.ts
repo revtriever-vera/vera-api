@@ -66,7 +66,8 @@ export const conversationResponseSchema = z.object({
             })
         )
         .describe('The last 20 messages, oldest first'),
-    usage: usageSchema.nullable().describe('Usage band that applies to the next turn')
+    usage: usageSchema.nullable().describe('Usage band that applies to the next turn'),
+    enabled: z.boolean().describe('Whether the language model is on; false means the ask-Vera button must be hidden')
 });
 
 export type SendTurnBody = z.infer<typeof sendTurnBodySchema>;
