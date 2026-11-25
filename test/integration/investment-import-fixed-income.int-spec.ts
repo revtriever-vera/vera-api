@@ -146,6 +146,7 @@ describe('investment import: renda fixa da Posição', () => {
             reason: 'assumed_face_price'
         });
         expect(lineOf(ready, '112% CDI').suggestion).toContain('Achamos: CDB BANCO EXEMPLO, 112% do CDI, vence em 03/2028. Confirmar?');
+        expect(ready.fixedIncome[0]).toHaveProperty('issuer', null);
         expect(lineOf(ready, 'CARENCIA')).toMatchObject({ status: 'check', reason: 'grace_period' });
         expect(await titlesOf(owner)).toEqual([]);
     });
@@ -159,7 +160,7 @@ describe('investment import: renda fixa da Posição', () => {
 
         const done: Reply<CommitBody> = await commit(owner, ready.previewId, [
             { lineId: cdi.lineId, confirm: true },
-            { lineId: pre.lineId, edits: { rateBps: 1250 } },
+            { lineId: pre.lineId, edits: { rateBps: 1250, currency: 'BRL', holderUserId: null } },
             { lineId: noIndexer.lineId, edits: { indexer: 'prefixed', rateBps: 1100 } },
             { lineId: lineOf(ready, 'IPCA').lineId, skip: true }
         ]);

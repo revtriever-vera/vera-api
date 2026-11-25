@@ -62,7 +62,15 @@ const titleEditsSchema = z
         rateBps: z.number().int().min(0).max(MAX_RATE_BPS).optional().describe('Rate in basis points (112% of the CDI is 11200)'),
         appliedMinor: z.number().int().min(1).max(MAX_APPLIED_MINOR).optional().describe('Amount applied, in cents'),
         appliedAt: z.string().regex(DATE_PATTERN).optional().describe('Application date, YYYY-MM-DD'),
-        maturityDate: z.string().regex(DATE_PATTERN).optional().describe('Maturity date, YYYY-MM-DD')
+        maturityDate: z.string().regex(DATE_PATTERN).optional().describe('Maturity date, YYYY-MM-DD'),
+        currency: z.enum(['BRL', 'USD']).optional().describe('Currency of the title; BRL by default'),
+        classId: z.string().uuid().optional().describe('Asset class; the one suggested for the indexer by default'),
+        holderUserId: z
+            .string()
+            .uuid()
+            .nullable()
+            .optional()
+            .describe('Accepted for compatibility with the title form; the holder of the preview is always used')
     })
     .strict();
 
@@ -136,6 +144,17 @@ const fixedIncomeViewSchema = z.object({
     product: z.string().describe('Product as read from the report'),
     issuerName: z.string().nullable().describe('Issuer as read from the report'),
     issuerId: z.string().nullable().describe('Issuer of the issuers directory matched; null when none matched'),
+    issuer: z
+        .object({
+            id: z.string().describe('Issuer id'),
+            name: z.string().describe('Issuer name'),
+            groupId: z.string().describe('Group id'),
+            groupName: z.string().describe('Group name'),
+            kind: z.enum(['bank', 'company', 'sovereign', 'other']).describe('Issuer kind'),
+            fgcAssociated: z.boolean().describe('Whether the group is covered by the FGC')
+        })
+        .nullable()
+        .describe('Issuer matched, resolved against the directory; null when none matched'),
     kind: z.enum(TITLE_KIND_VALUES).nullable().describe('Kind of security; null when not recognized'),
     indexer: z.enum(INDEXER_VALUES).nullable().describe('Indexer of the title; null when unknown'),
     rateBps: z.number().int().nullable().describe('Inferred rate in basis points; null when it could not be calculated'),

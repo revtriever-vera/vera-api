@@ -51,6 +51,9 @@ export interface FixedIncomeTitleEdits {
     readonly appliedMinor?: number;
     readonly appliedAt?: string;
     readonly maturityDate?: string;
+    readonly currency?: 'BRL' | 'USD';
+    readonly classId?: string;
+    readonly holderUserId?: string | null;
 }
 
 export interface FixedIncomeDecision {

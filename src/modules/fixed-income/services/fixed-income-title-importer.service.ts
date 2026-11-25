@@ -5,7 +5,7 @@ import { ClassResolverService } from '../../allocation/services/class-resolver.s
 import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { IssuerDirectoryService } from '../../issuers/services/issuer-directory.service';
 import type { Issuer, ResolvedIssuer } from '../../issuers/services/issuer-directory.service';
-import { CURRENCIES, Indexer } from '../domain/curve/curve.types';
+import { CURRENCIES, Currency, Indexer } from '../domain/curve/curve.types';
 import { FixedIncomeTitleDomain, TitleDraft } from '../domain/fixed-income-title.domain';
 import { IssuerKindMismatchError, TitleLimitReachedError, UnknownIssuerError } from '../domain/fixed-income.errors';
 import {
@@ -13,12 +13,13 @@ import {
     MAX_TITLES_PER_COMPANY,
     SUGGESTED_CLASS_KEY_BY_INDEXER,
     TITLE_ACTIONS,
+    TitleIssuerView,
     TitleKind
 } from '../domain/fixed-income.types';
 import { assertValidTerms } from '../domain/terms-validation';
 import { FixedIncomeLogService } from './fixed-income-log.service';
 
-export type { TitleKind };
+export type { TitleIssuerView, TitleKind };
 
 const SUBJECT_TYPE: Parameters<ClassAssignmentService['assign']>[0] = 'fixed_income';
 const ISSUER_CANDIDATES: number = 5;
@@ -33,6 +34,8 @@ export interface ImportedTitleDraft {
     readonly appliedMinor: number;
     readonly appliedAt: string;
     readonly maturityDate: string;
+    readonly currency?: Currency;
+    readonly classId?: string;
 }
 
 export interface TitleProbe {
@@ -85,6 +88,22 @@ export class FixedIncomeTitleImporterService {
         return found === undefined ? null : found.id;
     }
 
+    public issuerView(issuerId: string | null): TitleIssuerView | null {
+        const stored: Issuer | null = issuerId === null ? null : this.issuers.find(issuerId);
+        const current: ResolvedIssuer | null = stored === null ? null : this.issuers.resolve(stored.id);
+        if (stored === null || current === null) {
+            return null;
+        }
+        return {
+            id: stored.id,
+            name: stored.name,
+            groupId: current.groupId,
+            groupName: current.groupName,
+            kind: stored.kind,
+            fgcAssociated: current.fgcAssociated
+        };
+    }
+
     public async duplicates(probes: readonly (TitleProbe | null)[]): Promise<boolean[]> {
         const existing: FixedIncomeTitle[] = await this.titles.listReal();
         return probes.map(
@@ -123,10 +142,22 @@ export class FixedIncomeTitleImporterService {
     }
 
     private async createOne(draft: ImportedTitleDraft, importId: string, holderUserId: string | null): Promise<string> {
-        const full: TitleDraft = { ...draft, currency: CURRENCIES.brl, holderUserId };
+        const full: TitleDraft = {
+            name: draft.name,
+            kind: draft.kind,
+            issuerId: draft.issuerId,
+            indexer: draft.indexer,
+            rateBps: draft.rateBps,
+            appliedMinor: draft.appliedMinor,
+            appliedAt: draft.appliedAt,
+            maturityDate: draft.maturityDate,
+            currency: draft.currency ?? CURRENCIES.brl,
+            holderUserId
+        };
         assertValidTerms(full, DateUtil.todayInBrazil());
         this.assertIssuer(full);
-        const classId: string = (await this.classResolver.resolveBySystemKey(SUGGESTED_CLASS_KEY_BY_INDEXER[draft.indexer])).id;
+        const classId: string =
+            draft.classId ?? (await this.classResolver.resolveBySystemKey(SUGGESTED_CLASS_KEY_BY_INDEXER[draft.indexer])).id;
         const created: FixedIncomeTitle = await this.titles.createImported(full, importId);
         await this.assignments.assign(SUBJECT_TYPE, created.id, classId);
         this.logs.titleChanged(TITLE_ACTIONS.created, created.id, created.kind, created.indexer);

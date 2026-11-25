@@ -1,5 +1,6 @@
 import { Insertable, Selectable } from 'kysely';
 import { InvestmentImportPreviews } from '../../../core/database/generated/database.types';
+import type { TitleIssuerView } from '../../fixed-income/services/fixed-income-title-importer.service';
 import { FixedIncomeOutcome, StoredFixedIncome } from './fixed-income/fixed-income-import.types';
 import { IncomeKind, OperationDirection, OperationKind } from './investment-statement.types';
 
@@ -154,13 +155,15 @@ export interface OperationLineView {
     readonly positionMode: PositionMode | null;
 }
 
+export type FixedIncomeLineView = StoredFixedIncome & { readonly issuer: TitleIssuerView | null };
+
 export interface PreviewView {
     readonly previewId: string;
     readonly source: string;
     readonly notes: readonly NoteView[];
     readonly operations: readonly OperationLineView[];
     readonly effect: readonly EffectLine[];
-    readonly fixedIncome: readonly StoredFixedIncome[];
+    readonly fixedIncome: readonly FixedIncomeLineView[];
     readonly warnings: readonly NoteView[];
     readonly alreadyImportedAt: string | null;
     readonly expiresAt: string;

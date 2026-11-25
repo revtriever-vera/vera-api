@@ -69,6 +69,7 @@ export const PREVIEW_EXAMPLE: Record<string, unknown> = {
             product: 'CDB - CDB EXEMPLO 112% CDI',
             issuerName: 'BANCO EXEMPLO',
             issuerId: null,
+            issuer: null,
             kind: 'cdb',
             indexer: 'cdi_percent',
             rateBps: 11200,

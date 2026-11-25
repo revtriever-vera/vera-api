@@ -46,6 +46,7 @@ function viewOf(
     evaluation: Evaluation,
     stored: InvestmentImportPreview,
     fixedIncome: readonly StoredFixedIncome[],
+    titles: FixedIncomeTitleImporterService,
     previous: InvestmentImportRecord | null
 ): PreviewView {
     return {
@@ -54,7 +55,7 @@ function viewOf(
         notes: notesOf(statement),
         operations: [...evaluation.lines.map(operationViewOf), ...ignoredViewsOf(statement).map(ignoredOperationViewOf)],
         effect: evaluation.effects,
-        fixedIncome,
+        fixedIncome: fixedIncome.map((entry: StoredFixedIncome) => ({ ...entry, issuer: titles.issuerView(entry.issuerId) })),
         warnings: warningsOf(evaluation.lines),
         alreadyImportedAt: previous === null ? null : previous.createdAt.toISOString(),
         expiresAt: stored.expiresAt.toISOString()
@@ -87,7 +88,7 @@ export class InvestmentImportPreviewApplication {
         const stored: InvestmentImportPreview = await this.store(upload, statement.source, holderUserId, { lines, fixedIncome });
         const previous: InvestmentImportRecord | null = await this.records.findCompletedByHash(stored.fileSha256);
         this.report(statement.source, evaluation, upload.size, Date.now() - startedAt, countByProposalStatus(fixedIncome));
-        return viewOf(statement, evaluation, stored, fixedIncome, previous);
+        return viewOf(statement, evaluation, stored, fixedIncome, this.titles, previous);
     }
 
     public async purgeExpired(): Promise<number> {

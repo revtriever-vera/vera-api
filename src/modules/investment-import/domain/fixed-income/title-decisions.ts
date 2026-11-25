@@ -45,7 +45,9 @@ function fieldsOf(entry: StoredFixedIncome, edits: FixedIncomeTitleEdits): Parti
         rateBps: firstDefined(edits.rateBps, entry.rateBps),
         appliedMinor: firstDefined(edits.appliedMinor, entry.appliedMinor),
         appliedAt: firstDefined(edits.appliedAt, entry.appliedAt),
-        maturityDate: firstDefined(edits.maturityDate, entry.maturityDate)
+        maturityDate: firstDefined(edits.maturityDate, entry.maturityDate),
+        currency: edits.currency,
+        classId: edits.classId
     };
 }
 
