@@ -690,6 +690,37 @@ export interface PluggyCredentials {
     verifiedWith: Generated<string>;
 }
 
+export interface PortfolioIncomeLedger {
+    amountMinor: Int8;
+    assetId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    deletedAt: Timestamp | null;
+    eventId: string;
+    id: string;
+    paymentDate: Timestamp | null;
+    quantityAtExDate: Numeric;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface PortfolioMonthlySnapshots {
+    assetId: string;
+    classId: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    deletedAt: Timestamp | null;
+    holdingKind: string;
+    id: string;
+    month: string;
+    price: Numeric | null;
+    priceDate: Timestamp | null;
+    quantity: Numeric | null;
+    updatedAt: Generated<Timestamp>;
+    valueMinor: Int8;
+}
+
 export interface PortfolioSettings {
     baseCurrency: Generated<string>;
     companyId: string;
@@ -1204,6 +1235,8 @@ export interface DB {
     PlatformAccessTokens: PlatformAccessTokens;
     PlatformAuditLog: PlatformAuditLog;
     PluggyCredentials: PluggyCredentials;
+    PortfolioIncomeLedger: PortfolioIncomeLedger;
+    PortfolioMonthlySnapshots: PortfolioMonthlySnapshots;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;
     PremiumEndedNotifications: PremiumEndedNotifications;
