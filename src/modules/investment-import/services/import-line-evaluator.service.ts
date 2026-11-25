@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { AssetSimulation, OperationInput, PositionOperationsService } from '../../positions/services/position-operations.service';
-import { B3_MARKET, EditedLine, EffectLine, EvaluatedLine, LINE_STATUSES } from '../domain/investment-import.types';
+import {
+    B3_MARKET,
+    CRYPTO_MARKET,
+    EditedLine,
+    EffectLine,
+    EvaluatedLine,
+    LINE_STATUSES,
+    StoredLine
+} from '../domain/investment-import.types';
 import { balanceViewOf, evaluatedOf, hasUnsupportedDirection, LineFacts, verdictOf } from '../domain/line-evaluation';
 import { operationOf } from './import-operation.builder';
 
@@ -15,6 +23,14 @@ interface Simulated {
     readonly failures: ReadonlyMap<number, string>;
     readonly held: ReadonlySet<string>;
     readonly effects: readonly EffectLine[];
+}
+
+function tickerKeyOf(market: string, ticker: string): string {
+    return `${market}:${ticker}`;
+}
+
+function tickersOf(lines: readonly StoredLine[], market: string): string[] {
+    return [...new Set(lines.filter((line: StoredLine): boolean => line.market === market).map((line: StoredLine): string => line.ticker))];
 }
 
 const APPLICABLE: ReadonlySet<string> = new Set([LINE_STATUSES.ok, LINE_STATUSES.check]);
@@ -92,7 +108,8 @@ export class ImportLineEvaluatorService {
         const byId: Map<string, Asset> = await this.assetsById(edited);
         const matched: Map<string, Asset> = new Map();
         for (const item of edited) {
-            const asset: Asset | undefined = item.assetId === null ? byTicker.get(item.line.ticker) : byId.get(item.assetId);
+            const asset: Asset | undefined =
+                item.assetId === null ? byTicker.get(tickerKeyOf(item.line.market, item.line.ticker)) : byId.get(item.assetId);
             if (asset !== undefined) {
                 matched.set(item.line.lineId, asset);
             }
@@ -101,13 +118,15 @@ export class ImportLineEvaluatorService {
     }
 
     private async assetsByTicker(edited: readonly EditedLine[]): Promise<Map<string, Asset>> {
-        const tickers: string[] = [
-            ...new Set(
-                edited.filter((item: EditedLine): boolean => item.assetId === null).map((item: EditedLine): string => item.line.ticker)
-            )
-        ];
-        const found: Asset[] = await this.catalog.findManyByMarketAndExternalIds(B3_MARKET, tickers);
-        return new Map(found.map((asset: Asset): [string, Asset] => [asset.externalId, asset]));
+        const unresolved: StoredLine[] = edited
+            .filter((item: EditedLine): boolean => item.assetId === null)
+            .map((item: EditedLine): StoredLine => item.line);
+        const b3: Asset[] = await this.catalog.findManyByMarketAndExternalIds(B3_MARKET, tickersOf(unresolved, B3_MARKET));
+        const crypto: Asset[] = await this.catalog.findBestByMarketAndSymbols(CRYPTO_MARKET, tickersOf(unresolved, CRYPTO_MARKET));
+        return new Map([
+            ...b3.map((asset: Asset): [string, Asset] => [tickerKeyOf(B3_MARKET, asset.externalId), asset]),
+            ...crypto.map((asset: Asset): [string, Asset] => [tickerKeyOf(CRYPTO_MARKET, asset.symbol), asset])
+        ]);
     }
 
     private async assetsById(edited: readonly EditedLine[]): Promise<Map<string, Asset>> {

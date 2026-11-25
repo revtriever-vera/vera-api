@@ -1,5 +1,12 @@
 import { divDecimal, mulDecimal, toMinor } from '../../../../shared/utils/decimal.util';
-import { IGNORE_REASONS, OperationKind, ParsedOperation, REJECT_REASONS, RejectReason } from '../investment-statement.types';
+import {
+    IGNORE_REASONS,
+    NO_COST_EXTRAS,
+    OperationKind,
+    ParsedOperation,
+    REJECT_REASONS,
+    RejectReason
+} from '../investment-statement.types';
 import { dateOf, decimalOf, normalizeText, RawTable } from './b3-cells';
 import { cellAt, column, ColumnSpec, HeaderMatch, textAt } from './b3-columns';
 import { accept, collectRows, Collected, ignore, nullIfEmpty, reject, RowResult } from './b3-rows';
@@ -126,7 +133,8 @@ function operationOf(parts: TradeParts, unitPrice: string): ParsedOperation {
         unitPrice,
         grossMinor: toMinor(value ?? mulDecimal(parts.quantity, unitPrice), 'BRL'),
         currency: 'BRL',
-        appliedToPosition: true
+        appliedToPosition: true,
+        ...NO_COST_EXTRAS
     };
     return { ...operation, matchKey: matchKeyOf(operation), alreadyImported: false };
 }

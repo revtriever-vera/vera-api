@@ -18,6 +18,8 @@ export const MAX_REPORTED_LINE_IDS: number = 50;
 export const MAX_LINES_PER_IMPORT: number = 5000;
 export const PURGE_BATCH: number = 500;
 export const B3_MARKET = 'B3' as const;
+export const CRYPTO_MARKET = 'CRYPTO' as const;
+export const CRYPTO_QUANTITY_DECIMALS: number = 8;
 
 export const LINE_STATUSES = { ok: 'ok', check: 'check', blocked: 'blocked', duplicate: 'duplicate', ignored: 'ignored' } as const;
 export type LineStatus = (typeof LINE_STATUSES)[keyof typeof LINE_STATUSES];
@@ -41,7 +43,10 @@ export const NOTE_CODES = {
     positionReportNotApplied: 'position_report_not_applied',
     fixedIncomePending: 'fixed_income_pending',
     rowsRejected: 'rows_rejected',
-    rowsIgnored: 'rows_ignored'
+    rowsIgnored: 'rows_ignored',
+    cryptoTransferCheck: 'crypto_transfer_check',
+    cryptoUsdRateApplied: 'crypto_usd_rate_applied',
+    cryptoFeeNotConverted: 'crypto_fee_not_converted'
 } as const;
 
 export const COMMIT_OUTCOMES = { previewed: 'previewed', committed: 'committed', undone: 'undone', failed: 'failed' } as const;
@@ -58,7 +63,9 @@ export interface StoredLine {
     readonly quantity: string;
     readonly unitPrice: string | null;
     readonly grossMinor: number | null;
+    readonly feesMinor: number;
     readonly currency: string;
+    readonly market: string;
     readonly sourceRef: string;
 }
 

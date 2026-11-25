@@ -13,7 +13,9 @@ const LINE: StoredLine = {
     quantity: '10',
     unitPrice: '5',
     grossMinor: 5000,
+    feesMinor: 0,
     currency: 'BRL',
+    market: 'B3',
     sourceRef: 'b3:x:1'
 };
 

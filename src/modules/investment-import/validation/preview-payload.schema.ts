@@ -22,7 +22,9 @@ const storedLineSchema = z.object({
     quantity: z.string(),
     unitPrice: z.string().nullable(),
     grossMinor: z.number().int().nullable(),
+    feesMinor: z.number().int().default(0),
     currency: z.string(),
+    market: z.string().default('B3'),
     sourceRef: z.string()
 });
 
