@@ -1,0 +1,4 @@
+Produto;Instituição;Código ISIN;Indexador;Vencimento;Quantidade;Quantidade Disponível;Quantidade Indisponível;Motivo;Valor Aplicado;Valor bruto;Valor líquido;Valor Atualizado
+Tesouro Selic 2029;CORRETORA EXEMPLO;BREXEMLFT001;SELIC;01/03/2029;1,25;1,25;0;;15200,4;16480,17;16012,9;16012,9
+Tesouro IPCA+ 2035;CORRETORA EXEMPLO;BREXEMNTNB01;IPCA;15/05/2035;3,4;3,4;0;;8900;9714,55;9391,2;9391,2
+Tesouro Prefixado 2027;CORRETORA EXEMPLO;BREXEMLTN001;PRE;01/01/2027;5;5;0;;3650;4021,88;3897,3;3897,3

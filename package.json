@@ -36,6 +36,7 @@
     "eval:live": "bash evals/local.sh",
     "usage:simulate": "tsx scripts/usage-simulate.ts",
     "qa:statement-fixture": "tsx scripts/qa-statement-fixture.ts",
+    "fixtures:investment-import": "tsx test/fixtures/investment-import/generator/cli.ts",
     "secrets:reseal": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/secrets-reseal.js",
     "billing:provision": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/billing-provision.js",
     "platform:seed": "tsc -p tsconfig.scripts.json && node dist-scripts/scripts/platform-seed.js",

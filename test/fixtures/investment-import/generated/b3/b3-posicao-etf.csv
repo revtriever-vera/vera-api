@@ -1,0 +1,3 @@
+Produto;Instituição;Conta;Código de Negociação;CNPJ da Empresa;Código ISIN / Distribuição;Tipo;Escriturador;Quantidade;Quantidade Disponível;Quantidade Indisponível;Motivo;Preço de Fechamento;Valor Atualizado
+BOVA11 - ETF EXEMPLO IBOVESPA;CORRETORA EXEMPLO;0001234-5;BOVA11;55.555.555/0001-00;BREXEMCTF001;Cotas;ESCRITURADOR EXEMPLO;50;50;0;;128,9;6445
+IVVB11 - ETF EXEMPLO S&P 500;CORRETORA EXEMPLO;0001234-5;IVVB11;66.666.666/0001-00;BREXEMCTF002;Cotas;ESCRITURADOR EXEMPLO;40;40;0;;305,7;12228
