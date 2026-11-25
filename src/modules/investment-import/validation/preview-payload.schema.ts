@@ -23,7 +23,8 @@ const storedLineSchema = z.object({
     unitPrice: z.string().nullable(),
     grossMinor: z.number().int().nullable(),
     currency: z.string(),
-    sourceRef: z.string()
+    sourceRef: z.string(),
+    check: z.string().nullable().default(null)
 });
 
 const storedFixedIncomeSchema = z.object({

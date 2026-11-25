@@ -11,26 +11,31 @@ function directionOf(operation: ParsedOperation): OperationDirection {
     return EVENT_KINDS.has(operation.kind) ? operation.direction : 'credit';
 }
 
+function storedLineOf(operation: ParsedOperation, index: number, sourceRef: string): StoredLine {
+    return {
+        lineId: `L${String(index + 1)}`,
+        lineNumber: index + 1,
+        kind: operation.kind,
+        incomeKind: operation.incomeKind,
+        direction: directionOf(operation),
+        tradeDate: operation.tradeDate,
+        ticker: operation.ticker,
+        quantity: operation.quantity,
+        unitPrice: operation.unitPrice,
+        grossMinor: operation.grossMinor,
+        currency: operation.currency,
+        sourceRef,
+        check: operation.check ?? null
+    };
+}
+
 export function storedLinesOf(statement: ParsedInvestmentStatement): StoredLine[] {
     const seen: Map<string, number> = new Map();
     return statement.operations.map((operation: ParsedOperation, index: number): StoredLine => {
         const key: string = occurrenceKey(operation);
         const occurrence: number = (seen.get(key) ?? 0) + 1;
         seen.set(key, occurrence);
-        return {
-            lineId: `L${String(index + 1)}`,
-            lineNumber: index + 1,
-            kind: operation.kind,
-            incomeKind: operation.incomeKind,
-            direction: directionOf(operation),
-            tradeDate: operation.tradeDate,
-            ticker: operation.ticker,
-            quantity: operation.quantity,
-            unitPrice: operation.unitPrice,
-            grossMinor: operation.grossMinor,
-            currency: operation.currency,
-            sourceRef: `${statement.source}:${key}:${String(occurrence)}`
-        };
+        return storedLineOf(operation, index, `${statement.source}:${key}:${String(occurrence)}`);
     });
 }
 

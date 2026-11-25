@@ -98,7 +98,10 @@ export class InvestmentImportsController {
             'of each asset before and after, and what was left out. The file is discarded as soon as it is read and never stored: only ' +
             'the operations read are kept for 30 minutes, waiting for POST /investment-imports. In a Posição report, each fixed income ' +
             'title (CDB, LCI, LCA...) comes back with a proposal: the contracted rate is calculated from the CURVA price and the ' +
-            'CDI and IPCA series, and is only saved when the person confirms it. Available on every plan.'
+            'CDI and IPCA series, and is only saved when the person confirms it. A PDF, PNG, JPEG, HEIC or WEBP (brokerage note, ' +
+            'statement from a broker abroad, B3 PDF, print or photo) is read by a language model, on every plan: without ' +
+            '`modelConsent=true` the call is refused with model.confirmation_required and nothing is sent; the text of a PDF is sent ' +
+            'with personal data masked. Lines whose arithmetic does not hold come back with status `check`. Available on every plan.'
     })
     @ApiConsumes('multipart/form-data')
     @ApiBody({ schema: multipartBodyOf(previewBodySchema) })
@@ -115,10 +118,25 @@ export class InvestmentImportsController {
     @ApiProblemResponse({
         status: 422,
         description:
-            'Not a report the reader knows (format.not_recognized, meta.suggestion says what is accepted) or too many rows (format.too_many_rows)',
+            'Not a report the reader knows (format.not_recognized, meta.suggestion says what is accepted), too many rows (format.too_many_rows), ' +
+            'too many pages (file.too_many_pages: 50 with text, 10 scanned), a damaged file (file.unreadable) or a file the model could not read (model.unreadable)',
         example: PROBLEM_EXAMPLES.notRecognized
     })
-    @ApiProblemResponse({ status: 429, description: 'More than 60 previews in an hour for the company', example: THROTTLED_EXAMPLE })
+    @ApiProblemResponse({
+        status: 428,
+        description: 'The file goes to a language model and `modelConsent=true` was not sent (model.confirmation_required)',
+        example: PROBLEM_EXAMPLES.modelConfirmation
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description: 'More than 60 previews in an hour for the company, or more than 30 files read by the model in an hour',
+        example: THROTTLED_EXAMPLE
+    })
+    @ApiProblemResponse({
+        status: 503,
+        description: 'No language model is configured (model.unavailable); the B3 Excel report works without it',
+        example: PROBLEM_EXAMPLES.modelUnavailable
+    })
     public async preview(@UploadedFile() file: UploadedReport | undefined, @Body() body: PreviewBodyDto): Promise<PreviewView> {
         return this.previews.preview(requireFile(file), body);
     }

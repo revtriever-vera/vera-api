@@ -74,6 +74,7 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 90_000,
         maxRetries: 1,
         evalThreshold: 0.8,
-        promptVersion: 'v1'
+        promptVersion: 'v2',
+        outsideCap: true
     }
 ];

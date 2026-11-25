@@ -17,6 +17,15 @@ export const PROBLEM_EXAMPLES: Readonly<Record<string, Record<string, unknown>>>
         status: 422,
         meta: { suggestion: 'b3_excel_download' }
     },
+    modelConfirmation: {
+        type: 'model.confirmation_required',
+        title: 'ModelConfirmationRequiredError',
+        status: 428,
+        meta: { sentTo: 'language_model', provider: 'vercel' }
+    },
+    modelUnavailable: { type: 'model.unavailable', title: 'ModelUnavailableError', status: 503 },
+    modelUnreadable: { type: 'model.unreadable', title: 'ModelUnreadableError', status: 422, meta: { reason: 'invalid_response' } },
+    tooManyPages: { type: 'file.too_many_pages', title: 'FileTooManyPagesError', status: 422, meta: { limit: 50 } },
     expired: { type: 'preview.expired', title: 'PreviewExpiredError', status: 410 },
     blocked: { type: 'import.has_blocked_lines', title: 'BlockedLinesError', status: 422, meta: { lineIds: ['L3'], total: 1 } },
     undoBlocked: {
@@ -42,6 +51,7 @@ const EFFECT_EXAMPLE: Record<string, unknown> = {
 export const PREVIEW_EXAMPLE: Record<string, unknown> = {
     previewId: EXAMPLE_IDS.preview,
     source: 'b3',
+    documentType: 'b3_report',
     notes: [{ code: 'rows_ignored', count: 1 }],
     operations: [
         {

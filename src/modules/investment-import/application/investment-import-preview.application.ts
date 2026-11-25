@@ -28,17 +28,17 @@ import {
 import { sanitizeFileName } from '../domain/file-name';
 import { ParsedInvestmentStatement, ParsedSource } from '../domain/investment-statement.types';
 import { applyEdits } from '../domain/line-edits';
-import { countByStatus } from '../domain/line-counts';
 import { ignoredOperationViewOf, operationViewOf, warningsOf } from '../domain/preview-view';
 import { ignoredViewsOf, notesOf, storedLinesOf } from '../domain/preview-lines';
 import { readB3Report } from '../domain/b3/b3-file.reader';
 import { Evaluation, ImportLineEvaluatorService } from '../services/import-line-evaluator.service';
-import { InvestmentImportLogService } from '../services/investment-import-log.service';
-import { InvestmentImportMetricsService } from '../services/investment-import-metrics.service';
+import { InvestmentImportReporterService } from '../services/investment-import-reporter.service';
+import { ModelReaderService } from '../services/model-reader.service';
 
 export interface PreviewInput {
     readonly holderUserId?: string;
     readonly positionDate?: string;
+    readonly modelConsent?: boolean;
 }
 
 function viewOf(
@@ -52,6 +52,7 @@ function viewOf(
     return {
         previewId: stored.id,
         source: statement.source,
+        documentType: statement.documentType ?? null,
         notes: notesOf(statement),
         operations: [...evaluation.lines.map(operationViewOf), ...ignoredViewsOf(statement).map(ignoredOperationViewOf)],
         effect: evaluation.effects,
@@ -71,14 +72,14 @@ export class InvestmentImportPreviewApplication {
         private readonly series: IndexSeriesReaderService,
         private readonly titles: FixedIncomeTitleImporterService,
         private readonly context: AppContext,
-        private readonly logs: InvestmentImportLogService,
-        private readonly metrics: InvestmentImportMetricsService
+        private readonly reporter: InvestmentImportReporterService,
+        private readonly model: ModelReaderService
     ) {}
 
     public async preview(upload: UploadedReport, input: PreviewInput): Promise<PreviewView> {
         const startedAt: number = Date.now();
         const holderUserId: string | null = input.holderUserId ?? null;
-        const statement: ParsedInvestmentStatement = await readB3Report(upload.buffer);
+        const statement: ParsedInvestmentStatement = await this.read(upload, input.modelConsent === true);
         if (statement.operations.length > MAX_LINES_PER_IMPORT) {
             throw new ReportTooLargeError(MAX_LINES_PER_IMPORT);
         }
@@ -87,13 +88,23 @@ export class InvestmentImportPreviewApplication {
         const fixedIncome: StoredFixedIncome[] = await this.proposeFixedIncome(statement, input.positionDate);
         const stored: InvestmentImportPreview = await this.store(upload, statement.source, holderUserId, { lines, fixedIncome });
         const previous: InvestmentImportRecord | null = await this.records.findCompletedByHash(stored.fileSha256);
-        this.report(statement.source, evaluation, upload.size, Date.now() - startedAt, countByProposalStatus(fixedIncome));
+        this.reporter.previewed({
+            source: statement.source,
+            evaluation,
+            sizeBytes: upload.size,
+            durationMs: Date.now() - startedAt,
+            fixedIncome: countByProposalStatus(fixedIncome)
+        });
         return viewOf(statement, evaluation, stored, fixedIncome, this.titles, previous);
+    }
+
+    private async read(upload: UploadedReport, consent: boolean): Promise<ParsedInvestmentStatement> {
+        return this.model.accepts(upload.buffer) ? this.model.read(upload.buffer, consent) : readB3Report(upload.buffer);
     }
 
     public async purgeExpired(): Promise<number> {
         const removed: number = await this.previews.purgeExpired();
-        this.logs.purged(removed);
+        this.reporter.purged(removed);
         return removed;
     }
 
@@ -128,18 +139,5 @@ export class InvestmentImportPreviewApplication {
         return proposals.map((proposal: StoredFixedIncome, index: number): StoredFixedIncome =>
             duplicates[index] === true ? asDuplicate(proposal) : proposal
         );
-    }
-
-    private report(
-        source: string,
-        evaluation: Evaluation,
-        sizeBytes: number,
-        durationMs: number,
-        fixedIncome: Readonly<Record<string, number>>
-    ): void {
-        this.logs.record('previewed', { source, lines: evaluation.lines.length, durationMs, sizeBytes, fixedIncome });
-        this.metrics.outcome(source, 'previewed', durationMs);
-        this.metrics.lines(source, countByStatus(evaluation.lines));
-        this.metrics.fileSize(source, sizeBytes);
     }
 }

@@ -11,6 +11,7 @@ import {
     CommitView,
     EvaluatedLine,
     InvestmentImportPreview,
+    LINE_REASONS,
     LINE_STATUSES,
     LineEdit,
     MAX_REPORTED_LINE_IDS,
@@ -126,7 +127,10 @@ function assertCommittable(lines: readonly EvaluatedLine[]): void {
     if (blocked.length > 0) {
         throw new BlockedLinesError(blocked.slice(0, MAX_REPORTED_LINE_IDS), blocked.length);
     }
-    const unchosen: string[] = idsWithStatus(lines, LINE_STATUSES.check);
+    const unchosen: string[] = idsWithStatus(
+        lines.filter((line: EvaluatedLine): boolean => line.reason === LINE_REASONS.positionModeRequired),
+        LINE_STATUSES.check
+    );
     if (unchosen.length > 0) {
         throw new PositionModeRequiredError(unchosen.slice(0, MAX_REPORTED_LINE_IDS), unchosen.length);
     }

@@ -25,6 +25,7 @@ const MAX_RATE_BPS: number = 30000;
 const MAX_APPLIED_MINOR: number = 9_000_000_000_000_000;
 const MAX_TITLE_NAME: number = 80;
 const SOURCE_VALUES = ['b3', 'crypto_csv', 'model'] as const;
+const DOCUMENT_TYPE_VALUES = ['note', 'b3_report', 'foreign_statement', 'screenshot'] as const;
 const KIND_VALUES = ['buy', 'sell', 'split', 'reverse_split', 'bonus', 'income', 'transfer'] as const;
 const INCOME_VALUES = ['dividend', 'jcp', 'fii_income', 'interest', 'staking'] as const;
 
@@ -34,7 +35,14 @@ export const previewBodySchema = z.object({
         .string()
         .regex(DATE_PATTERN)
         .optional()
-        .describe('Date of the position report, YYYY-MM-DD, used to infer fixed income rates; defaults to the last business day')
+        .describe('Date of the position report, YYYY-MM-DD, used to infer fixed income rates; defaults to the last business day'),
+    modelConsent: z
+        .enum(['true', 'false'])
+        .optional()
+        .transform((value: 'true' | 'false' | undefined): boolean => value === 'true')
+        .describe(
+            'Send `true` after the person agrees that this file goes to a language model (a PDF, image or photo). Without it, such a file is refused with model.confirmation_required and nothing is sent. Valid only for this request'
+        )
 });
 
 const lineEditSchema = z
@@ -174,6 +182,12 @@ const noteSchema = z.object({
 export const importPreviewSchema = z.object({
     previewId: z.string().uuid().describe('Id to send to POST /investment-imports; valid until expiresAt'),
     source: z.enum(SOURCE_VALUES).describe('Kind of report read'),
+    documentType: z
+        .enum(DOCUMENT_TYPE_VALUES)
+        .nullable()
+        .describe(
+            'Kind of document the reader found: note, b3_report, foreign_statement or screenshot; null when the reader does not tell'
+        ),
     notes: z.array(noteSchema).describe('Informational notes about what was left out of the import'),
     operations: z.array(lineViewSchema).describe('Every line of the report with its status and reason'),
     effect: z.array(effectSchema).describe('Position of each asset before and after the import'),
@@ -225,7 +239,11 @@ export function multipartBodyOf(schema: ZodTypeAny): Record<string, unknown> {
     return {
         ...base,
         properties: {
-            file: { type: 'string', format: 'binary', description: `The report (xlsx or csv), up to ${String(limit)} MB` },
+            file: {
+                type: 'string',
+                format: 'binary',
+                description: `The report (xlsx or csv) or, with modelConsent, a PDF or image (PNG, JPEG, HEIC, WEBP), up to ${String(limit)} MB`
+            },
             ...properties
         },
         required: ['file', ...required]

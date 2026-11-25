@@ -24,8 +24,18 @@ const OPERATION_SCHEMA: JsonObject = {
 export const INVESTMENT_EXTRACT_SCHEMA: JsonObject = {
     type: 'object',
     properties: {
+        documentType: {
+            type: 'string',
+            enum: ['note', 'b3_report', 'foreign_statement', 'screenshot'],
+            description:
+                'note: brokerage trade note; b3_report: B3 report; foreign_statement: statement from a broker abroad; screenshot: print or photo of a broker screen'
+        },
         currency: { type: 'string', description: 'ISO 4217 code of the statement' },
+        totalMinor: {
+            type: ['integer', 'null'],
+            description: 'Total of the trades as printed on the document, in the currency minor unit; null when the document prints none'
+        },
         operations: { type: 'array', items: OPERATION_SCHEMA }
     },
-    required: ['currency', 'operations']
+    required: ['documentType', 'currency', 'operations']
 };

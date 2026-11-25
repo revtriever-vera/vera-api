@@ -1,5 +1,7 @@
 import { AddressInfo, Server } from 'node:net';
+import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
 import { LogService } from '../../src/core/observability/log.service';
 import { asRole } from '../support/as-role';
 import { Account, AllocationHarness } from './support/allocation-harness';
@@ -367,16 +369,14 @@ describe('investment import', () => {
         expect(listed.body.data.map((item): string => item.status)).toEqual(['undone', 'undone']);
     });
 
-    it('recusa arquivo desconhecido, PDF e arquivo vazio', async () => {
+    it('recusa arquivo desconhecido, PDF sem confirmação, PDF quebrado e arquivo vazio', async () => {
         const owner: Account = await harness.signUp('formato');
         const unknown: Reply = await upload(owner.token, Buffer.from('a;b\n1;2\n'));
         expect([unknown.status, unknown.body['type']]).toEqual([422, 'format.not_recognized']);
         const pdf: Reply = await upload(owner.token, Buffer.from('%PDF-1.4 conteudo'));
-        expect([pdf.status, pdf.body['type'], (pdf.body['meta'] as Record<string, unknown>)['suggestion']]).toEqual([
-            422,
-            'format.not_recognized',
-            'b3_excel_download'
-        ]);
+        expect([pdf.status, pdf.body['type']]).toEqual([428, 'model.confirmation_required']);
+        const consented: Reply = await upload(owner.token, Buffer.from('%PDF-1.4 conteudo'), { modelConsent: 'true' });
+        expect([consented.status, consented.body['type']]).toEqual([422, 'file.unreadable']);
         const noFile: Response = await fetch(`${origin}/investment-imports/preview`, {
             method: 'POST',
             body: new FormData(),
@@ -422,5 +422,106 @@ describe('investment import', () => {
         const stored = await harness.pg.query<{ payload: unknown }>(`SELECT payload FROM "InvestmentImportPreviews"`);
         expect(JSON.stringify(stored.rows)).not.toContain(HOLDER_SENTINEL);
         expect(JSON.stringify(stored.rows)).not.toContain('CORRETORA');
+    });
+    describe('leitura por modelo', () => {
+        const MODEL_SENTINEL: string = 'PRODUTO-SENTINELA-MODELO-ZZ';
+        let mock: MockLlmDriver;
+
+        beforeAll(() => {
+            mock = harness.app.get(MockLlmDriver, { strict: false });
+        });
+
+        async function printOf(width: number): Promise<Buffer> {
+            return sharp({ create: { width, height: 300, channels: 3, background: '#ffffff' } })
+                .png()
+                .toBuffer();
+        }
+
+        function modelAnswer(rows: Record<string, unknown>[]): string {
+            return JSON.stringify({ documentType: 'screenshot', currency: 'BRL', totalMinor: null, operations: rows });
+        }
+
+        function modelRow(ticker: string, quantity: string, unitPrice: string, grossMinor: number): Record<string, unknown> {
+            return {
+                kind: 'buy',
+                direction: 'credit',
+                tradeDate: '2026-11-03',
+                ticker,
+                productName: MODEL_SENTINEL,
+                quantity,
+                unitPrice,
+                grossMinor,
+                currency: 'BRL'
+            };
+        }
+
+        it('sem modelConsent nada vai ao modelo; com ele a conta Free lê o print e a confirmação não chama o modelo de novo', async () => {
+            const owner: Account = await harness.signUp('modelo');
+            const file: Buffer = await printOf(401);
+            const generate = vi.spyOn(mock, 'generate');
+            mock.enqueue(modelAnswer([modelRow('PETR4', '100', '10', 100000), modelRow('VALE3', '10', '50', 60000)]));
+            logged.length = 0;
+
+            const refused: Reply<ProblemBody> = (await upload(owner.token, file, {}, 'print.png')) as unknown as Reply<ProblemBody>;
+
+            expect(refused.status).toBe(428);
+            expect(refused.body.type).toBe('model.confirmation_required');
+            expect(generate).not.toHaveBeenCalled();
+
+            const reply: Reply = await upload(owner.token, file, { modelConsent: 'true' }, 'print.png');
+            const ready: PreviewBody & { source: string; documentType: string } = reply.body as never;
+
+            expect(reply.status).toBe(200);
+            expect(ready.source).toBe('model');
+            expect(ready.documentType).toBe('screenshot');
+            expect(
+                ready.operations.map((line: LineBody): string => `${String(line.ticker)}:${line.status}:${String(line.reason)}`)
+            ).toEqual(['PETR4:ok:null', 'VALE3:check:amount_mismatch']);
+            expect(generate).toHaveBeenCalledTimes(1);
+
+            const done: Reply<CommitBody> = await commit<CommitBody>(owner, ready.previewId);
+
+            expect(done.status).toBe(201);
+            expect(done.body.applied).toBe(2);
+            expect(generate).toHaveBeenCalledTimes(1);
+            expect(await positionOf(owner, 'PETR4')).toMatchObject({ quantity: 100 });
+            generate.mockRestore();
+        });
+
+        it('resposta fora do esquema devolve model.unreadable e nada fica gravado', async () => {
+            const owner: Account = await harness.signUp('modelo-ilegivel');
+            mock.enqueue('isto não é JSON');
+
+            const reply: Reply<ProblemBody> = (await upload(
+                owner.token,
+                await printOf(402),
+                { modelConsent: 'true' },
+                'print.png'
+            )) as unknown as Reply<ProblemBody>;
+
+            expect(reply.status).toBe(422);
+            expect(reply.body.type).toBe('model.unreadable');
+            const stored = await harness.pg.query(`SELECT 1 FROM "InvestmentImportPreviews" WHERE "companyId" = $1`, [owner.company.id]);
+            expect(stored.rowCount).toBe(0);
+        });
+
+        it('nenhum byte do arquivo, nome ou resposta do modelo vai para log ou banco', async () => {
+            const owner: Account = await harness.signUp('modelo-privacidade');
+            mock.enqueue(modelAnswer([modelRow('ITUB4', '5', '20', 10000)]));
+            logged.length = 0;
+
+            const reply: Reply = await upload(owner.token, await printOf(403), { modelConsent: 'true' }, 'meu-print-secreto.png');
+
+            expect(reply.status).toBe(200);
+            const inLogs: string = logged.join('\n');
+            for (const secret of [MODEL_SENTINEL, 'meu-print-secreto', 'ITUB4']) {
+                expect(inLogs).not.toContain(secret);
+            }
+            const stored = await harness.pg.query<{ payload: unknown }>(
+                `SELECT payload FROM "InvestmentImportPreviews" WHERE "companyId" = $1`,
+                [owner.company.id]
+            );
+            expect(JSON.stringify(stored.rows)).not.toContain(MODEL_SENTINEL);
+        });
     });
 });

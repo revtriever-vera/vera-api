@@ -67,6 +67,16 @@ describe('LlmLedgerService', () => {
         expect(metrics.divergence).toHaveBeenCalledWith('summary_month', 5000);
     });
 
+    it('tarefa fora da cota grava a chamada e as métricas, mas não lança custo na cota', async () => {
+        const { ledger, calls, port, metrics } = build();
+
+        await ledger.record({ ...ENTRY, outsideCap: true });
+
+        expect(calls.record).toHaveBeenCalledTimes(1);
+        expect(metrics.cost).toHaveBeenCalledWith('summary_month', 'ai', 1500);
+        expect(port.record).not.toHaveBeenCalled();
+    });
+
     it('falha do provedor lança custo zero como não respondida', async () => {
         const { ledger, port } = build();
 

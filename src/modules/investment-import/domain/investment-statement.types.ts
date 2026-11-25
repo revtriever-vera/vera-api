@@ -10,6 +10,14 @@ export type ParsedSource = (typeof PARSED_SOURCES)[keyof typeof PARSED_SOURCES];
 export const POSITION_GROUPS = { stock: 'stock', bdr: 'bdr', etf: 'etf', fund: 'fund', treasury: 'treasury' } as const;
 export type PositionGroup = (typeof POSITION_GROUPS)[keyof typeof POSITION_GROUPS];
 
+export const DOCUMENT_TYPES = {
+    note: 'note',
+    b3Report: 'b3_report',
+    foreignStatement: 'foreign_statement',
+    screenshot: 'screenshot'
+} as const;
+export type DocumentType = (typeof DOCUMENT_TYPES)[keyof typeof DOCUMENT_TYPES];
+
 export type OperationDirection = 'credit' | 'debit';
 
 export interface ParsedOperation {
@@ -30,6 +38,7 @@ export interface ParsedOperation {
     readonly appliedToPosition: boolean;
     readonly matchKey: string;
     readonly alreadyImported: boolean;
+    readonly check?: string;
 }
 
 export interface ParsedPositionAdjustment {
@@ -85,7 +94,8 @@ export interface ParsedFixedIncome {
 export const IGNORE_REASONS = {
     settlement: 'settlement',
     unsupportedMovement: 'unsupported_movement',
-    unsupportedMarket: 'unsupported_market'
+    unsupportedMarket: 'unsupported_market',
+    pageNotRead: 'page_not_read'
 } as const;
 export type IgnoreReason = (typeof IGNORE_REASONS)[keyof typeof IGNORE_REASONS];
 
@@ -123,6 +133,7 @@ export type B3ReportKind = (typeof B3_REPORT_KINDS)[keyof typeof B3_REPORT_KINDS
 
 export interface ParsedInvestmentStatement {
     readonly source: ParsedSource;
+    readonly documentType?: DocumentType;
     readonly reportKinds: readonly B3ReportKind[];
     readonly currency: string;
     readonly operations: readonly ParsedOperation[];

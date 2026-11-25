@@ -5,12 +5,17 @@ const NO_FEES: number = 0;
 
 const NO_EDIT: LineEdit = { lineId: '' };
 
+function touchesFacts(edit: LineEdit): boolean {
+    return edit.quantity !== undefined || edit.unitPrice !== undefined || edit.tradeDate !== undefined;
+}
+
 function correctedOf(line: StoredLine, edit: LineEdit): StoredLine {
     return {
         ...line,
         quantity: edit.quantity ?? line.quantity,
         unitPrice: edit.unitPrice ?? line.unitPrice,
-        tradeDate: edit.tradeDate ?? line.tradeDate
+        tradeDate: edit.tradeDate ?? line.tradeDate,
+        check: touchesFacts(edit) ? null : line.check
     };
 }
 

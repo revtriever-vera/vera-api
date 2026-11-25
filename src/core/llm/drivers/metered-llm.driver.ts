@@ -141,6 +141,9 @@ export class MeteredLlmDriver extends LlmPort {
     }
 
     private async assertRoom(call: Call): Promise<void> {
+        if (call.spec.outsideCap === true) {
+            return;
+        }
         try {
             await this.ledger.assertRoom(call.request.feature, call.request.task, call.estimateMicros);
         } catch (error: unknown) {
@@ -226,7 +229,8 @@ export class MeteredLlmDriver extends LlmPort {
             attempts: result?.attempts ?? 0,
             outcome,
             requestHash: call.requestHash,
-            referenceId: call.request.referenceId ?? null
+            referenceId: call.request.referenceId ?? null,
+            outsideCap: call.spec.outsideCap === true
         };
     }
 }
