@@ -10,7 +10,7 @@ import {
 } from '../../src/modules/investment-import/domain/prompts/investment-extract.prompt';
 import { maskStatementText } from '../../src/modules/investment-import/domain/model/statement-masking';
 import { PdfContent, readPdfContent } from '../../src/modules/investment-import/domain/pdf-text';
-import { ExtractCase, extractCaseSchema, SectionResult, compareAnswers } from './extract-compare';
+import { Answer, ExtractCase, extractCaseSchema, SectionResult, compareAnswers } from './extract-compare';
 
 const CASES_DIR: string = join(__dirname, '..', 'cases', 'investment_extract', 'avenue');
 const FIXTURES_DIR: string = join(__dirname, '..', '..', 'test', 'fixtures', 'investment-import', 'generated');
@@ -52,7 +52,7 @@ async function liveAnswer(item: ExtractCase, bytes: Buffer): Promise<string> {
 async function runCase(item: ExtractCase, live: boolean): Promise<boolean> {
     const expectedText: string = readFileSync(join(FIXTURES_DIR, item.expected), 'utf8');
     const answerText: string = live ? await liveAnswer(item, readFileSync(join(FIXTURES_DIR, item.file))) : expectedText;
-    const results: SectionResult[] = compareAnswers(item.sections, JSON.parse(expectedText), JSON.parse(answerText));
+    const results: SectionResult[] = compareAnswers(item.sections, JSON.parse(expectedText) as Answer, JSON.parse(answerText) as Answer);
     const failed: SectionResult[] = results.filter((result: SectionResult): boolean => !result.passed);
     process.stdout.write(
         `${item.id}: ${failed.length === 0 ? 'ok' : failed.map((result: SectionResult): string => `${result.section} (missing ${String(result.missing)}, extra ${String(result.extra)})`).join(', ')}\n`

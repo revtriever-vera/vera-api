@@ -43,9 +43,7 @@ export function warningsOf(lines: readonly EvaluatedLine[], foreign: ReadonlyMap
     const choice: number = lines.filter((line: EvaluatedLine): boolean => line.reason === LINE_REASONS.positionModeRequired).length;
     const mismatch: number = countOf(foreign, LINE_REASONS.positionMismatch);
     const unordered: number = countOf(foreign, LINE_REASONS.outOfOrder);
-    const named: number = lines.filter(
-        (line: EvaluatedLine): boolean => foreign.get(line.lineId) === line.reason && line.reason !== null
-    ).length;
+    const named: number = lines.filter((line: EvaluatedLine): boolean => foreign.get(line.lineId) === line.reason).length;
     const check: number = idsWithStatus(lines, LINE_STATUSES.check).length - choice - named;
     const candidates: readonly NoteView[] = [
         { code: LINE_REASONS.positionMismatch, count: mismatch },

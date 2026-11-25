@@ -1,18 +1,12 @@
 import { z } from 'zod';
+import { extractCaseSchema } from './extract-case.schemas';
 
-export const extractCaseSchema = z.object({
-    id: z.string(),
-    task: z.literal('investment_extract'),
-    mode: z.enum(['text', 'scanned']),
-    file: z.string(),
-    expected: z.string(),
-    sections: z.array(z.enum(['period', 'operations', 'income', 'positions', 'taxWithholdings', 'cashMovements'])).min(1)
-});
+export { extractCaseSchema };
 
 export type ExtractCase = z.infer<typeof extractCaseSchema>;
 export type ExtractSection = ExtractCase['sections'][number];
 
-interface Answer {
+export interface Answer {
     readonly periodStart?: unknown;
     readonly periodEnd?: unknown;
     readonly operations?: readonly Record<string, unknown>[];
@@ -29,8 +23,12 @@ export interface SectionResult {
     readonly diffs: readonly string[];
 }
 
+function scalarOf(value: unknown): string {
+    return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+}
+
 function keyOf(item: Record<string, unknown>, fields: readonly string[]): string {
-    return fields.map((field: string): string => String(item[field] ?? '')).join('|');
+    return fields.map((field: string): string => scalarOf(item[field])).join('|');
 }
 
 function numberOf(value: unknown): string {
@@ -40,8 +38,8 @@ function numberOf(value: unknown): string {
 function normalized(item: Record<string, unknown>): Record<string, unknown> {
     return {
         ...item,
-        ticker: String(item['ticker'] ?? item['symbol'] ?? '').toUpperCase(),
-        symbol: String(item['symbol'] ?? '').toUpperCase(),
+        ticker: scalarOf(item['ticker'] ?? item['symbol']).toUpperCase(),
+        symbol: scalarOf(item['symbol']).toUpperCase(),
         quantity: numberOf(item['quantity']),
         unitPrice: numberOf(item['unitPrice']),
         price: numberOf(item['price'])
@@ -86,14 +84,15 @@ function grossDiffers(left: unknown, right: unknown): boolean {
 }
 
 function compareList(section: ExtractSection, expected: Answer, actual: Answer): SectionResult {
-    const want = listOf(expected, section);
+    const want: { items: readonly Record<string, unknown>[]; fields: readonly string[] } = listOf(expected, section);
     const wanted: Map<string, unknown> = indexOf(want.items, want.fields);
     const found: Map<string, unknown> = indexOf(listOf(actual, section).items, want.fields);
     const wrongGross: string[] = [...wanted.keys()].filter(
         (key: string): boolean => found.has(key) && grossDiffers(wanted.get(key), found.get(key))
     );
-    const missing: string[] = [...wanted.keys()].filter((key: string): boolean => !found.has(key) || wrongGross.includes(key));
-    const extra: string[] = [...found.keys()].filter((key: string): boolean => !wanted.has(key) || wrongGross.includes(key));
+    const wrong: Set<string> = new Set(wrongGross);
+    const missing: string[] = [...wanted.keys()].filter((key: string): boolean => !found.has(key) || wrong.has(key));
+    const extra: string[] = [...found.keys()].filter((key: string): boolean => !wanted.has(key) || wrong.has(key));
     return {
         section,
         passed: missing.length === 0 && extra.length === 0,
