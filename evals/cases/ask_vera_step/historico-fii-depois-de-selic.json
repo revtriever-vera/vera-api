@@ -1,0 +1,55 @@
+{
+  "id": "historico-fii-depois-de-selic",
+  "task": "ask_vera_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "O que é um FII?",
+  "history": [
+    {
+      "role": "person",
+      "text": "Devo comprar PETR4 agora?"
+    },
+    {
+      "role": "vera",
+      "text": "Não posso indicar uma ação para comprar. PETR4 é uma ação de petróleo e gás.\nIsto não é uma recomendação de compra ou venda."
+    },
+    {
+      "role": "person",
+      "text": "Posso vender minha PETR4?"
+    },
+    {
+      "role": "vera",
+      "text": "Não posso indicar uma ação para vender.\nIsto não é uma recomendação de compra ou venda."
+    },
+    {
+      "role": "person",
+      "text": "O que é o Tesouro Selic?"
+    },
+    {
+      "role": "vera",
+      "text": "Tesouro Selic é um título público federal corrigido pela taxa Selic.\nIsto não é uma recomendação de compra ou venda."
+    }
+  ],
+  "tools": {
+    "required": [],
+    "allowed": [
+      "list_categories",
+      "spending_month_summary",
+      "spending_cuts",
+      "spending_by_category",
+      "portfolio_overview",
+      "contribution_suggestion"
+    ]
+  },
+  "mockTools": [],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": ["PETR4", "Selic"],
+    "sentences": {
+      "min": 1,
+      "max": 4
+    }
+  },
+  "reference": ["FII é um fundo imobiliário que compra imóveis e recebe aluguéis."]
+}

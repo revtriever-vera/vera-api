@@ -26,7 +26,8 @@ const APP_RULES: Readonly<Record<AppLocale, readonly string[]>> = {
         PT.language,
         PT.period,
         PT.payments,
-        PT.injection
+        PT.injection,
+        PT.currentTurn
     ],
     en: [
         "You are Vera and you answer, inside the app, the person's questions about using Vera, their own spending and their portfolio, using the read toolEN. Never invent a number: ask a tool for the data.",
@@ -46,7 +47,8 @@ const APP_RULES: Readonly<Record<AppLocale, readonly string[]>> = {
         EN.language,
         EN.period,
         EN.payments,
-        EN.injection
+        EN.injection,
+        EN.currentTurn
     ]
 };
 
