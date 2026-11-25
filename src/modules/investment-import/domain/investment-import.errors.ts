@@ -140,7 +140,7 @@ export class ModelConfirmationRequiredError extends AppError {
 }
 
 export class ModelUnreadableError extends AppError {
-    public constructor(reason: 'invalid_response' | 'no_operations') {
+    public constructor(reason: 'invalid_response' | 'no_operations' | 'positions_without_price') {
         super({
             code: 'model.unreadable',
             status: 422,

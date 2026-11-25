@@ -26,11 +26,13 @@ describe('investment_extract note cases', () => {
                 'nota-opcao',
                 'nota-total-nao-bate',
                 'nota-escaneada',
-                'nota-envenenada'
+                'nota-envenenada',
+                'print-carteira'
             ])
         );
         expect(CASES.filter((item: NoteCase): boolean => item.input === 'image').map((item: NoteCase): string => item.id)).toEqual([
-            'nota-escaneada'
+            'nota-escaneada',
+            'print-carteira'
         ]);
     });
 

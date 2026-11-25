@@ -235,6 +235,26 @@ describe('ModelReaderService', () => {
         expect(kit.logs['modelFailed']).toHaveBeenCalledWith('no_operations', expect.any(Object));
     });
 
+    it('retrato da carteira com preço vira linha de custo assumido', async () => {
+        const positions: unknown[] = [{ block: 'equities', symbol: 'PETR4', quantity: '10', price: '38.5' }];
+        kit.generate.mockResolvedValue(response(answer([], { documentType: 'screenshot', notes: null, positions })));
+
+        const statement = await kit.reader.read(await png(20, 20), true);
+
+        expect(statement.operations).toMatchObject([{ ticker: 'PETR4', check: 'assumed_cost' }]);
+    });
+
+    it('retrato da carteira sem preço legível tem motivo próprio', async () => {
+        const positions: unknown[] = [{ block: 'equities', symbol: 'PETR4', quantity: '10', price: null }];
+        kit.generate.mockResolvedValue(response(answer([], { documentType: 'screenshot', positions })));
+
+        await expect(kit.reader.read(await png(20, 20), true)).rejects.toMatchObject({
+            code: 'model.unreadable',
+            meta: { reason: 'positions_without_price' }
+        });
+        expect(kit.logs['modelFailed']).toHaveBeenCalledWith('positions_without_price', expect.any(Object));
+    });
+
     it('credencial que sumiu no meio vira model.unavailable', async () => {
         kit.generate.mockRejectedValue(new LlmProviderDisabledError());
 

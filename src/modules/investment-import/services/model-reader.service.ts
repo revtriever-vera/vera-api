@@ -192,8 +192,10 @@ export class ModelReaderService {
             tickersBySpec: await this.resolver.resolve(specsOfModelAnswers(answers.texts))
         });
         if (isEmptyReading(statement)) {
-            this.logs.modelFailed('no_operations', { kind, sizeBytes });
-            throw new ModelUnreadableError('no_operations');
+            const reason: 'no_operations' | 'positions_without_price' =
+                (statement.foreign?.positions.length ?? 0) > 0 ? 'positions_without_price' : 'no_operations';
+            this.logs.modelFailed(reason, { kind, sizeBytes });
+            throw new ModelUnreadableError(reason);
         }
         return statement;
     }

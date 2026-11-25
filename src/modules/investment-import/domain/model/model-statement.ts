@@ -1,4 +1,6 @@
 import { SafeParseReturnType } from 'zod';
+import { BRL } from '../foreign/foreign-statement';
+import { snapshotOperationsOf } from '../foreign/foreign-summary';
 import { ModelUnreadableError } from '../investment-import.errors';
 import { LINE_REASONS, NOTE_CODES } from '../investment-import.types';
 import {
@@ -18,6 +20,8 @@ import { foreignExtrasOf, mergedForeignOf } from './model-foreign';
 import { AnswerEnvelope, AnswerOperation, answerEnvelopeSchema, answerOperationSchema } from './model-answer.schema';
 import { totalMatches } from './model-checks';
 import { ignoredOf, operationOf, rejectReasonOf, UNSUPPORTED_MARKET } from './model-operation';
+
+const SNAPSHOT_TYPES: ReadonlySet<DocumentType> = new Set([DOCUMENT_TYPES.screenshot, DOCUMENT_TYPES.b3Report]);
 
 export interface ModelStatementInput {
     readonly labels: readonly string[];
@@ -149,6 +153,11 @@ function notesOf(readings: readonly PageReading[]): StatementNote[] {
     return candidates.filter((note: StatementNote): boolean => note.count > 0);
 }
 
+function snapshotOf(first: PageReading, foreign: ForeignExtras, operations: readonly ParsedOperation[], today: string): ParsedOperation[] {
+    const isSnapshot: boolean = SNAPSHOT_TYPES.has(first.documentType) && first.currency === BRL && operations.length === 0;
+    return isSnapshot ? snapshotOperationsOf(foreign.positions, first.currency, today) : [];
+}
+
 export function specsOfModelAnswers(answers: readonly string[]): string[] {
     const specs: Set<string> = new Set();
     for (const text of answers) {
@@ -168,17 +177,15 @@ export function statementOfModelAnswers(answers: readonly string[], input: Model
     if (first === undefined) {
         throw new ModelUnreadableError('invalid_response');
     }
-    const foreign: Pick<ParsedInvestmentStatement, 'foreign'> =
-        first.documentType === DOCUMENT_TYPES.foreignStatement
-            ? { foreign: mergedForeignOf(readings.map((reading: PageReading): ForeignExtras => reading.foreign)) }
-            : {};
+    const foreign: ForeignExtras = mergedForeignOf(readings.map((reading: PageReading): ForeignExtras => reading.foreign));
+    const operations: ParsedOperation[] = operationsOf(readings);
     return {
-        ...foreign,
+        foreign,
         source: PARSED_SOURCES.model,
         documentType: first.documentType,
         reportKinds: [],
         currency: first.currency,
-        operations: operationsOf(readings),
+        operations: [...operations, ...snapshotOf(first, foreign, operations, input.today)],
         positionAdjustments: [],
         fixedIncome: [],
         notes: notesOf(readings),
