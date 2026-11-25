@@ -20,6 +20,7 @@ type TitleFields = Pick<
     | 'appliedAt'
     | 'maturityDate'
     | 'taxRegime'
+    | 'importId'
 >;
 
 const LIST_LIMIT: number = MAX_TITLES_PER_COMPANY + 50;
@@ -36,6 +37,10 @@ export class FixedIncomeTitlesRepository extends TenantRepository<'FixedIncomeTi
 
     public async insertSample(fields: TitleFields): Promise<FixedIncomeTitleRow> {
         return this.createRow({ id: IdUtil.newId(), companyId: this.companyId, isSample: true, ...fields });
+    }
+
+    public async listByImport(importId: string): Promise<FixedIncomeTitleRow[]> {
+        return this.findMany({ importId }, { limit: LIST_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
     }
 
     public async listReal(): Promise<FixedIncomeTitleRow[]> {

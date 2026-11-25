@@ -19,8 +19,15 @@ export function accept<T>(item: T): RowResult<T> {
     return { kind: 'item', item };
 }
 
-export function ignore<T>(sheet: string, row: RawRow, reason: IgnoreReason, description: string, tradeDate: string | null): RowResult<T> {
-    return { kind: 'ignored', ignored: { sheet, line: row.line, reason, description, tradeDate } };
+export function ignore<T>(
+    sheet: string,
+    row: RawRow,
+    reason: IgnoreReason,
+    description: string,
+    tradeDate: string | null,
+    productCode: string | null = null
+): RowResult<T> {
+    return { kind: 'ignored', ignored: { sheet, line: row.line, reason, description, tradeDate, productCode } };
 }
 
 export function reject<T>(sheet: string, row: RawRow, reason: RejectReason): RowResult<T> {

@@ -33,7 +33,7 @@ function statement(operations: ParsedOperation[]): ParsedInvestmentStatement {
         operations,
         positionAdjustments: [],
         fixedIncome: [],
-        ignored: [{ sheet: '', line: 5, reason: 'settlement', description: 'SECRET TEXT', tradeDate: '2026-01-11' }],
+        ignored: [{ sheet: '', line: 5, reason: 'settlement', description: 'SECRET TEXT', tradeDate: '2026-01-11', productCode: null }],
         rejected: [{ sheet: '', line: 6, reason: 'invalid_date' }]
     };
 }

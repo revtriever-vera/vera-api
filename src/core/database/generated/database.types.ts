@@ -450,6 +450,7 @@ export interface FixedIncomeTitles {
     deletedAt: Timestamp | null;
     holderUserId: string | null;
     id: string;
+    importId: string | null;
     indexer: string;
     isSample: Generated<boolean>;
     issuerId: string | null;

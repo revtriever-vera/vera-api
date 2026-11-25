@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Page } from '../../../shared/pagination/pagination.types';
 import { AppError } from '../../../shared/errors/app.error';
+import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
+import { FixedIncomeTitleImporterService } from '../../fixed-income/services/fixed-income-title-importer.service';
 import { InvestmentImportReaderService, InvestmentImportRecord } from '../../positions/services/investment-import-reader.service';
 import { PositionOperationsService } from '../../positions/services/position-operations.service';
 import { ImportUndoBlockedError } from '../domain/investment-import.errors';
@@ -29,6 +31,7 @@ export class InvestmentImportListApplication {
     public constructor(
         private readonly records: InvestmentImportReaderService,
         private readonly positions: PositionOperationsService,
+        private readonly titles: FixedIncomeTitleImporterService,
         private readonly logs: InvestmentImportLogService,
         private readonly metrics: InvestmentImportMetricsService
     ) {}
@@ -41,15 +44,21 @@ export class InvestmentImportListApplication {
     public async undo(id: string): Promise<{ undone: boolean }> {
         const startedAt: number = Date.now();
         const record: InvestmentImportRecord = await this.records.require(id);
+        await this.revert(id);
+        const durationMs: number = Date.now() - startedAt;
+        this.logs.record('undone', { source: record.source, importId: id, durationMs });
+        this.metrics.outcome(record.source, 'undone', durationMs);
+        return { undone: true };
+    }
+
+    @UsingTransaction()
+    private async revert(id: string): Promise<void> {
         try {
             await this.positions.undo(id);
         } catch (error) {
             throw translateUndoError(error);
         }
-        const durationMs: number = Date.now() - startedAt;
-        this.logs.record('undone', { source: record.source, importId: id, durationMs });
-        this.metrics.outcome(record.source, 'undone', durationMs);
-        return { undone: true };
+        await this.titles.removeByImport(id);
     }
 }
 

@@ -95,3 +95,25 @@ export class InvalidEditError extends AppError {
         });
     }
 }
+
+export class FixedIncomeIncompleteError extends AppError {
+    public constructor(lineId: string, missing: readonly string[]) {
+        super({
+            code: 'import.fixed_income_incomplete',
+            status: 422,
+            detail: 'The fixed income title lacks fields: send them in `edits` or skip the line.',
+            meta: { lineId, missing }
+        });
+    }
+}
+
+export class DuplicateTitleError extends AppError {
+    public constructor(lineId: string) {
+        super({
+            code: 'import.fixed_income_duplicate',
+            status: 422,
+            detail: 'An equal title already exists: skip the line or send `edits` to create it anyway.',
+            meta: { lineId }
+        });
+    }
+}

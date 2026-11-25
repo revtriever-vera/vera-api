@@ -96,7 +96,9 @@ export class InvestmentImportsController {
         description:
             'Reads a B3 report (xlsx or csv: Negociação, Movimentação or Posição) and returns every line with its status, the position ' +
             'of each asset before and after, and what was left out. The file is discarded as soon as it is read and never stored: only ' +
-            'the operations read are kept for 30 minutes, waiting for POST /investment-imports. Available on every plan.'
+            'the operations read are kept for 30 minutes, waiting for POST /investment-imports. In a Posição report, each fixed income ' +
+            'title (CDB, LCI, LCA...) comes back with a proposal: the contracted rate is calculated from the CURVA price and the ' +
+            'CDI and IPCA series, and is only saved when the person confirms it. Available on every plan.'
     })
     @ApiConsumes('multipart/form-data')
     @ApiBody({ schema: multipartBodyOf(previewBodySchema) })
@@ -129,7 +131,9 @@ export class InvestmentImportsController {
         description:
             'Records the operations of the preview, with the corrections sent in `edits`, and updates the positions in one transaction. ' +
             'The effect is recalculated with the corrections; the call is refused while a line is `blocked` or while an asset that ' +
-            'already has a position has lines without `positionMode`. The preview can be confirmed once. `DELETE /investment-imports/{id}` undoes it.'
+            'already has a position has lines without `positionMode`. Each fixed income line in `fixedIncome` is confirmed, corrected with ' +
+            '`edits` or skipped; a title that needs input is refused without the required fields (import.fixed_income_incomplete). ' +
+            'The preview can be confirmed once. `DELETE /investment-imports/{id}` undoes it, removing the titles it created.'
     })
     @ApiZodBody(commitBodySchema)
     @ApiZodResponse({
@@ -149,8 +153,8 @@ export class InvestmentImportsController {
     @ApiProblemResponse({
         status: 422,
         description:
-            'Blocked lines remain (import.has_blocked_lines), a position mode is missing (import.position_mode_required) or an edit does ' +
-            'not match a line (import.invalid_edit)',
+            'Blocked lines remain (import.has_blocked_lines), a position mode is missing (import.position_mode_required), an edit does ' +
+            'not match a line (import.invalid_edit) or a fixed income title lacks fields (import.fixed_income_incomplete)',
         example: PROBLEM_EXAMPLES.blocked
     })
     @ApiProblemResponse({ status: 429, description: 'More than 30 imports in an hour for the company', example: THROTTLED_EXAMPLE })

@@ -25,6 +25,7 @@ function row(overrides: Partial<FixedIncomeTitleRow> = {}): FixedIncomeTitleRow 
         appliedAt: new Date(2025, 0, 6),
         maturityDate: new Date(2027, 0, 6),
         taxRegime: 'exempt',
+        importId: null,
         isSample: false,
         createdAt: new Date(),
         updatedAt: new Date(),

@@ -14,6 +14,14 @@ export class FixedIncomeTitleDomain {
         return toFixedIncomeTitle(await this.titles.insert({ ...draft, taxRegime: TAX_REGIME_BY_KIND[draft.kind] }));
     }
 
+    public async createImported(draft: TitleDraft, importId: string): Promise<FixedIncomeTitle> {
+        return toFixedIncomeTitle(await this.titles.insert({ ...draft, importId, taxRegime: TAX_REGIME_BY_KIND[draft.kind] }));
+    }
+
+    public async listByImport(importId: string): Promise<FixedIncomeTitle[]> {
+        return (await this.titles.listByImport(importId)).map(toFixedIncomeTitle);
+    }
+
     public async createSample(draft: TitleDraft): Promise<FixedIncomeTitle> {
         return toFixedIncomeTitle(await this.titles.insertSample({ ...draft, taxRegime: TAX_REGIME_BY_KIND[draft.kind] }));
     }
