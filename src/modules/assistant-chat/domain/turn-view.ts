@@ -2,7 +2,8 @@ import { UsageState } from '../../../core/usage/usage.types';
 import { APP_LOCALES, AppLocale } from '../../../shared/i18n/locale';
 import { AskVeraSent, investmentNoticeText } from '../../ai-assistant/services/ask-vera.service';
 import type { UsageView } from '../validation/assistant-chat.schemas';
-import { AssistantMessage, TURN_MODES, TurnMode } from './assistant-chat.types';
+import { DATA_LOCKED_TOOL } from '../../ai-assistant/services/tools/data-locked.tool';
+import { ACCESS_STATES, AccessState, AssistantMessage, TURN_MODES, TurnMode } from './assistant-chat.types';
 
 export interface SplitText {
     readonly text: string;
@@ -40,4 +41,8 @@ export function sentAvailableOf(message: Pick<AssistantMessage, 'sent'>): boolea
 
 export function sentOf(message: Pick<AssistantMessage, 'sent'>): AskVeraSent[] {
     return Array.isArray(message.sent) ? (message.sent as unknown as AskVeraSent[]) : [];
+}
+
+export function accessOf(message: Pick<AssistantMessage, 'toolsUsed'>, lock: AccessState): AccessState {
+    return toolsOf(message).includes(DATA_LOCKED_TOOL) ? lock : ACCESS_STATES.ok;
 }

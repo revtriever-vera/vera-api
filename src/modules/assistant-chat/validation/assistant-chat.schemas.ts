@@ -25,6 +25,12 @@ export const feedbackBodySchema = z
     .object({ helpful: z.literal(false).describe('Only the negative signal is collected; nothing of the text is kept') })
     .strict();
 
+const accessSchema = z
+    .enum(['ok', 'premium_required', 'permission_required'])
+    .describe(
+        'Whether the answer was held back: premium_required when the plan lacks the feature, permission_required when the plan has it but the person did not allow sending the figures to the language model, ok otherwise. For a held-back answer, it reflects the state at read time'
+    );
+
 const usageSchema = z.object({
     state: z.enum(['ok', 'warning', 'paused']).describe('State of the usage band that applies to the next turn'),
     usedBps: z.number().int().describe('Share of that band used, in basis points'),
@@ -44,6 +50,7 @@ export const turnResponseSchema = z.object({
             source: z.enum(['help', 'ai']).describe('help: from the help content; ai: from the language model with the account figures'),
             toolsUsed: z.array(z.string()).describe('Names of the tools the answer used'),
             sentAvailable: z.boolean().describe('The figures sent to the language model are still stored'),
+            access: accessSchema,
             notice: z.string().nullable().describe('Investment notice line, when the answer needs one')
         })
         .optional()
@@ -74,6 +81,8 @@ export const conversationResponseSchema = z.object({
                 text: z.string().describe('The text'),
                 status: z.enum(['pending', 'done', 'failed']).describe('Status of the message'),
                 toolsUsed: z.array(z.string()).describe('Tools the answer used'),
+                access: accessSchema,
+                sentAvailable: z.boolean().describe('The figures sent to the language model are still stored'),
                 notice: z.string().nullable().describe('Investment notice line, when the answer needs one'),
                 createdAt: z.string().describe('ISO 8601')
             })

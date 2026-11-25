@@ -242,8 +242,8 @@ describe('assistant chat: ferramentas de leitura no app', () => {
         await askWithTools(withConsent, 'como vejo meus números?', [toolUse('help_search', { query: 'números' })]);
         const withTools: string[] = toolNamesOf(requests[0] as LlmDriverCall);
 
-        expect(freeTools).toEqual(['help_search', 'where_is']);
-        expect(withoutTools).toEqual(['help_search', 'where_is']);
+        expect(freeTools).toEqual(['data_locked', 'help_search', 'where_is']);
+        expect(withoutTools).toEqual(['data_locked', 'help_search', 'where_is']);
         expect(withTools).toEqual(READ_TOOLS);
     });
 
@@ -334,7 +334,7 @@ describe('assistant chat: ferramentas de leitura no app', () => {
         requests = [];
         const second: StartedBody = await askWithTools(owner, 'e agora?', [toolUse('help_search', { query: 'carteira' })]);
         expect((await turn(owner, second.turnId)).answer?.source).toBe('help');
-        expect(toolNamesOf(requests[0] as LlmDriverCall)).toEqual(['help_search', 'where_is']);
+        expect(toolNamesOf(requests[0] as LlmDriverCall)).toEqual(['data_locked', 'help_search', 'where_is']);
         const features = await harness.pg.query<{ feature: string }>(
             'SELECT DISTINCT "feature" FROM "LlmCalls" WHERE "companyId" = $1 ORDER BY "feature"',
             [owner.company.id]

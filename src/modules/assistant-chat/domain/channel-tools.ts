@@ -1,8 +1,11 @@
+import { DATA_LOCKED_TOOL } from '../../ai-assistant/services/tools/data-locked.tool';
 import { TURN_MODES, TurnMode } from './assistant-chat.types';
 
 const HELP_TOOLS: readonly string[] = ['help_search', 'where_is'];
 
-export const APP_HELP_TOOLS: ReadonlySet<string> = new Set(HELP_TOOLS);
+export const APP_HELP_ONLY_TOOLS: readonly string[] = [DATA_LOCKED_TOOL];
+
+export const APP_HELP_TOOLS: ReadonlySet<string> = new Set([...HELP_TOOLS, ...APP_HELP_ONLY_TOOLS]);
 
 export const APP_AI_TOOLS: ReadonlySet<string> = new Set([
     ...HELP_TOOLS,

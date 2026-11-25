@@ -42,6 +42,7 @@ const TURN_EXAMPLE: TurnView = {
         source: 'help',
         toolsUsed: ['help_search'],
         sentAvailable: false,
+        access: 'ok',
         notice: null
     },
     usage: USAGE_EXAMPLE
@@ -67,6 +68,8 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             text: 'Onde vejo meus gastos?',
             status: 'done',
             toolsUsed: [],
+            access: 'ok',
+            sentAvailable: false,
             notice: null,
             createdAt: '2026-11-25T12:00:00.000Z'
         },
@@ -76,6 +79,8 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             text: 'Para ver os gastos do mês, abra **Gastos** no menu lateral.',
             status: 'done',
             toolsUsed: ['help_search'],
+            access: 'ok',
+            sentAvailable: false,
             notice: null,
             createdAt: '2026-11-25T12:00:00.001Z'
         }

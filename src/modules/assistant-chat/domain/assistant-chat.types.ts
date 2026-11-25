@@ -11,6 +11,9 @@ export type MessageStatus = (typeof MESSAGE_STATUSES)[keyof typeof MESSAGE_STATU
 export const TURN_MODES = { help: 'help', ai: 'ai' } as const;
 export type TurnMode = (typeof TURN_MODES)[keyof typeof TURN_MODES];
 
+export const ACCESS_STATES = { ok: 'ok', premiumRequired: 'premium_required', permissionRequired: 'permission_required' } as const;
+export type AccessState = (typeof ACCESS_STATES)[keyof typeof ACCESS_STATES];
+
 export const MAX_TURN_CHARS: number = 1000;
 export const CURRENT_MESSAGES_LIMIT: number = 20;
 export const RETENTION_DAYS: number = 30;
