@@ -9,6 +9,19 @@ export const MAX_B3_ROWS: number = 20_000;
 
 const ZIP_MAGIC: readonly number[] = [0x50, 0x4b];
 const PDF_MAGIC: readonly number[] = [0x25, 0x50, 0x44, 0x46];
+const IMAGE_MAGICS: readonly (readonly number[])[] = [
+    [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    [0xff, 0xd8, 0xff],
+    [0x47, 0x49, 0x46, 0x38]
+];
+const RIFF_MAGIC: readonly number[] = [0x52, 0x49, 0x46, 0x46];
+const WEBP_TAG: readonly number[] = [0x57, 0x45, 0x42, 0x50];
+
+function isImage(bytes: Uint8Array): boolean {
+    const webp: boolean =
+        startsWith(bytes, RIFF_MAGIC) && WEBP_TAG.every((value: number, index: number): boolean => bytes[8 + index] === value);
+    return webp || IMAGE_MAGICS.some((magic: readonly number[]): boolean => startsWith(bytes, magic));
+}
 
 function startsWith(bytes: Uint8Array, magic: readonly number[]): boolean {
     return magic.every((value: number, index: number): boolean => bytes[index] === value);
@@ -72,7 +85,7 @@ function assertWithinLimit(tables: readonly RawTable[]): void {
 }
 
 export async function readB3Report(bytes: Uint8Array): Promise<ParsedInvestmentStatement> {
-    if (startsWith(bytes, PDF_MAGIC)) {
+    if (startsWith(bytes, PDF_MAGIC) || isImage(bytes)) {
         throw new FormatNotRecognizedError(FORMAT_SUGGESTIONS.b3Excel);
     }
     const tables: RawTable[] = startsWith(bytes, ZIP_MAGIC) ? await readWorkbook(bytes) : readText(bytes);
