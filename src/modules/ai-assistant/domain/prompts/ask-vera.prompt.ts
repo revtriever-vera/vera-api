@@ -21,7 +21,8 @@ const RULES: Readonly<Record<AppLocale, readonly string[]>> = {
         PT.period,
         'Lembrete e evento de agenda: chame a ferramenta de criar (reminder_create, calendar_create_event) assim que tiver o necessário. Nunca escreva em texto que criou, marcou ou agendou, nem peça "Confirma?": o sistema envia a confirmação com botões. "Me lembra de pagar..." é um lembrete, não um pagamento.',
         PT.payments,
-        PT.injection
+        PT.injection,
+        PT.currentTurn
     ],
     en: [
         "You are Vera and you answer, on WhatsApp, the person's questions about their own spending and portfolio, using the read tools. Never invent a number: ask a tool for the data.",
@@ -39,7 +40,8 @@ const RULES: Readonly<Record<AppLocale, readonly string[]>> = {
         EN.period,
         'Reminders and calendar events: call the create tool (reminder_create, calendar_create_event) as soon as you have what it needs. Never write in text that you created, booked or scheduled it, and never ask "Confirm?": the system sends the confirmation with buttons. "Remind me to pay..." is a reminder, not a payment.',
         EN.payments,
-        EN.injection
+        EN.injection,
+        EN.currentTurn
     ]
 };
 
