@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { seriesOf } from '../../../../test/support/fixed-income-fixtures';
+import { seriesOf, weekdayPoints } from '../../../../test/support/fixed-income-fixtures';
 import { flatSeries, monthlyIpca } from '../../../../test/support/schedule-fixtures';
 import { DecimalUtil } from '../../../shared/utils/decimal.util';
 import { buildIpcaSeries } from '../domain/curve/ipca-factor';
-import { accumulatedInflation, businessDaysBetween, calendarDaysBetween, compoundFactor, referenceRatesOf } from './index-series-math';
+import {
+    accumulatedInflation,
+    businessDaysBetween,
+    calendarDaysBetween,
+    cdiAccrual,
+    compoundFactor,
+    referenceRatesOf
+} from './index-series-math';
 
 describe('businessDaysBetween', () => {
     it('conta 252 dias úteis entre uma segunda e a quarta 352 dias depois', () => {
@@ -122,5 +129,20 @@ describe('accumulatedInflation', () => {
 
         expect(inflation.factor.toNumber()).toBeCloseTo(1.005 ** 2, 10);
         expect(inflation.estimated).toBe(true);
+    });
+});
+
+describe('cdiAccrual', () => {
+    const series = seriesOf(weekdayPoints('2026-01-01', '2026-03-31', '0.05'));
+
+    it('capitaliza o CDI diário na fração contratada', () => {
+        const accrual = cdiAccrual(series.cdi, '2026-02-02', '2026-02-09', 11000);
+
+        expect(accrual?.factor.toNumber()).toBeCloseTo((1 + 0.0005 * 1.1) ** 5, 12);
+        expect(accrual?.estimated).toBe(false);
+    });
+
+    it('devolve nulo quando a série não cobre o período', () => {
+        expect(cdiAccrual(series.cdi, '2026-02-02', '2026-09-09', 10000)).toBeNull();
     });
 });

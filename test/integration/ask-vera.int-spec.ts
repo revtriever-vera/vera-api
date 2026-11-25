@@ -112,7 +112,15 @@ describe('AskVeraService', () => {
 
     async function ask(owner: Account, text: string, messageId: string): Promise<AskVeraAnswer> {
         return harness.inCompany(owner.company.id, async () =>
-            service.ask({ text, history: [], locale: 'pt-BR', messageId, allowedTools: ALL_TOOLS })
+            service.ask({
+                text,
+                history: [],
+                locale: 'pt-BR',
+                messageId,
+                channel: 'whatsapp',
+                feature: 'whatsapp',
+                allowedTools: ALL_TOOLS
+            })
         );
     }
 

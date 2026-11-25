@@ -4,6 +4,7 @@ import { PaidUsageMeter } from '../../../core/usage/services/paid-usage-meter.se
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { PaidUsageStateAdapter } from './paid-usage-state.adapter';
 import { PlanLimitService } from './plan-limit.service';
+import { PlanResolverService } from './plan-resolver.service';
 import { PlanUsageContextAdapter } from './plan-usage-context.adapter';
 
 describe('PlanUsageContextAdapter', () => {
@@ -11,14 +12,16 @@ describe('PlanUsageContextAdapter', () => {
         const register = vi.fn();
         const adapter: PlanUsageContextAdapter = new PlanUsageContextAdapter(
             { capMicros: vi.fn().mockResolvedValue(4_000_000) } as unknown as PlanLimitService,
+            { planOf: vi.fn().mockResolvedValue('free') } as unknown as PlanResolverService,
             { timezoneOfCompany: vi.fn().mockResolvedValue('Asia/Tokyo') } as unknown as CompanyTimezoneService,
-            { register, configuredCapMicros: () => 4_000_000 } as unknown as UsageContextHolder
+            { register, configuredCapMicros: () => 4_000_000, configuredHelpCapMicros: () => 500_000 } as unknown as UsageContextHolder
         );
 
         adapter.onModuleInit();
 
         expect(register).toHaveBeenCalledWith(adapter);
         expect(await adapter.capMicros()).toBe(4_000_000);
+        expect(await adapter.helpCapMicros()).toBe(500_000);
         expect(await adapter.timezone()).toBe('Asia/Tokyo');
     });
 });

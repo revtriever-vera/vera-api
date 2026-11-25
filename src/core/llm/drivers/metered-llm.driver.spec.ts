@@ -32,8 +32,13 @@ const REQUEST: LlmGenerationRequest = {
     referenceId: 'ref-1'
 };
 
-function build(options: { mode?: 'live' | 'mock'; credentials?: LlmCredentials | null; repeats?: number } = {}) {
-    const config: Partial<LlmConfig> = { LLM_DRIVER: options.mode ?? 'live', LLM_MODEL_ID: 'vendor/model-a', LLM_REPEAT_LIMIT: 3 };
+function build(options: { mode?: 'live' | 'mock'; credentials?: LlmCredentials | null; repeats?: number; vision?: string } = {}) {
+    const config: Partial<LlmConfig> = {
+        LLM_DRIVER: options.mode ?? 'live',
+        LLM_MODEL_ID: 'vendor/model-a',
+        LLM_REPEAT_LIMIT: 3,
+        LLM_VISION_MODEL: options.vision
+    };
     const driver = { generate: vi.fn().mockResolvedValue(RESULT) };
     const router = { driverFor: vi.fn().mockReturnValue(driver) };
     const ledger = {
@@ -227,5 +232,84 @@ describe('MeteredLlmDriver', () => {
             status: 500
         });
         expect(credentials.resolve).not.toHaveBeenCalled();
+    });
+
+    describe('imagem, arquivo e modelo de visão', () => {
+        const PDF_BYTES: Uint8Array = new Uint8Array(5_000).fill(7);
+        const EXTRACT: LlmGenerationRequest = {
+            task: 'investment_extract',
+            feature: 'ai',
+            system: 'sys',
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        { kind: 'text', text: 'extraia' },
+                        { kind: 'image', mediaType: 'image/png', data: new Uint8Array([1, 2, 3]) },
+                        { kind: 'file', mediaType: 'application/pdf', data: PDF_BYTES }
+                    ]
+                }
+            ]
+        };
+
+        function buildExtract(options: Parameters<typeof build>[0] = {}): ReturnType<typeof build> {
+            const built = build(options);
+            built.driver.generate.mockResolvedValue({ ...RESULT, text: '{"currency":"BRL","operations":[]}' });
+            return built;
+        }
+
+        it('a tarefa de visão usa o modelo de visão quando configurado, e o principal quando não', async () => {
+            const withVision = buildExtract({ vision: 'vendor/visao' });
+            await withVision.metered.generate(EXTRACT);
+            expect(withVision.driver.generate).toHaveBeenCalledWith(
+                expect.objectContaining({ credentials: { ...GATEWAY, modelId: 'vendor/visao' } })
+            );
+            expect(withVision.ledger.record).toHaveBeenCalledWith(expect.objectContaining({ modelId: 'vendor/visao' }));
+            expect(withVision.pricing.costMicros).toHaveBeenLastCalledWith('vendor/visao', RESULT.usage);
+
+            const without = buildExtract();
+            await without.metered.generate(EXTRACT);
+            expect(without.driver.generate).toHaveBeenCalledWith(expect.objectContaining({ credentials: GATEWAY }));
+        });
+
+        it('as tarefas primárias seguem no modelo principal mesmo com modelo de visão configurado', async () => {
+            const { metered, driver } = buildExtract({ vision: 'vendor/visao' });
+
+            await metered.generate(REQUEST);
+
+            expect(driver.generate).toHaveBeenCalledWith(expect.objectContaining({ credentials: GATEWAY }));
+        });
+
+        it('a tarefa traz o esquema do catálogo e o custo dos tokens de entrada com mídia entra no record', async () => {
+            const { metered, driver, ledger, pricing } = buildExtract({ vision: 'vendor/visao' });
+
+            await metered.generate(EXTRACT);
+
+            expect(driver.generate).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    request: expect.objectContaining({ responseSchema: expect.objectContaining({ type: 'object' }) })
+                })
+            );
+            const estimate = pricing.costMicros.mock.calls[0]?.[1] as { inputTokens: number };
+            expect(estimate.inputTokens).toBeGreaterThan(1_600);
+            expect(ledger.record).toHaveBeenCalledWith(
+                expect.objectContaining({ costMicros: 1234, usage: RESULT.usage, outcome: 'answered' })
+            );
+        });
+
+        it('o hash e o razão não carregam os bytes, só tipo e tamanho', async () => {
+            const { metered, ledger } = buildExtract();
+            const other: LlmGenerationRequest = {
+                ...EXTRACT,
+                messages: [{ role: 'user', content: [{ kind: 'file', mediaType: 'application/pdf', data: new Uint8Array(5_000).fill(8) }] }]
+            };
+
+            await metered.generate(EXTRACT);
+            await metered.generate(other);
+
+            const entries = ledger.record.mock.calls.map((call) => call[0] as { requestHash: string });
+            expect(entries[0]?.requestHash).not.toBe(entries[1]?.requestHash);
+            expect(JSON.stringify(ledger.record.mock.calls)).not.toContain('7,7,7');
+        });
     });
 });

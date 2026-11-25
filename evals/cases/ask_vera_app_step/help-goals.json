@@ -1,0 +1,32 @@
+{
+  "id": "help-goals",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "how do I create a goal?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "create goal"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/portfolio/goals"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Open [Goals](/portfolio/goals), choose New goal and say how much and by when. Vera calculates what is missing and how much to save each month."
+  ]
+}

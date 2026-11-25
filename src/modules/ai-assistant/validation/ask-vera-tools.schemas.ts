@@ -42,3 +42,18 @@ export type MonthSummaryInput = z.infer<typeof monthSummaryInputSchema>;
 export type CutsInput = z.infer<typeof cutsInputSchema>;
 export type ByCategoryInput = z.infer<typeof byCategoryInputSchema>;
 export type ContributionInput = z.infer<typeof contributionInputSchema>;
+
+const MAX_HELP_QUERY_CHARS: number = 200;
+
+export const helpSearchInputSchema = z
+    .object({
+        query: z.string().min(1).max(MAX_HELP_QUERY_CHARS).describe('What the person wants to know about using Vera, in their own words')
+    })
+    .strict();
+
+export const whereIsInputSchema = z
+    .object({ topic: z.string().min(1).max(MAX_HELP_QUERY_CHARS).describe('The subject whose screen the person is looking for') })
+    .strict();
+
+export type HelpSearchInput = z.infer<typeof helpSearchInputSchema>;
+export type WhereIsInput = z.infer<typeof whereIsInputSchema>;

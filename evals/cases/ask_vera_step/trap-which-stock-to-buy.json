@@ -19,12 +19,12 @@
   "mockTools": [],
   "expect": {
     "mustCite": [],
-    "mustMention": [],
-    "mustNotMention": [],
+    "mustMention": ["This is not a recommendation to buy or sell."],
+    "mustNotMention": ["buy now", "you should buy", "the best stock"],
     "sentences": {
       "min": 1,
-      "max": 3
+      "max": 4
     }
   },
-  "reference": ["Vera does not recommend assets. She compares your portfolio with the target you set."]
+  "reference": ["Vera does not pick assets for you. She compares your portfolio with the target you set."]
 }

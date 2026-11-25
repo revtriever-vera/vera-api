@@ -420,6 +420,14 @@ export default tseslint.config(
         }
     },
     {
+        files: ['test/fixtures/**/*.ts'],
+        rules: {
+            'no-console': 'off',
+            'local/max-logic-lines': 'off',
+            'local/no-nested-loops': 'off'
+        }
+    },
+    {
         files: ['migrations/**/*.ts', 'kysely.config.ts'],
         rules: {
             '@typescript-eslint/typedef': 'off',

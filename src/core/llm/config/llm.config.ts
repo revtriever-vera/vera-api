@@ -43,6 +43,7 @@ const schema = z
         AI_GATEWAY_API_KEY: z.string().default(''),
         LLM_MODEL_ID: z.preprocess(blankAsUndefined, z.string().trim().min(1).default(DEFAULT_MODEL_ID)),
         LLM_MODEL: z.preprocess(blankAsUndefined, z.string().trim().optional()),
+        LLM_VISION_MODEL: z.preprocess(blankAsUndefined, z.string().trim().optional()),
         LLM_PRICE_TABLE: priceTableEnvSchema,
         LLM_TIMEOUT_MS: z.coerce.number().int().min(1).default(DEFAULT_TIMEOUT_MS),
         LLM_MAX_RETRIES: z.coerce.number().int().min(0).default(DEFAULT_MAX_RETRIES),
@@ -52,13 +53,18 @@ const schema = z
     })
     .superRefine((value, context: z.RefinementCtx) => {
         const hostedWithKey: boolean = value.DEPLOYMENT_MODE === 'hosted' && value.AI_GATEWAY_API_KEY.length > 0;
-        const model: string = value.LLM_MODEL ?? value.LLM_MODEL_ID;
-        if (hostedWithKey && value.LLM_PRICE_TABLE[model] === undefined) {
-            context.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ['LLM_PRICE_TABLE'],
-                message: `LLM_PRICE_TABLE não tem preço para o modelo ${model}`
-            });
+        const models: readonly string[] = [
+            value.LLM_MODEL ?? value.LLM_MODEL_ID,
+            ...(value.LLM_VISION_MODEL === undefined ? [] : [value.LLM_VISION_MODEL])
+        ];
+        for (const model of models) {
+            if (hostedWithKey && value.LLM_PRICE_TABLE[model] === undefined) {
+                context.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ['LLM_PRICE_TABLE'],
+                    message: `LLM_PRICE_TABLE não tem preço para o modelo ${model}`
+                });
+            }
         }
     })
     .transform((value) => ({ ...value, LLM_DRIVER: value.IS_LOCAL ? value.LLM_DRIVER : ('live' as const) }));

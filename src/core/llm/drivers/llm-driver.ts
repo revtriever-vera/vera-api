@@ -9,6 +9,12 @@ export interface LlmDriverCall {
     readonly spec: LlmTaskSpec;
 }
 
+export interface LlmCallDiagnostic {
+    readonly finishReason: string;
+    readonly reasoningTokens: number;
+    readonly reasoningChars: number;
+}
+
 export interface LlmDriverResult {
     readonly text: string;
     readonly toolUses: readonly LlmToolUse[];
@@ -18,6 +24,7 @@ export interface LlmDriverResult {
     readonly providerCostUsd: number | null;
     readonly attempts: number;
     readonly latencyMs: number;
+    readonly diagnostic?: LlmCallDiagnostic;
 }
 
 export abstract class LlmDriver {

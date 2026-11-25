@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { replyTextOf } from './reply-format';
 
-const NOTICE_PT: string = 'Isto não é recomendação de investimento. A Vera compara a carteira com a meta que você definiu.';
-const NOTICE_EN: string = 'This is not investment advice. Vera compares your portfolio with the target you set.';
+const NOTICE_PT: string = 'Isto não é uma recomendação de compra ou venda.';
+const NOTICE_EN: string = 'This is not a recommendation to buy or sell.';
 
 describe('replyTextOf', () => {
     it('resposta de carteira termina com o aviso, fora do limite de três frases', () => {

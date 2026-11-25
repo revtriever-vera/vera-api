@@ -2,16 +2,15 @@ import type { ZodTypeAny } from 'zod';
 import { JsonObject } from '../../../core/llm/llm.types';
 import { UsageStateKey } from '../../../core/usage/usage.types';
 import { AppLocale } from '../../../shared/i18n/locale';
+import { AskRoute } from './ask-channel-profiles';
 import { LabelSource } from './context/ai-context.types';
 
 export const ASK_VERA_MAX_STEPS: number = 4;
 export const ASK_VERA_MAX_HISTORY: number = 6;
 export const ASK_VERA_MAX_QUESTION_CHARS: number = 1000;
 export const ASK_VERA_MAX_TOOL_BYTES: number = 8192;
-export const ASK_VERA_MAX_ANSWER_CHARS: number = 600;
-export const ASK_VERA_MAX_SENTENCES: number = 3;
-export const ASK_VERA_TASK = 'ask_vera_step' as const;
 export const ASK_VERA_FEATURE = 'whatsapp' as const;
+export const ASK_VERA_HELP_FEATURE = 'help' as const;
 
 export const ASK_VERA_TOOL_KINDS = { read: 'read', proposal: 'proposal', direct: 'direct' } as const;
 
@@ -22,13 +21,18 @@ export interface AskVeraTurn {
     readonly text: string;
 }
 
-export interface AskVeraInput {
+export interface AskVeraScreen {
+    readonly path: string;
+}
+
+export type AskVeraInput = AskRoute & {
+    readonly screen?: AskVeraScreen;
     readonly text: string;
     readonly history: readonly AskVeraTurn[];
     readonly locale: AppLocale;
     readonly messageId: string;
     readonly allowedTools: ReadonlySet<string>;
-}
+};
 
 export interface AskVeraProposal {
     readonly tool: string;
@@ -42,8 +46,15 @@ export interface AskVeraUsage {
     readonly resetsAt: string;
 }
 
+export interface AskVeraSent {
+    readonly tool: string;
+    readonly payload: JsonObject;
+}
+
 export interface AskVeraAnswer {
     readonly text: string;
+    readonly notice: boolean;
+    readonly sent: readonly AskVeraSent[];
     readonly source: 'model' | 'fixed';
     readonly toolsUsed: readonly string[];
     readonly proposals: readonly AskVeraProposal[];
@@ -53,7 +64,7 @@ export interface AskVeraAnswer {
 
 export type AskVeraOutcome = 'model' | 'fixed_refusal' | 'fixed_greeting' | 'fallback' | 'cap_reached';
 
-export const CVM_NOTICE_TOOLS: ReadonlySet<string> = new Set(['portfolio_overview', 'contribution_suggestion']);
+export const INVESTMENT_NOTICE_TOOLS: ReadonlySet<string> = new Set(['portfolio_overview', 'contribution_suggestion', 'goals_overview']);
 
 export interface AskVeraToolProposal {
     readonly summary: string;

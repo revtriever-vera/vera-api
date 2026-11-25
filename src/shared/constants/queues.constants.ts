@@ -8,12 +8,14 @@ export const QUEUES = {
     identity: 'vera-identity',
     usage: 'vera-usage',
     aiAssistant: 'vera-ai-assistant',
+    assistantChat: 'vera-assistant-chat',
     whatsapp: 'vera-whatsapp',
     reminders: 'vera-reminders',
     recurring: 'vera-recurring',
     goalNotices: 'vera-goal-notices',
     recurringNotices: 'vera-recurring-notices',
-    billing: 'vera-billing'
+    billing: 'vera-billing',
+    investmentImport: 'vera-investment-import'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -36,7 +38,10 @@ export const MESSAGE_TYPES = {
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',
     usageGaugeRequested: 'usage.gauge.requested',
+    investmentImportPreviewsPurgeRequested: 'investment-import.previews.purge.requested',
     aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
+    assistantTurnRequested: 'assistant-chat.turn.requested',
+    assistantRetentionRequested: 'assistant-chat.retention.requested',
     whatsappWebhookReceived: 'whatsapp.webhook.received',
     whatsappInboundReceived: 'whatsapp.inbound.received',
     whatsappStatusReceived: 'whatsapp.status.received',

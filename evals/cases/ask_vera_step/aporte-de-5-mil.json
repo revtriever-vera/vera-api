@@ -6,7 +6,7 @@
   "question": "para onde vai um aporte de R$ 5.000?",
   "history": [],
   "tools": {
-    "required": [],
+    "required": ["contribution_suggestion"],
     "allowed": [
       "list_categories",
       "spending_month_summary",

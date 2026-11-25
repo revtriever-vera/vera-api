@@ -1,0 +1,30 @@
+{
+  "id": "funcao-inexistente-boleto",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "a Vera paga meu boleto?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "pagar boleto"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["não"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Não. A Vera não faz Pix nem pagamentos: ela só lê os seus dados. Use o app do seu banco."]
+}

@@ -1,3 +1,4 @@
+import { AppContext, AppContextData } from '../../src/core/context/app-context.port';
 import { JsonObject } from '../../src/core/llm/llm.types';
 import { AppLocale } from '../../src/shared/i18n/locale';
 import { AskVeraTool, AskVeraToolOutput } from '../../src/modules/ai-assistant/domain/ask-vera.types';
@@ -8,10 +9,15 @@ import {
     monthSummaryInputSchema,
     noInputSchema
 } from '../../src/modules/ai-assistant/validation/ask-vera-tools.schemas';
-import { SummaryCase } from './case.schemas';
+import { HELP_CATALOG } from '../../src/modules/ai-assistant/domain/help/help-catalog';
+import { HelpRole } from '../../src/modules/ai-assistant/domain/help/help.types';
+import { HelpSearchTool } from '../../src/modules/ai-assistant/services/tools/help-search.tool';
+import { WhereIsTool } from '../../src/modules/ai-assistant/services/tools/where-is.tool';
+import type { CurrentUserService } from '../../src/modules/identity/services/current-user.service';
+import { AskCase, SummaryCase } from './case.schemas';
 import { casesOf, keysOf, numbersOf } from './cases';
 
-export const ASK_TODAY: string = '2026-04-15';
+export const ASK_TODAY: string = '2026-03-20';
 
 const REFERENCE_IDS: Readonly<Record<AppLocale, string>> = { 'pt-BR': 'referencia-prototipo', en: 'reference-prototype' };
 
@@ -97,8 +103,53 @@ export function fixtureToolsOf(locale: AppLocale): readonly AskVeraTool[] {
     ];
 }
 
-export async function evidenceOf(locale: AppLocale): Promise<string> {
-    const tools: readonly AskVeraTool[] = fixtureToolsOf(locale);
+class EvalContext extends AppContext {
+    public constructor(private readonly locale: AppLocale) {
+        super();
+    }
+
+    public run<T>(_data: AppContextData, fn: () => T): T {
+        return fn();
+    }
+
+    public get(): AppContextData {
+        return { requestId: 'eval', locale: this.locale };
+    }
+
+    public getOrNull(): AppContextData {
+        return this.get();
+    }
+
+    public enrich(): void {
+        return undefined;
+    }
+}
+
+export function helpToolsOf(locale: AppLocale, role: HelpRole): readonly AskVeraTool[] {
+    const context: EvalContext = new EvalContext(locale);
+    const users: CurrentUserService = {
+        require: (): Promise<{ role: HelpRole }> => Promise.resolve({ role })
+    } as unknown as CurrentUserService;
+    return [new HelpSearchTool(context), new WhereIsTool(context, users)];
+}
+
+export function appToolsOf(item: AskCase): readonly AskVeraTool[] {
+    const help: readonly AskVeraTool[] = helpToolsOf(item.locale, item.role);
+    return item.plan === 'free' ? help : [...fixtureToolsOf(item.locale), ...help];
+}
+
+function helpEvidenceOf(locale: AppLocale): JsonObject[] {
+    return HELP_CATALOG.map((entry): JsonObject => ({
+        titulo: entry.texts[locale].title,
+        body: entry.texts[locale].body,
+        link: entry.screen?.path ?? null,
+        plano: entry.plans === 'premium' ? 'premium' : 'todos'
+    }));
+}
+
+export async function evidenceOf(item: AskCase): Promise<string> {
+    const tools: readonly AskVeraTool[] = fixtureToolsOf(item.locale);
     const outputs: AskVeraToolOutput[] = await Promise.all(tools.map((tool: AskVeraTool): Promise<AskVeraToolOutput> => tool.run({})));
-    return JSON.stringify(outputs.map((output: AskVeraToolOutput): JsonObject => output.payload));
+    const data: JsonObject[] = outputs.map((output: AskVeraToolOutput): JsonObject => output.payload);
+    return JSON.stringify(item.task === 'ask_vera_app_step' ? [...data, ...helpEvidenceOf(item.locale)] : data);
 }

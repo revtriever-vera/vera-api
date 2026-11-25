@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { PlanGateService } from '../../plans/services/plan-gate.service';
-import { AskVeraToolPort } from './ask-vera-tool.port';
+import { ASK_VERA_HELP_FEATURE } from '../domain/ask-vera.types';
+import { AskVeraToolFeature, AskVeraToolPort } from './ask-vera-tool.port';
 
 @Injectable()
 export class AskVeraToolRegistry {
@@ -14,11 +15,15 @@ export class AskVeraToolRegistry {
     public async available(allowed: ReadonlySet<string>): Promise<readonly AskVeraToolPort[]> {
         const offered: AskVeraToolPort[] = [];
         for (const tool of this.all()) {
-            if (allowed.has(tool.name) && (await this.gate.allows(tool.feature))) {
+            if (allowed.has(tool.name) && (await this.offered(tool.feature))) {
                 offered.push(tool);
             }
         }
         return offered;
+    }
+
+    private async offered(feature: AskVeraToolFeature): Promise<boolean> {
+        return feature === ASK_VERA_HELP_FEATURE || (await this.gate.allows(feature));
     }
 
     public all(): readonly AskVeraToolPort[] {

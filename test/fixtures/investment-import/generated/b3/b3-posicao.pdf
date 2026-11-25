@@ -1,0 +1,127 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 3768 >>
+stream
+BT /F2 14 Tf 30 560 Td (Relatório de Posição - B3 \(amostra sintética\)) Tj ET
+BT /F1 8 Tf 30 540 Td (Investidor: PESSOA EXEMPLO   CPF: 123.456.789-00) Tj ET
+BT /F1 8 Tf 30 527 Td (Instituição: CORRETORA EXEMPLO   Conta: 0001234-5   Código do cliente: 9000001) Tj ET
+BT /F2 8 Tf 30 500 Td (ACOES) Tj ET
+BT /F2 8 Tf 30 487 Td (Código de Negociação) Tj ET
+BT /F2 8 Tf 150 487 Td (Quantidade) Tj ET
+BT /F2 8 Tf 270 487 Td (Preço de Fechamento) Tj ET
+BT /F2 8 Tf 390 487 Td (Valor Atualizado) Tj ET
+BT /F1 8 Tf 30 474 Td (PETR4) Tj ET
+BT /F1 8 Tf 150 474 Td (227) Tj ET
+BT /F1 8 Tf 270 474 Td (38,52) Tj ET
+BT /F1 8 Tf 390 474 Td (8744,04) Tj ET
+BT /F1 8 Tf 30 461 Td (VALE3) Tj ET
+BT /F1 8 Tf 150 461 Td (100) Tj ET
+BT /F1 8 Tf 270 461 Td (61,1) Tj ET
+BT /F1 8 Tf 390 461 Td (6110) Tj ET
+BT /F1 8 Tf 30 448 Td (ITUB4) Tj ET
+BT /F1 8 Tf 150 448 Td (400) Tj ET
+BT /F1 8 Tf 270 448 Td (33,45) Tj ET
+BT /F1 8 Tf 390 448 Td (13380) Tj ET
+BT /F2 8 Tf 30 422 Td (ETF) Tj ET
+BT /F2 8 Tf 30 409 Td (Código de Negociação) Tj ET
+BT /F2 8 Tf 150 409 Td (Quantidade) Tj ET
+BT /F2 8 Tf 270 409 Td (Preço de Fechamento) Tj ET
+BT /F2 8 Tf 390 409 Td (Valor Atualizado) Tj ET
+BT /F1 8 Tf 30 396 Td (BOVA11) Tj ET
+BT /F1 8 Tf 150 396 Td (50) Tj ET
+BT /F1 8 Tf 270 396 Td (128,9) Tj ET
+BT /F1 8 Tf 390 396 Td (6445) Tj ET
+BT /F1 8 Tf 30 383 Td (IVVB11) Tj ET
+BT /F1 8 Tf 150 383 Td (40) Tj ET
+BT /F1 8 Tf 270 383 Td (305,7) Tj ET
+BT /F1 8 Tf 390 383 Td (12228) Tj ET
+BT /F2 8 Tf 30 357 Td (FUNDO DE INVESTIMENTO) Tj ET
+BT /F2 8 Tf 30 344 Td (Código de Negociação) Tj ET
+BT /F2 8 Tf 150 344 Td (Quantidade) Tj ET
+BT /F2 8 Tf 270 344 Td (Preço de Fechamento) Tj ET
+BT /F2 8 Tf 390 344 Td (Valor Atualizado) Tj ET
+BT /F1 8 Tf 30 331 Td (HGLG11) Tj ET
+BT /F1 8 Tf 150 331 Td (60) Tj ET
+BT /F1 8 Tf 270 331 Td (158,2) Tj ET
+BT /F1 8 Tf 390 331 Td (9492) Tj ET
+BT /F1 8 Tf 30 318 Td (XPML11) Tj ET
+BT /F1 8 Tf 150 318 Td (90) Tj ET
+BT /F1 8 Tf 270 318 Td (109,4) Tj ET
+BT /F1 8 Tf 390 318 Td (9846) Tj ET
+BT /F2 8 Tf 30 292 Td (RENDA FIXA) Tj ET
+BT /F2 8 Tf 30 279 Td (Código) Tj ET
+BT /F2 8 Tf 150 279 Td (Indexador) Tj ET
+BT /F2 8 Tf 270 279 Td (Vencimento) Tj ET
+BT /F2 8 Tf 390 279 Td (Quantidade) Tj ET
+BT /F2 8 Tf 510 279 Td (Preço Atualizado CURVA) Tj ET
+BT /F1 8 Tf 30 266 Td (CDB-EX-POS112) Tj ET
+BT /F1 8 Tf 150 266 Td (DI) Tj ET
+BT /F1 8 Tf 270 266 Td (15/03/2028) Tj ET
+BT /F1 8 Tf 390 266 Td (10) Tj ET
+BT /F1 8 Tf 510 266 Td (1458,65) Tj ET
+BT /F1 8 Tf 30 253 Td (LCA-EX-IPCA65) Tj ET
+BT /F1 8 Tf 150 253 Td (IPCA) Tj ET
+BT /F1 8 Tf 270 253 Td (10/08/2029) Tj ET
+BT /F1 8 Tf 390 253 Td (5) Tj ET
+BT /F1 8 Tf 510 253 Td (1412,72) Tj ET
+BT /F1 8 Tf 30 240 Td (CDB-EX-PRE123) Tj ET
+BT /F1 8 Tf 150 240 Td (PRE) Tj ET
+BT /F1 8 Tf 270 240 Td (20/01/2027) Tj ET
+BT /F1 8 Tf 390 240 Td (8) Tj ET
+BT /F1 8 Tf 510 240 Td (1238,12) Tj ET
+BT /F1 8 Tf 30 227 Td (CDB-EX-CAREN) Tj ET
+BT /F1 8 Tf 150 227 Td (DI) Tj ET
+BT /F1 8 Tf 270 227 Td (04/05/2028) Tj ET
+BT /F1 8 Tf 390 227 Td (4) Tj ET
+BT /F1 8 Tf 510 227 Td (1070,69) Tj ET
+BT /F1 8 Tf 30 214 Td (DEB-EX-JUROS) Tj ET
+BT /F1 8 Tf 150 214 Td (IPCA) Tj ET
+BT /F1 8 Tf 270 214 Td (15/11/2032) Tj ET
+BT /F1 8 Tf 390 214 Td (12) Tj ET
+BT /F1 8 Tf 510 214 Td (1526,19) Tj ET
+BT /F1 8 Tf 30 201 Td (CDB-EX-APLIC) Tj ET
+BT /F1 8 Tf 150 201 Td (DI) Tj ET
+BT /F1 8 Tf 270 201 Td (01/02/2027) Tj ET
+BT /F1 8 Tf 390 201 Td (6) Tj ET
+BT /F1 8 Tf 510 201 Td (1443,94) Tj ET
+BT /F1 8 Tf 30 188 Td (CDB-EX-SEMIDX) Tj ET
+BT /F1 8 Tf 150 188 Td (-) Tj ET
+BT /F1 8 Tf 270 188 Td (02/06/2027) Tj ET
+BT /F1 8 Tf 390 188 Td (3) Tj ET
+BT /F1 8 Tf 510 188 Td (1043,17) Tj ET
+BT /F1 8 Tf 30 175 Td (CDB-EX-SEMCURVA) Tj ET
+BT /F1 8 Tf 150 175 Td (DI) Tj ET
+BT /F1 8 Tf 270 175 Td (01/09/2027) Tj ET
+BT /F1 8 Tf 390 175 Td (7) Tj ET
+BT /F1 8 Tf 510 175 Td (-) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000004071 00000 n 
+0000004168 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+4270
+%%EOF

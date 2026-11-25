@@ -1,0 +1,31 @@
+{
+  "id": "papel-sem-acesso",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "onde eu mudo o meu plano?",
+  "history": [],
+  "role": "viewer",
+  "tools": {
+    "required": ["where_is"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "where_is",
+      "input": {
+        "topic": "mudar plano"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["Dono"],
+    "mustNotMention": ["/settings/plan"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["A tela Plano e uso é aberta só pelo Dono da conta, e o seu papel é Leitura. Peça a quem é Dono para mudar o plano."]
+}

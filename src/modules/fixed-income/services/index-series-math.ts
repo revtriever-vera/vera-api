@@ -1,6 +1,7 @@
 import { Decimal, DecimalUtil } from '../../../shared/utils/decimal.util';
-import { addDays, daysBetween, isWeekday } from '../domain/curve/business-days';
-import type { CurveSeries, IpcaSeries } from '../domain/curve/curve.types';
+import { accrualDays, addDays, daysBetween, isWeekday } from '../domain/curve/business-days';
+import { cdiPercentFactor } from '../domain/curve/cdi-factor';
+import type { AccrualDay, CdiCurve, CurveSeries, IpcaSeries } from '../domain/curve/curve.types';
 import { monthStart, nextMonthStart, previousMonthKey } from '../domain/curve/ipca-factor';
 import { annualRateFactor, BUSINESS_DAYS_PER_YEAR } from '../domain/curve/prefixed-factor';
 
@@ -131,4 +132,14 @@ export function accumulatedInflation(ipca: IpcaSeries, from: string, lastMonth: 
         cursor = next;
     }
     return { factor, estimated };
+}
+
+export type Accrual = Inflation;
+
+export function cdiAccrual(cdi: CdiCurve, from: string, to: string, percentBps: number): Accrual | null {
+    const days: AccrualDay[] | null = accrualDays(cdi, from, to);
+    if (days === null) {
+        return null;
+    }
+    return { factor: cdiPercentFactor(days, percentBps), estimated: days.some((day: AccrualDay): boolean => day.projected) };
 }

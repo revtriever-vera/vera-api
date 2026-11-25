@@ -9,7 +9,9 @@ const MAX_INPUT_TOKENS: Readonly<Record<string, number>> = {
     [LLM_TASKS.summaryMonth]: 40_000,
     [LLM_TASKS.summaryCuts]: 40_000,
     [LLM_TASKS.summaryPortfolio]: 40_000,
-    [LLM_TASKS.askVeraStep]: 100_000
+    [LLM_TASKS.askVeraStep]: 100_000,
+    [LLM_TASKS.askVeraAppStep]: 100_000,
+    [LLM_TASKS.investmentExtract]: 60_000
 };
 const CAP_MICROS: number = 4_000_000;
 
@@ -29,9 +31,9 @@ function byTask(task: string): LlmTaskSpec {
 }
 
 describe('catálogo de tarefas', () => {
-    it('cobre as quatro tarefas da Vera, sem repetir nenhuma', () => {
+    it('cobre as seis tarefas da Vera, sem repetir nenhuma', () => {
         expect(LLM_TASK_CATALOG.map((spec: LlmTaskSpec): string => spec.task).sort()).toEqual(
-            ['ask_vera_step', 'summary_cuts', 'summary_month', 'summary_portfolio'].sort()
+            ['ask_vera_app_step', 'ask_vera_step', 'investment_extract', 'summary_cuts', 'summary_month', 'summary_portfolio'].sort()
         );
     });
 
@@ -47,6 +49,7 @@ describe('catálogo de tarefas', () => {
 
         expect(summaries).toBe(148);
         expect(askSteps).toBe(67);
+        expect(Math.floor(CAP_MICROS / byTask(LLM_TASKS.askVeraAppStep).maxCostMicros)).toBe(67);
     });
 
     it('toda tarefa usa raciocínio mínimo: nos evals ao vivo ficou 3 a 4 vezes mais rápido, sem texto cortado e com a mesma nota', () => {
@@ -61,5 +64,14 @@ describe('catálogo de tarefas', () => {
             expect(spec.maxRetries).toBeGreaterThanOrEqual(0);
             expect(spec.promptVersion.length).toBeGreaterThan(0);
         }
+    });
+
+    it('só a extração de investimentos usa o modelo de visão, e ela traz o esquema de resposta', () => {
+        const vision: string[] = LLM_TASK_CATALOG.filter((spec: LlmTaskSpec): boolean => spec.model === 'vision').map(
+            (spec: LlmTaskSpec): string => spec.task
+        );
+
+        expect(vision).toEqual(['investment_extract']);
+        expect(byTask(LLM_TASKS.investmentExtract).responseSchema).toMatchObject({ required: ['currency', 'operations'] });
     });
 });

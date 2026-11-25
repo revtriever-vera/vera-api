@@ -9,6 +9,7 @@ const MANAGED: readonly string[] = [
     'AI_GATEWAY_API_KEY',
     'LLM_MODEL_ID',
     'LLM_MODEL',
+    'LLM_VISION_MODEL',
     'LLM_PRICE_TABLE',
     'LLM_TIMEOUT_MS',
     'LLM_MAX_RETRIES',
@@ -76,6 +77,20 @@ describe('llm.config', () => {
 
         expect(config.LLM_MODEL).toBeUndefined();
         expect(config.LLM_MODEL_ID).toBe('meta/muse-spark-1.3-contributor');
+    });
+
+    it('LLM_VISION_MODEL é opcional (vazio vale ausente) e, na hospedada com chave, precisa de preço como o principal', () => {
+        const base = { DEPLOYMENT_MODE: 'hosted', AI_GATEWAY_API_KEY: 'k', LLM_PRICE_TABLE: PRICED };
+
+        expect(load({ ...base, LLM_VISION_MODEL: '' }).LLM_VISION_MODEL).toBeUndefined();
+        expect(() => load({ ...base, LLM_VISION_MODEL: 'vendor/visao' })).toThrow('vendor/visao');
+        expect(
+            load({
+                ...base,
+                LLM_VISION_MODEL: 'vendor/visao',
+                LLM_PRICE_TABLE: JSON.stringify({ ...JSON.parse(PRICED), 'vendor/visao': { input: 1, output: 2 } })
+            }).LLM_VISION_MODEL
+        ).toBe('vendor/visao');
     });
 
     it('hospedada com chave e preço sobe', () => {
