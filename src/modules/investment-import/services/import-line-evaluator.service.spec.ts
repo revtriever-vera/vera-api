@@ -87,17 +87,21 @@ describe('ImportLineEvaluatorService with a statement from a broker abroad', () 
 describe('ImportLineEvaluatorService with an assumed-cost line on an asset that already has a position', () => {
     it('leaves the line out of the simulated effect', async () => {
         const simulate = vi.fn((_holder: string | null, ops: readonly { lineNumber: number }[]): Promise<AssetSimulation[]> =>
-            Promise.resolve([
-                {
-                    effect: {
-                        assetId: 'a-aapl',
-                        before: { quantity: '3', averagePrice: '420' },
-                        after: ops.length > 0 ? { quantity: '6', averagePrice: '426.5' } : { quantity: '3', averagePrice: '420' }
-                    },
-                    hasPosition: true,
-                    failures: []
-                }
-            ])
+            Promise.resolve(
+                ops.length === 0
+                    ? []
+                    : [
+                          {
+                              effect: {
+                                  assetId: 'a-aapl',
+                                  before: { quantity: '3', averagePrice: '420' },
+                                  after: { quantity: '6', averagePrice: '426.5' }
+                              },
+                              hasPosition: true,
+                              failures: []
+                          }
+                      ]
+            )
         );
         const catalog = {
             findManyByMarketAndExternalIds: vi.fn((m: string): Promise<Asset[]> => Promise.resolve(m === 'US' ? [APPLE] : [])),

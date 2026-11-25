@@ -71,6 +71,19 @@ function summarize(simulations: readonly AssetSimulation[], assets: ReadonlyMap<
     return { failures, held, effects, afterQuantities };
 }
 
+function withoutDropped(first: Simulated, second: Simulated): Simulated {
+    const rebuilt: ReadonlyMap<string, EffectLine> = new Map(
+        second.effects.map((effect: EffectLine): [string, EffectLine] => [effect.assetId, effect])
+    );
+    const effects: EffectLine[] = first.effects.map(
+        (effect: EffectLine): EffectLine => rebuilt.get(effect.assetId) ?? { ...effect, after: effect.before }
+    );
+    const afterQuantities: Map<string, string> = new Map(
+        effects.map((effect: EffectLine): [string, string] => [effect.assetId, effect.after?.quantity ?? '0'])
+    );
+    return { failures: first.failures, held: first.held, effects, afterQuantities };
+}
+
 function factsOf(
     item: EditedLine,
     asset: Asset | undefined,
@@ -122,10 +135,6 @@ export class ImportLineEvaluatorService {
         return { lines, effects: simulated.effects, operations: appliedOf(lines, inputs), foreignChecks };
     }
 
-    /**
-     * Assumed-cost lines for an asset that already has a position are ignored by the verdict and never
-     * committed, so they must not count in the effect shown by the preview.
-     */
     private async simulateApplied(
         holderUserId: string | null,
         candidates: readonly EditedLine[],
@@ -145,7 +154,8 @@ export class ImportLineEvaluatorService {
             return first;
         }
         const kept: OperationInput[] = live.filter((input: OperationInput): boolean => !dropped.has(input.lineNumber));
-        return summarize(await this.operations.simulate(holderUserId, kept), assets);
+        const second: Simulated = summarize(await this.operations.simulate(holderUserId, kept), assets);
+        return withoutDropped(first, second);
     }
 
     private async latestDatesOf(
