@@ -1,0 +1,25 @@
+{
+  "id": "fora-do-dominio",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "qual a capital da França?",
+  "history": [],
+  "tools": {
+    "required": [],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Isso não é sobre a Vera nem sobre os seus dados, então não respondo aqui. Pergunte sobre a carteira, os gastos ou o uso do app."
+  ]
+}

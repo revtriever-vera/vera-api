@@ -1,0 +1,32 @@
+{
+  "id": "ajuda-objetivos",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "como eu crio um objetivo?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "criar objetivo"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/portfolio/goals"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Abra [Objetivos](/portfolio/goals), escolha Novo objetivo e diga quanto e até quando. A Vera calcula quanto falta e quanto guardar por mês com os ativos que você já tem."
+  ]
+}

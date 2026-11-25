@@ -1,6 +1,6 @@
 import { LlmTaskSpec } from '../../src/core/llm/catalog/llm-task.types';
 import { LlmReasoning } from '../../src/core/llm/llm.types';
-import { EvalCase, EvalTask } from './case.schemas';
+import { EvalCase, EvalTask, isAskCase } from './case.schemas';
 import { casesOf } from './cases';
 import { CheckFailure, CheckOutcome, checkOutput } from './checks';
 import { BudgetExceededError, Engine } from './engine';
@@ -38,11 +38,11 @@ export const PENDING_INFO_CHECKS: ReadonlySet<string> = new Set(['tool_missing',
 const PENDING_CHECKS: ReadonlySet<string> = new Set(['empty', 'truncated', 'forbidden_text', 'forbidden_term', ...PENDING_INFO_CHECKS]);
 
 export function isPending(item: EvalCase): boolean {
-    return item.task === 'ask_vera_step' && item.pending;
+    return isAskCase(item) && item.pending;
 }
 
 export function requiresTool(item: EvalCase): boolean {
-    return item.task === 'ask_vera_step' && item.tools.required.length > 0;
+    return isAskCase(item) && item.tools.required.length > 0;
 }
 
 function failuresOf(item: EvalCase, outcome: CheckOutcome): readonly CheckFailure[] {
@@ -55,7 +55,7 @@ const BAD_GATEWAY: CheckFailure = { check: 'provider', detail: 'the provider cal
 
 async function generated(engine: Engine, spec: LlmTaskSpec, item: EvalCase): Promise<Generation | CheckFailure> {
     try {
-        return item.task === 'ask_vera_step' ? await askGenerate(engine, spec, item) : await generate(engine, spec, item);
+        return isAskCase(item) ? await askGenerate(engine, spec, item) : await generate(engine, spec, item);
     } catch (error: unknown) {
         if (error instanceof BudgetExceededError) {
             throw error;
@@ -89,7 +89,8 @@ async function repOf(engine: Engine, spec: LlmTaskSpec, item: EvalCase, withJudg
         fixed: attempt.fixed,
         toolsUsed: attempt.toolsUsed,
         ending: attempt.ending,
-        calls: attempt.calls
+        calls: attempt.calls,
+        sent: attempt.sent
     });
     const failures: readonly CheckFailure[] = failuresOf(item, outcome);
     return {

@@ -1,0 +1,32 @@
+{
+  "id": "ajuda-vincular-whatsapp",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "como vinculo meu whatsapp?",
+  "history": [],
+  "tools": {
+    "required": ["help_search"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "help_search",
+      "input": {
+        "query": "vincular whatsapp"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/settings/whatsapp"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Abra [WhatsApp](/settings/whatsapp), em Configurações, e escolha Vincular seu WhatsApp. Mande o código pelo celular ou pelo QR. Essa função é do Premium."
+  ]
+}
