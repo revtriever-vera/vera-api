@@ -7,6 +7,7 @@ import {
     EditedLine,
     EffectLine,
     EvaluatedLine,
+    LINE_REASONS,
     LINE_STATUSES,
     StoredLine,
     US_MARKET
@@ -104,16 +105,10 @@ export class ImportLineEvaluatorService {
         const candidates: EditedLine[] = edited.filter(
             (item: EditedLine): boolean => !item.skip && matched.has(item.line.lineId) && !hasUnsupportedDirection(item)
         );
-        const inputs: Map<string, OperationInput> = new Map(
-            candidates.map((item: EditedLine): [string, OperationInput] => [
-                item.line.lineId,
-                operationOf(item, matched.get(item.line.lineId)?.id ?? '')
-            ])
-        );
+        const inputs: Map<string, OperationInput> = inputsOf(candidates, matched);
         const duplicates: ReadonlySet<number> = await this.operations.duplicateLines(holderUserId, [...inputs.values()]);
-        const live: OperationInput[] = [...inputs.values()].filter((input: OperationInput): boolean => !duplicates.has(input.lineNumber));
         const assets: Map<string, Asset> = new Map([...matched.values()].map((asset: Asset): [string, Asset] => [asset.id, asset]));
-        const simulated: Simulated = summarize(await this.operations.simulate(holderUserId, live), assets);
+        const simulated: Simulated = await this.simulateApplied(holderUserId, candidates, inputs, duplicates, assets);
         const latest: Map<string, string> = await this.latestDatesOf(holderUserId, edited, assets);
         const foreignChecks: Map<string, string> = new Map();
         const lines: EvaluatedLine[] = edited.map((item: EditedLine): EvaluatedLine => {
@@ -125,6 +120,32 @@ export class ImportLineEvaluatorService {
             return evaluatedOf(facts, verdict);
         });
         return { lines, effects: simulated.effects, operations: appliedOf(lines, inputs), foreignChecks };
+    }
+
+    /**
+     * Assumed-cost lines for an asset that already has a position are ignored by the verdict and never
+     * committed, so they must not count in the effect shown by the preview.
+     */
+    private async simulateApplied(
+        holderUserId: string | null,
+        candidates: readonly EditedLine[],
+        inputs: ReadonlyMap<string, OperationInput>,
+        duplicates: ReadonlySet<number>,
+        assets: ReadonlyMap<string, Asset>
+    ): Promise<Simulated> {
+        const live: OperationInput[] = [...inputs.values()].filter((input: OperationInput): boolean => !duplicates.has(input.lineNumber));
+        const first: Simulated = summarize(await this.operations.simulate(holderUserId, live), assets);
+        const dropped: ReadonlySet<number> = new Set(
+            candidates
+                .filter((item: EditedLine): boolean => item.line.check === LINE_REASONS.assumedCost)
+                .filter((item: EditedLine): boolean => first.held.has(inputs.get(item.line.lineId)?.assetId ?? ''))
+                .map((item: EditedLine): number => item.line.lineNumber)
+        );
+        if (dropped.size === 0) {
+            return first;
+        }
+        const kept: OperationInput[] = live.filter((input: OperationInput): boolean => !dropped.has(input.lineNumber));
+        return summarize(await this.operations.simulate(holderUserId, kept), assets);
     }
 
     private async latestDatesOf(
@@ -169,6 +190,15 @@ export class ImportLineEvaluatorService {
         const found: Asset[] = await this.catalog.findManyByIds(ids);
         return new Map(found.map((asset: Asset): [string, Asset] => [asset.id, asset]));
     }
+}
+
+function inputsOf(candidates: readonly EditedLine[], matched: ReadonlyMap<string, Asset>): Map<string, OperationInput> {
+    return new Map(
+        candidates.map((item: EditedLine): [string, OperationInput] => [
+            item.line.lineId,
+            operationOf(item, matched.get(item.line.lineId)?.id ?? '')
+        ])
+    );
 }
 
 function appliedOf(lines: readonly EvaluatedLine[], inputs: ReadonlyMap<string, OperationInput>): OperationInput[] {
