@@ -32,8 +32,8 @@ const EVENT_KINDS: ReadonlySet<OperationKind> = new Set<OperationKind>([
     OPERATION_KINDS.bonus
 ]);
 
-export function affectsPosition(operation: Pick<CostOperation, 'kind' | 'dayTrade'>): boolean {
-    if (!POSITION_KINDS.has(operation.kind)) {
+export function affectsPosition(operation: Pick<CostOperation, 'kind' | 'dayTrade' | 'historyOnly'>): boolean {
+    if (operation.historyOnly || !POSITION_KINDS.has(operation.kind)) {
         return false;
     }
     return EVENT_KINDS.has(operation.kind) || !operation.dayTrade;

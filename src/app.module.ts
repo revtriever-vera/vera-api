@@ -40,6 +40,7 @@ import { PortfolioExportModule } from './modules/portfolio-export/portfolio-expo
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { GoalNoticesModule } from './modules/goal-notices/goal-notices.module';
 import { GoalsModule } from './modules/goals/goals.module';
+import { InvestmentImportModule } from './modules/investment-import/investment-import.module';
 import { PositionsModule } from './modules/positions/positions.module';
 import { RecurringModule } from './modules/recurring/recurring.module';
 import { RecurringNoticesModule } from './modules/recurring-notices/recurring-notices.module';
@@ -106,6 +107,7 @@ const REDACTED_PATHS: string[] = [
         RecurringModule,
         RecurringNoticesModule,
         PositionsModule,
+        InvestmentImportModule,
         MarketDataModule,
         PortfolioModule,
         PortfolioExportModule,

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
+import { Page } from '../../../shared/pagination/pagination.types';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { InvestmentImport, NewInvestmentImport } from '../domain/investment-operations.types';
 
@@ -22,6 +23,22 @@ export class InvestmentImportsRepository extends TenantRepository<'InvestmentImp
 
     public async listAll(): Promise<InvestmentImport[]> {
         return this.findMany({}, { limit: IMPORT_LIMIT, orderBy: [{ property: 'createdAt', direction: 'asc' }] });
+    }
+
+    public async page(page: number, pageSize: number): Promise<Page<InvestmentImport>> {
+        return this.findAllPaginated({ page, pageSize, orderBy: [{ property: 'createdAt', direction: 'desc' }] });
+    }
+
+    public async findCompletedByHash(fileSha256: string): Promise<InvestmentImport | null> {
+        const row: InvestmentImport | undefined = await this.selectScoped()
+            .selectAll()
+            .where('status', '=', 'completed')
+            .where('deletedAt', 'is', null)
+            .where('fileSha256', '=', fileSha256)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .executeTakeFirst();
+        return row ?? null;
     }
 
     public async saveSnapshots(id: string, snapshots: SnapshotsData): Promise<InvestmentImport | null> {

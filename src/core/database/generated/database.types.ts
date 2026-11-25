@@ -567,6 +567,20 @@ export interface IntegrationCredentials {
     verifiedAt: Timestamp;
 }
 
+export interface InvestmentImportPreviews {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    createdBy: string | null;
+    expiresAt: Timestamp;
+    fileName: string;
+    fileSha256: string;
+    holderUserId: string | null;
+    id: string;
+    payload: Json;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface InvestmentImports {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1238,6 +1252,7 @@ export interface DB {
     Goals: Goals;
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
+    InvestmentImportPreviews: InvestmentImportPreviews;
     InvestmentImports: InvestmentImports;
     InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;

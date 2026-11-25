@@ -50,6 +50,19 @@ export class InvestmentOperationsRepository extends TenantRepository<'Investment
         );
     }
 
+    public async countByImports(importIds: readonly string[]): Promise<Map<string, number>> {
+        if (importIds.length === 0) {
+            return new Map();
+        }
+        const rows: { importId: string; total: string | number | bigint }[] = await this.selectScoped()
+            .select(['importId', (builder) => builder.fn.countAll().as('total')])
+            .where('deletedAt', 'is', null)
+            .where('importId', 'in', importIds)
+            .groupBy('importId')
+            .execute();
+        return new Map(rows.map((row): [string, number] => [row.importId, Number(row.total)]));
+    }
+
     public async softDeleteByImport(importId: string): Promise<number> {
         return (await this.updateManyRows({ importId }, { deletedAt: new Date() })).length;
     }

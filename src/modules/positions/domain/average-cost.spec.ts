@@ -3,7 +3,18 @@ import { affectsPosition, applyOperations, AverageCostResult, sortOperations } f
 import { BalanceState, CostOperation, OperationKind } from './investment-operations.types';
 
 function op(kind: OperationKind, quantity: string, unitPrice: string, extra: Partial<CostOperation> = {}): CostOperation {
-    return { kind, quantity, unitPrice, tradeDate: '2026-01-10', lineNumber: 1, feesMinor: 0, currency: 'BRL', dayTrade: false, ...extra };
+    return {
+        kind,
+        quantity,
+        unitPrice,
+        tradeDate: '2026-01-10',
+        lineNumber: 1,
+        feesMinor: 0,
+        currency: 'BRL',
+        dayTrade: false,
+        historyOnly: false,
+        ...extra
+    };
 }
 
 function balanceOf(current: BalanceState | null, operations: CostOperation[]): BalanceState | null {
@@ -132,10 +143,10 @@ describe('applyOperations', () => {
 
 describe('affectsPosition', () => {
     it('is true for buys, sells and events, except day trade', () => {
-        expect(affectsPosition({ kind: 'buy', dayTrade: false })).toBe(true);
-        expect(affectsPosition({ kind: 'sell', dayTrade: true })).toBe(false);
-        expect(affectsPosition({ kind: 'split', dayTrade: false })).toBe(true);
-        expect(affectsPosition({ kind: 'income', dayTrade: false })).toBe(false);
-        expect(affectsPosition({ kind: 'transfer', dayTrade: false })).toBe(false);
+        expect(affectsPosition({ kind: 'buy', dayTrade: false, historyOnly: false })).toBe(true);
+        expect(affectsPosition({ kind: 'sell', dayTrade: true, historyOnly: false })).toBe(false);
+        expect(affectsPosition({ kind: 'split', dayTrade: false, historyOnly: false })).toBe(true);
+        expect(affectsPosition({ kind: 'income', dayTrade: false, historyOnly: false })).toBe(false);
+        expect(affectsPosition({ kind: 'transfer', dayTrade: false, historyOnly: false })).toBe(false);
     });
 });

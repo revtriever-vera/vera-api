@@ -26,6 +26,10 @@ export class AssetCatalogService {
         return this.assets.findManyByIds(ids);
     }
 
+    public async findManyByMarketAndExternalIds(market: CatalogMarket, externalIds: readonly string[]): Promise<Asset[]> {
+        return this.assets.findManyByMarketAndExternalIds(market, externalIds);
+    }
+
     public async findByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         return this.assets.findByMarketAndExternalId(market, externalId);
     }

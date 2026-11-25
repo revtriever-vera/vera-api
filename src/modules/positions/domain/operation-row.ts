@@ -3,6 +3,11 @@ import { affectsPosition } from './average-cost';
 import { OperationInput } from './investment-operations.types';
 import { operationFingerprint } from './operation-fingerprint';
 
+export interface RowSource {
+    readonly raw: OperationInput;
+    readonly effective: OperationInput;
+}
+
 type Amounts = Pick<
     CreateOperationData,
     'quantity' | 'unitPrice' | 'grossMinor' | 'feesMinor' | 'withheldTaxMinor' | 'currency' | 'fxRate' | 'grossBrlMinor'
@@ -21,7 +26,8 @@ function amountsOf(operation: OperationInput): Amounts {
     };
 }
 
-export function operationRowOf(importId: string, holderUserId: string | null, operation: OperationInput): CreateOperationData {
+export function operationRowOf(importId: string, holderUserId: string | null, source: RowSource): CreateOperationData {
+    const operation: OperationInput = source.effective;
     return {
         importId,
         assetId: operation.assetId,
@@ -34,6 +40,6 @@ export function operationRowOf(importId: string, holderUserId: string | null, op
         ...amountsOf(operation),
         dayTrade: operation.dayTrade,
         appliedToPosition: affectsPosition(operation),
-        fingerprint: operationFingerprint(holderUserId, operation)
+        fingerprint: operationFingerprint(holderUserId, source.raw)
     };
 }

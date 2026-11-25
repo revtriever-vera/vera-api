@@ -11,6 +11,7 @@ export const COMMAND_KEYS = {
     plansTrialSweep: 'plans-trial-sweep-command',
     identityMembersCleanup: 'identity-members-cleanup-command',
     usageCleanup: 'usage-cleanup-command',
+    investmentImportPreviewsPurge: 'investment-import-previews-purge-command',
     usageGauge: 'usage-gauge-command',
     aiSummariesRetention: 'ai-summaries-retention-command',
     whatsappTemplatesSync: 'whatsapp-templates-sync-command',

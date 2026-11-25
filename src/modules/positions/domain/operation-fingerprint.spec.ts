@@ -18,6 +18,8 @@ const BASE: OperationInput = {
     fxRate: null,
     grossBrlMinor: null,
     dayTrade: false,
+    historyOnly: false,
+    direction: null,
     sourceRef: 'note-1:1'
 };
 

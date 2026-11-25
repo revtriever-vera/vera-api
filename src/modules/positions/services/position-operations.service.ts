@@ -5,12 +5,13 @@ import { ClassAssignmentService } from '../../allocation/services/class-assignme
 import { ClassResolverService } from '../../allocation/services/class-resolver.service';
 import { MemberDirectoryService } from '../../identity/services/member-directory.service';
 import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
-import { applyOperations, AverageCostResult, sortOperations } from '../domain/average-cost';
+import { sortOperations } from '../domain/average-cost';
 import { InvestmentImportDomain } from '../domain/investment-import.domain';
 import { InvestmentOperationDomain } from '../domain/investment-operation.domain';
 import {
     ApplyResult,
     BalanceState,
+    FAILURE_REASONS,
     InvestmentImport,
     InvestmentOperation,
     IMPORT_STATUSES,
@@ -28,6 +29,7 @@ import {
     ClassRequiredError,
     ImportNotFoundError,
     ImportNotOpenError,
+    InvalidOperationError,
     InvalidQuantityError,
     PositionChangedSinceImportError,
     PositionLimitReachedError,
@@ -37,11 +39,29 @@ import {
 import { ACTIVE_ASSET_STATUS, MAX_POSITIONS_PER_COMPANY, POSITION_SUBJECT_TYPE, Position } from '../domain/positions.types';
 import { fitsDecimals, normalizeDecimal } from '../domain/quantity';
 import { positionSnapshotsSchema } from '../validation/position-snapshots.schema';
+import { Evaluation, evaluateOperations, OperationFailure, ResolvedOperation } from './operation-evaluation';
 import { assertValidOperations } from './operation-validation';
 
 interface PlannedAsset {
     readonly effect: PositionEffect;
     readonly position: Position | null;
+    readonly resolved: readonly ResolvedOperation[];
+    readonly failures: readonly OperationFailure[];
+    readonly quantityDecimals: number;
+}
+
+export type { ApplyResult, OperationInput, PositionEffect };
+
+interface SortKey {
+    readonly source: ResolvedOperation;
+    readonly tradeDate: string;
+    readonly lineNumber: number;
+}
+
+export interface AssetSimulation {
+    readonly effect: PositionEffect;
+    readonly hasPosition: boolean;
+    readonly failures: readonly OperationFailure[];
 }
 
 @Injectable()
@@ -63,7 +83,27 @@ export class PositionOperationsService {
     public async preview(holderUserId: string | null, operations: readonly OperationInput[]): Promise<PositionEffect[]> {
         await this.assertHolder(holderUserId);
         const planned: PlannedAsset[] = await this.plan(holderUserId, operations);
+        planned.forEach(assertPlanned);
         return planned.map((item: PlannedAsset): PositionEffect => item.effect);
+    }
+
+    public async duplicateLines(holderUserId: string | null, operations: readonly OperationInput[]): Promise<ReadonlySet<number>> {
+        const isNew: boolean[] = await this.newness(holderUserId, operations);
+        return new Set(
+            operations
+                .filter((_operation: OperationInput, index: number): boolean => isNew[index] === false)
+                .map((operation: OperationInput): number => operation.lineNumber)
+        );
+    }
+
+    public async simulate(holderUserId: string | null, operations: readonly OperationInput[]): Promise<AssetSimulation[]> {
+        await this.assertHolder(holderUserId);
+        const planned: PlannedAsset[] = await this.plan(holderUserId, operations);
+        return planned.map((item: PlannedAsset): AssetSimulation => ({
+            effect: item.effect,
+            hasPosition: item.position !== null,
+            failures: item.failures
+        }));
     }
 
     @UsingTransaction()
@@ -72,9 +112,10 @@ export class PositionOperationsService {
         await this.assertHolder(holderUserId);
         const fresh: OperationInput[] = await this.withoutDuplicates(holderUserId, operations);
         const planned: PlannedAsset[] = await this.plan(holderUserId, fresh);
+        planned.forEach(assertPlanned);
         await this.assertRoom(planned);
         const before: PositionSnapshotEntry[] = await this.snapshotsOf(holderUserId, planned);
-        await this.store(importId, holderUserId, fresh);
+        await this.store(importId, holderUserId, planned);
         const after: PositionSnapshotEntry[] = await this.write(holderUserId, planned);
         await this.imports.saveSnapshots(importId, before, after);
         return {
@@ -124,16 +165,18 @@ export class PositionOperationsService {
     }
 
     private async withoutDuplicates(holderUserId: string | null, operations: readonly OperationInput[]): Promise<OperationInput[]> {
+        const isNew: boolean[] = await this.newness(holderUserId, operations);
+        return operations.filter((_operation: OperationInput, index: number): boolean => isNew[index] === true);
+    }
+
+    private async newness(holderUserId: string | null, operations: readonly OperationInput[]): Promise<boolean[]> {
         assertValidOperations(operations);
-        const known: ReadonlySet<string> = await this.operations.existingFingerprints(
-            operations.map((operation: OperationInput): string => operationFingerprint(holderUserId, operation))
-        );
-        const seen: Set<string> = new Set(known);
-        return operations.filter((operation: OperationInput): boolean => {
-            const fingerprint: string = operationFingerprint(holderUserId, operation);
-            const isNew: boolean = !seen.has(fingerprint);
+        const fingerprints: string[] = operations.map((operation: OperationInput): string => operationFingerprint(holderUserId, operation));
+        const seen: Set<string> = new Set(await this.operations.existingFingerprints(fingerprints));
+        return fingerprints.map((fingerprint: string): boolean => {
+            const fresh: boolean = !seen.has(fingerprint);
             seen.add(fingerprint);
-            return isNew;
+            return fresh;
         });
     }
 
@@ -159,20 +202,9 @@ export class PositionOperationsService {
         assetId: string,
         group: readonly OperationInput[]
     ): Promise<PlannedAsset> {
-        if (asset === null) {
-            throw new AssetNotAvailableError(assetId);
-        }
         const position: Position | null = await this.positions.findByAssetAndHolder(assetId, holderUserId);
         const before: BalanceState | null = position === null ? null : balanceOfPosition(position);
-        assertQuantities(asset, group);
-        const result: AverageCostResult = applyOperations(before, group);
-        if (!result.ok) {
-            throw new SellExceedsPositionError(assetId, result.error.operation.lineNumber, result.error.operation.tradeDate);
-        }
-        if (position === null && result.balance !== null && asset.status !== ACTIVE_ASSET_STATUS) {
-            throw new AssetNotAvailableError(assetId);
-        }
-        return { effect: { assetId, before, after: result.balance }, position };
+        return asset === null ? unavailable(assetId, position, before, group) : planKnown(asset, position, before, group);
     }
 
     private async assertRoom(planned: readonly PlannedAsset[]): Promise<void> {
@@ -184,9 +216,16 @@ export class PositionOperationsService {
         }
     }
 
-    private async store(importId: string, holderUserId: string | null, operations: readonly OperationInput[]): Promise<void> {
-        const sorted: OperationInput[] = sortOperations(operations);
-        await this.operations.insertMany(sorted.map((operation: OperationInput) => operationRowOf(importId, holderUserId, operation)));
+    private async store(importId: string, holderUserId: string | null, planned: readonly PlannedAsset[]): Promise<void> {
+        const keyed: SortKey[] = planned
+            .flatMap((item: PlannedAsset): readonly ResolvedOperation[] => item.resolved)
+            .map((source: ResolvedOperation): SortKey => ({
+                source,
+                tradeDate: source.effective.tradeDate,
+                lineNumber: source.effective.lineNumber
+            }));
+        const sorted: ResolvedOperation[] = sortOperations(keyed).map((entry: SortKey): ResolvedOperation => entry.source);
+        await this.operations.insertMany(sorted.map((operation: ResolvedOperation) => operationRowOf(importId, holderUserId, operation)));
     }
 
     private async snapshotsOf(holderUserId: string | null, planned: readonly PlannedAsset[]): Promise<PositionSnapshotEntry[]> {
@@ -312,15 +351,69 @@ export class PositionOperationsService {
     }
 }
 
-function assertQuantities(asset: Asset, group: readonly OperationInput[]): void {
-    const traded: OperationInput | undefined = group.find(
-        (operation: OperationInput): boolean =>
-            (operation.kind === OPERATION_KINDS.buy || operation.kind === OPERATION_KINDS.sell) &&
-            !fitsDecimals(operation.quantity, asset.quantityDecimals)
-    );
-    if (traded !== undefined) {
-        throw new InvalidQuantityError(asset.quantityDecimals);
+function planKnown(asset: Asset, position: Position | null, before: BalanceState | null, group: readonly OperationInput[]): PlannedAsset {
+    const rejected: OperationFailure[] = quantityFailures(asset, group);
+    const rejectedLines: ReadonlySet<number> = new Set(rejected.map((failure: OperationFailure): number => failure.lineNumber));
+    const accepted: OperationInput[] = group.filter((operation: OperationInput): boolean => !rejectedLines.has(operation.lineNumber));
+    const evaluation: Evaluation = evaluateOperations(before, accepted);
+    const inactive: boolean = position === null && evaluation.balance !== null && asset.status !== ACTIVE_ASSET_STATUS;
+    if (inactive) {
+        return unavailable(asset.id, position, before, group);
     }
+    return {
+        effect: { assetId: asset.id, before, after: evaluation.balance },
+        position,
+        resolved: evaluation.resolved,
+        failures: [...rejected, ...evaluation.failures],
+        quantityDecimals: asset.quantityDecimals
+    };
+}
+
+function quantityFailures(asset: Asset, group: readonly OperationInput[]): OperationFailure[] {
+    return group
+        .filter(
+            (operation: OperationInput): boolean =>
+                (operation.kind === OPERATION_KINDS.buy || operation.kind === OPERATION_KINDS.sell) &&
+                !fitsDecimals(operation.quantity, asset.quantityDecimals)
+        )
+        .map((operation: OperationInput): OperationFailure => failureOf(operation, FAILURE_REASONS.invalidQuantity));
+}
+
+function failureOf(operation: OperationInput, reason: OperationFailure['reason']): OperationFailure {
+    return { lineNumber: operation.lineNumber, tradeDate: operation.tradeDate, reason };
+}
+
+function unavailable(
+    assetId: string,
+    position: Position | null,
+    before: BalanceState | null,
+    group: readonly OperationInput[]
+): PlannedAsset {
+    return {
+        effect: { assetId, before, after: before },
+        position,
+        resolved: [],
+        quantityDecimals: 0,
+        failures: group.map((operation: OperationInput): OperationFailure => failureOf(operation, FAILURE_REASONS.assetNotAvailable))
+    };
+}
+
+function assertPlanned(item: PlannedAsset): void {
+    const failure: OperationFailure | undefined = item.failures[0];
+    if (failure === undefined) {
+        return;
+    }
+    const assetId: string = item.effect.assetId;
+    if (failure.reason === FAILURE_REASONS.sellExceedsPosition) {
+        throw new SellExceedsPositionError(assetId, failure.lineNumber, failure.tradeDate);
+    }
+    if (failure.reason === FAILURE_REASONS.invalidQuantity) {
+        throw new InvalidQuantityError(item.quantityDecimals);
+    }
+    if (failure.reason === FAILURE_REASONS.assetNotAvailable) {
+        throw new AssetNotAvailableError(assetId);
+    }
+    throw new InvalidOperationError(failure.lineNumber, failure.reason);
 }
 
 function groupByAsset(operations: readonly OperationInput[]): Map<string, OperationInput[]> {
