@@ -321,6 +321,24 @@ describe('investment import', () => {
         expect(again.operations[0]?.status).toBe('duplicate');
     });
 
+    it('desdobro creditado soma a quantidade creditada à posição, sem tratá-la como fator', async () => {
+        const owner: Account = await harness.signUp('creditado');
+        await commit(owner, (await preview(owner, negotiation(trade('10/03/2025', 'Compra', 'ITUB4', '300', '30')))).previewId);
+        const ready: PreviewBody = await preview(
+            owner,
+            movement(['Credito', '02/12/2025', 'Desdobro', 'ITUB4 - ITAU', 'CORRETORA EXEMPLO', '100', '-', '-'])
+        );
+
+        expect(ready.operations[0]?.status).toBe('check');
+        expect(effectOf(ready, 'ITUB4')?.after).toEqual({ quantity: '400', averagePrice: '22.5' });
+
+        const done = await commit<CommitBody>(owner, ready.previewId, [{ lineId: 'L1', positionMode: 'add' }]);
+
+        expect(done.status).toBe(201);
+        expect(done.body.positions[0]?.after).toEqual({ quantity: '400', averagePrice: '22.5' });
+        expect(await positionOf(owner, 'ITUB4')).toMatchObject({ quantity: 400, averagePrice: 22.5 });
+    });
+
     it('desfaz a importação, bloqueia desfazer quando há importação posterior e não repete', async () => {
         const owner: Account = await harness.signUp('desfazer');
         const first = await commit<CommitBody>(

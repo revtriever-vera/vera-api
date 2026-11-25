@@ -38,6 +38,15 @@ describe('evaluateOperations', () => {
         expect(result.balance).toEqual({ quantity: '600', averagePrice: '15' });
     });
 
+    it('applies a credited split that is not a whole factor without losing quantity to rounding', () => {
+        const result = evaluateOperations(HELD, [op('split', '100', { direction: 'credit' })]);
+
+        expect(result.failures).toEqual([]);
+        expect(result.balance).toEqual({ quantity: '400', averagePrice: '22.5' });
+        expect(result.resolved[0]?.raw.quantity).toBe('100');
+        expect(result.resolved[0]?.effective.quantity).toBe('1.3333333333');
+    });
+
     it('nets a debit and a credit of the same reverse split into one factor', () => {
         const result = evaluateOperations({ quantity: '1000', averagePrice: '1' }, [
             op('reverse_split', '1000', { direction: 'debit', lineNumber: 1 }),
