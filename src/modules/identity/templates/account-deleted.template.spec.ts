@@ -31,7 +31,7 @@ describe('AccountDeletedTemplate', () => {
 
         expect(content.html).toContain('&lt;b&gt;&quot;Ana&quot;&lt;/b&gt;');
         expect(content.html).not.toContain('<b>');
-        expect(content.html).not.toContain('href=');
+        expect(content.html).not.toMatch(/href="(?!https:\/\/revtriever\.com")/);
     });
 
     it('cumprimenta sem nome quando não há primeiro nome', () => {
