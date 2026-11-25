@@ -567,6 +567,49 @@ export interface IntegrationCredentials {
     verifiedAt: Timestamp;
 }
 
+export interface InvestmentImports {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    createdBy: string | null;
+    deletedAt: Timestamp | null;
+    fileName: string;
+    fileSha256: string;
+    id: string;
+    noteNumbers: Generated<string[]>;
+    positionsAfter: Generated<Json>;
+    positionsBefore: Generated<Json>;
+    source: string;
+    status: Generated<string>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface InvestmentOperations {
+    appliedToPosition: Generated<boolean>;
+    assetId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    dayTrade: Generated<boolean>;
+    deletedAt: Timestamp | null;
+    feesMinor: Generated<Int8>;
+    fingerprint: string;
+    fxRate: Numeric | null;
+    grossBrlMinor: Int8 | null;
+    grossMinor: Int8;
+    holderUserId: string | null;
+    id: string;
+    importId: string;
+    incomeKind: string | null;
+    kind: string;
+    lineNumber: Generated<number>;
+    quantity: Numeric;
+    settlementDate: Timestamp | null;
+    tradeDate: Timestamp;
+    unitPrice: Numeric;
+    updatedAt: Generated<Timestamp>;
+    withheldTaxMinor: Int8 | null;
+}
+
 export interface LlmCalls {
     attempts: number;
     cacheReadTokens: Generated<number>;
@@ -1195,6 +1238,8 @@ export interface DB {
     Goals: Goals;
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
+    InvestmentImports: InvestmentImports;
+    InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;
