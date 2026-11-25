@@ -1,7 +1,7 @@
 import { createHash, createHmac } from 'node:crypto';
 
 export class HashUtil {
-    public static sha256(value: string): string {
+    public static sha256(value: string | Uint8Array): string {
         return createHash('sha256').update(value).digest('hex');
     }
 

@@ -9,13 +9,17 @@ import { LlmInvalidResponseError, LlmProviderDisabledError, LlmRepeatedRequestEr
 import { LlmPort } from '../llm.port';
 import {
     EMPTY_USAGE,
+    LlmContentBlock,
     LlmCredentials,
     LlmDriverName,
     LlmGenerationRequest,
     LlmGenerationResponse,
+    LlmMessage,
     LlmOutcome,
-    LlmUsage
+    LlmUsage,
+    JsonObject
 } from '../llm.types';
+import { credentialsForRole } from '../services/llm-vision-model';
 import { LlmCredentialsPort } from '../ports/llm-credentials.port';
 import { LlmLedgerEntry, LlmLedgerService } from '../services/llm-ledger.service';
 import { LlmPricingService } from '../services/llm-pricing.service';
@@ -25,6 +29,8 @@ import { LlmDriverResult } from './llm-driver';
 import { LlmDriverRouter } from './llm-driver-router';
 
 const CHARS_PER_TOKEN_ESTIMATE: number = 3;
+const IMAGE_TOKENS_ESTIMATE: number = 1_600;
+const FILE_BYTES_PER_TOKEN_ESTIMATE: number = 50;
 const REPEAT_WINDOW_MS: number = 24 * 3_600_000;
 
 interface Route {
@@ -54,9 +60,10 @@ export class MeteredLlmDriver extends LlmPort {
         super();
     }
 
-    public async generate(request: LlmGenerationRequest): Promise<LlmGenerationResponse> {
-        const spec: LlmTaskSpec = this.registry.resolve(request.task);
-        const route: Route = await this.routeOf();
+    public async generate(requested: LlmGenerationRequest): Promise<LlmGenerationResponse> {
+        const spec: LlmTaskSpec = this.registry.resolve(requested.task);
+        const request: LlmGenerationRequest = this.withSpecSchema(requested, spec);
+        const route: Route = await this.routeOf(spec);
         const call: Call = await this.prepare(request, spec, route);
         await this.assertRoom(call);
         await this.assertNotRepeated(call);
@@ -64,7 +71,12 @@ export class MeteredLlmDriver extends LlmPort {
         return this.finish(call, result);
     }
 
-    private async routeOf(): Promise<Route> {
+    private withSpecSchema(request: LlmGenerationRequest, spec: LlmTaskSpec): LlmGenerationRequest {
+        const responseSchema: JsonObject | undefined = request.responseSchema ?? spec.responseSchema;
+        return responseSchema === undefined ? request : { ...request, responseSchema };
+    }
+
+    private async routeOf(spec: LlmTaskSpec): Promise<Route> {
         if (this.config.LLM_DRIVER === 'mock') {
             return { driver: 'mock', credentials: { driver: 'gateway', apiKey: '', modelId: this.config.LLM_MODEL_ID } };
         }
@@ -72,20 +84,23 @@ export class MeteredLlmDriver extends LlmPort {
         if (credentials === null) {
             throw new LlmProviderDisabledError();
         }
-        return { driver: credentials.driver, credentials };
+        return {
+            driver: credentials.driver,
+            credentials: credentialsForRole(credentials, spec.model, this.config.LLM_VISION_MODEL)
+        };
     }
 
     private async prepare(request: LlmGenerationRequest, spec: LlmTaskSpec, route: Route): Promise<Call> {
         const body: string = JSON.stringify({
             task: request.task,
             system: request.system,
-            messages: request.messages,
+            messages: request.messages.map((message: LlmMessage): unknown => this.fingerprintOf(message)),
             tools: request.tools ?? null,
             responseSchema: request.responseSchema ?? null
         });
         const usage: LlmUsage = {
             ...EMPTY_USAGE,
-            inputTokens: Math.ceil(body.length / CHARS_PER_TOKEN_ESTIMATE),
+            inputTokens: Math.ceil(body.length / CHARS_PER_TOKEN_ESTIMATE) + this.mediaTokensOf(request),
             outputTokens: spec.maxOutputTokens
         };
         return {
@@ -96,6 +111,33 @@ export class MeteredLlmDriver extends LlmPort {
             requestHash: HashUtil.sha256(body),
             estimateMicros: await this.pricing.costMicros(route.credentials.modelId, usage)
         };
+    }
+
+    private fingerprintOf(message: LlmMessage): unknown {
+        if (typeof message.content === 'string') {
+            return message;
+        }
+        return {
+            role: message.role,
+            content: message.content.map((block: LlmContentBlock): unknown =>
+                block.kind === 'image' || block.kind === 'file'
+                    ? { kind: block.kind, mediaType: block.mediaType, bytes: block.data.byteLength, sha256: HashUtil.sha256(block.data) }
+                    : block
+            )
+        };
+    }
+
+    private mediaTokensOf(request: LlmGenerationRequest): number {
+        return request.messages
+            .flatMap((message: LlmMessage): readonly LlmContentBlock[] => (typeof message.content === 'string' ? [] : message.content))
+            .reduce((total: number, block: LlmContentBlock): number => total + this.tokensOfBlock(block), 0);
+    }
+
+    private tokensOfBlock(block: LlmContentBlock): number {
+        if (block.kind === 'image') {
+            return IMAGE_TOKENS_ESTIMATE;
+        }
+        return block.kind === 'file' ? Math.ceil(block.data.byteLength / FILE_BYTES_PER_TOKEN_ESTIMATE) : 0;
     }
 
     private async assertRoom(call: Call): Promise<void> {
