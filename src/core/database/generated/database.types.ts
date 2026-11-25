@@ -168,6 +168,25 @@ export interface AssistantMessages {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssistantPendingActions {
+    actionHash: string;
+    companyId: string;
+    conversationId: string;
+    createdAt: Generated<Timestamp>;
+    expiresAt: Timestamp;
+    id: string;
+    payload: Json;
+    resolvedAt: Timestamp | null;
+    resultText: string | null;
+    stateHash: string;
+    status: string;
+    summary: string;
+    tool: string;
+    turnId: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface AuthIdentities {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1245,6 +1264,7 @@ export interface DB {
     Assets: Assets;
     AssistantConversations: AssistantConversations;
     AssistantMessages: AssistantMessages;
+    AssistantPendingActions: AssistantPendingActions;
     AuthIdentities: AuthIdentities;
     BankConnectionAccounts: BankConnectionAccounts;
     BankConnections: BankConnections;

@@ -17,7 +17,7 @@ import { assetKeysIn } from '../../src/modules/ai-assistant/domain/forbidden-ter
 import { needsInvestmentNotice, withInvestmentNotice } from '../../src/modules/ai-assistant/domain/ask-notice';
 import { ASK_VERA_MAX_STEPS } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import { askVeraSystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/ask-vera.prompt';
-import { ASK_TODAY, appToolsOf, fixtureToolsOf } from './ask-fixtures';
+import { ASK_TODAY, appToolsOf, canProposeIn, fixtureToolsOf } from './ask-fixtures';
 import { AskCase } from './case.schemas';
 import type { AskVeraTurn } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import { Engine } from './engine';
@@ -111,7 +111,12 @@ function systemOf(item: AskCase): string {
     if (!isApp(item)) {
         return askVeraSystemPromptOf(item.locale, ASK_TODAY);
     }
-    return askVeraAppSystemPromptOf(item.locale, ASK_TODAY, item.screen === undefined ? undefined : { path: item.screen });
+    return askVeraAppSystemPromptOf(
+        item.locale,
+        ASK_TODAY,
+        item.screen === undefined ? undefined : { path: item.screen },
+        canProposeIn(item)
+    );
 }
 
 function loopInputOf(engine: Engine, spec: LlmTaskSpec, item: AskCase, meter: Meter): AskLoopInput {
@@ -138,8 +143,9 @@ function loopInputOf(engine: Engine, spec: LlmTaskSpec, item: AskCase, meter: Me
 }
 
 function generationOf(result: AskLoopResult, meter: Meter, item: AskCase): Generation {
+    const proposed: string | undefined = result.proposals[0]?.summary;
     return {
-        text: withInvestmentNotice(result.text, needsInvestmentNotice(result, item.question), item.locale),
+        text: proposed ?? withInvestmentNotice(result.text, needsInvestmentNotice(result, item.question), item.locale),
         stopReason: 'end',
         outputTokens: meter.outputTokens,
         costUsd: meter.costUsd,

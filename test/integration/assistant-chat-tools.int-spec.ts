@@ -49,6 +49,8 @@ const READ_TOOLS: readonly string[] = [
     'where_is'
 ];
 
+const OWNER_ACTION_TOOLS: readonly string[] = ['goal_create', 'transaction_categorize'];
+
 interface StartedBody {
     readonly turnId: string;
     readonly conversationId: string;
@@ -244,7 +246,7 @@ describe('assistant chat: ferramentas de leitura no app', () => {
 
         expect(freeTools).toEqual(['data_locked', 'help_search', 'where_is']);
         expect(withoutTools).toEqual(['data_locked', 'help_search', 'where_is']);
-        expect(withTools).toEqual(READ_TOOLS);
+        expect(withTools).toEqual([...READ_TOOLS, ...OWNER_ACTION_TOOLS].sort());
     });
 
     it('turno em ai: concentração e vencimentos vão ao modelo, o aviso de investimento sai, e sent é o que a requisição levou', async () => {

@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { AssistantMessagesRepository } from '../repositories/assistant-messages.repository';
-import { AssistantMessage, FinishTurnInput, TurnMode } from './assistant-chat.types';
+import { AssistantMessage, AssistantPendingAction, FinishTurnInput, TurnMode } from './assistant-chat.types';
+import { AssistantPendingActionDomain } from './assistant-pending-action.domain';
 
 @Injectable()
 export class AssistantMessageDomain {
-    public constructor(private readonly messages: AssistantMessagesRepository) {}
+    public constructor(
+        private readonly messages: AssistantMessagesRepository,
+        private readonly pending: AssistantPendingActionDomain
+    ) {}
+
+    public async actionsOfTurns(turnIds: readonly string[]): Promise<AssistantPendingAction[]> {
+        return this.pending.ofTurns(turnIds);
+    }
 
     public async startTurn(
         conversationId: string,

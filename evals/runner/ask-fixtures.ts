@@ -10,6 +10,10 @@ import {
     maturitiesInputSchema,
     noInputSchema
 } from '../../src/modules/ai-assistant/validation/ask-vera-tools.schemas';
+import { lastDayOfMonth, proposalSummary as goalSummary } from '../../src/modules/goals/domain/goal-assistant-texts';
+import { GoalCreateInput, goalCreateInputSchema } from '../../src/modules/goals/validation/goal-proposal.schemas';
+import { proposalSummary as transactionSummary } from '../../src/modules/transactions/domain/transaction-assistant-texts';
+import { transactionCategorizeInputSchema } from '../../src/modules/transactions/validation/transaction-proposal.schemas';
 import { buildConcentrationContext } from '../../src/modules/ai-assistant/domain/context/concentration.context';
 import { buildMaturitiesContext } from '../../src/modules/ai-assistant/domain/context/maturities.context';
 import { HELP_CATALOG } from '../../src/modules/ai-assistant/domain/help/help-catalog';
@@ -227,11 +231,43 @@ export function freeToolsOf(locale: AppLocale, role: HelpRole): readonly AskVera
     return [...helpToolsOf(locale, role), new DataLockedTool(new EvalContext(locale), gate, consent)];
 }
 
+export function canProposeIn(item: AskCase): boolean {
+    return item.task === 'ask_vera_app_step' && item.plan === 'premium' && item.role !== 'viewer';
+}
+
+function proposalToolOf(name: string, schema: AskVeraTool['inputSchema'], summaryOf: (input: JsonObject) => string): AskVeraTool {
+    return {
+        name,
+        kind: 'proposal',
+        inputSchema: schema,
+        description: (): string => name,
+        run: (input: unknown): Promise<AskVeraToolOutput> =>
+            Promise.resolve({
+                payload: { status: 'proposed' },
+                proposal: { summary: summaryOf(input as JsonObject), payload: input as JsonObject }
+            })
+    };
+}
+
+export function proposalToolsOf(locale: AppLocale): readonly AskVeraTool[] {
+    const categoryLabel: string = locale === 'pt-BR' ? 'Delivery e restaurantes' : 'Delivery and restaurants';
+    return [
+        proposalToolOf('goal_create', goalCreateInputSchema, (input: JsonObject): string => {
+            const goal: GoalCreateInput = goalCreateInputSchema.parse(input);
+            return goalSummary(goal.name, goal.targetMinor, lastDayOfMonth(goal.targetMonth), locale);
+        }),
+        proposalToolOf('transaction_categorize', transactionCategorizeInputSchema, (input: JsonObject): string =>
+            transactionSummary(categoryLabel, input['always'] === true, locale)
+        )
+    ];
+}
+
 export function appToolsOf(item: AskCase): readonly AskVeraTool[] {
     if (item.plan === 'free') {
         return freeToolsOf(item.locale, item.role);
     }
-    return [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale), ...helpToolsOf(item.locale, item.role)];
+    const proposals: readonly AskVeraTool[] = canProposeIn(item) ? proposalToolsOf(item.locale) : [];
+    return [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale), ...helpToolsOf(item.locale, item.role), ...proposals];
 }
 
 function helpEvidenceOf(locale: AppLocale): JsonObject[] {
