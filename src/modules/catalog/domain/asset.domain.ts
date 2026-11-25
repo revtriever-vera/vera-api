@@ -23,6 +23,10 @@ export class AssetDomain {
         return this.assets.findAssetsByIds(ids);
     }
 
+    public async findManyByMarketAndExternalIds(market: CatalogMarket, externalIds: readonly string[]): Promise<Asset[]> {
+        return this.assets.findAssetsByMarketAndExternalIds(market, externalIds);
+    }
+
     public async findByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         return this.assets.findAssetByMarketAndExternalId(market, externalId);
     }

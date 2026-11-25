@@ -13,7 +13,8 @@ export const QUEUES = {
     recurring: 'vera-recurring',
     goalNotices: 'vera-goal-notices',
     recurringNotices: 'vera-recurring-notices',
-    billing: 'vera-billing'
+    billing: 'vera-billing',
+    investmentImport: 'vera-investment-import'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -36,6 +37,7 @@ export const MESSAGE_TYPES = {
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',
     usageGaugeRequested: 'usage.gauge.requested',
+    investmentImportPreviewsPurgeRequested: 'investment-import.previews.purge.requested',
     aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
     whatsappWebhookReceived: 'whatsapp.webhook.received',
     whatsappInboundReceived: 'whatsapp.inbound.received',

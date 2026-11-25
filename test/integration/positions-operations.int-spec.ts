@@ -63,6 +63,8 @@ describe('positions operations', () => {
             fxRate: null,
             grossBrlMinor: null,
             dayTrade: false,
+            historyOnly: false,
+            direction: null,
             sourceRef: `${symbol}:${kind}:${quantity}:${String(extra.lineNumber ?? 1)}`,
             ...extra
         };

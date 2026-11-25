@@ -58,10 +58,14 @@ export interface CostOperation {
     readonly feesMinor: number;
     readonly currency: string;
     readonly dayTrade: boolean;
+    readonly historyOnly: boolean;
 }
+
+export type EventDirection = 'credit' | 'debit';
 
 export interface OperationInput extends CostOperation {
     readonly assetId: string;
+    readonly direction: EventDirection | null;
     readonly incomeKind: IncomeKind | null;
     readonly settlementDate: string | null;
     readonly grossMinor: number;
@@ -90,3 +94,11 @@ export interface ApplyResult {
     readonly skippedDuplicates: number;
     readonly effects: readonly PositionEffect[];
 }
+
+export const FAILURE_REASONS = {
+    sellExceedsPosition: 'sell_exceeds_position',
+    eventFactor: 'event_factor',
+    invalidQuantity: 'invalid_quantity',
+    assetNotAvailable: 'asset_not_available'
+} as const;
+export type FailureReason = (typeof FAILURE_REASONS)[keyof typeof FAILURE_REASONS];

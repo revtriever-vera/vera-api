@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InvestmentImportsRepository } from '../repositories/investment-imports.repository';
+import { Page } from '../../../shared/pagination/pagination.types';
 import { cleanFileName } from './operation-fingerprint';
 import { InvestmentImport, NewImportInput, PositionSnapshotEntry } from './investment-operations.types';
 
@@ -19,6 +20,14 @@ export class InvestmentImportDomain {
 
     public async findById(id: string): Promise<InvestmentImport | null> {
         return this.imports.findById(id);
+    }
+
+    public async page(page: number, pageSize: number): Promise<Page<InvestmentImport>> {
+        return this.imports.page(page, pageSize);
+    }
+
+    public async findCompletedByHash(fileSha256: string): Promise<InvestmentImport | null> {
+        return this.imports.findCompletedByHash(fileSha256);
     }
 
     public async listAll(): Promise<InvestmentImport[]> {

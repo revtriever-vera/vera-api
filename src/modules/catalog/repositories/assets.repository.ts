@@ -101,6 +101,13 @@ export class AssetsRepository extends BareGlobalRepository<'Assets'> {
         return this.selectAssets().where('id', 'in', ids).execute();
     }
 
+    public async findAssetsByMarketAndExternalIds(market: CatalogMarket, externalIds: readonly string[]): Promise<Asset[]> {
+        if (externalIds.length === 0) {
+            return [];
+        }
+        return this.selectAssets().where('market', '=', market).where('externalId', 'in', externalIds).execute();
+    }
+
     public async findAssetByMarketAndExternalId(market: CatalogMarket, externalId: string): Promise<Asset | null> {
         const rows: Asset[] = await this.selectAssets()
             .where('market', '=', market)

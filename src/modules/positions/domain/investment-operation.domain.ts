@@ -27,6 +27,10 @@ export class InvestmentOperationDomain {
         return this.operations.listCreatedAfter(assetIds, after);
     }
 
+    public async countByImports(importIds: readonly string[]): Promise<Map<string, number>> {
+        return this.operations.countByImports(importIds);
+    }
+
     public async softDeleteByImport(importId: string): Promise<number> {
         return this.operations.softDeleteByImport(importId);
     }

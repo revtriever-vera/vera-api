@@ -1,0 +1,97 @@
+import { Injectable } from '@nestjs/common';
+import { AppContext } from '../../../core/context/app-context.port';
+import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
+import { ApplyResult, PositionOperationsService } from '../../positions/services/position-operations.service';
+import { InvestmentImportPreviewDomain } from '../domain/investment-import-preview.domain';
+import { BlockedLinesError, PositionModeRequiredError } from '../domain/investment-import.errors';
+import {
+    CommitView,
+    EvaluatedLine,
+    InvestmentImportPreview,
+    LINE_STATUSES,
+    LineEdit,
+    MAX_REPORTED_LINE_IDS,
+    PreviewPayload
+} from '../domain/investment-import.types';
+import { ParsedSource } from '../domain/investment-statement.types';
+import { countByStatus, idsWithStatus } from '../domain/line-counts';
+import { applyEdits } from '../domain/line-edits';
+import { Evaluation, ImportLineEvaluatorService } from '../services/import-line-evaluator.service';
+import { InvestmentImportLogService } from '../services/investment-import-log.service';
+import { InvestmentImportMetricsService } from '../services/investment-import-metrics.service';
+import { previewPayloadSchema } from '../validation/preview-payload.schema';
+
+export interface CommitInput {
+    readonly previewId: string;
+    readonly edits: readonly LineEdit[];
+}
+
+interface Committed {
+    readonly view: CommitView;
+    readonly source: ParsedSource;
+    readonly lines: readonly EvaluatedLine[];
+}
+
+@Injectable()
+export class InvestmentImportCommitApplication {
+    public constructor(
+        private readonly evaluator: ImportLineEvaluatorService,
+        private readonly previews: InvestmentImportPreviewDomain,
+        private readonly positions: PositionOperationsService,
+        private readonly context: AppContext,
+        private readonly logs: InvestmentImportLogService,
+        private readonly metrics: InvestmentImportMetricsService
+    ) {}
+
+    public async commit(input: CommitInput): Promise<CommitView> {
+        const startedAt: number = Date.now();
+        const committed: Committed = await this.persist(input);
+        const durationMs: number = Date.now() - startedAt;
+        this.logs.record('committed', {
+            source: committed.source,
+            importId: committed.view.importId,
+            previewId: input.previewId,
+            lines: committed.lines.length,
+            applied: committed.view.applied,
+            skipped: committed.view.skipped,
+            durationMs
+        });
+        this.metrics.outcome(committed.source, 'committed', durationMs);
+        this.metrics.lines(committed.source, countByStatus(committed.lines));
+        return committed.view;
+    }
+
+    @UsingTransaction()
+    private async persist(input: CommitInput): Promise<Committed> {
+        const preview: InvestmentImportPreview = await this.previews.consume(input.previewId);
+        const payload: PreviewPayload = previewPayloadSchema.parse(preview.payload);
+        const evaluation: Evaluation = await this.evaluator.evaluate(preview.holderUserId, applyEdits(payload.lines, input.edits));
+        assertCommittable(evaluation.lines);
+        const created: { readonly id: string } = await this.positions.createImport({
+            createdBy: this.context.getOrNull()?.userId ?? null,
+            source: preview.source as ParsedSource,
+            fileSha256: preview.fileSha256,
+            fileName: preview.fileName,
+            noteNumbers: []
+        });
+        const result: ApplyResult = await this.positions.apply(created.id, preview.holderUserId, evaluation.operations);
+        const view: CommitView = {
+            importId: created.id,
+            applied: result.applied,
+            skipped: evaluation.lines.length - result.applied,
+            positions: evaluation.effects
+        };
+        return { view, source: preview.source as ParsedSource, lines: evaluation.lines };
+    }
+}
+
+function assertCommittable(lines: readonly EvaluatedLine[]): void {
+    const blocked: string[] = idsWithStatus(lines, LINE_STATUSES.blocked);
+    if (blocked.length > 0) {
+        throw new BlockedLinesError(blocked.slice(0, MAX_REPORTED_LINE_IDS), blocked.length);
+    }
+    const unchosen: string[] = idsWithStatus(lines, LINE_STATUSES.check);
+    if (unchosen.length > 0) {
+        throw new PositionModeRequiredError(unchosen.slice(0, MAX_REPORTED_LINE_IDS), unchosen.length);
+    }
+}
