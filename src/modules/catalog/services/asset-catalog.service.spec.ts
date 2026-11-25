@@ -45,3 +45,18 @@ describe('AssetCatalogService', () => {
         await expect(service.requireById('missing')).rejects.toBeInstanceOf(AssetNotFoundError);
     });
 });
+
+describe('AssetCatalogService.searchByName', () => {
+    it('busca por nome e devolve só os ativos do mercado pedido', async () => {
+        const search: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue([
+            { symbol: 'PETR4', market: 'B3' },
+            { symbol: 'PETRO', market: 'CRYPTO' }
+        ]);
+        const service: AssetCatalogService = new AssetCatalogService({ search } as unknown as AssetDomain);
+
+        const found: Asset[] = await service.searchByName('B3', ' Petrobras ', 30);
+
+        expect(found.map((asset: Asset): string => asset.symbol)).toEqual(['PETR4']);
+        expect(search).toHaveBeenCalledWith({ text: 'petrobras', likeText: 'petrobras', limit: 30 });
+    });
+});

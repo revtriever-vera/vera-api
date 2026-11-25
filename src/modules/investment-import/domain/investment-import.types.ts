@@ -37,6 +37,7 @@ export const LINE_REASONS = {
     skipped: 'skipped',
     amountMismatch: 'amount_mismatch',
     totalMismatch: 'total_mismatch',
+    netMismatch: 'net_mismatch',
     dateOutOfRange: 'date_out_of_range'
 } as const;
 
@@ -51,6 +52,8 @@ export const NOTE_CODES = {
     cryptoTransferCheck: 'crypto_transfer_check',
     cryptoUsdRateApplied: 'crypto_usd_rate_applied',
     cryptoFeeNotConverted: 'crypto_fee_not_converted',
+    noteTotalMismatch: 'note_total_mismatch',
+    noteNetMismatch: 'note_net_mismatch',
     linesToCheck: 'lines_to_check'
 } as const;
 
