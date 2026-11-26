@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { QueuePublisherPort } from '../../../core/queue/queue.types';
 import { MESSAGE_TYPES, QUEUES } from '../../../shared/constants/queues.constants';
+import { MonthlyReviewPayload } from '../validation/monthly-review.schemas';
 import { DailyPayload, SnapshotPayload, WeeklyPayload } from '../validation/portfolio-watch.schemas';
 
 export function monthlySnapshotJobId(companyId: string, month: string): string {
     return `portfolio-watch-snapshot-${companyId}-${month}`;
+}
+
+export function monthlyReviewJobId(companyId: string, month: string): string {
+    return `portfolio-watch-review-${companyId}-${month}`;
 }
 
 export function dailyJobId(companyId: string, day: string): string {
@@ -24,6 +29,13 @@ export class PortfolioWatchPublisherService {
         await this.publisher.publish(QUEUES.portfolioWatch, MESSAGE_TYPES.portfolioWatchMonthlySnapshotCompanyRequested, payload, {
             jobId: monthlySnapshotJobId(companyId, month),
             replaceExisting: true
+        });
+    }
+
+    public async requestMonthlyReview(companyId: string, month: string): Promise<void> {
+        const payload: MonthlyReviewPayload = { companyId, month };
+        await this.publisher.publish(QUEUES.portfolioWatch, MESSAGE_TYPES.portfolioWatchMonthlyReviewCompanyRequested, payload, {
+            jobId: monthlyReviewJobId(companyId, month)
         });
     }
 

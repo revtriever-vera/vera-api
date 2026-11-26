@@ -68,6 +68,8 @@ export const MESSAGE_TYPES = {
     portfolioWatchDailyCompanyRequested: 'portfolio-watch.daily.company.requested',
     portfolioWatchWeeklyChangesRequested: 'portfolio-watch.weekly-changes.requested',
     portfolioWatchWeeklyChangesCompanyRequested: 'portfolio-watch.weekly-changes.company.requested',
+    portfolioWatchMonthlyReviewRequested: 'portfolio-watch.monthly-review.requested',
+    portfolioWatchMonthlyReviewCompanyRequested: 'portfolio-watch.monthly-review.company.requested',
     recurringNoticesDailyRequested: 'recurring-notices.daily.requested',
     recurringNoticesScheduleRequested: 'recurring-notices.schedule.requested',
     recurringWeekDue: 'recurring-notices.week.due',

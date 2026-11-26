@@ -3,7 +3,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { MonthlySnapshotEntry, MonthlySnapshotRow, PRUNE_BATCH } from '../domain/portfolio-watch.types';
+import { MonthlySnapshotEntry, MonthlySnapshotRow, PRUNE_BATCH, SNAPSHOT_MONTH_LIMIT } from '../domain/portfolio-watch.types';
 
 @Injectable()
 export class PortfolioMonthlySnapshotsRepository extends TenantRepository<'PortfolioMonthlySnapshots'> {
@@ -25,6 +25,10 @@ export class PortfolioMonthlySnapshotsRepository extends TenantRepository<'Portf
 
     public async eraseAll(): Promise<number> {
         return this.hardDeleteWhere({}, PRUNE_BATCH);
+    }
+
+    public async listByMonth(month: string): Promise<MonthlySnapshotRow[]> {
+        return this.findMany({ month }, { limit: SNAPSHOT_MONTH_LIMIT, orderBy: [{ property: 'assetId', direction: 'asc' }] });
     }
 
     public async listPage(offset: number, limit: number): Promise<MonthlySnapshotRow[]> {

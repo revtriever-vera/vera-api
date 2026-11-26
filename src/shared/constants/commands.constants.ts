@@ -27,6 +27,7 @@ export const COMMAND_KEYS = {
     portfolioWatchMonthlySnapshot: 'portfolio-watch-monthly-snapshot-command',
     portfolioWatchDaily: 'portfolio-watch-daily-command',
     portfolioWatchWeeklyChanges: 'portfolio-watch-weekly-changes-command',
+    portfolioWatchMonthlyReview: 'portfolio-watch-monthly-review-command',
     billingProvisioningRescue: 'billing-provisioning-rescue-command',
     billingEventsReplay: 'billing-events-replay-command',
     billingInvoicesReconcile: 'billing-invoices-reconcile-command',
@@ -58,7 +59,8 @@ export const CRON = {
     mondayToSaturdayAtNineAm: '0 9 * * 1-6',
     everyDayAtTenThirtyPm: '30 22 * * *',
     weekdaysAtTwoThirtyPm: '30 14 * * 1-5',
-    firstOfMonthAtFourAm: '0 4 1 * *'
+    firstOfMonthAtFourAm: '0 4 1 * *',
+    firstOfMonthAtFiveAm: '0 5 1 * *'
 } as const;
 
 export const CRON_TIMEZONE: string = 'America/Sao_Paulo';

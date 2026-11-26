@@ -762,6 +762,16 @@ export interface MarketIndexPoints {
     symbol: string;
 }
 
+export interface MonthlyReviews {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    month: string;
+    payload: Json;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface NoticePreferences {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -1427,6 +1437,7 @@ export interface DB {
     MarketDocuments: MarketDocuments;
     MarketDocumentSummaries: MarketDocumentSummaries;
     MarketIndexPoints: MarketIndexPoints;
+    MonthlyReviews: MonthlyReviews;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;
     OnboardingStates: OnboardingStates;

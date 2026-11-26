@@ -25,6 +25,13 @@ import { PortfolioWatchLogService } from '../services/portfolio-watch-log.servic
 import { PortfolioWatchNoticeRegistrar } from '../services/portfolio-watch-notice.registrar';
 import { PortfolioWatchPublisherService } from '../services/portfolio-watch-publisher.service';
 import { PortfolioChangesReaderService } from '../services/portfolio-changes-reader.service';
+import { MonthlyReviewBenchmarksService } from '../services/monthly-review-benchmarks.service';
+import { MonthlyReviewConcentrationService } from '../services/monthly-review-concentration.service';
+import { MonthlyReviewService } from '../services/monthly-review.service';
+import { ConcentrationApplicationModule } from '../../concentration/application/concentration-application.module';
+import { FixedIncomeCoverageApplicationModule } from '../../fixed-income-coverage/application/fixed-income-coverage-application.module';
+import { MarketBenchmarksApplicationModule } from '../../market-benchmarks/application/market-benchmarks-application.module';
+import { PortfolioMonthlyReviewApplication } from './portfolio-monthly-review.application';
 import { PortfolioAgendaApplication } from './portfolio-agenda.application';
 import { PortfolioChangesApplication } from './portfolio-changes.application';
 import { PortfolioWatchDailyApplication } from './portfolio-watch-daily.application';
@@ -46,10 +53,17 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
         PortfolioEventsApplicationModule,
         MailModule,
         MarketDocumentsApplicationModule,
-        PlansApplicationModule
+        PlansApplicationModule,
+        ConcentrationApplicationModule,
+        FixedIncomeCoverageApplicationModule,
+        MarketBenchmarksApplicationModule
     ],
     providers: [
         PortfolioWatchSnapshotApplication,
+        PortfolioMonthlyReviewApplication,
+        MonthlyReviewService,
+        MonthlyReviewBenchmarksService,
+        MonthlyReviewConcentrationService,
         PortfolioWatchDailyApplication,
         PortfolioAgendaApplication,
         PortfolioChangesApplication,
@@ -66,6 +80,7 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
     ],
     exports: [
         PortfolioWatchSnapshotApplication,
+        PortfolioMonthlyReviewApplication,
         PortfolioWatchDailyApplication,
         PortfolioAgendaApplication,
         PortfolioChangesApplication,
