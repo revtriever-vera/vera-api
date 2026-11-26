@@ -14,7 +14,7 @@ export interface UnsubscribeSubject {
 }
 
 const SEPARATOR: string = '.';
-const TYPE_PATTERN: RegExp = /^[a-z][a-z0-9_]{0,63}$/;
+const TYPE_PATTERN: RegExp = /^[a-z][a-z0-9_]{0,63}(,[a-z][a-z0-9_]{0,63}){0,15}$/;
 
 function isSubjectParts(parts: string[]): parts is [string, string, string] {
     return parts.length === 3 && IdUtil.isId(parts[0] ?? '') && IdUtil.isId(parts[1] ?? '') && TYPE_PATTERN.test(parts[2] ?? '');

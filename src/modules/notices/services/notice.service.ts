@@ -26,6 +26,7 @@ interface ClaimedEntry {
 interface DigestContext {
     readonly extra: Readonly<Record<string, string>>;
     readonly urls: Readonly<Record<string, string>>;
+    readonly allUrl: string;
     readonly recipient: MemberRecipient;
 }
 
@@ -106,8 +107,10 @@ export class NoticeService {
             return false;
         }
         const urls: Record<string, string> = this.linksOf(companyId, recipient.userId, claimed);
+        const types: string[] = [...new Set(claimed.map(({ entry }: ClaimedEntry): string => entry.type))];
+        const allUrl: string = this.links.urlFor({ companyId, userId: recipient.userId, type: types.join(',') });
         try {
-            await this.mailer.enqueue(this.digestMail(claimed, first, { extra, urls, recipient }));
+            await this.mailer.enqueue(this.digestMail(claimed, first, { extra, urls, allUrl, recipient }));
         } catch (error: unknown) {
             await this.releaseAll(claimed);
             this.logs.released(first.entry.type, first.noticeId, error);
@@ -143,7 +146,7 @@ export class NoticeService {
     }
 
     private digestMail(claimed: readonly ClaimedEntry[], first: ClaimedEntry, context: DigestContext): EnqueueMailRequest {
-        const unsubscribeUrl: string = context.urls[first.entry.type] ?? '';
+        const unsubscribeUrl: string = context.allUrl;
         return {
             template: this.types.require(first.entry.type).template,
             locale: context.recipient.locale,

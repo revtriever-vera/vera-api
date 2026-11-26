@@ -91,7 +91,7 @@ describe('e-mail semanal "O que mudou"', () => {
         const premium: Account = await account('weekly-send', true);
         await document('alto', daysAgo(1), 3);
         await document('medio', daysAgo(2), 2);
-        await document('baixo', daysAgo(2), 1);
+        await document('baixo', daysAgo(3), 1);
 
         const first: number = await evaluate(premium);
         const second: number = await evaluate(premium);
