@@ -112,6 +112,17 @@ export interface AssetClasses {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssetIssuerLinks {
+    assetId: string;
+    cnpj: string;
+    createdAt: Generated<Timestamp>;
+    cvmCode: string | null;
+    id: string;
+    issuerKind: string;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AssetQuotes {
     assetId: string;
     currency: string;
@@ -779,6 +790,22 @@ export interface PluggyCredentials {
     verifiedWith: Generated<string>;
 }
 
+export interface PortfolioEvents {
+    amountPerUnit: Numeric | null;
+    assetId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    documentUrl: string | null;
+    eventDate: Timestamp | null;
+    exDate: Timestamp | null;
+    externalKey: string;
+    id: string;
+    kind: string;
+    paymentDate: Timestamp | null;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface PortfolioIncomeLedger {
     amountMinor: Int8;
     assetId: string;
@@ -1280,6 +1307,7 @@ export interface DB {
     AiSummaries: AiSummaries;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
+    AssetIssuerLinks: AssetIssuerLinks;
     AssetQuotes: AssetQuotes;
     Assets: Assets;
     AssistantConversations: AssistantConversations;
@@ -1330,6 +1358,7 @@ export interface DB {
     PlatformAccessTokens: PlatformAccessTokens;
     PlatformAuditLog: PlatformAuditLog;
     PluggyCredentials: PluggyCredentials;
+    PortfolioEvents: PortfolioEvents;
     PortfolioIncomeLedger: PortfolioIncomeLedger;
     PortfolioMonthlySnapshots: PortfolioMonthlySnapshots;
     PortfolioSettings: PortfolioSettings;

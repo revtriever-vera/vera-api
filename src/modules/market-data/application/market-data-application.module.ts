@@ -31,6 +31,7 @@ import { MarketIndexReaderService } from '../services/market-index-reader.servic
 import { MarketIndexSyncService } from '../services/market-index-sync.service';
 import { PtaxUsdRateAdapter } from '../services/ptax-usd-rate.adapter';
 import { ProviderBudgetService } from '../services/provider-budget.service';
+import { ProviderHttpService } from '../services/provider-http.service';
 import { QuoteCollectorService } from '../services/quote-collector.service';
 import { QuoteProviderRegistryService, selectQuoteProviders } from '../services/quote-provider-registry.service';
 import { QuoteReaderService } from '../services/quote-reader.service';
@@ -73,6 +74,7 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         QuoteProviderRegistryService,
         QuoteCollectorService,
         HeldAssetsService,
+        ProviderHttpService,
         MarketDataLogService,
         MarketDataMetricsService,
         EmptyHeldAssetsDriver,
@@ -125,7 +127,9 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         QuoteReaderService,
         ExchangeRateReaderService,
         MarketIndexReaderService,
-        ProviderBudgetService
+        ProviderBudgetService,
+        HeldAssetsService,
+        ProviderHttpService
     ]
 })
 export class MarketDataApplicationModule {}

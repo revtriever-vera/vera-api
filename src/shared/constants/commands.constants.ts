@@ -29,7 +29,9 @@ export const COMMAND_KEYS = {
     billingEventsReplay: 'billing-events-replay-command',
     billingInvoicesReconcile: 'billing-invoices-reconcile-command',
     billingStandingSweep: 'billing-standing-sweep-command',
-    billingTrialSweep: 'billing-trial-sweep-command'
+    billingTrialSweep: 'billing-trial-sweep-command',
+    portfolioEventsDaily: 'portfolio-events-daily-command',
+    portfolioEventsLinksWeekly: 'portfolio-events-links-weekly-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
@@ -44,6 +46,7 @@ export const CRON = {
     everyDayAtSixAm: '0 6 * * *',
     everyDayAtFourAm: '0 4 * * *',
     everyDayAtSevenAm: '0 7 * * *',
+    everyMondayAtSevenAm: '0 7 * * 1',
     everyDayAtNineAm: '0 9 * * *',
     everyDayAtNineThirtyAm: '30 9 * * *',
     twiceDaily: '0 9,21 * * *',

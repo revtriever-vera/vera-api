@@ -16,7 +16,8 @@ export const QUEUES = {
     recurringNotices: 'vera-recurring-notices',
     portfolioWatch: 'vera-portfolio-watch',
     billing: 'vera-billing',
-    investmentImport: 'vera-investment-import'
+    investmentImport: 'vera-investment-import',
+    portfolioEvents: 'vera-portfolio-events'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -71,7 +72,10 @@ export const MESSAGE_TYPES = {
     billingEventsReplayRequested: 'billing.events-replay.requested',
     billingInvoicesReconcileRequested: 'billing.invoices-reconcile.requested',
     billingStandingSweepRequested: 'billing.standing-sweep.requested',
-    billingTrialSweepRequested: 'billing.trial-sweep.requested'
+    billingTrialSweepRequested: 'billing.trial-sweep.requested',
+    portfolioEventsDailyRequested: 'portfolio-events.daily.requested',
+    portfolioEventsLinksRequested: 'portfolio-events.links.requested',
+    portfolioEventsBatchRequested: 'portfolio-events.batch.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
