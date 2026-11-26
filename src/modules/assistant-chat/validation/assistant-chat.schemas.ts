@@ -29,16 +29,11 @@ export const sendTurnBodySchema = z
         modelConsent: z
             .enum(['true', 'false'])
             .optional()
-            .transform((value: 'true' | 'false' | undefined): boolean => value === 'true')
             .describe(
                 'Multipart only. Send `true` after the person agrees that the `file` goes to a language model (a PDF, image or photo). Without it, such a file is refused with model.confirmation_required and nothing is sent. Valid only for this request'
             )
     })
     .strict();
-
-export const sendTurnMultipartSchema = z.object({
-    file: z.string().optional().describe('Report to import: B3 xlsx or csv, brokerage note PDF, statement or print')
-});
 
 export const turnIdParamsSchema = z.object({ id: z.string().uuid().describe('Turn id, as returned when the question was sent') });
 
@@ -172,7 +167,7 @@ export const conversationResponseSchema = z.object({
     enabled: z.boolean().describe('Whether the language model is on; false means the ask-Vera button must be hidden')
 });
 
-export type SendTurnBody = z.output<typeof sendTurnBodySchema>;
+export type SendTurnBody = z.infer<typeof sendTurnBodySchema>;
 export type TurnView = z.infer<typeof turnResponseSchema>;
 export type TurnStartedView = z.infer<typeof turnStartedResponseSchema>;
 export type SentView = z.infer<typeof sentResponseSchema>;
