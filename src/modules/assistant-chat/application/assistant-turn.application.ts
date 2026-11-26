@@ -57,7 +57,7 @@ export class AssistantTurnApplication {
             }
             return null;
         }
-        return this.attachments.propose(this.userId(), file, input.modelConsent);
+        return this.attachments.propose(this.userId(), file, input.modelConsent === 'true');
     }
 
     public async get(turnId: string): Promise<TurnView> {

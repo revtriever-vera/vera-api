@@ -202,7 +202,7 @@ function sendTurnRequestDoc(): Record<string, unknown> {
         format: 'binary',
         description: 'Multipart only. The report to import, up to 10 MB: xlsx or csv, or with `modelConsent` a PDF or an image'
     };
-    return { oneOf: [json, { ...json, properties: { file, ...properties } }] };
+    return { ...json, properties: { file, ...properties } };
 }
 
 function problems(...docs: readonly ProblemDoc[]): MethodDecorator {
