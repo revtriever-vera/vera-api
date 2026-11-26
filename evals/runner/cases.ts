@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { AiContext, BuiltContext, LabelSource } from '../../src/modules/ai-assistant/domain/context/ai-context.types';
+import { AiContext, AiMarkerKind, BuiltContext, LabelSource } from '../../src/modules/ai-assistant/domain/context/ai-context.types';
 import { figuresIn } from '../../src/modules/ai-assistant/domain/summary-guard';
 import { EvalCase, EvalTask, SummaryCase, evalCaseSchema } from './case.schemas';
 
@@ -8,13 +8,23 @@ export const EVAL_TASKS: readonly EvalTask[] = [
     'summary_month',
     'summary_cuts',
     'summary_portfolio',
+    'summary_monthly_review',
     'ask_vera_step',
     'ask_vera_app_step',
     'market_document_summary'
 ];
 
 const CASES_DIR: string = join(__dirname, '..', 'cases');
-const SKIPPED_FIELDS: ReadonlySet<string> = new Set(['mes', 'chave', 'status', 'situacao', 'moeda_base', 'tipo', 'rotulo_padrao']);
+const SKIPPED_FIELDS: ReadonlySet<string> = new Set([
+    'mes',
+    'sem_rentabilidade_motivo',
+    'chave',
+    'status',
+    'situacao',
+    'moeda_base',
+    'tipo',
+    'rotulo_padrao'
+]);
 
 export function casesOf(task: EvalTask): EvalCase[] {
     const dir: string = join(CASES_DIR, task);
@@ -51,12 +61,16 @@ export function numbersOf(item: SummaryCase): readonly number[] {
     return [...found].sort((left: number, right: number): number => left - right);
 }
 
+function markerKindOf(key: string): AiMarkerKind {
+    if (key.startsWith('cls:')) {
+        return 'cls';
+    }
+    return key.startsWith('ativo:') ? 'ativo' : 'cat';
+}
+
 export function keysOf(item: EvalCase): ReadonlyMap<string, LabelSource> {
     return new Map<string, LabelSource>(
-        Object.entries(item.labels).map(([key, name]: [string, string]): [string, LabelSource] => [
-            key,
-            { kind: key.startsWith('cls:') ? 'cls' : 'cat', name }
-        ])
+        Object.entries(item.labels).map(([key, name]: [string, string]): [string, LabelSource] => [key, { kind: markerKindOf(key), name }])
     );
 }
 

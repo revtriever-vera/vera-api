@@ -6,7 +6,7 @@ import { toolInputSchemaOf } from '../../src/core/llm/tool-input-schema';
 import { serializeContext } from '../../src/modules/ai-assistant/domain/context/context-hash';
 import { summarySystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/summary-prompts';
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
-import { SummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
+import { GeneratedSummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
 import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter';
 import { marketDocumentSummaryPromptOf } from '../../src/modules/market-documents/domain/market-document-summary.prompt';
 import { SUMMARY_RESPONSE_SCHEMA, summaryPayloadOf } from '../../src/modules/market-documents/domain/market-document-summary.request';
@@ -37,10 +37,11 @@ export interface Generation {
 }
 
 const RESPONSE_SCHEMA: JsonObject = toolInputSchemaOf(summaryOutputSchema);
-const KIND_BY_TASK: Readonly<Record<SummaryCase['task'], SummaryKind>> = {
+const KIND_BY_TASK: Readonly<Record<SummaryCase['task'], GeneratedSummaryKind>> = {
     summary_month: 'month',
     summary_cuts: 'cuts',
-    summary_portfolio: 'portfolio'
+    summary_portfolio: 'portfolio',
+    summary_monthly_review: 'monthly_review'
 };
 
 export function specOf(task: string, reasoning: LlmReasoning | undefined): LlmTaskSpec {

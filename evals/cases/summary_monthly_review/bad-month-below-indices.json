@@ -1,0 +1,59 @@
+{
+  "id": "bad-month-below-indices",
+  "task": "summary_monthly_review",
+  "locale": "en",
+  "labels": {
+    "cls:acoes_br": "Brazilian stocks",
+    "cls:fii": "REITs",
+    "ativo:custom_2": "Vale"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "-1.80%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Brazilian stocks",
+        "rentabilidade_pct": "-5.10%"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "REITs",
+        "rentabilidade_pct": "-0.40%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0.95%",
+      "ipca_pct": "+0.60%",
+      "ibovespa_pct": null
+    },
+    "maiores_altas": [],
+    "maiores_quedas": [
+      {
+        "chave": "custom_2",
+        "variacao_pct": "-12.00%"
+      }
+    ],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["-1.80%"],
+    "mustMention": ["CDI"],
+    "mustNotMention": ["income"],
+    "sentences": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Your portfolio returned **-1.80%** in October, below the CDI (+0.95%) and the IPCA (+0.60%).",
+    "[[cls:fii]] was the best class (-0.40%) and [[cls:acoes_br]] the lowest (-5.10%).",
+    "In price, [[ativo:custom_2]] fell -12.00%."
+  ]
+}

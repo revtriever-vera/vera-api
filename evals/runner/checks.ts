@@ -116,9 +116,44 @@ function mentionFailures(item: EvalCase, text: string): CheckFailure[] {
     return [...missing, ...present];
 }
 
+const REVIEW_ADVICE: readonly RegExp[] = [
+    /(?<![\p{L}\p{N}_])(?:aumente|aumentem|reduza|reduzam|diversifique|diversifiquem|resgate|resgatem|realoque|rebalanceie|considere|aproveite)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:increase|reduce|diversify|redeem|rebalance|consider|you should|should you)(?![\p{L}\p{N}_])/iu
+];
+const REVIEW_PROMISE: readonly RegExp[] = [
+    /(?<![\p{L}\p{N}_])(?:vai|v[aã]o)\s+(?:continuar|seguir|manter|subir|cair|melhorar|piorar)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:deve|devem|tende|tendem)\s+a\s+(?:continuar|seguir|manter|subir|cair)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:pr[oó]ximo m[eê]s|pr[oó]ximos meses)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:will|is going to|are going to)\s+(?:continue|keep|rise|fall|improve)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])next months?(?![\p{L}\p{N}_])/iu
+];
+const REVIEW_NOTICE: RegExp = /recomenda[çc][ãa]o|recommendation|n[aã]o [eé] (?:uma )?(?:conselho|oferta)|not (?:an? )?(?:advice|offer)/iu;
+
+function reviewFailures(item: EvalCase, text: string): CheckFailure[] {
+    if (item.task !== 'summary_monthly_review') {
+        return [];
+    }
+    const advice: CheckFailure[] = REVIEW_ADVICE.filter((pattern: RegExp): boolean => pattern.test(text)).map((): CheckFailure =>
+        fail('forbidden_term', 'advice on what to do with the portfolio')
+    );
+    const promise: CheckFailure[] = REVIEW_PROMISE.filter((pattern: RegExp): boolean => pattern.test(text)).map((): CheckFailure =>
+        fail('forbidden_term', 'a promise or forecast about the next period')
+    );
+    const notice: CheckFailure[] = REVIEW_NOTICE.test(text)
+        ? [fail('no_notice_in_model_text', 'the model wrote the investment notice, which is the code')]
+        : [];
+    return [...advice, ...promise, ...notice];
+}
+
 function softChecks(item: EvalCase, rendered: readonly string[]): CheckFailure[] {
     const text: string = plainOf(rendered);
-    return [...sentenceFailure(item, text), ...languageFailure(item, text), ...toneFailure(text), ...mentionFailures(item, text)];
+    return [
+        ...reviewFailures(item, text),
+        ...sentenceFailure(item, text),
+        ...languageFailure(item, text),
+        ...toneFailure(text),
+        ...mentionFailures(item, text)
+    ];
 }
 
 type Parsed = { readonly ok: true; readonly paragraphs: readonly string[] } | { readonly ok: false; readonly failure: CheckFailure };

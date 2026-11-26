@@ -58,6 +58,30 @@ const portfolioContext = z.object({
     aporte_planejado: z.object({ total: z.string(), por_classe: z.array(z.object({ chave: z.string(), valor: z.string() })) }).optional()
 });
 
+const reviewClass = z.object({
+    chave: z.string(),
+    rotulo_padrao: z.string().optional(),
+    rentabilidade_pct: z.string().nullable()
+});
+
+const reviewMove = z.object({ chave: z.string(), variacao_pct: z.string() });
+
+const monthlyReviewContext = z.object({
+    mes: z.string(),
+    rentabilidade_pct: z.string().nullable(),
+    sem_rentabilidade_motivo: z.enum(['no_operations', 'no_previous_snapshot', 'classes_not_closing', 'no_base']).nullable(),
+    por_classe: z.array(reviewClass),
+    indices: z.object({ cdi_pct: z.string().nullable(), ipca_pct: z.string().nullable(), ibovespa_pct: z.string().nullable() }),
+    maiores_altas: z.array(reviewMove),
+    maiores_quedas: z.array(reviewMove),
+    proventos_pct_carteira: z.string().nullable(),
+    concentracao: z.object({
+        maior_emissor_pct: z.string().nullable(),
+        maior_setor_pct: z.string().nullable(),
+        acima_do_fgc: z.boolean()
+    })
+});
+
 const expectations = z.object({
     mustCite: z.array(z.string()),
     mustMention: z.array(z.string()),
@@ -114,13 +138,14 @@ export const evalCaseSchema = z.discriminatedUnion('task', [
     z.object({ ...common, task: z.literal('summary_month'), context: monthContext }),
     z.object({ ...common, task: z.literal('summary_cuts'), context: cutsContext }),
     z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext }),
+    z.object({ ...common, task: z.literal('summary_monthly_review'), context: monthlyReviewContext }),
     z.object(documentFields)
 ]);
 
 export type EvalCase = z.infer<typeof evalCaseSchema>;
 export type EvalTask = EvalCase['task'];
 export type AskTask = 'ask_vera_step' | 'ask_vera_app_step';
-export type SummaryCase = Extract<EvalCase, { task: 'summary_month' | 'summary_cuts' | 'summary_portfolio' }>;
+export type SummaryCase = Extract<EvalCase, { task: 'summary_month' | 'summary_cuts' | 'summary_portfolio' | 'summary_monthly_review' }>;
 export type DocumentCase = Extract<EvalCase, { task: 'market_document_summary' }>;
 export type AskCase = Extract<EvalCase, { task: AskTask }>;
 
