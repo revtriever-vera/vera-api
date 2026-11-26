@@ -3,7 +3,6 @@ import { ConfigType } from '@nestjs/config';
 import { AsCompany } from '../../../core/context/as-company.decorator';
 import { ANY_HOLDER } from '../../../shared/holder/holder-filter';
 import { DateUtil } from '../../../shared/utils/date.util';
-import { NoticeOutcome } from '../../notices/domain/notices.types';
 import { NoticeService } from '../../notices/services/notice.service';
 import { PlanGateService } from '../../plans/services/plan-gate.service';
 import { PositionReaderService } from '../../positions/services/position-reader.service';
@@ -22,6 +21,8 @@ import {
 import { PortfolioChangesReaderService } from '../services/portfolio-changes-reader.service';
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
 import { PortfolioWatchPublisherService } from '../services/portfolio-watch-publisher.service';
+
+type NoticeOutcome = Awaited<ReturnType<NoticeService['notify']>>;
 
 @Injectable()
 export class PortfolioChangesApplication {

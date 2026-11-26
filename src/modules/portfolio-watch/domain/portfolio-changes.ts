@@ -92,7 +92,7 @@ export function changeItemsOf(
             continue;
         }
         const key: string = resendKeyOf(document, asset);
-        const current = newest.get(key);
+        const current: { document: typeof document; asset: HeldAsset } | undefined = newest.get(key);
         if (current === undefined || isNewer(document, current.document)) {
             newest.set(key, { document, asset });
         }

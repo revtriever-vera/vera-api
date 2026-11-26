@@ -3,7 +3,7 @@ import { WeeklyChangeProp } from '../validation/portfolio-watch.schemas';
 
 export const WEEKLY_CHANGES_NOTICE_TYPE: string = 'portfolio_weekly_changes';
 export const WEEKLY_CHANGES_TEMPLATE: string = 'portfolio-weekly-changes';
-export const WEEKLY_CHANGES_DAYS: 7 = 7;
+export const WEEKLY_CHANGES_DAYS: 7 | 30 = 7;
 export const WEEKLY_MIN_RELEVANCE: number = 2;
 export const WEEKLY_MAX_ITEMS: number = 5;
 export const WEEKLY_ITEMS_PROP: string = 'items';
