@@ -10,3 +10,14 @@ export class InvalidAgendaWindowError extends AppError {
         });
     }
 }
+
+export class FeatureLockedError extends AppError {
+    public constructor(feature: string, documentCount: number) {
+        super({
+            code: 'plan.feature_locked',
+            status: 402,
+            detail: 'This feature is part of the Premium plan. Only the count of documents is available on this plan.',
+            meta: { feature, documentCount }
+        });
+    }
+}

@@ -41,6 +41,10 @@ export class MarketDocumentDomain {
         }));
     }
 
+    public async findFeed(assetIds: readonly string[], since: Date, limit: number): Promise<MarketDocumentRow[]> {
+        return assetIds.length === 0 ? [] : this.documents.findFeed(assetIds, since, limit);
+    }
+
     public async markExtracted(id: string, text: string, textHash: string): Promise<boolean> {
         return this.documents.transitionPending(id, {
             status: DOCUMENT_STATUSES.extracted,

@@ -7,7 +7,17 @@ import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../../identity/services/requires-role.decorator';
 import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PortfolioAgendaApplication } from '../../application/portfolio-agenda.application';
-import { AgendaQueryDto, AgendaResponse, agendaQuerySchema, agendaResponseSchema } from '../../validation/portfolio-watch.schemas';
+import { PortfolioChangesApplication } from '../../application/portfolio-changes.application';
+import {
+    AgendaQueryDto,
+    AgendaResponse,
+    ChangesQueryDto,
+    ChangesResponse,
+    agendaQuerySchema,
+    agendaResponseSchema,
+    changesQuerySchema,
+    changesResponseSchema
+} from '../../validation/portfolio-watch.schemas';
 
 const AGENDA_EXAMPLE: AgendaResponse = {
     from: '2026-12-01',
@@ -48,13 +58,38 @@ const AGENDA_EXAMPLE: AgendaResponse = {
     ]
 };
 
+const CHANGES_EXAMPLE: ChangesResponse = {
+    days: 7,
+    notice: 'Isto não é uma recomendação de compra ou venda.',
+    items: [
+        {
+            id: '0199b5b8-1c2d-7000-8000-000000000021',
+            assetId: '0199b5b8-1c2d-7000-8000-000000000012',
+            symbol: 'XPLG11',
+            source: 'b3_fnet',
+            category: 'monthly_report',
+            kind: 'management',
+            date: '2026-12-03',
+            summary: 'O fundo manteve a vacância física em 4% e distribuiu R$ 0,78 por cota no mês.',
+            summaryAvailable: true,
+            relevance: 2,
+            weightBps: 800,
+            weightLine: 'XPLG11 é 8% da sua carteira.',
+            documentUrl: 'https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=100'
+        }
+    ]
+};
+
 @ApiTags('portfolio-watch')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @RequiresRole('viewer')
 @Controller('portfolio-watch')
 export class PortfolioWatchController {
-    public constructor(private readonly agenda: PortfolioAgendaApplication) {}
+    public constructor(
+        private readonly agenda: PortfolioAgendaApplication,
+        private readonly changes: PortfolioChangesApplication
+    ) {}
 
     @Get('agenda')
     @ApiOperation({
@@ -81,5 +116,42 @@ export class PortfolioWatchController {
     })
     public async agendaOf(@Query() query: AgendaQueryDto): Promise<AgendaResponse> {
         return this.agenda.list({ from: query.from, to: query.to }, holderFilterOf(query.holder));
+    }
+
+    @Get('changes')
+    @ApiOperation({
+        summary: 'What changed in the portfolio: official documents of the assets held, summarized',
+        description:
+            'Documents published in the last 7 or 30 days about the assets the account holds (relevant facts, notices, results, ' +
+            'monthly reports). Each item carries the summary made once per document, its kind and relevance, the share of the asset ' +
+            'in the portfolio (written by the code, no model per account), the link and the source. The most relevant for the ' +
+            'portfolio come first, then the newest. A document without summary (over the daily budget, scanned, too large) shows ' +
+            'only its title link and "Resumo indisponível". With `classId` only assets of that class; with `holder` only what is ' +
+            'theirs. Premium: other plans get `plan.feature_locked` with the count of documents and no content.'
+    })
+    @ApiZodQuery(changesQuerySchema)
+    @ApiZodResponse({ status: 200, description: 'Documents of the window', schema: changesResponseSchema, example: CHANGES_EXAMPLE })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Invalid query (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 402,
+        description: 'The account is not on Premium; meta.documentCount is how many documents the window has',
+        example: {
+            type: 'plan.feature_locked',
+            title: 'FeatureLockedError',
+            status: 402,
+            meta: { feature: 'portfolio_changes', documentCount: 4 }
+        }
+    })
+    public async changesOf(@Query() query: ChangesQueryDto): Promise<ChangesResponse> {
+        return this.changes.list({ days: query.days, classId: query.classId ?? null, holder: holderFilterOf(query.holder) });
     }
 }

@@ -6,6 +6,8 @@ import { FixedIncomeServicesModule } from '../../fixed-income/services/fixed-inc
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
 import { FixedIncomeScheduleApplicationModule } from '../../fixed-income-schedule/application/fixed-income-schedule-application.module';
 import { NoticesApplicationModule } from '../../notices/application/notices-application.module';
+import { MarketDocumentsApplicationModule } from '../../market-documents/application/market-documents-application.module';
+import { PlansApplicationModule } from '../../plans/application/plans-application.module';
 import { PortfolioApplicationModule } from '../../portfolio/application/portfolio-application.module';
 import { PortfolioEventsApplicationModule } from '../../portfolio-events/application/portfolio-events-application.module';
 import { PositionsApplicationModule } from '../../positions/application/positions-application.module';
@@ -19,7 +21,9 @@ import { PortfolioWatchDigestTemplates } from '../services/portfolio-watch-diges
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
 import { PortfolioWatchNoticeRegistrar } from '../services/portfolio-watch-notice.registrar';
 import { PortfolioWatchPublisherService } from '../services/portfolio-watch-publisher.service';
+import { PortfolioChangesReaderService } from '../services/portfolio-changes-reader.service';
 import { PortfolioAgendaApplication } from './portfolio-agenda.application';
+import { PortfolioChangesApplication } from './portfolio-changes.application';
 import { PortfolioWatchDailyApplication } from './portfolio-watch-daily.application';
 import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.application';
 
@@ -36,12 +40,16 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
         FixedIncomeScheduleApplicationModule,
         NoticesApplicationModule,
         PortfolioEventsApplicationModule,
-        MailModule
+        MailModule,
+        MarketDocumentsApplicationModule,
+        PlansApplicationModule
     ],
     providers: [
         PortfolioWatchSnapshotApplication,
         PortfolioWatchDailyApplication,
         PortfolioAgendaApplication,
+        PortfolioChangesApplication,
+        PortfolioChangesReaderService,
         PortfolioAgendaService,
         PortfolioWatchNoticeRegistrar,
         PortfolioWatchDigestTemplates,
@@ -51,6 +59,13 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
         PortfolioWatchLogService,
         PortfolioWatchPublisherService
     ],
-    exports: [PortfolioWatchSnapshotApplication, PortfolioWatchDailyApplication, PortfolioAgendaApplication, PortfolioIncomeLedgerService]
+    exports: [
+        PortfolioWatchSnapshotApplication,
+        PortfolioWatchDailyApplication,
+        PortfolioAgendaApplication,
+        PortfolioChangesApplication,
+        PortfolioChangesReaderService,
+        PortfolioIncomeLedgerService
+    ]
 })
 export class PortfolioWatchApplicationModule {}
