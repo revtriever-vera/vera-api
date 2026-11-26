@@ -8,6 +8,7 @@ import { seedAsset } from './support/portfolio-seed';
 interface ChangeBody {
     readonly id: string;
     readonly symbol: string;
+    readonly title: string;
     readonly summary: string;
     readonly summaryAvailable: boolean;
     readonly relevance: number | null;
@@ -189,6 +190,7 @@ describe('feed "O que mudou" por conta', () => {
 
         expect(idsOf(week.body)).toEqual([docs['kept'], docs['capped'], docs['package']]);
         expect(week.body.items[1]).toMatchObject({
+            title: 'Título capped',
             summary: 'Resumo indisponível',
             summaryAvailable: false,
             relevance: null,

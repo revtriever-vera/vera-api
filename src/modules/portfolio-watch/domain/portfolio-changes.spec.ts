@@ -69,6 +69,7 @@ describe('changeItemsOf', () => {
             weightBps: null,
             weightLine: null,
             documentUrl: 'https://example.com/d1',
+            title: 'Documento d1',
             date: '2026-12-05'
         });
     });

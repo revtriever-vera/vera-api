@@ -14,6 +14,7 @@ function item(index: number): ChangeItem {
         symbol: 'AAAA3',
         source: 'cvm_ipe',
         category: 'relevant_fact',
+        title: 'T',
         kind: null,
         date: '2026-12-01',
         summary: 'x',

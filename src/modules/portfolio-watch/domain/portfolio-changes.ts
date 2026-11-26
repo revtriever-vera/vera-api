@@ -51,6 +51,7 @@ function itemOf(document: PublicDocumentView, asset: HeldAsset, locale: AppLocal
         symbol: asset.symbol,
         source: document.source,
         category: document.category,
+        title: document.title,
         kind: document.summary?.kind ?? null,
         date: DateUtil.onlyDateString(document.publishedAt),
         summary: document.summary?.text ?? COPY[locale].unavailable,

@@ -68,6 +68,7 @@ const CHANGES_EXAMPLE: ChangesResponse = {
             symbol: 'XPLG11',
             source: 'b3_fnet',
             category: 'monthly_report',
+            title: 'Relatório Gerencial - Novembro/2026',
             kind: 'management',
             date: '2026-12-03',
             summary: 'O fundo manteve a vacância física em 4% e distribuiu R$ 0,78 por cota no mês.',

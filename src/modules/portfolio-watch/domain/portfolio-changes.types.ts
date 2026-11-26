@@ -26,6 +26,7 @@ export interface ChangeItem {
     readonly symbol: string;
     readonly source: string;
     readonly category: string;
+    readonly title: string;
     readonly kind: SummaryKind | null;
     readonly date: string;
     readonly summary: string;

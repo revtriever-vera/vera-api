@@ -102,6 +102,7 @@ export const changeItemSchema = z.object({
     symbol: z.string().describe('Ticker of the asset. Untrusted text'),
     source: z.string().describe('Where the document comes from: `cvm_ipe`, `cvm_itr` or `b3_fnet`'),
     category: z.string().describe('Category of the document as published, for example `relevant_fact`'),
+    title: z.string().describe('Title of the document as published. Untrusted text'),
     kind: z.enum(SUMMARY_KIND_LIST).nullable().describe('What the document is, from the summary; null when there is no summary'),
     date: z.string().describe('Publication date, YYYY-MM-DD'),
     summary: z
