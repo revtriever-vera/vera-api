@@ -18,14 +18,17 @@ export class NoticeUnsubscribeService {
 
     @AsCompany()
     public async unsubscribe(_companyId: string, subject: UnsubscribeSubject): Promise<void> {
-        if (!this.types.has(subject.type)) {
+        const types: string[] = subject.type.split(',');
+        if (!types.every((type: string): boolean => this.types.has(type))) {
             throw new InvalidUnsubscribeTokenError();
         }
         const person: MemberRecipient | null = await this.recipients.find(subject.userId);
         if (person === null) {
             return;
         }
-        await this.preferences.set(subject.userId, subject.type, false);
-        this.logs.unsubscribed(subject.type);
+        for (const type of types) {
+            await this.preferences.set(subject.userId, type, false);
+            this.logs.unsubscribed(type);
+        }
     }
 }
