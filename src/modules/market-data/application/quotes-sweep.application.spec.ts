@@ -5,7 +5,7 @@ import { QuotableAsset } from '../domain/market-data.types';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
-import { ProviderBudgetService } from '../services/provider-budget.service';
+import { MarketDataPruneService } from '../services/market-data-prune.service';
 import { QuoteProviderRegistryService } from '../services/quote-provider-registry.service';
 import { QuotesSweepApplication } from './quotes-sweep.application';
 
@@ -37,7 +37,7 @@ function rig(
             chunkSpacingMs: () => 1000
         } as unknown as QuoteProviderRegistryService,
         { publish, remove: vi.fn() },
-        { pruneOldUsage: prune } as unknown as ProviderBudgetService,
+        { pruneAll: prune } as unknown as MarketDataPruneService,
         { findByAssetIds: vi.fn().mockResolvedValue(stored) } as unknown as AssetQuoteDomain,
         { staleAssets } as unknown as MarketDataMetricsService,
         { sweepFinished: vi.fn() } as unknown as MarketDataLogService

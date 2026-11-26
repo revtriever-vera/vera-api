@@ -180,6 +180,25 @@ export interface AssistantMessages {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssistantPendingActions {
+    actionHash: string;
+    companyId: string;
+    conversationId: string;
+    createdAt: Generated<Timestamp>;
+    expiresAt: Timestamp;
+    id: string;
+    payload: Json;
+    resolvedAt: Timestamp | null;
+    resultText: string | null;
+    stateHash: string;
+    status: string;
+    summary: string;
+    tool: string;
+    turnId: string;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
 export interface AuthIdentities {
     companyId: string;
     createdAt: Generated<Timestamp>;
@@ -495,6 +514,25 @@ export interface FixedIncomeTitles {
     rateBps: number;
     taxRegime: string;
     updatedAt: Generated<Timestamp>;
+}
+
+export interface FundQuoteCoverage {
+    assetId: string;
+    coveredFrom: Timestamp;
+    coveredTo: Timestamp;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    readAt: Generated<Timestamp>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface FundQuotePoints {
+    assetId: string;
+    createdAt: Generated<Timestamp>;
+    date: Timestamp;
+    fetchedAt: Generated<Timestamp>;
+    id: string;
+    quota: Numeric;
 }
 
 export interface GlobalPlanCapabilities {
@@ -1346,6 +1384,7 @@ export interface DB {
     Assets: Assets;
     AssistantConversations: AssistantConversations;
     AssistantMessages: AssistantMessages;
+    AssistantPendingActions: AssistantPendingActions;
     AuthIdentities: AuthIdentities;
     BankConnectionAccounts: BankConnectionAccounts;
     BankConnections: BankConnections;
@@ -1369,6 +1408,8 @@ export interface DB {
     ExchangeRates: ExchangeRates;
     FinancialAccounts: FinancialAccounts;
     FixedIncomeTitles: FixedIncomeTitles;
+    FundQuoteCoverage: FundQuoteCoverage;
+    FundQuotePoints: FundQuotePoints;
     GlobalPlanCapabilities: GlobalPlanCapabilities;
     GlobalPlanProducts: GlobalPlanProducts;
     GlobalPlans: GlobalPlans;

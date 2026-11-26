@@ -1,0 +1,47 @@
+{
+  "id": "acao-criar-objetivo-en",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "Create a goal named Trip for me: R$ 12,000 by December 2027.",
+  "history": [],
+  "tools": {
+    "required": [
+      "goal_create"
+    ],
+    "allowed": [
+      "goal_create",
+      "help_search",
+      "where_is"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "goal_create",
+      "input": {
+        "name": "Trip",
+        "targetMinor": 1200000,
+        "targetMonth": "2027-12",
+        "kind": "travel"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [
+      "Trip"
+    ],
+    "mustNotMention": [
+      "created",
+      "i created",
+      "has been created"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "I prepared the goal. Confirm it on the card."
+  ]
+}

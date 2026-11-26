@@ -1,15 +1,39 @@
-import { applyDecorators, Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+    applyDecorators,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Header,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiNoContentResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { zodToOpenAPI } from 'nestjs-zod';
 import { ApiProblemResponse, ProblemDoc } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../../identity/services/requires-role.decorator';
 import { RolesGuard } from '../../../identity/services/roles.guard';
+import type { UploadedReport } from '../../../investment-import/services/investment-import-assistant.service';
+import { InvestmentUploadInterceptor } from '../../../investment-import/services/investment-upload.interceptor';
 import { AssistantConversationApplication } from '../../application/assistant-conversation.application';
 import { AssistantTurnApplication } from '../../application/assistant-turn.application';
 import { TURNS_PER_HOUR } from '../../domain/assistant-chat.types';
 import {
+    ActionIdParamsDto,
+    ActionSummaryView,
+    ActionView,
+    ConfirmActionBodyDto,
+    actionSummarySchema,
+    actionViewSchema,
+    confirmActionBodySchema,
     ConversationIdParamsDto,
     ConversationView,
     FeedbackBodyDto,
@@ -43,7 +67,8 @@ const TURN_EXAMPLE: TurnView = {
         toolsUsed: ['help_search'],
         sentAvailable: false,
         access: 'ok',
-        notice: null
+        notice: null,
+        action: null
     },
     usage: USAGE_EXAMPLE
 };
@@ -71,6 +96,7 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             access: 'ok',
             sentAvailable: false,
             notice: null,
+            action: null,
             createdAt: '2026-11-25T12:00:00.000Z'
         },
         {
@@ -82,11 +108,46 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             access: 'ok',
             sentAvailable: false,
             notice: null,
+            action: null,
             createdAt: '2026-11-25T12:00:00.001Z'
         }
     ],
     usage: USAGE_EXAMPLE,
     enabled: true
+};
+
+const ACTION_ID: string = '0199c5a0-5d20-7d11-a4f3-6c2e9b1d8a05';
+const ACTION_SUMMARY_EXAMPLE: ActionSummaryView = {
+    id: ACTION_ID,
+    tool: 'goal_create',
+    summary: 'Criar o objetivo viagem: R$ 12.000 até dezembro de 2027.',
+    status: 'open',
+    expiresAt: '2026-11-25T12:30:00.000Z',
+    resultText: null,
+    reference: null
+};
+const ACTION_VIEW_EXAMPLE: ActionView = { ...ACTION_SUMMARY_EXAMPLE, candidates: [], importPreview: null };
+const CONFIRMED_EXAMPLE: ActionSummaryView = {
+    ...ACTION_SUMMARY_EXAMPLE,
+    status: 'confirmed',
+    resultText: 'Objetivo criado: viagem, R$ 12.000 até dezembro de 2027.'
+};
+
+const ACTION_NOT_FOUND: ProblemDoc = {
+    status: 404,
+    description: 'No such pending action for this person (assistant.action_not_found)',
+    example: { type: 'assistant.action_not_found', title: 'ActionNotFoundError', status: 404 }
+};
+const ACTION_CONFLICT: ProblemDoc = {
+    status: 409,
+    description:
+        'The action was already resolved (assistant.action_resolved), its window passed (assistant.action_expired) or what it refers to changed since it was proposed (assistant.confirmation_stale)',
+    example: { type: 'assistant.confirmation_stale', title: 'ConfirmationStaleError', status: 409 }
+};
+const FORBIDDEN: ProblemDoc = {
+    status: 403,
+    description: 'The person has read-only access to the account (members.forbidden_role)',
+    example: { type: 'members.forbidden_role', title: 'RoleForbiddenError', status: 403 }
 };
 
 const UNAUTHORIZED: ProblemDoc = {
@@ -116,6 +177,34 @@ const PROVIDER_DISABLED: ProblemDoc = {
     example: { type: 'ai.provider_disabled', title: 'LlmProviderDisabledError', status: 503 }
 };
 
+const FILE_TOO_LARGE: ProblemDoc = {
+    status: 413,
+    description: 'The file is larger than 10 MB (file.too_large)',
+    example: { type: 'file.too_large', title: 'FileTooLargeError', status: 413 }
+};
+const CONFIRMATION_REQUIRED: ProblemDoc = {
+    status: 428,
+    description: 'The file goes to a language model and `modelConsent=true` was not sent (model.confirmation_required)',
+    example: { type: 'model.confirmation_required', title: 'ModelConfirmationRequiredError', status: 428 }
+};
+const FILE_UNREADABLE: ProblemDoc = {
+    status: 422,
+    description:
+        'Not a report the reader knows (format.not_recognized), a damaged file (file.unreadable), a file the model could not read (model.unreadable) or nothing to import (import.nothing_to_import)',
+    example: { type: 'format.not_recognized', title: 'FormatNotRecognizedError', status: 422 }
+};
+
+function sendTurnRequestDoc(): Record<string, unknown> {
+    const json: Record<string, unknown> = zodToOpenAPI(sendTurnBodySchema) as Record<string, unknown>;
+    const properties: Record<string, unknown> = (json['properties'] ?? {}) as Record<string, unknown>;
+    const file: Record<string, unknown> = {
+        type: 'string',
+        format: 'binary',
+        description: 'Multipart only. The report to import, up to 10 MB: xlsx or csv, or with `modelConsent` a PDF or an image'
+    };
+    return { ...json, properties: { file, ...properties } };
+}
+
 function problems(...docs: readonly ProblemDoc[]): MethodDecorator {
     return applyDecorators(...docs.map((doc: ProblemDoc): MethodDecorator => ApiProblemResponse(doc)));
 }
@@ -144,13 +233,31 @@ export class AssistantChatController {
         description:
             'Stores the question and queues the answer; the answer is read from `GET /assistant/turns/{id}`. The turn is in `help` mode ' +
             '(answers from the help content) unless the plan includes the AI and the account allowed sending figures, then it is in `ai` mode. ' +
-            'Refused up front, with nothing stored, when the usage band of the mode is used up. Limited to 20 turns per hour per person.'
+            'Refused up front, with nothing stored, when the usage band of the mode is used up. Limited to 20 turns per hour per person. ' +
+            'Sent as multipart with a `file` (the same files and limits as POST /investment-imports/preview, editors only), the turn runs the ' +
+            'preview of the import before the answer: the language model of the assistant never receives the file, the lines or the amounts, ' +
+            'only that a file was attached. The answer then carries a pending action (`investment_import`) whose card shows the preview ' +
+            '(GET /assistant/actions/{id}) and is confirmed at POST /assistant/actions/{id}/confirm. A PDF or an image goes to a language ' +
+            'reader and needs `modelConsent=true`, otherwise the call is refused with model.confirmation_required and nothing is stored. ' +
+            'The conversation keeps only "Arquivo: <name>".'
     })
-    @ApiZodBody(sendTurnBodySchema)
+    @UseInterceptors(InvestmentUploadInterceptor)
+    @ApiConsumes('application/json', 'multipart/form-data')
+    @ApiBody({ schema: sendTurnRequestDoc() })
     @ApiZodResponse({ status: 202, description: 'Question accepted', schema: turnStartedResponseSchema, example: STARTED_EXAMPLE })
-    @problems(INVALID, UNAUTHORIZED, NOT_FOUND, CAP_REACHED, PROVIDER_DISABLED)
-    public async send(@Body() body: SendTurnBodyDto): Promise<TurnStartedView> {
-        return this.turns.start(body);
+    @problems(
+        INVALID,
+        UNAUTHORIZED,
+        FORBIDDEN,
+        NOT_FOUND,
+        FILE_TOO_LARGE,
+        CAP_REACHED,
+        CONFIRMATION_REQUIRED,
+        FILE_UNREADABLE,
+        PROVIDER_DISABLED
+    )
+    public async send(@UploadedFile() file: UploadedReport | undefined, @Body() body: SendTurnBodyDto): Promise<TurnStartedView> {
+        return this.turns.start(body, file);
     }
 
     @Get('turns/:id')
@@ -196,6 +303,60 @@ export class AssistantChatController {
     @problems(INVALID, UNAUTHORIZED, NOT_FOUND)
     public async feedback(@Param() params: TurnIdParamsDto, @Body() _body: FeedbackBodyDto): Promise<void> {
         await this.turns.feedback(params.id);
+    }
+
+    @Get('actions/:id')
+    @RequiresRole('viewer')
+    @Header('Cache-Control', NO_STORE)
+    @ApiOperation({
+        summary: 'Read a pending action',
+        description:
+            'The action the assistant proposed, with the transactions the person can pick from when the action needs one. ' +
+            'The descriptions of the transactions are served here, to the screen only: they never go to the language model.'
+    })
+    @ApiParam({ name: 'id', description: 'Pending action id' })
+    @ApiZodResponse({ status: 200, description: 'The action', schema: actionViewSchema, example: ACTION_VIEW_EXAMPLE })
+    @problems(INVALID, UNAUTHORIZED, ACTION_NOT_FOUND)
+    public async action(@Param() params: ActionIdParamsDto): Promise<ActionView> {
+        return this.conversations.action(params.id);
+    }
+
+    @Post('actions/:id/confirm')
+    @RequiresRole('editor')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Confirm a pending action',
+        description:
+            'Runs the action the assistant proposed, once. The code executes it, never the model. Two confirmations at the same time run it once; ' +
+            'the other gets `assistant.action_resolved`. When what the action refers to changed, nothing runs (`assistant.confirmation_stale`).'
+    })
+    @ApiParam({ name: 'id', description: 'Pending action id' })
+    @ApiZodBody(confirmActionBodySchema)
+    @ApiZodResponse({
+        status: 200,
+        description: 'The action, confirmed, with what was done',
+        schema: actionSummarySchema,
+        example: CONFIRMED_EXAMPLE
+    })
+    @problems(INVALID, UNAUTHORIZED, FORBIDDEN, ACTION_NOT_FOUND, ACTION_CONFLICT)
+    public async confirm(@Param() params: ActionIdParamsDto, @Body() body: ConfirmActionBodyDto): Promise<ActionSummaryView> {
+        return this.conversations.confirmAction(params.id, body);
+    }
+
+    @Post('actions/:id/cancel')
+    @RequiresRole('editor')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Cancel a pending action', description: 'Drops the action the assistant proposed; nothing runs.' })
+    @ApiParam({ name: 'id', description: 'Pending action id' })
+    @ApiZodResponse({
+        status: 200,
+        description: 'The action, canceled',
+        schema: actionSummarySchema,
+        example: { ...ACTION_SUMMARY_EXAMPLE, status: 'canceled' }
+    })
+    @problems(INVALID, UNAUTHORIZED, FORBIDDEN, ACTION_NOT_FOUND, ACTION_CONFLICT)
+    public async cancel(@Param() params: ActionIdParamsDto): Promise<ActionSummaryView> {
+        return this.conversations.cancelAction(params.id);
     }
 
     @Get('conversations/current')

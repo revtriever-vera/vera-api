@@ -92,6 +92,33 @@ describe('CvmDailyInformeReaderService', () => {
         expect(older.get('33333333000191')).toEqual({ date: '2020-12-30', quota: '2.200000000000' });
     });
 
+    it('returns every day of one series in the month, in date order, and nothing for the others', async () => {
+        serve({ [CURRENT_URL]: CURRENT });
+
+        const points: readonly DailyQuote[] = await rig().reader.monthPoints('202611', '11111111000191');
+        const absent: readonly DailyQuote[] = await rig().reader.monthPoints('202611', 'ausente');
+
+        expect(points).toEqual([
+            { date: '2026-11-03', quota: '1.500000000000' },
+            { date: '2026-11-04', quota: '1.505000000000' },
+            { date: '2026-11-05', quota: '1.510000000000' }
+        ]);
+        expect(absent).toEqual([]);
+    });
+
+    it('reads a series month with no cache headers, treats a missing month as empty and fails on an HTTP error', async () => {
+        const fetchMock = serve({ [CURRENT_URL]: CURRENT });
+        const { reader } = rig();
+
+        await reader.monthPoints('202611', '11111111000191');
+        await reader.monthPoints('202611', '11111111000191');
+
+        expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({ headers: {} });
+        expect(await reader.monthPoints('202612', '11111111000191')).toEqual([]);
+        fetchMock.mockImplementationOnce((): Promise<Response> => Promise.resolve(new Response('', { status: 503 })));
+        await expect(reader.monthPoints('202611', '11111111000191')).rejects.toMatchObject({ errorCode: 'catalog.source_unavailable' });
+    });
+
     it('sends If-None-Match on the second read and answers from memory on 304', async () => {
         const fetchMock = serve({ [CURRENT_URL]: CURRENT });
         const { reader, informeRead } = rig();

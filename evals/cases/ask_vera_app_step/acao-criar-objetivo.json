@@ -1,0 +1,47 @@
+{
+  "id": "acao-criar-objetivo",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "Cria um objetivo de viagem pra mim: R$ 12.000 até dezembro de 2027.",
+  "history": [],
+  "tools": {
+    "required": [
+      "goal_create"
+    ],
+    "allowed": [
+      "goal_create",
+      "help_search",
+      "where_is"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "goal_create",
+      "input": {
+        "name": "Viagem",
+        "targetMinor": 1200000,
+        "targetMonth": "2027-12",
+        "kind": "travel"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [
+      "Viagem"
+    ],
+    "mustNotMention": [
+      "criei",
+      "criado",
+      "foi criado"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Preparei o objetivo. Confirme no cartão que aparece."
+  ]
+}

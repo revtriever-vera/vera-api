@@ -60,3 +60,15 @@ describe('AssetCatalogService.searchByName', () => {
         expect(search).toHaveBeenCalledWith({ text: 'petrobras', likeText: 'petrobras', limit: 30 });
     });
 });
+
+describe('AssetCatalogService.searchAny', () => {
+    it('busca em qualquer mercado, com o texto limpo e o limite pedido', async () => {
+        const search: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue([{ symbol: 'PETR4' }, { symbol: 'PETRO' }]);
+        const service: AssetCatalogService = new AssetCatalogService({ search } as unknown as AssetDomain);
+
+        const found: Asset[] = await service.searchAny(' 100% Petro_ ', 3);
+
+        expect(found).toHaveLength(2);
+        expect(search).toHaveBeenCalledWith({ text: '100% petro_', likeText: String.raw`100\% petro\_`, limit: 3 });
+    });
+});

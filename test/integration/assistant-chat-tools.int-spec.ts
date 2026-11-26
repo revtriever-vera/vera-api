@@ -37,9 +37,12 @@ const POISON_OTHER_COMPANY: string = 'CDB Concorrente Confidencial';
 const POISON_UUID_PATTERN: RegExp = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
 
 const READ_TOOLS: readonly string[] = [
+    'asset_lookup',
     'concentration_overview',
     'contribution_suggestion',
     'fixed_income_maturities',
+    'fixed_income_vs_benchmark',
+    'fund_performance',
     'goals_overview',
     'help_search',
     'list_categories',
@@ -51,6 +54,8 @@ const READ_TOOLS: readonly string[] = [
     'spending_month_summary',
     'where_is'
 ];
+
+const OWNER_ACTION_TOOLS: readonly string[] = ['goal_create', 'transaction_categorize'];
 
 interface StartedBody {
     readonly turnId: string;
@@ -247,7 +252,7 @@ describe('assistant chat: ferramentas de leitura no app', () => {
 
         expect(freeTools).toEqual(['data_locked', 'help_search', 'where_is']);
         expect(withoutTools).toEqual(['data_locked', 'help_search', 'where_is']);
-        expect(withTools).toEqual(READ_TOOLS);
+        expect(withTools).toEqual([...READ_TOOLS, ...OWNER_ACTION_TOOLS].sort());
     });
 
     it('turno em ai: concentração e vencimentos vão ao modelo, o aviso de investimento sai, e sent é o que a requisição levou', async () => {
@@ -313,6 +318,44 @@ describe('assistant chat: ferramentas de leitura no app', () => {
         expect(payload.cdi.acumulado.map((item) => item.periodo)).toEqual(['1 mês', '12 meses', 'no ano']);
         expect(payload.selic_meta.valor).toBe('13,75%');
         expect(payload.ibovespa).toMatchObject({ status: 'ok', fonte: 'brapi' });
+    });
+
+    it('pesquisa de ativo e renda fixa contra os indicadores: só no modo ai, com chave curta e sem nome de emissor nem uuid, e o aviso de investimento', async () => {
+        const owner: Account = await richAccount('tools-research');
+        const sync: IndexSyncApplication = harness.app.get(IndexSyncApplication, { strict: false });
+        for (const series of ['cdi_daily', 'ipca_monthly'] as const) {
+            await sync.syncWindow({ series, from: addDays(TODAY, -800), to: TODAY });
+        }
+
+        const started: StartedBody = await askWithTools(owner, 'o CDB que tenho ganha da inflação? e o que é PETR4?', [
+            toolUse('asset_lookup', { query: 'PETR4' }),
+            toolUse('fixed_income_vs_benchmark', {}),
+            toolUse('fixed_income_vs_benchmark', { holdingKey: 'rf1' }),
+            toolUse('fund_performance', { fundId: '00000000000000' })
+        ]);
+
+        const answered: TurnBody = await turn(owner, started.turnId);
+        expect(answered).toMatchObject({ status: 'done', answer: { source: 'ai', sentAvailable: true } });
+        expect(answered.answer?.notice).toContain('Isto não é uma recomendação');
+        const sent = await sentOf(owner, started.turnId);
+        expect(sent.body.sent.map((item) => item.tool)).toEqual([
+            'asset_lookup',
+            'fixed_income_vs_benchmark',
+            'fixed_income_vs_benchmark',
+            'fund_performance'
+        ]);
+        const lookup = sent.body.sent[0]?.payload as { ativos: { ticker: string; cotacao: { data: string } | null }[] };
+        const listed = sent.body.sent[1]?.payload as { status: string; titulos: { chave: string }[] };
+        const chosen = sent.body.sent[2]?.payload as { status: string; titulos: { chave: string; ganha_da_inflacao: boolean | null }[] };
+        expect(lookup.ativos[0]).toMatchObject({ ticker: 'PETR4', cotacao: { data: TODAY } });
+        expect(listed.status).toBe('escolha_um_titulo');
+        expect(listed.titulos.map((title) => title.chave)).toEqual(['rf1', 'rf2']);
+        expect(chosen).toMatchObject({ status: 'ok', titulos: [{ chave: 'rf1' }] });
+        expect(sent.body.sent[3]?.payload).toMatchObject({ status: 'fundo_nao_encontrado' });
+        const payloads: string = JSON.stringify(sent.body.sent);
+        expect(POISON_UUID_PATTERN.test(payloads)).toBe(false);
+        expect(payloads).not.toContain(POISON_TITLE);
+        expect(payloads).not.toContain('Itaú');
     });
 
     it('fixtures envenenadas (nome de título, e-mail, descrição, contraparte, uuid, ativo) não aparecem em requisição nenhuma', async () => {

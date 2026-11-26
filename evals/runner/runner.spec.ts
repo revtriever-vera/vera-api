@@ -21,6 +21,8 @@ import {
 } from './checks';
 import { problemsOf } from './cli';
 import { engineOf } from './engine';
+import { isAskCase } from './case.schemas';
+import { evidenceOf } from './ask-fixtures';
 import { isFixed } from './generate';
 import { summaryOf, TaskSummary } from './report';
 import { runTask, TaskRun } from './run';
@@ -442,5 +444,19 @@ describe('tarefa market_document_summary', () => {
         expect(summary.adviceRepRate).toBe(0);
         expect(summary.failedCases).toBe(0);
         expect(summary.judgeAverage).toBe(5);
+    });
+});
+
+describe('evidência do juiz nos casos de pergunta', () => {
+    it('usa a saída da mockTool com a entrada do caso, não a da ferramenta com {}', async () => {
+        const item: EvalCase = caseOf('ask_vera_app_step', 'fundo-e-bom');
+        if (!isAskCase(item)) {
+            throw new Error('fundo-e-bom must be an ask case');
+        }
+
+        const evidence: string = await evidenceOf(item);
+
+        expect(evidence).toContain('14,10%');
+        expect(evidence).not.toContain('fundo_nao_encontrado');
     });
 });

@@ -6,6 +6,7 @@ import { IssuersServicesModule } from '../../issuers/services/issuers-services.m
 import { MarketDataApplicationModule } from '../../market-data/application/market-data-application.module';
 import { PositionsApplicationModule } from '../../positions/application/positions-application.module';
 import { MaturitiesReaderService } from '../services/maturities-reader.service';
+import { RealRatesReaderService } from '../services/real-rates-reader.service';
 import { ScheduleLogService } from '../services/schedule-log.service';
 import { ScheduleMetricsService } from '../services/schedule-metrics.service';
 import { ScheduleSourceService } from '../services/schedule-source.service';
@@ -25,10 +26,11 @@ import { RealRatesApplication } from './real-rates.application';
         MaturitiesApplication,
         MaturitiesReaderService,
         RealRatesApplication,
+        RealRatesReaderService,
         ScheduleSourceService,
         ScheduleLogService,
         ScheduleMetricsService
     ],
-    exports: [MaturitiesApplication, MaturitiesReaderService, RealRatesApplication, ScheduleSourceService]
+    exports: [MaturitiesApplication, MaturitiesReaderService, RealRatesApplication, RealRatesReaderService, ScheduleSourceService]
 })
 export class FixedIncomeScheduleApplicationModule {}
