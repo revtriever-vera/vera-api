@@ -1,4 +1,12 @@
-import { AMOUNT_TOKEN, columnAmounts, decimalOf, DeclaredAmount, headerTables, NET_BEFORE } from './income-notice-tables';
+import {
+    AMOUNT_TOKEN,
+    columnAmounts,
+    decimalOf,
+    DeclaredAmount,
+    headerTables,
+    isPerShareMagnitude,
+    NET_BEFORE
+} from './income-notice-tables';
 import { EVENT_KINDS, SHARE_CLASSES, ShareClass } from './portfolio-events.types';
 
 export interface IncomeNotice {
@@ -45,7 +53,13 @@ const PER_SHARE_BEFORE: RegExp = new RegExp(
     String.raw`(?:por|para cada)\s(?:cada\s)?(?:uma das\s)?(?:${SHARE})(?:\s\S+){0,2}\s?(?:de|é|:|-)?\s?$`,
     'i'
 );
-const PER_SHARE_AFTER: RegExp = new RegExp(String.raw`^[^R]{0,70}?(?:por|para cada)\s(?:cada\s)?(?:uma das\s)?(?:${SHARE})\b`, 'i');
+const PER_SHARE_AFTER: RegExp = new RegExp(String.raw`^[^R.;]{0,70}?(?:por|para cada)\s(?:cada\s)?(?:uma das\s)?(?:${SHARE})\b`, 'i');
+const INCOME_ROW_LABEL: string = String.raw`(?:dividendos?|JCP|juros\s+sobre\s+(?:o\s+)?capital\s+pr[óo]prio)`;
+const PER_SHARE_TABLE_BEFORE: RegExp = new RegExp(String.raw`por\s+a[çc][ãa]o\s+data\s+d[eo]\s+pagamento\s+${INCOME_ROW_LABEL}\s?$`, 'i');
+const PAYMENT_TABLE_ROW: RegExp = new RegExp(
+    String.raw`data\s+d[eo]\s+pagamento\s+${INCOME_ROW_LABEL}\s+R\$\s?\d[\d.,]*\s+(\d{1,2}[/.]\d{1,2}[/.]\d{4})`,
+    'i'
+);
 const RESTATEMENT: RegExp = /passa\s+a\s+vigorar|deve-se\s+ler/gi;
 const SENTENCE_BREAK: RegExp = /[.;]\s[A-ZÀ-Ú]/;
 const PAYMENT_KEYWORD: RegExp = /pagamento|pag[oa]s?\b/gi;
@@ -169,13 +183,18 @@ function paymentBeforeVerb(text: string, dates: readonly DateToken[]): (string |
     });
 }
 
+function paymentInTable(text: string): string | null {
+    const row: string | undefined = PAYMENT_TABLE_ROW.exec(text)?.[1];
+    return row === undefined ? null : (datesOf(row)[0]?.iso ?? null);
+}
+
 function paymentDateOf(text: string, exDate: string): string | null {
-    const candidates: (string | null)[] = [...paymentAfterKeyword(text), ...paymentBeforeVerb(text, datesOf(text))];
+    const candidates: (string | null)[] = [paymentInTable(text), ...paymentAfterKeyword(text), ...paymentBeforeVerb(text, datesOf(text))];
     return candidates.find((date: string | null): boolean => date !== null && date > exDate) ?? null;
 }
 
 function isPerShare(before: string, after: string): boolean {
-    return PER_SHARE_BEFORE.test(before) || PER_SHARE_AFTER.test(after);
+    return PER_SHARE_BEFORE.test(before) || PER_SHARE_TABLE_BEFORE.test(before) || PER_SHARE_AFTER.test(after);
 }
 
 function classOf(label: string): ShareClass {
@@ -214,14 +233,16 @@ function amountEntries(text: string): AmountEntry[] {
         const after: string = text.slice(match.index + match[0].length, matches[index + 1]?.index ?? text.length);
         const classes: ShareClass[] = classesFor(before, after);
         const labeled: boolean = classes.length > 0 && PER_SHARE_MAGNITUDE.test(match[1] ?? '');
-        if ((labeled || isPerShare(before, after)) && !NET_BEFORE.test(before)) {
+        if ((labeled || isPerShare(before, after)) && !NET_BEFORE.test(before) && isPerShareMagnitude(match[1] ?? '')) {
             entries.push({ classes: labeled ? classes : [], amount: decimalOf(match[1] ?? '') });
         }
     });
-    const rows: AmountEntry[] = [...text.matchAll(CLASS_TABLE_ROW)].map((match: RegExpExecArray): AmountEntry => ({
-        classes: [classOf(match[1] ?? '')],
-        amount: decimalOf(match[2] ?? '')
-    }));
+    const rows: AmountEntry[] = [...text.matchAll(CLASS_TABLE_ROW)]
+        .filter((match: RegExpExecArray): boolean => isPerShareMagnitude(match[2] ?? ''))
+        .map((match: RegExpExecArray): AmountEntry => ({
+            classes: [classOf(match[1] ?? '')],
+            amount: decimalOf(match[2] ?? '')
+        }));
     return [...entries, ...rows];
 }
 
