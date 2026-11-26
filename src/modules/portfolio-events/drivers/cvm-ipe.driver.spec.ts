@@ -6,7 +6,7 @@ import { parsePortfolioEventsConfig } from '../config/portfolio-events.config';
 import { CvmIpeDriver } from './cvm-ipe.driver';
 import { pdfOfText } from './fixtures/notice-pdf';
 
-const COMPANY = { assetId: 'asset-1', issuerKind: 'company', cnpj: '01083200000118' } as const;
+const COMPANY = { assetId: 'asset-1', issuerKind: 'company', cnpj: '01083200000118', assetClass: 'ON' } as const;
 const OTHER_CNPJ: string = '43776517000180';
 
 function text(name: string): string {
@@ -98,7 +98,7 @@ describe('CvmIpeDriver', () => {
                 eventDate: null,
                 amountPerUnit: '0.8106790501',
                 currency: 'BRL',
-                externalKey: '01083200000118:dividend:2025-12-30',
+                externalKey: '01083200000118:dividend:2025-12-30:ON',
                 documentUrl: document(11).url
             },
             {
@@ -126,6 +126,36 @@ describe('CvmIpeDriver', () => {
             ['jcp', '2026-07-24', '2026-08-05', '0.077032959'],
             ['dividend', '2026-08-07', '2026-08-20', '0.034404313']
         ]);
+    });
+
+    it('gives each share class of the same issuer its own event, with the amount of its class', async () => {
+        const classes: string =
+            'AVISO AOS ACIONISTAS dividendos: R$ 0,50 por ação ordinária e R$ 0,55 por ação preferencial, ' +
+            'posição acionária de 10/04/2026. Pagamento em 30/04/2026.';
+        const { driver } = await rigWith([document(80)], { 80: classes });
+
+        const common = await driver.fetchFor({ ...COMPANY, assetId: 'asset-on', assetClass: 'ON' });
+        const preferred = await driver.fetchFor({ ...COMPANY, assetId: 'asset-pn', assetClass: 'PN' });
+        const preferredSeries = await driver.fetchFor({ ...COMPANY, assetId: 'asset-pna', assetClass: 'PNA' });
+
+        expect(common.map((draft) => [draft.externalKey, draft.amountPerUnit])).toEqual([
+            ['01083200000118:dividend:2026-04-10:ON', '0.50']
+        ]);
+        expect(preferred.map((draft) => [draft.externalKey, draft.amountPerUnit])).toEqual([
+            ['01083200000118:dividend:2026-04-10:PN', '0.55']
+        ]);
+        expect(preferredSeries.map((draft) => draft.amountPerUnit)).toEqual(['0.55']);
+    });
+
+    it('does not make an event for a Unit when the notice gives neither its amount nor its composition, and counts it', async () => {
+        const classes: string =
+            'AVISO AOS ACIONISTAS dividendos: R$ 0,50 por ação ordinária e R$ 0,55 por ação preferencial, ' +
+            'posição acionária de 10/04/2026.';
+        const { driver, metrics } = await rigWith([document(81)], { 81: classes });
+
+        await expect(driver.fetchFor({ ...COMPANY, assetClass: 'UNIT' })).resolves.toEqual([]);
+
+        expect(metrics.unparsed).toHaveBeenCalledWith('cvm_ipe', 1);
     });
 
     it('a rectification replaces the value of the original notice instead of creating another event', async () => {

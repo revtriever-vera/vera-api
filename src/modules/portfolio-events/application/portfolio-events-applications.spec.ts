@@ -16,8 +16,8 @@ const ASSET_A: string = '0199a000-0000-7000-8000-00000000000a';
 const ASSET_B: string = '0199a000-0000-7000-8000-00000000000b';
 const ASSET_C: string = '0199a000-0000-7000-8000-00000000000c';
 
-const fund = (assetId: string): IssuerLink => ({ assetId, issuerKind: 'fund', cnpj: '11728688000147' });
-const company = (assetId: string): IssuerLink => ({ assetId, issuerKind: 'company', cnpj: '33000167000101' });
+const fund = (assetId: string): IssuerLink => ({ assetId, issuerKind: 'fund', cnpj: '11728688000147', assetClass: null });
+const company = (assetId: string): IssuerLink => ({ assetId, issuerKind: 'company', cnpj: '33000167000101', assetClass: null });
 
 class FakeSource extends PortfolioEventSourcePort {
     public readonly source = 'fnet' as const;

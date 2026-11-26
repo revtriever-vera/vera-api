@@ -113,6 +113,7 @@ export interface AssetClasses {
 }
 
 export interface AssetIssuerLinks {
+    assetClass: string | null;
     assetId: string;
     cnpj: string;
     createdAt: Generated<Timestamp>;

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Asset, AssetCatalogService } from '../../catalog/services/asset-catalog.service';
 import { IssuerLinkSource, IssuerLinkSourceService } from '../../catalog/services/issuer-link-source.service';
 import { AssetIssuerLinkDomain } from '../domain/asset-issuer-link.domain';
-import { AssetIssuerLinkWrite, ISSUER_KINDS } from '../domain/portfolio-events.types';
+import { AssetIssuerLinkWrite, ISSUER_KINDS, shareClassOfTicker } from '../domain/portfolio-events.types';
 import { PortfolioEventsLogService } from '../services/portfolio-events-log.service';
 
 const LOOKUP_CHUNK: number = 2000;
@@ -51,7 +51,8 @@ export class IssuerLinksApplication {
             issuerKind: source.isFund ? ISSUER_KINDS.fund : ISSUER_KINDS.company,
             cnpj: source.cnpj,
             cvmCode: source.cvmCode,
-            source: source.origin
+            source: source.origin,
+            assetClass: source.isFund || asset.kind !== 'stock' ? null : shareClassOfTicker(source.symbol)
         };
     }
 }
