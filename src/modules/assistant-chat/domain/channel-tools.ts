@@ -19,7 +19,10 @@ export const APP_AI_TOOLS: ReadonlySet<string> = new Set([
     'recurring_overview',
     'concentration_overview',
     'fixed_income_maturities',
-    'market_benchmarks'
+    'market_benchmarks',
+    'asset_lookup',
+    'fund_performance',
+    'fixed_income_vs_benchmark'
 ]);
 
 export const APP_WRITE_TOOLS: ReadonlySet<string> = new Set(['goal_create', 'transaction_categorize']);

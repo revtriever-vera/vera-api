@@ -6,15 +6,21 @@ import { LlmTask } from '../../../core/llm/llm.types';
 import type { ContributionSuggestion } from '../../contribution/services/contribution-planner.service';
 import type { ConcentrationResponse } from '../../concentration/services/concentration-reader.service';
 import type { MaturityItem } from '../../fixed-income-schedule/services/maturities-reader.service';
+import type { LookupEntry } from '../../market-benchmarks/services/asset-lookup.service';
 import type { BenchmarkWindow, BenchmarkWindows } from '../../market-benchmarks/services/benchmark.service';
+import type { FixedIncomeComparison } from '../../market-benchmarks/services/fixed-income-benchmark.service';
+import type { FundPerformance, FundWindow } from '../../market-benchmarks/services/fund-performance.service';
 import type { PortfolioSnapshot } from '../../portfolio/services/portfolio-snapshot.service';
 import type { CutsResult } from '../../spending-cuts/services/spending-cuts.service';
 import type { MonthlySummary } from '../../spending-summary/services/spending-summary.service';
 import {
+    AiAssetLookupContext,
     AiBenchmarksContext,
     AiConcentrationContext,
     AiContext,
     AiCutsContext,
+    AiFixedIncomeBenchmarkContext,
+    AiFundPerformanceContext,
     AiMaturitiesContext,
     AiMonthContext,
     AiPortfolioContext,
@@ -27,6 +33,7 @@ import { buildCutsContext } from '../domain/context/cuts.context';
 import { buildMaturitiesContext } from '../domain/context/maturities.context';
 import { buildMonthContext } from '../domain/context/month.context';
 import { buildPortfolioContext } from '../domain/context/portfolio.context';
+import { buildAssetLookupContext, buildFixedIncomeBenchmarkContext, buildFundPerformanceContext } from '../domain/context/research.context';
 
 @Injectable()
 export class AiContextBuilderService {
@@ -54,6 +61,18 @@ export class AiContextBuilderService {
 
     public benchmarks(windows: BenchmarkWindows, shown: readonly BenchmarkWindow[] | undefined): BuiltContext<AiBenchmarksContext> {
         return buildBenchmarksContext(windows, shown, this.context.get().locale);
+    }
+
+    public assetLookup(entries: readonly LookupEntry[]): BuiltContext<AiAssetLookupContext> {
+        return buildAssetLookupContext(entries, this.context.get().locale);
+    }
+
+    public fundPerformance(performance: FundPerformance, shown: readonly FundWindow[]): BuiltContext<AiFundPerformanceContext> {
+        return buildFundPerformanceContext(performance, shown, this.context.get().locale);
+    }
+
+    public fixedIncomeBenchmark(comparison: FixedIncomeComparison): BuiltContext<AiFixedIncomeBenchmarkContext> {
+        return buildFixedIncomeBenchmarkContext(comparison, this.context.get().locale);
     }
 
     public hash(context: AiContext, task: LlmTask): string {

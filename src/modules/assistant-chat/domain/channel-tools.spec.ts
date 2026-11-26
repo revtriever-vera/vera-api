@@ -5,14 +5,19 @@ describe('ferramentas do app por modo', () => {
     it('help só recebe as de ajuda, sem nenhuma ferramenta de número', () => {
         expect([...appToolsOf('help', true)].sort()).toEqual(['data_locked', 'help_search', 'where_is']);
         expect(appToolsOf('help', true)).toBe(APP_HELP_TOOLS);
-        expect(appToolsOf('help', true).has('market_benchmarks')).toBe(false);
+        for (const name of ['market_benchmarks', 'asset_lookup', 'fund_performance', 'fixed_income_vs_benchmark']) {
+            expect(appToolsOf('help', true).has(name)).toBe(false);
+        }
     });
 
-    it('ai recebe as de ajuda e as de leitura, com as ferramentas de concentração, vencimentos e indicadores de mercado, e nada de agenda nem lembrete', () => {
+    it('ai recebe as de ajuda e as de leitura, com as ferramentas de concentração, vencimentos, indicadores de mercado e pesquisa de ativo e fundo, e nada de agenda nem lembrete', () => {
         expect([...appToolsOf('ai', false)].sort()).toEqual([
+            'asset_lookup',
             'concentration_overview',
             'contribution_suggestion',
             'fixed_income_maturities',
+            'fixed_income_vs_benchmark',
+            'fund_performance',
             'goals_overview',
             'help_search',
             'list_categories',

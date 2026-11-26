@@ -52,3 +52,23 @@ describe('regra dos indicadores de mercado no prompt do app', () => {
         expect(en).toContain('Never compute an accumulation');
     });
 });
+
+describe('regra da pesquisa de ativo e fundo no prompt do app', () => {
+    it('manda pesquisar pelas ferramentas, comparar sem calcular, recusar projeção e não aconselhar', () => {
+        const pt: string = askVeraAppSystemPromptOf('pt-BR', '2026-03-20', undefined, false);
+        const en: string = askVeraAppSystemPromptOf('en', '2026-03-20', undefined, false);
+
+        for (const prompt of [pt, en]) {
+            expect(prompt).toContain('asset_lookup');
+            expect(prompt).toContain('fund_performance');
+            expect(prompt).toContain('fixed_income_vs_benchmark');
+        }
+        expect(pt).toContain('nunca calcule');
+        expect(pt).toContain('Pedido de projeção');
+        expect(pt).toContain('sem repetir o ano');
+        expect(pt).toContain('Não diga se é bom');
+        expect(en).toContain('never compute');
+        expect(en).toContain('A request for a projection');
+        expect(en).toContain('Do not say whether it is good');
+    });
+});

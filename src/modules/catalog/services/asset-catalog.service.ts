@@ -52,6 +52,11 @@ export class AssetCatalogService {
         return found.filter((asset: Asset): boolean => asset.market === market);
     }
 
+    public async searchAny(text: string, limit: number): Promise<Asset[]> {
+        const lowered: string = text.trim().toLowerCase();
+        return this.assets.search({ text: lowered, likeText: escapeLike(lowered), limit });
+    }
+
     public profileOf(asset: Pick<Asset, 'market' | 'symbol'>): AssetProfile {
         return profileOf(asset.market, asset.symbol);
     }

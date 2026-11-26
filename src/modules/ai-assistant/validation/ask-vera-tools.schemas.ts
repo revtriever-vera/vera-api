@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BENCHMARK_WINDOWS } from '../../market-benchmarks/services/benchmark.service';
+import { FUND_WINDOWS } from '../../market-benchmarks/services/fund-performance.service';
 import { MONTH_PATTERN, monthIndexOf } from '../domain/ask-tool-output';
 
 const MAX_MONTHS: number = 12;
@@ -69,6 +70,41 @@ export const benchmarksInputSchema = z
     })
     .strict();
 
+const MAX_LOOKUP_QUERY_CHARS: number = 80;
+const MAX_KEY_CHARS: number = 64;
+
+export const assetLookupInputSchema = z
+    .object({
+        query: z.string().trim().min(2).max(MAX_LOOKUP_QUERY_CHARS).describe('Name, ticker or fund name to look up, as the person wrote it')
+    })
+    .strict();
+
+export const fundPerformanceInputSchema = z
+    .object({
+        fundId: z.string().min(1).max(MAX_KEY_CHARS).describe('The fund_id returned by asset_lookup, copied as it came'),
+        windows: z
+            .array(z.enum(FUND_WINDOWS))
+            .min(1)
+            .max(FUND_WINDOWS.length)
+            .optional()
+            .describe('Windows to return: m1, m3, m6, m12, m36 (months back); omit for all of them')
+    })
+    .strict();
+
+export const fixedIncomeBenchmarkInputSchema = z
+    .object({
+        holdingKey: z
+            .string()
+            .min(1)
+            .max(MAX_KEY_CHARS)
+            .optional()
+            .describe('The chave of one fixed income security of the portfolio; omit it to list the keys')
+    })
+    .strict();
+
+export type AssetLookupInput = z.infer<typeof assetLookupInputSchema>;
+export type FundPerformanceInput = z.infer<typeof fundPerformanceInputSchema>;
+export type FixedIncomeBenchmarkInput = z.infer<typeof fixedIncomeBenchmarkInputSchema>;
 export type BenchmarksInput = z.infer<typeof benchmarksInputSchema>;
 export type MaturitiesInput = z.infer<typeof maturitiesInputSchema>;
 export type MonthSummaryInput = z.infer<typeof monthSummaryInputSchema>;

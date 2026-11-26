@@ -19,7 +19,11 @@
       "help_search",
       "where_is",
       "concentration_overview",
-      "fixed_income_maturities"
+      "fixed_income_maturities",
+      "asset_lookup",
+      "fund_performance",
+      "fixed_income_vs_benchmark",
+      "market_benchmarks"
     ]
   },
   "mockTools": [
