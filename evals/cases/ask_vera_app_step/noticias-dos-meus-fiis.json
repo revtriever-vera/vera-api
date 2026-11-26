@@ -1,0 +1,32 @@
+{
+  "id": "noticias-dos-meus-fiis",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "o que saiu sobre meus FIIs?",
+  "history": [],
+  "tools": {
+    "required": ["portfolio_news"],
+    "allowed": ["help_search", "where_is", "portfolio_overview", "asset_lookup", "fund_performance", "market_benchmarks", "portfolio_news"]
+  },
+  "mockTools": [
+    {
+      "name": "portfolio_news",
+      "input": {
+        "classId": "fiis"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": ["R$ 0,78", "R$ 1,10"],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": ["compre", "venda seus", "mantenha"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Saiu sobre dois FIIs seus: o XPLG11 (12/03/2026) manteve a vacância física em 4% e distribuiu **R$ 0,78** por cota, e o HGLG11 (10/03/2026) anunciou rendimento de R$ 1,10 por cota, com pagamento em abril."
+  ]
+}

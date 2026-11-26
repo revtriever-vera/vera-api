@@ -72,3 +72,17 @@ describe('regra da pesquisa de ativo e fundo no prompt do app', () => {
         expect(en).toContain('Do not say whether it is good');
     });
 });
+
+describe('regra das notícias da carteira no prompt do app', () => {
+    it('manda chamar portfolio_news, contar só o devolvido e não aconselhar diante da notícia', () => {
+        const pt: string = askVeraAppSystemPromptOf('pt-BR', '2026-03-20', undefined, false, false);
+        const en: string = askVeraAppSystemPromptOf('en', '2026-03-20', undefined, false, false);
+
+        expect(pt).toContain('portfolio_news');
+        expect(pt).toContain('Conte só o que a ferramenta devolveu');
+        expect(pt).toContain('sem dizer o que fazer com o ativo');
+        expect(en).toContain('portfolio_news');
+        expect(en).toContain('Tell only what the tool returned');
+        expect(en).toContain('without saying what to do with the asset');
+    });
+});

@@ -30,6 +30,7 @@ import { PortfolioWatchDigestTemplates } from '../services/portfolio-watch-diges
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
 import { PortfolioWatchNoticeRegistrar } from '../services/portfolio-watch-notice.registrar';
 import { PortfolioWatchPublisherService } from '../services/portfolio-watch-publisher.service';
+import { PortfolioNewsTool } from '../services/portfolio-news.tool';
 import { PortfolioChangesReaderService } from '../services/portfolio-changes-reader.service';
 import { MonthlyReviewBenchmarksService } from '../services/monthly-review-benchmarks.service';
 import { MonthlyReviewConcentrationService } from '../services/monthly-review-concentration.service';
@@ -80,6 +81,7 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
         PortfolioAgendaApplication,
         PortfolioChangesApplication,
         PortfolioChangesReaderService,
+        PortfolioNewsTool,
         PortfolioAgendaService,
         PortfolioWatchNoticeRegistrar,
         PortfolioWatchDigestTemplates,
