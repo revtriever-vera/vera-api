@@ -16,3 +16,13 @@ export class ActionChoiceInvalidError extends AppError {
         });
     }
 }
+
+export class ActionAlwaysNotApplicableError extends AppError {
+    public constructor() {
+        super({
+            code: 'assistant.action_always_not_applicable',
+            status: 422,
+            detail: 'The `always` choice only applies to actions that categorize a transaction.'
+        });
+    }
+}
