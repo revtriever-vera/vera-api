@@ -3,7 +3,12 @@ import { ZodTypeAny } from 'zod';
 import { JsonObject } from '../../../core/llm/llm.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { AskVeraToolOutput, AskVeraToolPort, PaidFeature } from '../../ai-assistant/services/ask-vera-tool.port';
-import { ActionCandidate, ActionChoice, AssistantActionExecutorPort } from '../../assistant-chat/services/assistant-action-executor.port';
+import {
+    ActionCandidate,
+    ActionChoice,
+    ActionOutcome,
+    AssistantActionExecutorPort
+} from '../../assistant-chat/services/assistant-action-executor.port';
 import { TransactionCategorizeInput, transactionCategorizeInputSchema } from '../validation/transaction-proposal.schemas';
 import { TransactionAssistantService, TransactionProposal } from './transaction-assistant.service';
 
@@ -51,7 +56,7 @@ export class TransactionCategorizeExecutor extends AssistantActionExecutorPort {
         return this.assistant.candidates(payload);
     }
 
-    public async execute(payload: JsonObject, choice: ActionChoice | null): Promise<string> {
-        return this.assistant.categorize(payload, choice);
+    public async execute(payload: JsonObject, choice: ActionChoice | null): Promise<ActionOutcome> {
+        return { text: await this.assistant.categorize(payload, choice), reference: null };
     }
 }

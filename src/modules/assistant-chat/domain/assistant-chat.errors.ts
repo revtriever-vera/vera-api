@@ -23,3 +23,20 @@ export class ActionExpiredError extends AppError {
         super({ code: 'assistant.action_expired', status: 409, detail: 'The confirmation window of the action passed.' });
     }
 }
+
+export class TurnTextRequiredError extends AppError {
+    public constructor() {
+        super({ code: 'assistant.text_required', status: 400, detail: 'The question needs a `text` unless a `file` is sent.' });
+    }
+}
+
+export class AttachmentRoleError extends AppError {
+    public constructor() {
+        super({
+            code: 'members.forbidden_role',
+            status: 403,
+            detail: 'Importing a file needs the editor role or higher.',
+            meta: { required: 'editor' }
+        });
+    }
+}

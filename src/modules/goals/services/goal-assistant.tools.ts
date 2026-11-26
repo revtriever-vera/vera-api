@@ -3,7 +3,7 @@ import { ZodTypeAny } from 'zod';
 import { JsonObject } from '../../../core/llm/llm.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { AskVeraToolOutput, AskVeraToolPort, PaidFeature } from '../../ai-assistant/services/ask-vera-tool.port';
-import { AssistantActionExecutorPort } from '../../assistant-chat/services/assistant-action-executor.port';
+import { ActionOutcome, AssistantActionExecutorPort } from '../../assistant-chat/services/assistant-action-executor.port';
 import { goalCreateInputSchema, GoalCreateInput } from '../validation/goal-proposal.schemas';
 import { GoalAssistantService, GoalProposal } from './goal-assistant.service';
 
@@ -47,7 +47,7 @@ export class GoalCreateExecutor extends AssistantActionExecutorPort {
         return this.assistant.stateOf();
     }
 
-    public async execute(payload: JsonObject): Promise<string> {
-        return this.assistant.create(payload);
+    public async execute(payload: JsonObject): Promise<ActionOutcome> {
+        return { text: await this.assistant.create(payload), reference: null };
     }
 }

@@ -166,3 +166,19 @@ export class FileUnreadableError extends AppError {
         super({ code: 'file.unreadable', status: 422, detail: 'The file is damaged or too heavy to be read.', meta: { reason } });
     }
 }
+
+export class NothingToImportError extends AppError {
+    public constructor() {
+        super({ code: 'import.nothing_to_import', status: 422, detail: 'The file has no operation and no fixed income title to import.' });
+    }
+}
+
+export class InvalidCorrectionsError extends AppError {
+    public constructor() {
+        super({
+            code: 'import.invalid_corrections',
+            status: 422,
+            detail: 'The corrections sent do not follow the contract of POST /investment-imports.'
+        });
+    }
+}

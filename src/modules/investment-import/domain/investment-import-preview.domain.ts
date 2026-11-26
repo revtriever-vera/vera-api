@@ -39,6 +39,11 @@ export class InvestmentImportPreviewDomain {
         return found;
     }
 
+    public async findOpen(id: string, now: Date = new Date()): Promise<InvestmentImportPreview | null> {
+        const found: InvestmentImportPreview | null = await this.previews.findById(id);
+        return found !== null && found.expiresAt.getTime() > now.getTime() ? found : null;
+    }
+
     public async purgeExpired(now: Date = new Date()): Promise<number> {
         return this.previews.purgeExpired(now);
     }

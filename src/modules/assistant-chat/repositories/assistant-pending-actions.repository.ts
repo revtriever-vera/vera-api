@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareTenantRepository } from '../../../core/database/repositories/bare-tenant.repository';
+import { JsonObject } from '../../../core/llm/llm.types';
 import { IdUtil } from '../../../shared/utils/id.util';
 import { ACTION_STATUSES, ACTION_TTL_MS, ActionStatus, AssistantPendingAction, ProposedAction } from '../domain/assistant-chat.types';
 
@@ -53,8 +54,11 @@ export class AssistantPendingActionsRepository extends BareTenantRepository<'Ass
         return rows[0] ?? null;
     }
 
-    public async recordResult(id: string, resultText: string): Promise<void> {
-        await this.updateManyRows({ id, status: ACTION_STATUSES.confirmed }, { resultText, updatedAt: new Date() });
+    public async recordResult(id: string, resultText: string, payload: JsonObject): Promise<void> {
+        await this.updateManyRows(
+            { id, status: ACTION_STATUSES.confirmed },
+            { resultText, payload: JSON.stringify(payload), updatedAt: new Date() }
+        );
     }
 
     public async close(id: string, status: ActionStatus, now: Date): Promise<boolean> {

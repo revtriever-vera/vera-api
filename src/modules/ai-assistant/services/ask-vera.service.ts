@@ -22,6 +22,7 @@ import {
     ASK_VERA_MAX_QUESTION_CHARS,
     ASK_VERA_MAX_STEPS,
     AskVeraAnswer,
+    AskVeraTool,
     AskVeraInput,
     AskVeraOutcome,
     AskVeraTurn
@@ -30,10 +31,10 @@ import { askVeraAppSystemPromptOf } from '../domain/prompts/ask-vera-app.prompt'
 import { askVeraSystemPromptOf } from '../domain/prompts/ask-vera.prompt';
 import { AskVeraAccessService } from './ask-vera-access.service';
 import { AskVeraTelemetryService } from './ask-vera-telemetry.service';
-import { AskVeraToolPort } from './ask-vera-tool.port';
 import { AskVeraToolRegistry } from './ask-vera-tool.registry';
 
 export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraSent, AskVeraTurn } from '../domain/ask-vera.types';
+export { ASK_VERA_HELP_FEATURE, ASK_VERA_TOOL_KINDS } from '../domain/ask-vera.types';
 export { INVESTMENT_NOTICE_TOOLS } from '../domain/ask-vera.types';
 export { investmentNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
 export { isReminderRequest } from '../domain/ask-prefilter';
@@ -46,7 +47,8 @@ function systemPromptOf(input: AskVeraInput, today: string): string {
               input.locale,
               today,
               input.screen,
-              [...input.allowedTools].some((tool: string): boolean => PROPOSAL_TOOLS.has(tool))
+              [...input.allowedTools].some((tool: string): boolean => PROPOSAL_TOOLS.has(tool)),
+              input.importAttached === true
           )
         : askVeraSystemPromptOf(input.locale, today);
 }
@@ -100,13 +102,14 @@ export class AskVeraService {
     }
 
     private async answer(input: AskVeraInput, question: Question): Promise<AskVeraAnswer> {
-        const tools: readonly AskVeraToolPort[] = await this.registry.available(input.allowedTools, input);
+        const registered: readonly AskVeraTool[] = await this.registry.available(input.allowedTools, input);
+        const tools: readonly AskVeraTool[] = [...registered, ...(input.extraTools ?? [])];
         const today: string = await this.timezones.todayInCompany();
         const result: AskLoopResult = await this.loop(input, question, tools, today);
         return this.finish(result, input.locale, question.text);
     }
 
-    private async loop(input: AskVeraInput, question: Question, tools: readonly AskVeraToolPort[], today: string): Promise<AskLoopResult> {
+    private async loop(input: AskVeraInput, question: Question, tools: readonly AskVeraTool[], today: string): Promise<AskLoopResult> {
         try {
             return await runAskLoop(this.loopInput(input, question, tools, today));
         } catch (error: unknown) {
@@ -117,7 +120,7 @@ export class AskVeraService {
         }
     }
 
-    private loopInput(input: AskVeraInput, question: Question, tools: readonly AskVeraToolPort[], today: string): AskLoopInput {
+    private loopInput(input: AskVeraInput, question: Question, tools: readonly AskVeraTool[], today: string): AskLoopInput {
         const profile: ChannelProfile = channelProfileOf(input.channel);
         return {
             system: systemPromptOf(input, today),

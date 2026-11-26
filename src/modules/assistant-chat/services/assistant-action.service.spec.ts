@@ -41,30 +41,35 @@ interface Built {
     readonly claim: ReturnType<typeof vi.fn>;
     readonly close: ReturnType<typeof vi.fn>;
     readonly execute: ReturnType<typeof vi.fn>;
+    readonly recordResult: ReturnType<typeof vi.fn>;
+    readonly preview: ReturnType<typeof vi.fn>;
 }
 
 function build(action: AssistantPendingAction | null, state: string = 'state-1', claimed: boolean = true): Built {
     const claim: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(claimed ? action : null);
     const close: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(true);
-    const execute: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue('Objetivo criado: Viagem.');
+    const execute: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({ text: 'Objetivo criado: Viagem.', reference: null });
+    const preview: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(null);
+    const recordResult: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
     const executor: AssistantActionExecutorPort = {
         tool: 'goal_create',
         stateOf: vi.fn().mockResolvedValue(state),
         execute,
-        candidates: vi.fn().mockResolvedValue([])
+        candidates: vi.fn().mockResolvedValue([]),
+        preview
     };
     const service: AssistantActionService = new AssistantActionService(
         {
             findOfUser: vi.fn().mockResolvedValue(action),
             claim,
             close,
-            recordResult: vi.fn().mockResolvedValue(undefined)
+            recordResult
         } as unknown as AssistantPendingActionDomain,
         { executorFor: vi.fn().mockReturnValue(executor) } as unknown as AssistantActionRegistry,
         { get: vi.fn().mockReturnValue({ userId: 'user-1' }) } as unknown as AppContext,
         { actionConfirmed: vi.fn(), actionStale: vi.fn() } as unknown as AssistantChatLogService
     );
-    return { service, claim, close, execute };
+    return { service, claim, close, execute, recordResult, preview };
 }
 
 beforeEach(() => {
@@ -80,6 +85,30 @@ describe('AssistantActionService', () => {
         expect(built.execute).toHaveBeenCalledTimes(1);
         expect(built.execute).toHaveBeenCalledWith(PAYLOAD, {});
         expect(confirmed).toMatchObject({ status: 'confirmed', resultText: 'Objetivo criado: Viagem.' });
+    });
+
+    it('a referência do que foi criado entra no payload guardado e na resposta', async () => {
+        const built: Built = build(actionOf());
+        built.execute.mockResolvedValue({ text: 'Importação confirmada: 12 operações.', reference: 'import-1' });
+
+        const confirmed = await built.service.confirm('action-1', {});
+
+        expect(confirmed).toMatchObject({ resultText: 'Importação confirmada: 12 operações.', reference: 'import-1' });
+        expect(built.recordResult).toHaveBeenCalledWith('action-1', 'Importação confirmada: 12 operações.', {
+            ...PAYLOAD,
+            reference: 'import-1'
+        });
+    });
+
+    it('a visão da ação aberta traz a prévia que o executor monta; a vencida, não', async () => {
+        const built: Built = build(actionOf());
+        built.preview.mockResolvedValue({ previewId: 'preview-1' });
+
+        expect(await built.service.view('action-1')).toMatchObject({ importPreview: { previewId: 'preview-1' } });
+
+        const lapsed: Built = build(actionOf({ expiresAt: new Date(Date.now() - 1) }));
+        expect(await lapsed.service.view('action-1')).toMatchObject({ importPreview: null, candidates: [] });
+        expect(lapsed.preview).not.toHaveBeenCalled();
     });
 
     it('estado mudou: 409 assistant.confirmation_stale, nada executa e a ação fica stale', async () => {

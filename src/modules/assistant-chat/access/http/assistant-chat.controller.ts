@@ -1,11 +1,28 @@
-import { applyDecorators, Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+    applyDecorators,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Header,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiNoContentResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { zodToOpenAPI } from 'nestjs-zod';
 import { ApiProblemResponse, ProblemDoc } from '../../../../core/http/api-problem.decorator';
 import { ApiZodBody, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
 import { RequiresRole } from '../../../identity/services/requires-role.decorator';
 import { RolesGuard } from '../../../identity/services/roles.guard';
+import type { UploadedReport } from '../../../investment-import/services/investment-import-assistant.service';
+import { InvestmentUploadInterceptor } from '../../../investment-import/services/investment-upload.interceptor';
 import { AssistantConversationApplication } from '../../application/assistant-conversation.application';
 import { AssistantTurnApplication } from '../../application/assistant-turn.application';
 import { TURNS_PER_HOUR } from '../../domain/assistant-chat.types';
@@ -106,9 +123,10 @@ const ACTION_SUMMARY_EXAMPLE: ActionSummaryView = {
     summary: 'Criar o objetivo viagem: R$ 12.000 até dezembro de 2027.',
     status: 'open',
     expiresAt: '2026-11-25T12:30:00.000Z',
-    resultText: null
+    resultText: null,
+    reference: null
 };
-const ACTION_VIEW_EXAMPLE: ActionView = { ...ACTION_SUMMARY_EXAMPLE, candidates: [] };
+const ACTION_VIEW_EXAMPLE: ActionView = { ...ACTION_SUMMARY_EXAMPLE, candidates: [], importPreview: null };
 const CONFIRMED_EXAMPLE: ActionSummaryView = {
     ...ACTION_SUMMARY_EXAMPLE,
     status: 'confirmed',
@@ -159,6 +177,34 @@ const PROVIDER_DISABLED: ProblemDoc = {
     example: { type: 'ai.provider_disabled', title: 'LlmProviderDisabledError', status: 503 }
 };
 
+const FILE_TOO_LARGE: ProblemDoc = {
+    status: 413,
+    description: 'The file is larger than 10 MB (file.too_large)',
+    example: { type: 'file.too_large', title: 'FileTooLargeError', status: 413 }
+};
+const CONFIRMATION_REQUIRED: ProblemDoc = {
+    status: 428,
+    description: 'The file goes to a language model and `modelConsent=true` was not sent (model.confirmation_required)',
+    example: { type: 'model.confirmation_required', title: 'ModelConfirmationRequiredError', status: 428 }
+};
+const FILE_UNREADABLE: ProblemDoc = {
+    status: 422,
+    description:
+        'Not a report the reader knows (format.not_recognized), a damaged file (file.unreadable), a file the model could not read (model.unreadable) or nothing to import (import.nothing_to_import)',
+    example: { type: 'format.not_recognized', title: 'FormatNotRecognizedError', status: 422 }
+};
+
+function sendTurnRequestDoc(): Record<string, unknown> {
+    const json: Record<string, unknown> = zodToOpenAPI(sendTurnBodySchema) as Record<string, unknown>;
+    const properties: Record<string, unknown> = (json['properties'] ?? {}) as Record<string, unknown>;
+    const file: Record<string, unknown> = {
+        type: 'string',
+        format: 'binary',
+        description: 'Multipart only. The report to import, up to 10 MB: xlsx or csv, or with `modelConsent` a PDF or an image'
+    };
+    return { oneOf: [json, { ...json, properties: { file, ...properties } }] };
+}
+
 function problems(...docs: readonly ProblemDoc[]): MethodDecorator {
     return applyDecorators(...docs.map((doc: ProblemDoc): MethodDecorator => ApiProblemResponse(doc)));
 }
@@ -187,13 +233,31 @@ export class AssistantChatController {
         description:
             'Stores the question and queues the answer; the answer is read from `GET /assistant/turns/{id}`. The turn is in `help` mode ' +
             '(answers from the help content) unless the plan includes the AI and the account allowed sending figures, then it is in `ai` mode. ' +
-            'Refused up front, with nothing stored, when the usage band of the mode is used up. Limited to 20 turns per hour per person.'
+            'Refused up front, with nothing stored, when the usage band of the mode is used up. Limited to 20 turns per hour per person. ' +
+            'Sent as multipart with a `file` (the same files and limits as POST /investment-imports/preview, editors only), the turn runs the ' +
+            'preview of the import before the answer: the language model of the assistant never receives the file, the lines or the amounts, ' +
+            'only that a file was attached. The answer then carries a pending action (`investment_import`) whose card shows the preview ' +
+            '(GET /assistant/actions/{id}) and is confirmed at POST /assistant/actions/{id}/confirm. A PDF or an image goes to a language ' +
+            'reader and needs `modelConsent=true`, otherwise the call is refused with model.confirmation_required and nothing is stored. ' +
+            'The conversation keeps only "Arquivo: <name>".'
     })
-    @ApiZodBody(sendTurnBodySchema)
+    @UseInterceptors(InvestmentUploadInterceptor)
+    @ApiConsumes('application/json', 'multipart/form-data')
+    @ApiBody({ schema: sendTurnRequestDoc() })
     @ApiZodResponse({ status: 202, description: 'Question accepted', schema: turnStartedResponseSchema, example: STARTED_EXAMPLE })
-    @problems(INVALID, UNAUTHORIZED, NOT_FOUND, CAP_REACHED, PROVIDER_DISABLED)
-    public async send(@Body() body: SendTurnBodyDto): Promise<TurnStartedView> {
-        return this.turns.start(body);
+    @problems(
+        INVALID,
+        UNAUTHORIZED,
+        FORBIDDEN,
+        NOT_FOUND,
+        FILE_TOO_LARGE,
+        CAP_REACHED,
+        CONFIRMATION_REQUIRED,
+        FILE_UNREADABLE,
+        PROVIDER_DISABLED
+    )
+    public async send(@UploadedFile() file: UploadedReport | undefined, @Body() body: SendTurnBodyDto): Promise<TurnStartedView> {
+        return this.turns.start(body, file);
     }
 
     @Get('turns/:id')

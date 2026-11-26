@@ -32,6 +32,8 @@ export type AskVeraInput = AskRoute & {
     readonly locale: AppLocale;
     readonly messageId: string;
     readonly allowedTools: ReadonlySet<string>;
+    readonly extraTools?: readonly AskVeraTool[];
+    readonly importAttached?: boolean;
 };
 
 export interface AskVeraProposal {

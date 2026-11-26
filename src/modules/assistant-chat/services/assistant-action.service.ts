@@ -8,11 +8,15 @@ import { actionSummaryOf, statusOf } from '../domain/action-view';
 import { ActionExpiredError, ActionNotFoundError, ActionResolvedError } from '../domain/assistant-chat.errors';
 import { ACTION_STATUSES, AssistantMessage, AssistantPendingAction } from '../domain/assistant-chat.types';
 import { AssistantPendingActionDomain } from '../domain/assistant-pending-action.domain';
-import { ActionCandidate, AssistantActionExecutorPort } from './assistant-action-executor.port';
+import { ActionCandidate, ActionOutcome, AssistantActionExecutorPort } from './assistant-action-executor.port';
 import { ConfirmationStaleError } from './assistant-action.errors';
 import { AssistantActionRegistry } from './assistant-action.registry';
 import { AssistantChatLogService } from './assistant-chat-log.service';
 import { ActionSummaryView, ActionView, ConfirmActionBody } from '../validation/assistant-chat.schemas';
+
+function referencedPayload(payload: JsonObject, outcome: ActionOutcome): JsonObject {
+    return outcome.reference === null ? payload : { ...payload, reference: outcome.reference };
+}
 
 @Injectable()
 export class AssistantActionService {
@@ -49,9 +53,13 @@ export class AssistantActionService {
         const now: Date = new Date();
         const summary: ActionSummaryView = actionSummaryOf(action, now);
         const executor: AssistantActionExecutorPort | null = this.registry.executorFor(action.tool);
-        const candidates: readonly ActionCandidate[] =
-            summary.status === ACTION_STATUSES.open && executor !== null ? await executor.candidates(action.payload as JsonObject) : [];
-        return { ...summary, candidates: [...candidates] };
+        if (summary.status !== ACTION_STATUSES.open || executor === null) {
+            return { ...summary, candidates: [], importPreview: null };
+        }
+        const payload: JsonObject = action.payload as JsonObject;
+        const candidates: readonly ActionCandidate[] = await executor.candidates(payload);
+        const importPreview: JsonObject | null = await executor.preview(payload);
+        return { ...summary, candidates: [...candidates], importPreview };
     }
 
     public async confirm(id: string, body: ConfirmActionBody): Promise<ActionSummaryView> {
@@ -60,9 +68,10 @@ export class AssistantActionService {
         const executor: AssistantActionExecutorPort = this.executorOf(action);
         try {
             await this.assertFresh(action, executor);
-            const text: string = await this.run(action, executor, body);
+            const outcome: ActionOutcome = await this.run(action, executor, body);
             this.logs.actionConfirmed(action.id, action.tool);
-            return actionSummaryOf({ ...action, status: ACTION_STATUSES.confirmed, resultText: text }, new Date());
+            const done: AssistantPendingAction = { ...action, status: ACTION_STATUSES.confirmed, resultText: outcome.text };
+            return actionSummaryOf({ ...done, payload: referencedPayload(action.payload as JsonObject, outcome) }, new Date());
         } catch (error: unknown) {
             if (error instanceof ConfirmationStaleError) {
                 await this.actions.close(action.id, ACTION_STATUSES.stale, new Date());
@@ -83,14 +92,18 @@ export class AssistantActionService {
     }
 
     @UsingTransaction()
-    private async run(action: AssistantPendingAction, executor: AssistantActionExecutorPort, body: ConfirmActionBody): Promise<string> {
+    private async run(
+        action: AssistantPendingAction,
+        executor: AssistantActionExecutorPort,
+        body: ConfirmActionBody
+    ): Promise<ActionOutcome> {
         const claimed: AssistantPendingAction | null = await this.actions.claim(action.id, new Date());
         if (claimed === null) {
             throw new ActionResolvedError();
         }
-        const text: string = await executor.execute(action.payload as JsonObject, body);
-        await this.actions.recordResult(action.id, text);
-        return text;
+        const outcome: ActionOutcome = await executor.execute(action.payload as JsonObject, body);
+        await this.actions.recordResult(action.id, outcome.text, referencedPayload(action.payload as JsonObject, outcome));
+        return outcome;
     }
 
     private async assertFresh(action: AssistantPendingAction, executor: AssistantActionExecutorPort): Promise<void> {
