@@ -47,8 +47,8 @@ describe('regra dos indicadores de mercado no prompt do app', () => {
 
 describe('regra da pesquisa de ativo e fundo no prompt do app', () => {
     it('manda pesquisar pelas ferramentas, comparar sem calcular, recusar projeção e não aconselhar', () => {
-        const pt: string = askVeraAppSystemPromptOf('pt-BR', '2026-03-20');
-        const en: string = askVeraAppSystemPromptOf('en', '2026-03-20');
+        const pt: string = askVeraAppSystemPromptOf('pt-BR', '2026-03-20', undefined, false);
+        const en: string = askVeraAppSystemPromptOf('en', '2026-03-20', undefined, false);
 
         for (const prompt of [pt, en]) {
             expect(prompt).toContain('asset_lookup');
