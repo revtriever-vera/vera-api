@@ -1,0 +1,49 @@
+{
+  "id": "first-month-no-return",
+  "task": "summary_monthly_review",
+  "locale": "en",
+  "labels": {
+    "cls:acoes_br": "Brazilian stocks",
+    "ativo:custom_1": "Petrobras"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": null,
+    "sem_rentabilidade_motivo": "no_previous_snapshot",
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Brazilian stocks",
+        "rentabilidade_pct": null
+      }
+    ],
+    "indices": {
+      "cdi_pct": null,
+      "ipca_pct": null,
+      "ibovespa_pct": null
+    },
+    "maiores_altas": [
+      {
+        "chave": "custom_1",
+        "variacao_pct": "+7.00%"
+      }
+    ],
+    "maiores_quedas": [],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["returned", "CDI", "Ibovespa", "IPCA", "income"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "reference": ["In price, [[ativo:custom_1]] rose +7.00% in the month."]
+}

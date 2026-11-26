@@ -19,6 +19,7 @@ import { LlmCallsHistoryService } from './services/llm-calls-history.service';
 import { LlmLedgerService } from './services/llm-ledger.service';
 import { LlmLogService } from './services/llm-log.service';
 import { LlmMetricsService } from './services/llm-metrics.service';
+import { LlmPlatformBudgetService } from './services/llm-platform-budget.service';
 import { LlmPricingService } from './services/llm-pricing.service';
 import { LlmProbeService } from './services/llm-probe.service';
 import { LlmTaskRegistryService } from './services/llm-task-registry.service';
@@ -39,6 +40,7 @@ import { LlmTaskRegistryService } from './services/llm-task-registry.service';
         LlmMetricsService,
         LlmPricingService,
         LlmTaskRegistryService,
+        LlmPlatformBudgetService,
         LlmLedgerService,
         LlmAvailabilityService,
         LlmProbeService,

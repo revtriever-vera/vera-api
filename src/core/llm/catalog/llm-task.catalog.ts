@@ -40,6 +40,18 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         promptVersion: 'v2'
     },
     {
+        task: LLM_TASKS.summaryMonthlyReview,
+        model: 'primary',
+        maxOutputTokens: 6144,
+        maxCostMicros: 27_000,
+        temperature: 0.2,
+        reasoning: 'minimal',
+        timeoutMs: 30_000,
+        maxRetries: 2,
+        evalThreshold: 0.8,
+        promptVersion: 'v2'
+    },
+    {
         task: LLM_TASKS.askVeraStep,
         model: 'primary',
         maxOutputTokens: 8192,
@@ -76,5 +88,17 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         evalThreshold: 0.8,
         promptVersion: 'v4',
         outsideCap: true
+    },
+    {
+        task: LLM_TASKS.marketDocumentSummary,
+        model: 'primary',
+        maxOutputTokens: 1024,
+        maxCostMicros: 15_000,
+        temperature: 0.2,
+        reasoning: 'minimal',
+        timeoutMs: 30_000,
+        maxRetries: 2,
+        evalThreshold: 0.8,
+        promptVersion: 'v1'
     }
 ];

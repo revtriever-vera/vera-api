@@ -1,5 +1,5 @@
 import { AppLocale } from '../../../../shared/i18n/locale';
-import { moneyText, percentText, pointsText, priceText, ratePercentText, signedPercentText } from './money-text';
+import { moneyText, percentText, pointsText, priceText, ratePercentText, signedPercentText, signedRatePercentText } from './money-text';
 
 const MINOR_PER_MAJOR: number = 100;
 const BPS_PER_PERCENT: number = 100;
@@ -46,6 +46,15 @@ export class ContextFacts {
     public rate(bps: number): string {
         this.cited.add(Math.abs(Math.round(bps / BPS_PER_PERCENT)));
         return ratePercentText(bps, this.locale);
+    }
+
+    public signedRate(bps: number): string {
+        this.cited.add(Math.abs(Math.round(bps / BPS_PER_PERCENT)));
+        return signedRatePercentText(bps, this.locale);
+    }
+
+    public signedRateOrNull(bps: number | null): string | null {
+        return bps === null ? null : this.signedRate(bps);
     }
 
     public points(bps: number): string {

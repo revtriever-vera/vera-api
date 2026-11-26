@@ -77,4 +77,8 @@ export class FixedIncomeTitleDomain {
     public async remove(id: string): Promise<boolean> {
         return (await this.titles.softDelete(id)) !== null;
     }
+
+    public async listCompanyIdsWithRealAcrossTenants(): Promise<string[]> {
+        return this.titles.listCompanyIdsWithRealAcrossTenants();
+    }
 }

@@ -6,9 +6,11 @@ import { toolInputSchemaOf } from '../../src/core/llm/tool-input-schema';
 import { serializeContext } from '../../src/modules/ai-assistant/domain/context/context-hash';
 import { summarySystemPromptOf } from '../../src/modules/ai-assistant/domain/prompts/summary-prompts';
 import { summaryOutputSchema } from '../../src/modules/ai-assistant/domain/summary-output.schemas';
-import { SummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
+import { GeneratedSummaryKind } from '../../src/modules/ai-assistant/domain/summary.types';
 import { prefilterOf } from '../../src/modules/ai-assistant/domain/ask-prefilter';
-import { EvalCase, isAskCase, SummaryCase } from './case.schemas';
+import { marketDocumentSummaryPromptOf } from '../../src/modules/market-documents/domain/market-document-summary.prompt';
+import { SUMMARY_RESPONSE_SCHEMA, summaryPayloadOf } from '../../src/modules/market-documents/domain/market-document-summary.request';
+import { DocumentCase, EvalCase, isAskCase, isDocumentCase, SummaryCase } from './case.schemas';
 import { Engine } from './engine';
 
 export interface CallTrace {
@@ -35,10 +37,11 @@ export interface Generation {
 }
 
 const RESPONSE_SCHEMA: JsonObject = toolInputSchemaOf(summaryOutputSchema);
-const KIND_BY_TASK: Readonly<Record<SummaryCase['task'], SummaryKind>> = {
+const KIND_BY_TASK: Readonly<Record<SummaryCase['task'], GeneratedSummaryKind>> = {
     summary_month: 'month',
     summary_cuts: 'cuts',
-    summary_portfolio: 'portfolio'
+    summary_portfolio: 'portfolio',
+    summary_monthly_review: 'monthly_review'
 };
 
 export function specOf(task: string, reasoning: LlmReasoning | undefined): LlmTaskSpec {
@@ -103,11 +106,47 @@ export function fixedGeneration(text: string): Generation {
     };
 }
 
-export async function generate(engine: Engine, spec: LlmTaskSpec, item: SummaryCase): Promise<Generation> {
+function documentMessage(item: DocumentCase): string {
+    return summaryPayloadOf(
+        {
+            issuerName: item.document.issuer,
+            tickers: item.document.tickers,
+            category: item.document.category,
+            publishedAt: item.document.publishedAt,
+            text: item.document.text
+        },
+        item.locale
+    );
+}
+
+async function callDocumentModel(engine: Engine, spec: LlmTaskSpec, item: DocumentCase): Promise<LlmDriverResult> {
+    engine.assertBudget();
+    engine.mock()?.enqueue(JSON.stringify({ summary: item.reference.join(' '), ...item.referenceOutput }));
+    const result: LlmDriverResult = await engine.driver.generate({
+        credentials: engine.credentials,
+        spec,
+        request: {
+            task: item.task,
+            system: marketDocumentSummaryPromptOf(item.locale),
+            messages: [{ role: 'user', content: documentMessage(item) }],
+            responseSchema: SUMMARY_RESPONSE_SCHEMA
+        }
+    });
+    engine.spentUsd += costOf(result);
+    return result;
+}
+
+export async function generate(engine: Engine, spec: LlmTaskSpec, item: SummaryCase | DocumentCase): Promise<Generation> {
+    if (isDocumentCase(item)) {
+        return generationOf(await callDocumentModel(engine, spec, item));
+    }
     if (isFixed(item)) {
         return fixedGeneration('');
     }
-    const result: LlmDriverResult = await callModel(engine, spec, item);
+    return generationOf(await callModel(engine, spec, item));
+}
+
+function generationOf(result: LlmDriverResult): Generation {
     return {
         text: result.text,
         stopReason: result.stopReason,

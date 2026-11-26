@@ -38,6 +38,10 @@ export class UnsubscribeLinkService {
         return publicApiUrl(this.config.PUBLIC_API_URL, `notifications/unsubscribe/${this.tokenFor(subject)}`);
     }
 
+    public appUrl(): string {
+        return this.config.APP_URL;
+    }
+
     public pageUrlOf(token: string): string {
         return `${this.config.APP_URL}/avisos/sair/${encodeURIComponent(token)}`;
     }

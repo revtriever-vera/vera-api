@@ -88,4 +88,8 @@ export class PositionDomain {
     public async listHeldAssetIdsAcrossTenants(): Promise<string[]> {
         return this.positions.listHeldAssetIdsAcrossTenants();
     }
+
+    public async listCompanyIdsWithRealAcrossTenants(): Promise<string[]> {
+        return this.positions.listCompanyIdsWithRealAcrossTenants();
+    }
 }

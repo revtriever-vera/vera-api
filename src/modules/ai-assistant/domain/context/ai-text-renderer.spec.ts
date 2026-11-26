@@ -5,7 +5,8 @@ import { AiTextRenderer } from './ai-text-renderer';
 const KEYS: ReadonlyMap<string, LabelSource> = new Map<string, LabelSource>([
     ['cat:eating_out', { kind: 'cat', name: 'Delivery e restaurantes' }],
     ['cat:custom_1', { kind: 'cat', name: 'Pets' }],
-    ['cls:rf_pos', { kind: 'cls', name: 'Renda fixa pós' }]
+    ['cls:rf_pos', { kind: 'cls', name: 'Renda fixa pós' }],
+    ['ativo:custom_1', { kind: 'ativo', name: 'ITUB4' }]
 ]);
 
 describe('AiTextRenderer', () => {
@@ -25,6 +26,12 @@ describe('AiTextRenderer', () => {
         const result = renderer.render('[[cat:custom_1]] subiu. [[cls:rf_pos]] caiu!\n[[cat:eating_out]] ficou.', KEYS);
 
         expect(result).toEqual({ ok: true, text: 'Pets subiu. Renda fixa pós caiu!\nDelivery e restaurantes ficou.', markers: 3 });
+    });
+
+    it('troca o marcador de ativo pelo código, só quando a chave é de ativo', () => {
+        expect(renderer.render('[[ativo:custom_1]] subiu.', KEYS)).toEqual({ ok: true, text: 'ITUB4 subiu.', markers: 1 });
+        expect(renderer.render('[[cat:custom_1]] subiu.', KEYS)).toMatchObject({ ok: true, text: 'Pets subiu.' });
+        expect(renderer.render('[[ativo:custom_2]] subiu.', KEYS)).toMatchObject({ ok: false, reason: 'unknown_marker' });
     });
 
     it('recusa marcador com chave desconhecida ou de outro tipo', () => {

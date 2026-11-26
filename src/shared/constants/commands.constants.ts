@@ -24,11 +24,18 @@ export const COMMAND_KEYS = {
     recurringDaily: 'recurring-daily-command',
     goalNoticesDaily: 'goal-notices-daily-command',
     recurringNoticesDaily: 'recurring-notices-daily-command',
+    portfolioWatchMonthlySnapshot: 'portfolio-watch-monthly-snapshot-command',
+    portfolioWatchDaily: 'portfolio-watch-daily-command',
+    portfolioWatchWeeklyChanges: 'portfolio-watch-weekly-changes-command',
+    portfolioWatchMonthlyReview: 'portfolio-watch-monthly-review-command',
     billingProvisioningRescue: 'billing-provisioning-rescue-command',
     billingEventsReplay: 'billing-events-replay-command',
     billingInvoicesReconcile: 'billing-invoices-reconcile-command',
     billingStandingSweep: 'billing-standing-sweep-command',
-    billingTrialSweep: 'billing-trial-sweep-command'
+    billingTrialSweep: 'billing-trial-sweep-command',
+    portfolioEventsDaily: 'portfolio-events-daily-command',
+    portfolioEventsLinksWeekly: 'portfolio-events-links-weekly-command',
+    marketDocumentsSweep: 'market-documents-sweep-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
@@ -43,6 +50,8 @@ export const CRON = {
     everyDayAtSixAm: '0 6 * * *',
     everyDayAtFourAm: '0 4 * * *',
     everyDayAtSevenAm: '0 7 * * *',
+    everyMondayAtSevenAm: '0 7 * * 1',
+    everyMondayAtEightAm: '0 8 * * 1',
     everyDayAtNineAm: '0 9 * * *',
     everyDayAtNineThirtyAm: '30 9 * * *',
     twiceDaily: '0 9,21 * * *',
@@ -50,7 +59,8 @@ export const CRON = {
     mondayToSaturdayAtNineAm: '0 9 * * 1-6',
     everyDayAtTenThirtyPm: '30 22 * * *',
     weekdaysAtTwoThirtyPm: '30 14 * * 1-5',
-    firstOfMonthAtFourAm: '0 4 1 * *'
+    firstOfMonthAtFourAm: '0 4 1 * *',
+    firstOfMonthAtFiveAm: '0 5 1 * *'
 } as const;
 
 export const CRON_TIMEZONE: string = 'America/Sao_Paulo';

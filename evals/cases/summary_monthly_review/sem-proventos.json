@@ -1,0 +1,59 @@
+{
+  "id": "sem-proventos",
+  "task": "summary_monthly_review",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_br": "Ações Brasil",
+    "cls:fii": "FIIs",
+    "ativo:custom_1": "Petrobras"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "+1,60%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "rentabilidade_pct": "+2,40%"
+      },
+      {
+        "chave": "fii",
+        "rotulo_padrao": "FIIs",
+        "rentabilidade_pct": "+0,80%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0,95%",
+      "ipca_pct": "+0,60%",
+      "ibovespa_pct": "+1,90%"
+    },
+    "maiores_altas": [
+      {
+        "chave": "custom_1",
+        "variacao_pct": "+6,00%"
+      }
+    ],
+    "maiores_quedas": [],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["+1,60%"],
+    "mustMention": [],
+    "mustNotMention": ["provento", "dividend"],
+    "sentences": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira rendeu **+1,60%** em outubro, acima do CDI (+0,95%) e do IPCA (+0,60%), e abaixo do Ibovespa (+1,90%).",
+    "[[cls:acoes_br]] foi a classe de melhor resultado (+2,40%) e [[cls:fii]] a de menor (+0,80%).",
+    "No preço, [[ativo:custom_1]] subiu +6,00%."
+  ]
+}

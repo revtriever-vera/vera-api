@@ -1,0 +1,32 @@
+{
+  "id": "routine-notice-en",
+  "task": "market_document_summary",
+  "locale": "en",
+  "labels": {},
+  "document": {
+    "issuer": "Delta Steel Corp. (fictional)",
+    "tickers": ["DLTS"],
+    "category": "Notice",
+    "publishedAt": "2026-02-11",
+    "text": "Delta Steel Corp. announces that it has updated the contact details of its investor relations office. The new email address is ir@deltasteel.example. There is no change to the company's operations, financial position or dividend policy."
+  },
+  "expectDiscard": true,
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["buy", "sell", "worth", "will rise"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "routine",
+    "relevance": 0,
+    "discard": true,
+    "numbers": []
+  },
+  "reference": [
+    "Delta Steel updated the contact details of its investor relations office, with no change to operations, finances or dividend policy."
+  ]
+}

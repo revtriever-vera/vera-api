@@ -1,0 +1,32 @@
+{
+  "id": "previsao-do-emissor",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Agro Planalto (empresa fictícia)",
+    "tickers": ["APLN3"],
+    "category": "Fato Relevante",
+    "publishedAt": "2026-09-03",
+    "text": "FATO RELEVANTE. A Agro Planalto divulga sua projeção para a safra 2026/27: a administração espera colher 4,8 milhões de toneladas de grãos e crescimento da receita entre 10% e 14%, caso o clima seja favorável. A companhia ressalta que as projeções são estimativas e não constituem garantia de desempenho."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["4,8"],
+    "mustMention": ["projeta"],
+    "mustNotMention": ["vai crescer", "vai render", "vai subir", "compre"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "relevant_fact",
+    "relevance": 2,
+    "discard": false,
+    "numbers": ["4,8", "2026/27", "10%", "14%"]
+  },
+  "reference": [
+    "A Agro Planalto projeta colher 4,8 milhões de toneladas na safra 2026/27 e crescimento da receita de 10% a 14%, se o clima ajudar. A própria companhia diz que são estimativas, e não garantia de desempenho."
+  ]
+}

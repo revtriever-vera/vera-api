@@ -4,6 +4,7 @@ import { LlmUsagePort } from '../ports/llm-usage.port';
 import { LlmLedgerEntry, LlmLedgerService } from './llm-ledger.service';
 import { LlmLogService } from './llm-log.service';
 import { LlmMetricsService } from './llm-metrics.service';
+import { LlmPlatformBudgetService } from './llm-platform-budget.service';
 
 const ENTRY: LlmLedgerEntry = {
     callId: 'call-1',
@@ -28,15 +29,18 @@ function build(usage: LlmUsagePort | null = null) {
     const port = usage ?? { assertRoom: vi.fn().mockResolvedValue(undefined), record: vi.fn().mockResolvedValue(undefined) };
     const logs = { capReached: vi.fn(), bookkeepingFailed: vi.fn() };
     const metrics = { request: vi.fn(), tokens: vi.fn(), cost: vi.fn(), duration: vi.fn(), divergence: vi.fn() };
+    const platform = { assertRoom: vi.fn().mockResolvedValue(undefined) };
     const ledger: LlmLedgerService = new LlmLedgerService(
         calls as unknown as LlmCallDomain,
         logs as unknown as LlmLogService,
         metrics as unknown as LlmMetricsService,
+        platform as unknown as LlmPlatformBudgetService,
         port
     );
     return {
         ledger,
         calls,
+        platform,
         port: port as unknown as { assertRoom: ReturnType<typeof vi.fn>; record: ReturnType<typeof vi.fn> },
         logs,
         metrics
@@ -120,7 +124,7 @@ describe('LlmLedgerService', () => {
         const { ledger, port, calls } = build();
 
         await ledger.assertRoom('ai', 'summary_month', 7);
-        const answered: number = await ledger.answeredSince('hash', new Date(0));
+        const answered: number = await ledger.answeredSince('hash', new Date(0), 'ai');
 
         expect(port.assertRoom).toHaveBeenCalledWith({ feature: 'ai', task: 'summary_month', estimateMicros: 7 });
         expect(answered).toBe(2);
@@ -132,10 +136,23 @@ describe('LlmLedgerService', () => {
             { record: vi.fn() } as unknown as LlmCallDomain,
             { bookkeepingFailed: vi.fn() } as unknown as LlmLogService,
             { request: vi.fn(), tokens: vi.fn(), cost: vi.fn(), duration: vi.fn(), divergence: vi.fn() } as unknown as LlmMetricsService,
+            { assertRoom: vi.fn() } as unknown as LlmPlatformBudgetService,
             null
         );
 
         await expect(ledger.assertRoom('ai', 't', 1)).resolves.toBeUndefined();
         await expect(ledger.record(ENTRY)).resolves.toBeUndefined();
+    });
+
+    it('feature de plataforma usa o teto próprio e não lança na cota da conta', async () => {
+        const { ledger, port, platform, calls } = build();
+
+        await ledger.assertRoom('market_docs', 'market_document_summary', 9);
+        await ledger.record({ ...ENTRY, feature: 'market_docs', task: 'market_document_summary' });
+
+        expect(platform.assertRoom).toHaveBeenCalledWith('market_docs', 9);
+        expect(port.assertRoom).not.toHaveBeenCalled();
+        expect(port.record).not.toHaveBeenCalled();
+        expect(calls.record).toHaveBeenCalledWith(expect.objectContaining({ feature: 'market_docs' }));
     });
 });

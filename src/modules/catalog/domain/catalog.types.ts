@@ -29,6 +29,13 @@ export const MARKET_BY_SOURCE: Readonly<Record<CatalogSource, CatalogMarket>> = 
     cvm_funds: MARKETS.cvm
 };
 
+export const ISSUER_LINK_ORIGINS = {
+    companyRegistry: 'cvm_fca',
+    fundMonthlyReport: 'cvm_inf_mensal_fii'
+} as const;
+
+export type IssuerLinkOrigin = (typeof ISSUER_LINK_ORIGINS)[keyof typeof ISSUER_LINK_ORIGINS];
+
 export const ASSET_KINDS = {
     stock: 'stock',
     etf: 'etf',

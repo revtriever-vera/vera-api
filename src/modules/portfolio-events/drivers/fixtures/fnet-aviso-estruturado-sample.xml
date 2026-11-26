@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DadosEconomicoFinanceiros>
+  <DadosGerais>
+    <NomeFundo>PATRIA LOG FUNDO DE INVESTIMENTO IMOBILIARIO</NomeFundo>
+    <CNPJFundo>11.728.688/0001-47</CNPJFundo>
+    <CodNegociacaoCota>HGLG11</CodNegociacaoCota>
+  </DadosGerais>
+  <Provento>
+    <TipoProvento>Rendimento</TipoProvento>
+    <DataBase>2026-10-30</DataBase>
+    <DataPagamento>2026-11-14</DataPagamento>
+    <ValorProventoCota>1,10</ValorProventoCota>
+  </Provento>
+  <Provento>
+    <TipoProvento>Amortização</TipoProvento>
+    <DataBase>2026-10-30</DataBase>
+    <DataPagamento>2026-11-14</DataPagamento>
+    <ValorProventoCota>0,25</ValorProventoCota>
+  </Provento>
+</DadosEconomicoFinanceiros>

@@ -1,0 +1,53 @@
+{
+  "id": "fgc-and-issuer-concentration",
+  "task": "summary_monthly_review",
+  "locale": "en",
+  "labels": {
+    "cls:rf_pos": "Floating-rate fixed income",
+    "cls:rf_ipca": "Inflation-linked fixed income"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "+1.10%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Floating-rate fixed income",
+        "rentabilidade_pct": "+1.00%"
+      },
+      {
+        "chave": "rf_ipca",
+        "rotulo_padrao": "Inflation-linked fixed income",
+        "rentabilidade_pct": "+1.30%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0.95%",
+      "ipca_pct": "+0.60%",
+      "ibovespa_pct": null
+    },
+    "maiores_altas": [],
+    "maiores_quedas": [],
+    "proventos_pct_carteira": "0.30%",
+    "concentracao": {
+      "maior_emissor_pct": "38%",
+      "maior_setor_pct": "52%",
+      "acima_do_fgc": true
+    }
+  },
+  "expect": {
+    "mustCite": ["+1.10%", "38%"],
+    "mustMention": ["FGC"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Your portfolio returned **+1.10%** in October, above the CDI (+0.95%) and the IPCA (+0.60%).",
+    "[[cls:rf_ipca]] was the best class (+1.30%) and [[cls:rf_pos]] the lowest (+1.00%).",
+    "There is an amount above the FGC limit, and a single issuer holds 38% of the portfolio."
+  ]
+}

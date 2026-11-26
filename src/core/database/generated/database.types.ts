@@ -112,6 +112,18 @@ export interface AssetClasses {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssetIssuerLinks {
+    assetClass: string | null;
+    assetId: string;
+    cnpj: string;
+    createdAt: Generated<Timestamp>;
+    cvmCode: string | null;
+    id: string;
+    issuerKind: string;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AssetQuotes {
     assetId: string;
     currency: string;
@@ -689,7 +701,7 @@ export interface InvestmentOperations {
 export interface LlmCalls {
     attempts: number;
     cacheReadTokens: Generated<number>;
-    companyId: string;
+    companyId: string | null;
     costMicros: Generated<Int8>;
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
@@ -709,12 +721,55 @@ export interface LlmCalls {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface MarketDocuments {
+    assetIds: Generated<string[]>;
+    attempts: Generated<number>;
+    category: string;
+    createdAt: Generated<Timestamp>;
+    externalId: string;
+    extractedText: string | null;
+    id: string;
+    issuerCnpj: string | null;
+    publishedAt: Timestamp;
+    skipReason: string | null;
+    source: string;
+    status: Generated<string>;
+    textHash: string | null;
+    title: string;
+    updatedAt: Generated<Timestamp>;
+    url: string;
+}
+
+export interface MarketDocumentSummaries {
+    createdAt: Generated<Timestamp>;
+    discard: boolean;
+    documentId: string;
+    id: string;
+    kind: string;
+    llmCallId: string | null;
+    locale: string;
+    promptVersion: string;
+    relevance: number;
+    summary: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface MarketIndexPoints {
     close: Numeric;
     date: Timestamp;
     fetchedAt: Generated<Timestamp>;
     source: string;
     symbol: string;
+}
+
+export interface MonthlyReviews {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    deletedAt: Timestamp | null;
+    id: string;
+    month: string;
+    payload: Json;
+    updatedAt: Generated<Timestamp>;
 }
 
 export interface NoticePreferences {
@@ -815,6 +870,53 @@ export interface PluggyCredentials {
     status: string;
     updatedAt: Generated<Timestamp>;
     verifiedWith: Generated<string>;
+}
+
+export interface PortfolioEvents {
+    amountPerUnit: Numeric | null;
+    assetId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    documentUrl: string | null;
+    eventDate: Timestamp | null;
+    exDate: Timestamp | null;
+    externalKey: string;
+    id: string;
+    kind: string;
+    paymentDate: Timestamp | null;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface PortfolioIncomeLedger {
+    amountMinor: Int8;
+    assetId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    deletedAt: Timestamp | null;
+    eventId: string;
+    id: string;
+    paymentDate: Timestamp | null;
+    quantityAtExDate: Numeric;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface PortfolioMonthlySnapshots {
+    assetId: string;
+    classId: string | null;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    deletedAt: Timestamp | null;
+    holdingKind: string;
+    id: string;
+    month: string;
+    price: Numeric | null;
+    priceDate: Timestamp | null;
+    quantity: Numeric | null;
+    updatedAt: Generated<Timestamp>;
+    valueMinor: Int8;
 }
 
 export interface PortfolioSettings {
@@ -1287,6 +1389,7 @@ export interface DB {
     AiSummaries: AiSummaries;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
+    AssetIssuerLinks: AssetIssuerLinks;
     AssetQuotes: AssetQuotes;
     Assets: Assets;
     AssistantConversations: AssistantConversations;
@@ -1331,7 +1434,10 @@ export interface DB {
     InvestmentImports: InvestmentImports;
     InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;
+    MarketDocuments: MarketDocuments;
+    MarketDocumentSummaries: MarketDocumentSummaries;
     MarketIndexPoints: MarketIndexPoints;
+    MonthlyReviews: MonthlyReviews;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;
     OnboardingStates: OnboardingStates;
@@ -1340,6 +1446,9 @@ export interface DB {
     PlatformAccessTokens: PlatformAccessTokens;
     PlatformAuditLog: PlatformAuditLog;
     PluggyCredentials: PluggyCredentials;
+    PortfolioEvents: PortfolioEvents;
+    PortfolioIncomeLedger: PortfolioIncomeLedger;
+    PortfolioMonthlySnapshots: PortfolioMonthlySnapshots;
     PortfolioSettings: PortfolioSettings;
     Positions: Positions;
     PremiumEndedNotifications: PremiumEndedNotifications;

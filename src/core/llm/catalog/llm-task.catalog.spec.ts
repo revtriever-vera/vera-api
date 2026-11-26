@@ -9,9 +9,11 @@ const MAX_INPUT_TOKENS: Readonly<Record<string, number>> = {
     [LLM_TASKS.summaryMonth]: 40_000,
     [LLM_TASKS.summaryCuts]: 40_000,
     [LLM_TASKS.summaryPortfolio]: 40_000,
+    [LLM_TASKS.summaryMonthlyReview]: 40_000,
     [LLM_TASKS.askVeraStep]: 100_000,
     [LLM_TASKS.askVeraAppStep]: 100_000,
-    [LLM_TASKS.investmentExtract]: 60_000
+    [LLM_TASKS.investmentExtract]: 60_000,
+    [LLM_TASKS.marketDocumentSummary]: 20_000
 };
 const CAP_MICROS: number = 4_000_000;
 
@@ -31,9 +33,18 @@ function byTask(task: string): LlmTaskSpec {
 }
 
 describe('catálogo de tarefas', () => {
-    it('cobre as seis tarefas da Vera, sem repetir nenhuma', () => {
+    it('cobre as oito tarefas da Vera, sem repetir nenhuma', () => {
         expect(LLM_TASK_CATALOG.map((spec: LlmTaskSpec): string => spec.task).sort()).toEqual(
-            ['ask_vera_app_step', 'ask_vera_step', 'investment_extract', 'summary_cuts', 'summary_month', 'summary_portfolio'].sort()
+            [
+                'ask_vera_app_step',
+                'ask_vera_step',
+                'investment_extract',
+                'market_document_summary',
+                'summary_cuts',
+                'summary_month',
+                'summary_monthly_review',
+                'summary_portfolio'
+            ].sort()
         );
     });
 
