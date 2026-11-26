@@ -29,6 +29,10 @@ export class MarketDocumentSummaryDomain {
         };
     }
 
+    public async findForDocuments(documentIds: readonly string[], locales: readonly AppLocale[]): Promise<MarketDocumentSummaryRow[]> {
+        return documentIds.length === 0 ? [] : this.summaries.findForDocuments(documentIds, locales);
+    }
+
     public async save(summary: StoredSummary): Promise<void> {
         await this.summaries.upsertSummary(summary);
     }

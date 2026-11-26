@@ -16,6 +16,7 @@ import { MarketDocumentSourceRegistryService, selectDocumentSources } from '../s
 import { MarketDocumentSummarizerService } from '../services/market-document-summarizer.service';
 import { MarketDocumentTextService } from '../services/market-document-text.service';
 import { MarketDocumentsCollectorService } from '../services/market-documents-collector.service';
+import { MarketDocumentsReaderService } from '../services/market-documents-reader.service';
 import { MarketDocumentsExtractorService } from '../services/market-documents-extractor.service';
 import { MarketDocumentsRetentionService } from '../services/market-documents-retention.service';
 import { MarketDocumentsLogService } from '../services/market-documents-log.service';
@@ -39,6 +40,7 @@ import { MarketDocumentsSweepApplication } from './market-documents-sweep.applic
         MarketDocumentTextService,
         MarketDocumentSummarizerService,
         MarketDocumentsRetentionService,
+        MarketDocumentsReaderService,
         MarketDocumentSourceRegistryService,
         MarketDocumentsLogService,
         MarketDocumentsMetricsService,
@@ -61,6 +63,6 @@ import { MarketDocumentsSweepApplication } from './market-documents-sweep.applic
                 } satisfies Record<DocumentSource, MarketDocumentSourcePort>)
         }
     ],
-    exports: [MarketDocumentsSweepApplication]
+    exports: [MarketDocumentsSweepApplication, MarketDocumentsReaderService]
 })
 export class MarketDocumentsApplicationModule {}

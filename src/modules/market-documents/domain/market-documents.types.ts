@@ -72,3 +72,10 @@ export interface PendingDocument {
 }
 
 export const CNPJ_PATTERN: RegExp = /^\d{14}$/;
+
+export const FEED_STATUSES: readonly DocumentStatus[] = [
+    DOCUMENT_STATUSES.extracted,
+    DOCUMENT_STATUSES.summarized,
+    DOCUMENT_STATUSES.skipped,
+    DOCUMENT_STATUSES.failed
+];

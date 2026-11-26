@@ -3,7 +3,14 @@ import { RawBuilder } from 'kysely';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { BareGlobalRepository } from '../../../core/database/repositories/bare-global.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { DOCUMENT_STATUSES, MarketDocumentInsert, MarketDocumentRow, MarketDocumentWrite } from '../domain/market-documents.types';
+import {
+    DOCUMENT_STATUSES,
+    FEED_STATUSES,
+    MarketDocumentInsert,
+    MarketDocumentRow,
+    MarketDocumentWrite,
+    SKIP_REASONS
+} from '../domain/market-documents.types';
 
 const UPSERT_CHUNK: number = 200;
 const DELETE_BATCH: number = 500;
@@ -77,6 +84,18 @@ export class MarketDocumentsRepository extends BareGlobalRepository<'MarketDocum
         return this.selectScoped()
             .selectAll()
             .where('status', '=', DOCUMENT_STATUSES.extracted)
+            .orderBy('publishedAt', 'desc')
+            .limit(limit)
+            .execute();
+    }
+
+    public async findFeed(assetIds: readonly string[], since: Date, limit: number): Promise<MarketDocumentRow[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('publishedAt', '>=', since)
+            .where('status', 'in', [...FEED_STATUSES])
+            .where(this.rawSql<boolean>`NOT ("status" = ${DOCUMENT_STATUSES.skipped} AND "skipReason" = ${SKIP_REASONS.routineCategory})`)
+            .where(this.rawSql<boolean>`"assetIds" && ${[...assetIds]}::uuid[]`)
             .orderBy('publishedAt', 'desc')
             .limit(limit)
             .execute();

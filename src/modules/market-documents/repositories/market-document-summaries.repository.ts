@@ -27,6 +27,14 @@ export class MarketDocumentSummariesRepository extends BareGlobalRepository<'Mar
         return this.findOne({ documentId, locale });
     }
 
+    public async findForDocuments(documentIds: readonly string[], locales: readonly string[]): Promise<MarketDocumentSummaryRow[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('documentId', 'in', [...documentIds])
+            .where('locale', 'in', [...locales])
+            .execute();
+    }
+
     public async upsertSummary(summary: StoredSummary): Promise<MarketDocumentSummaryRow> {
         const content: SummaryContent = contentOf(summary);
         return this.upsertRow(

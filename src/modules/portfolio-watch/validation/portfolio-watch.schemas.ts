@@ -1,7 +1,9 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { holderQuerySchema } from '../../../shared/holder/holder-filter';
+import { SUMMARY_KIND_LIST } from '../../market-documents/services/market-documents-reader.service';
 import { AGENDA_KINDS } from '../domain/portfolio-agenda.types';
+import { ChangesWindow } from '../domain/portfolio-changes.types';
 
 const ISO_DATE: RegExp = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -81,3 +83,54 @@ export const agendaResponseSchema = z.object({
 });
 
 export type AgendaResponse = z.infer<typeof agendaResponseSchema>;
+
+export const changesQuerySchema = z.object({
+    days: z
+        .enum(['7', '30'])
+        .default('7')
+        .transform((value: '7' | '30'): ChangesWindow => (value === '7' ? 7 : 30))
+        .describe('Size of the window, in days back from now: 7 (default) or 30'),
+    classId: z.string().uuid().optional().describe('Only the assets of this asset class'),
+    holder: holderQuerySchema
+});
+
+export class ChangesQueryDto extends createZodDto(changesQuerySchema) {}
+
+export const changeItemSchema = z.object({
+    id: z.string().uuid().describe('Id of the document'),
+    assetId: z.string().uuid().describe('Catalog asset the document is about, the heaviest in the portfolio when it covers more than one'),
+    symbol: z.string().describe('Ticker of the asset. Untrusted text'),
+    source: z.string().describe('Where the document comes from: `cvm_ipe`, `cvm_itr` or `b3_fnet`'),
+    category: z.string().describe('Category of the document as published, for example `relevant_fact`'),
+    title: z.string().describe('Title of the document as published. Untrusted text'),
+    kind: z.enum(SUMMARY_KIND_LIST).nullable().describe('What the document is, from the summary; null when there is no summary'),
+    date: z.string().describe('Publication date, YYYY-MM-DD'),
+    summary: z
+        .string()
+        .describe(
+            'Summary of 2 to 3 sentences in the language of the account, or "Resumo indisponível" when there is none. Untrusted text'
+        ),
+    summaryAvailable: z
+        .boolean()
+        .describe(
+            'False when the document has only its title and link: over the daily budget, scanned, too large or a financial statements package'
+        ),
+    relevance: z.number().int().min(0).max(3).nullable().describe('How much the document weighs, 0 to 3; null when there is no summary'),
+    weightBps: z
+        .number()
+        .int()
+        .nullable()
+        .describe('Share of the asset in the portfolio, in basis points; null when the asset has no value yet'),
+    weightLine: z.string().nullable().describe('Sentence written by the code, for example "XPLG11 é 8% da sua carteira."'),
+    documentUrl: z.string().describe('Link to the official document')
+});
+
+export const changesResponseSchema = z.object({
+    days: z.union([z.literal(7), z.literal(30)]).describe('Window used, in days'),
+    notice: z.string().describe('Fixed line, written by the code, that this is not a recommendation to buy or sell'),
+    items: z
+        .array(changeItemSchema)
+        .describe('Documents of the assets the account holds, most relevant for the portfolio first, then newest')
+});
+
+export type ChangesResponse = z.infer<typeof changesResponseSchema>;
