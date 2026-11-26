@@ -50,7 +50,7 @@
   },
   "expect": {
     "mustCite": ["+2,10%"],
-    "mustMention": ["acima do CDI"],
+    "mustMention": ["acima do CDI", "valor da carteira"],
     "mustNotMention": [],
     "sentences": {
       "min": 3,
@@ -61,6 +61,6 @@
     "Sua carteira rendeu **+2,10%** em outubro, acima do CDI (+0,95%) e do IPCA (+0,60%), e abaixo do Ibovespa (+3,10%).",
     "[[cls:acoes_br]] foi a classe de melhor resultado (+4,20%) e [[cls:rf_pos]] a de menor (+0,95%).",
     "No preço, [[ativo:custom_1]] subiu +9,00% e [[ativo:custom_2]] caiu -3,00%.",
-    "A carteira recebeu proventos no mês, 0,80% do seu valor."
+    "A carteira recebeu proventos no mês, 0,80% do valor da carteira."
   ]
 }

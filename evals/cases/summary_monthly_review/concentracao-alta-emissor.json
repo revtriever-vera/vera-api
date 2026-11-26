@@ -38,7 +38,7 @@
   },
   "expect": {
     "mustCite": ["+1,10%", "38%"],
-    "mustMention": ["emissor"],
+    "mustMention": ["emissor", "valor da carteira"],
     "mustNotMention": [],
     "sentences": {
       "min": 3,
@@ -48,7 +48,7 @@
   "reference": [
     "Sua carteira rendeu **+1,10%** em outubro, acima do CDI (+0,95%) e do IPCA (+0,60%).",
     "[[cls:rf_ipca]] foi a classe de melhor resultado (+1,30%) e [[cls:rf_pos]] a de menor (+1,00%).",
-    "A carteira recebeu proventos no mês, 0,30% do seu valor.",
+    "A carteira recebeu proventos no mês, 0,30% do valor da carteira.",
     "Um único emissor concentra 38% da carteira."
   ]
 }
