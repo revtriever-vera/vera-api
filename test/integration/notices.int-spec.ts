@@ -111,7 +111,11 @@ describe('avisos por e-mail', () => {
         const ownerAfter = await harness.call<SettingsBody>(owner.token, 'GET', '/notifications/preferences');
 
         expect(before.body.items).toEqual([
+            { type: 'fixed_income_maturity_soon', enabled: true },
             { type: 'goal_behind', enabled: true },
+            { type: 'portfolio_assembly_soon', enabled: true },
+            { type: 'portfolio_ex_date_tomorrow', enabled: true },
+            { type: 'portfolio_payment_today', enabled: true },
             { type: TYPE, enabled: true },
             { type: OTHER_TYPE, enabled: true },
             { type: 'recurring_due', enabled: true },
@@ -119,7 +123,11 @@ describe('avisos por e-mail', () => {
         ]);
         expect(changed).toEqual({ status: 200, body: { type: TYPE, enabled: false } });
         expect(viewerAfter.body.items).toEqual([
+            { type: 'fixed_income_maturity_soon', enabled: true },
             { type: 'goal_behind', enabled: true },
+            { type: 'portfolio_assembly_soon', enabled: true },
+            { type: 'portfolio_ex_date_tomorrow', enabled: true },
+            { type: 'portfolio_payment_today', enabled: true },
             { type: TYPE, enabled: false },
             { type: OTHER_TYPE, enabled: true },
             { type: 'recurring_due', enabled: true },

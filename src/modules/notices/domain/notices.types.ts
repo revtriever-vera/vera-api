@@ -16,6 +16,20 @@ export interface NoticeRequest {
     readonly userId?: string;
 }
 
+export interface DigestEntry {
+    readonly type: string;
+    readonly key: string;
+    readonly data: Readonly<Record<string, string>>;
+}
+
+export interface DigestRequest {
+    readonly entries: readonly DigestEntry[];
+    readonly props: Readonly<Record<string, string>>;
+}
+
+export const DIGEST_ENTRIES_PROP: string = 'entries';
+export const DIGEST_UNSUBSCRIBE_PROP: string = 'unsubscribeUrls';
+
 export interface NoticeOutcome {
     readonly sent: number;
     readonly skipped: number;

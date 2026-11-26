@@ -36,9 +36,9 @@ export class ScheduleSourceService {
         private readonly issuers: IssuerDirectoryService
     ) {}
 
-    public async loadTitles(now: Date): Promise<TitlesInputs> {
+    public async loadTitles(now: Date, filter: HolderFilter = ANY_HOLDER): Promise<TitlesInputs> {
         const [valued, series]: [readonly ValuedTitle[], CurveSeries] = await Promise.all([
-            this.valuation.valueAll(now, ANY_HOLDER),
+            this.valuation.valueAll(now, filter),
             this.seriesReader.loadCurveSeries()
         ]);
         return {
@@ -48,10 +48,10 @@ export class ScheduleSourceService {
         };
     }
 
-    public async load(now: Date): Promise<ScheduleInputs> {
+    public async load(now: Date, filter: HolderFilter = ANY_HOLDER): Promise<ScheduleInputs> {
         const [base, treasuries]: [TitlesInputs, ScheduleTreasury[]] = await Promise.all([
-            this.loadTitles(now),
-            this.loadTreasuries(ANY_HOLDER)
+            this.loadTitles(now, filter),
+            this.loadTreasuries(filter)
         ]);
         const usdRate: string | null = base.titles.some((title: ScheduleTitle): boolean => title.currency === USD)
             ? await this.usdRate(now)

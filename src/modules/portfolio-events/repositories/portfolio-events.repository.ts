@@ -29,7 +29,10 @@ export class PortfolioEventsRepository extends BareGlobalRepository<'PortfolioEv
         }
         const rows: StoredEventRead[] = await this.readQuery()
             .where('assetId', 'in', assetIds)
-            .where(this.rawSql<boolean>`coalesce("exDate", "paymentDate", "eventDate") between ${window.from}::date and ${window.to}::date`)
+            .where(
+                this
+                    .rawSql<boolean>`("exDate" between ${window.from}::date and ${window.to}::date or "paymentDate" between ${window.from}::date and ${window.to}::date or "eventDate" between ${window.from}::date and ${window.to}::date)`
+            )
             .orderBy('assetId', 'asc')
             .orderBy('kind', 'asc')
             .orderBy('externalKey', 'asc')

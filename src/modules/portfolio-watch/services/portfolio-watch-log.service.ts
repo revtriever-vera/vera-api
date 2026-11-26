@@ -18,4 +18,12 @@ export class PortfolioWatchLogService {
     public incomeRecorded(recorded: boolean): void {
         this.logService.info({ message: 'portfolio income ledger entry', identifier: LOG_IDENTIFIER, meta: { recorded } });
     }
+
+    public dailyFanOut(companies: number): void {
+        this.logService.info({ message: 'portfolio daily notices fan-out queued', identifier: LOG_IDENTIFIER, meta: { companies } });
+    }
+
+    public dailyEvaluated(entries: number, emails: number): void {
+        this.logService.info({ message: 'portfolio daily notices evaluated', identifier: LOG_IDENTIFIER, meta: { entries, emails } });
+    }
 }
