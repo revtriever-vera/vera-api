@@ -147,6 +147,8 @@ describe('NoticeService', () => {
             goal_behind: 'https://api.vera.example/notifications/unsubscribe/goal_behind',
             goal_late: 'https://api.vera.example/notifications/unsubscribe/goal_late'
         });
+        expect(first.unsubscribeUrl).toBe('https://api.vera.example/notifications/unsubscribe/goal_behind,goal_late');
+        expect(first.props['unsubscribeUrl']).toBe(first.unsubscribeUrl);
         expect(first.props).toMatchObject({ extra: '1', firstName: 'Ana', appUrl: 'https://app.vera.example' });
     });
 

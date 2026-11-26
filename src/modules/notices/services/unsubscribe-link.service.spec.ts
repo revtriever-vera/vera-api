@@ -32,6 +32,12 @@ describe('UnsubscribeLinkService', () => {
         expect(service().verify(service().tokenFor(SUBJECT))).toEqual(SUBJECT);
     });
 
+    it('signs a token that carries several types for a grouped e-mail', () => {
+        const grouped: UnsubscribeSubject = { ...SUBJECT, type: 'goal_behind,goal_late' };
+
+        expect(service().verify(service().tokenFor(grouped))).toEqual(grouped);
+    });
+
     it('builds the one-click URL on the public API and the confirmation page URL on the app', () => {
         const token: string = service().tokenFor(SUBJECT);
 
