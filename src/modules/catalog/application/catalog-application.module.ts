@@ -18,6 +18,7 @@ import { CatalogMetricsService } from '../services/catalog-metrics.service';
 import { IssuerLinkSourceService } from '../services/issuer-link-source.service';
 import { CvmDailyInformeReaderService } from '../services/cvm-daily-informe-reader.service';
 import { CvmIpeReaderService } from '../services/cvm-ipe-reader.service';
+import { CvmPeriodicReaderService } from '../services/cvm-periodic-reader.service';
 import { TesouroCsvReaderService } from '../services/tesouro-csv-reader.service';
 import { AssetSearchApplication } from './asset-search.application';
 import { CatalogSyncApplication } from './catalog-sync.application';
@@ -34,6 +35,7 @@ import { CatalogSyncApplication } from './catalog-sync.application';
         TesouroCsvReaderService,
         CvmDailyInformeReaderService,
         CvmIpeReaderService,
+        CvmPeriodicReaderService,
         IssuerLinkSourceService,
         CvmInstrumentsDriver,
         FinnhubSymbolsDriver,
@@ -74,6 +76,7 @@ import { CatalogSyncApplication } from './catalog-sync.application';
         TesouroCsvReaderService,
         CvmDailyInformeReaderService,
         CvmIpeReaderService,
+        CvmPeriodicReaderService,
         IssuerLinkSourceService
     ]
 })
