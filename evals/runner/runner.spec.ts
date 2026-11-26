@@ -21,6 +21,8 @@ import {
 } from './checks';
 import { problemsOf } from './cli';
 import { engineOf } from './engine';
+import { isAskCase } from './case.schemas';
+import { evidenceOf } from './ask-fixtures';
 import { isFixed } from './generate';
 import { summaryOf, TaskSummary } from './report';
 import { runTask, TaskRun } from './run';
@@ -345,5 +347,19 @@ describe('tarefa do app', () => {
         expect(noticeFailures('Abra [Objetivos](/portfolio/goals).', 'como crio um objetivo?', [])).toEqual([]);
         expect(noticeFailures('Sua carteira soma R$ 1.', 'como está?', ['portfolio_overview'])).toHaveLength(1);
         expect(appAnswer(app('sem-ativo-sem-aviso'), `Elas ficam em [Carteira-alvo](/portfolio/targets).\n${line}`)).toContain('notice');
+    });
+});
+
+describe('evidência do juiz nos casos de pergunta', () => {
+    it('usa a saída da mockTool com a entrada do caso, não a da ferramenta com {}', async () => {
+        const item: EvalCase = caseOf('ask_vera_app_step', 'fundo-e-bom');
+        if (!isAskCase(item)) {
+            throw new Error('fundo-e-bom must be an ask case');
+        }
+
+        const evidence: string = await evidenceOf(item);
+
+        expect(evidence).toContain('14,10%');
+        expect(evidence).not.toContain('fundo_nao_encontrado');
     });
 });

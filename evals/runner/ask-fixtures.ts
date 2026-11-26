@@ -470,12 +470,28 @@ function helpEvidenceOf(locale: AppLocale): JsonObject[] {
     }));
 }
 
+async function outputOfCall(tool: AskVeraTool, input: unknown): Promise<AskVeraToolOutput> {
+    return tool.run(tool.inputSchema.safeParse(input).data ?? input);
+}
+
+/** Saída das mockTools do caso com a entrada dele; as demais ferramentas entram com {} só como contexto. */
 export async function evidenceOf(item: AskCase): Promise<string> {
     const tools: readonly AskVeraTool[] =
         item.task === 'ask_vera_app_step'
             ? [...fixtureToolsOf(item.locale), ...appFixtureToolsOf(item.locale)]
             : fixtureToolsOf(item.locale);
-    const outputs: AskVeraToolOutput[] = await Promise.all(tools.map((tool: AskVeraTool): Promise<AskVeraToolOutput> => tool.run({})));
+    const byName: ReadonlyMap<string, AskVeraTool> = new Map(tools.map((tool: AskVeraTool): [string, AskVeraTool] => [tool.name, tool]));
+    const planned: ReadonlySet<string> = new Set(item.mockTools.map((call): string => call.name));
+    const calls: { tool: AskVeraTool; input: unknown }[] = [
+        ...item.mockTools.flatMap((call): { tool: AskVeraTool; input: unknown }[] => {
+            const tool: AskVeraTool | undefined = byName.get(call.name);
+            return tool === undefined ? [] : [{ tool, input: call.input }];
+        }),
+        ...tools.filter((tool: AskVeraTool): boolean => !planned.has(tool.name)).map((tool: AskVeraTool) => ({ tool, input: {} }))
+    ];
+    const outputs: AskVeraToolOutput[] = await Promise.all(
+        calls.map((call): Promise<AskVeraToolOutput> => outputOfCall(call.tool, call.input))
+    );
     const data: JsonObject[] = outputs.map((output: AskVeraToolOutput): JsonObject => output.payload);
     return JSON.stringify(item.task === 'ask_vera_app_step' ? [...data, ...helpEvidenceOf(item.locale)] : data);
 }
