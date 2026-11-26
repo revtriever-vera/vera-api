@@ -61,6 +61,15 @@ function noticeFor(notices: readonly IncomeNotice[], assetClass: ShareClass | nu
     return sameClass ?? shared ?? preferred ?? null;
 }
 
+function noticesFor(notices: readonly IncomeNotice[], assetClass: ShareClass | null): IncomeNotice[] {
+    const declarations: Map<string, IncomeNotice[]> = new Map<string, IncomeNotice[]>();
+    for (const notice of notices) {
+        const key: string = `${notice.kind}:${notice.exDate}`;
+        declarations.set(key, [...(declarations.get(key) ?? []), notice]);
+    }
+    return [...declarations.values()].flatMap((group: IncomeNotice[]): IncomeNotice[] => noticeFor(group, assetClass) ?? []);
+}
+
 function incomeDraft(link: IssuerLink, notice: IncomeNotice, document: IpeDocument): PortfolioEventDraft {
     return {
         kind: notice.kind,
@@ -131,9 +140,9 @@ export class CvmIpeDriver extends PortfolioEventSourcePort {
         const drafts: PortfolioEventDraft[] = [];
         let unparsed: number = 0;
         for (const document of recent) {
-            const notice: IncomeNotice | null = noticeFor(await this.readNotices(document), link.assetClass);
-            unparsed += notice === null ? 1 : 0;
-            drafts.push(...(notice === null ? [] : [incomeDraft(link, notice, document)]));
+            const found: IncomeNotice[] = noticesFor(await this.readNotices(document), link.assetClass);
+            unparsed += found.length === 0 ? 1 : 0;
+            drafts.push(...found.map((notice: IncomeNotice): PortfolioEventDraft => incomeDraft(link, notice, document)));
         }
         this.metrics.unparsed(this.source, unparsed);
         return drafts;

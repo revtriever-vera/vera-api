@@ -1,3 +1,4 @@
+import { AMOUNT_TOKEN, columnAmounts, decimalOf, DeclaredAmount, headerTables, NET_BEFORE } from './income-notice-tables';
 import { EVENT_KINDS, SHARE_CLASSES, ShareClass } from './portfolio-events.types';
 
 export interface IncomeNotice {
@@ -36,7 +37,6 @@ const MONTHS: readonly string[] = [
 
 const NUMERIC_DATE: RegExp = /(\d{1,2})[/.](\d{1,2})[/.](\d{4})/g;
 const WRITTEN_DATE: RegExp = /(\d{1,2})\s?[º°]?\sde\s([a-zç]{4,9})\sde\s(\d{4})/gi;
-const AMOUNT_TOKEN: RegExp = /R\$\s?(\d{1,3}(?:\.\d{3})*,\d+|\d+,\d+)/g;
 const ENGLISH_TAIL: RegExp = /\bNOTICE\s+TO\s+(?:THE\s+)?SHAREHOLDERS\b/i;
 const JCP_TERM: RegExp = /juros\s+sobre\s+(?:o\s+)?capital\s+pr[óo]prio|\bJCP\b/i;
 const DIVIDEND_TERM: RegExp = /dividendo|provento/i;
@@ -46,7 +46,6 @@ const PER_SHARE_BEFORE: RegExp = new RegExp(
     'i'
 );
 const PER_SHARE_AFTER: RegExp = new RegExp(String.raw`^[^R]{0,70}?(?:por|para cada)\s(?:cada\s)?(?:uma das\s)?(?:${SHARE})\b`, 'i');
-const NET_BEFORE: RegExp = /l[íi]quid[oa][^R]{0,30}$/i;
 const RESTATEMENT: RegExp = /passa\s+a\s+vigorar|deve-se\s+ler/gi;
 const SENTENCE_BREAK: RegExp = /[.;]\s[A-ZÀ-Ú]/;
 const PAYMENT_KEYWORD: RegExp = /pagamento|pag[oa]s?\b/gi;
@@ -82,9 +81,10 @@ interface AmountEntry {
 }
 
 const EX_DATE_RULES: readonly { readonly keyword: RegExp; readonly gap: number }[] = [
-    { keyword: /data[\s-]*com\b/gi, gap: 20 },
+    { keyword: /data[\s-]*[“"”]?com\b(?:-?direitos?)?[“"”]?/gi, gap: 20 },
     { keyword: /posi[çc][ãa]o\s+acion[áa]ria/gi, gap: 40 },
-    { keyword: /detentores\s+de\s+a[çc][õo]es/gi, gap: 80 },
+    { keyword: /(?:detentores|titulares)\s+de\s+a[çc][õo]es/gi, gap: 80 },
+    { keyword: /dados\s+cadastrais\s+existentes\s+n[oa]s?/gi, gap: 60 },
     { keyword: /data[\s-]*base\b/gi, gap: 30 },
     { keyword: /far[ãa]o\s+jus/gi, gap: 120 }
 ];
@@ -172,10 +172,6 @@ function paymentBeforeVerb(text: string, dates: readonly DateToken[]): (string |
 function paymentDateOf(text: string, exDate: string): string | null {
     const candidates: (string | null)[] = [...paymentAfterKeyword(text), ...paymentBeforeVerb(text, datesOf(text))];
     return candidates.find((date: string | null): boolean => date !== null && date > exDate) ?? null;
-}
-
-function decimalOf(brazilian: string): string {
-    return brazilian.replaceAll('.', '').replace(',', '.');
 }
 
 function isPerShare(before: string, after: string): boolean {
@@ -309,8 +305,83 @@ function portugueseBody(rawText: string): string {
     return english > 0 ? rawText.slice(0, english) : rawText;
 }
 
+function runFrom(text: string, anchor: Anchor, count: number): string[] | null {
+    const window: string = text.slice(anchor.end, anchor.end + anchor.gap + count * DATE_MAX_LENGTH);
+    const dates: DateToken[] = datesOf(window);
+    const first: DateToken | undefined = dates[0];
+    if (first === undefined || first.start > anchor.gap || SENTENCE_BREAK.test(window.slice(0, first.start))) {
+        return null;
+    }
+    const run: DateToken[] = [first];
+    for (const date of dates.slice(1)) {
+        if (window.slice(run.at(-1)?.end ?? 0, date.start).trim() !== '') {
+            break;
+        }
+        run.push(date);
+    }
+    return run.length === count ? run.map((date: DateToken): string => date.iso) : null;
+}
+
+function exDatesRun(text: string, count: number): string[] | null {
+    const runs: (string[] | null)[] = EX_DATE_RULES.flatMap((rule: { keyword: RegExp; gap: number }): (string[] | null)[] =>
+        anchorsOf(text, rule.keyword, rule.gap).map((anchor: Anchor): string[] | null => runFrom(text, anchor, count))
+    );
+    return runs.find((run: string[] | null): boolean => run !== null) ?? null;
+}
+
+function tableNotices(text: string, declared: readonly DeclaredAmount[]): IncomeNotice[] {
+    const exDate: string | null = exDateOf(text);
+    if (exDate === null) {
+        return [];
+    }
+    const paymentDate: string | null = paymentDateOf(text, exDate);
+    const kinds: IncomeNotice['kind'][] = [...new Set(declared.map((item: DeclaredAmount): IncomeNotice['kind'] => item.kind))];
+    return kinds.flatMap((kind: IncomeNotice['kind']): IncomeNotice[] => {
+        const entries: AmountEntry[] = declared
+            .filter((item: DeclaredAmount): boolean => item.kind === kind)
+            .map((item: DeclaredAmount): AmountEntry => ({ classes: item.shareClasses, amount: item.amount }));
+        const grouped: Map<ShareClass | null, Set<string>> = amountsByClass(entries);
+        return [...grouped]
+            .filter(([, amounts]: [ShareClass | null, Set<string>]): boolean => amounts.size === 1)
+            .map(([shareClass, amounts]: [ShareClass | null, Set<string>]): IncomeNotice => ({
+                kind,
+                exDate,
+                paymentDate,
+                amountPerUnit: [...amounts][0] ?? '',
+                shareClass
+            }));
+    });
+}
+
+function columnNotices(text: string, amounts: readonly string[]): IncomeNotice[] {
+    const kind: IncomeNotice['kind'] | null = kindOf(text);
+    const exDates: string[] | null = exDatesRun(text, amounts.length);
+    if (kind === null || exDates === null || amounts.some((amount: string): boolean => amount.length === 0)) {
+        return [];
+    }
+    return exDates.map((exDate: string, index: number): IncomeNotice => ({
+        kind,
+        exDate,
+        paymentDate: paymentDateOf(text, exDate),
+        amountPerUnit: amounts[index] ?? '',
+        shareClass: null
+    }));
+}
+
 export function parseIncomeNotices(rawText: string): IncomeNotice[] {
     const text: string = currentWording(plain(portugueseBody(rawText)));
+    const declared: DeclaredAmount[] | null = headerTables(text);
+    if (declared !== null) {
+        return tableNotices(text, declared);
+    }
+    const columns: readonly string[] | null = columnAmounts(text);
+    if (columns !== null) {
+        return columnNotices(text, columns);
+    }
+    return singleNotices(text);
+}
+
+function singleNotices(text: string): IncomeNotice[] {
     const kind: IncomeNotice['kind'] | null = kindOf(text);
     const exDate: string | null = exDateOf(text);
     const found: Map<ShareClass | null, string> | null = grossAmountsByClass(text);

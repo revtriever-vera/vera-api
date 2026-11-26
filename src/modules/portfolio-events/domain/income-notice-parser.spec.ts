@@ -137,4 +137,66 @@ describe('parseIncomeNotices', () => {
 
         expect(parseIncomeNotices(text)).toEqual([]);
     });
+
+    describe('real notices of the CVM (QA of Fase 1)', () => {
+        it('reads the data-com written with curly quotes and ignores the installments after it (Cemig)', () => {
+            expect(parseIncomeNotices(notice('aviso-cemig-jcp-com-direitos'))).toEqual([
+                { kind: 'jcp', exDate: '2026-09-22', paymentDate: null, amountPerUnit: '0.06991340114', shareClass: null }
+            ]);
+        });
+
+        it('reads a table that writes the titles first: dividend and JCP per share and per Unit (Taesa)', () => {
+            const found = parseIncomeNotices(notice('aviso-taesa-proventos-tabela')).map((item) => [
+                item.kind,
+                item.shareClass,
+                item.amountPerUnit,
+                item.exDate,
+                item.paymentDate
+            ]);
+
+            expect(found).toEqual([
+                ['dividend', 'ON', '0.08025458488', '2026-08-14', '2026-11-26'],
+                ['dividend', 'PN', '0.08025458488', '2026-08-14', '2026-11-26'],
+                ['dividend', 'UNIT', '0.24076375464', '2026-08-14', '2026-11-26'],
+                ['jcp', 'ON', '0.11982485996', '2026-08-14', '2026-11-26'],
+                ['jcp', 'PN', '0.11982485996', '2026-08-14', '2026-11-26'],
+                ['jcp', 'UNIT', '0.35947457988', '2026-08-14', '2026-11-26']
+            ]);
+        });
+
+        it('takes the Unit column of a one-kind table and not the total in reais (Taesa)', () => {
+            const found = parseIncomeNotices(notice('aviso-taesa-dividendos-tabela-unit')).filter((item) => item.shareClass === 'UNIT');
+
+            expect(found).toEqual([
+                { kind: 'dividend', exDate: '2026-11-16', paymentDate: '2027-01-27', amountPerUnit: '1.05610815696', shareClass: 'UNIT' }
+            ]);
+        });
+
+        it('writes one event per declaration when the notice has a column for each (Itaú)', () => {
+            expect(parseIncomeNotices(notice('aviso-itau-jcp-duas-declaracoes'))).toEqual([
+                { kind: 'jcp', exDate: '2026-03-19', paymentDate: '2026-08-28', amountPerUnit: '0.34888', shareClass: null },
+                { kind: 'jcp', exDate: '2026-06-18', paymentDate: '2026-08-28', amountPerUnit: '0.36188', shareClass: null }
+            ]);
+        });
+
+        it('reads the data-com written in full after "titulares de ações escriturais em" (WEG)', () => {
+            expect(parseIncomeNotices(notice('aviso-weg-jcp-titulares'))).toEqual([
+                { kind: 'jcp', exDate: '2026-09-18', paymentDate: '2027-03-10', amountPerUnit: '0.107212121', shareClass: null }
+            ]);
+        });
+
+        it('takes the record date from the registrar base when the payment is still to be defined (Engie)', () => {
+            expect(parseIncomeNotices(notice('aviso-engie-dividendos-sem-pagamento'))).toEqual([
+                { kind: 'dividend', exDate: '2026-08-20', paymentDate: null, amountPerUnit: '0.54420747574', shareClass: null }
+            ]);
+        });
+
+        it.each([
+            ['an installment of a dividend already declared, in total reais (CPFL)', 'aviso-cpfl-parcela-sem-valor-por-acao'],
+            ['an update of a declared JCP without data-com (Banco do Brasil)', 'aviso-bb-jcp-complementar'],
+            ['a tax guidance that points to another notice for the dates (Petrobras)', 'aviso-petrobras-orientacao-nao-residentes']
+        ])('makes no event from %s', (_name: string, fixture: string) => {
+            expect(parseIncomeNotices(notice(fixture))).toEqual([]);
+        });
+    });
 });

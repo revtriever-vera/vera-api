@@ -158,6 +158,22 @@ describe('CvmIpeDriver', () => {
         expect(metrics.unparsed).toHaveBeenCalledWith('cvm_ipe', 1);
     });
 
+    it('writes a dividend and a JCP for the same notice, and one event per declaration of the same kind', async () => {
+        const { driver } = await rigWith([document(91), document(92, { deliveryDate: '2026-11-21' })], {
+            91: text('aviso-taesa-proventos-tabela'),
+            92: text('aviso-itau-jcp-duas-declaracoes')
+        });
+
+        const drafts = await driver.fetchFor({ ...COMPANY, assetClass: 'UNIT' });
+
+        expect(drafts.map((draft) => [draft.externalKey, draft.amountPerUnit, draft.paymentDate])).toEqual([
+            ['01083200000118:dividend:2026-08-14:UNIT', '0.24076375464', '2026-11-26'],
+            ['01083200000118:jcp:2026-08-14:UNIT', '0.35947457988', '2026-11-26'],
+            ['01083200000118:jcp:2026-03-19:UNIT', '0.34888', '2026-08-28'],
+            ['01083200000118:jcp:2026-06-18:UNIT', '0.36188', '2026-08-28']
+        ]);
+    });
+
     it('a rectification replaces the value of the original notice instead of creating another event', async () => {
         const rectification: string = text('aviso-sabesp-retificacao-jcp');
         const original: string = rectification.replace('2,643892990', '2,63053993');
