@@ -35,7 +35,8 @@ function props(): Record<string, string> {
             portfolio_ex_date_tomorrow: 'https://api.example.com/u/ex',
             fixed_income_maturity_soon: 'https://api.example.com/u/mat'
         }),
-        unsubscribeUrl: 'https://api.example.com/u/ex'
+        unsubscribeUrl: 'https://api.example.com/u/ex',
+        appUrl: 'https://app.example.com'
     };
 }
 
@@ -60,6 +61,9 @@ describe('template portfolio-watch-digest', () => {
         expect(mail.html).toContain('XPLG11 &lt;b&gt;');
         expect(mail.html).toContain('href="https://fnet.example/doc?id=1&amp;x=2"');
         expect(mail.html).toContain('href="https://api.example.com/u/mat"');
+        expect(mail.html).toContain('href="https://app.example.com/portfolio/agenda"');
+        expect(mail.html).toContain('Ver a agenda');
+        expect(mail.text).toContain('Ver a agenda: https://app.example.com/portfolio/agenda');
     });
 
     it('em inglês e sem nome, com o texto no idioma', () => {
@@ -68,6 +72,7 @@ describe('template portfolio-watch-digest', () => {
         expect(mail.subject).toBe('2 notices about your portfolio today');
         expect(mail.text).toContain('Hi.');
         expect(mail.text).toContain('Stop receiving: ex-date notices: https://api.example.com/u/ex');
+        expect(mail.text).toContain('See the agenda: https://app.example.com/portfolio/agenda');
     });
 
     it('sem o link de um tipo, não inventa descadastro para ele', () => {
@@ -77,5 +82,12 @@ describe('template portfolio-watch-digest', () => {
         });
 
         expect(mail.text).not.toContain('avisos de vencimento: ');
+    });
+
+    it('sem o endereço do app, não põe o botão da agenda', () => {
+        const mail: MailContent = registry().render(WATCH_DIGEST_TEMPLATE, 'pt-BR', { ...props(), appUrl: '' });
+
+        expect(mail.html).not.toContain('Ver a agenda');
+        expect(mail.text).not.toContain('Ver a agenda');
     });
 });
