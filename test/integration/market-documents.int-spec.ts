@@ -106,6 +106,7 @@ describe('market documents', () => {
         process.env['MARKET_DOC_CVM_IPE_ENABLED'] = 'true';
         process.env['MARKET_DOC_CVM_ITR_ENABLED'] = 'true';
         process.env['MARKET_DOC_REQUEST_SPACING_MS'] = '0';
+        process.env['LLM_DRIVER'] = 'live';
         const testing: TestingModule = await Test.createTestingModule({ imports: [AppModule, TestHeldModule] })
             .overrideProvider(QueuePublisherPort)
             .useValue(new CapturingPublisher())
@@ -137,6 +138,7 @@ describe('market documents', () => {
     });
 
     afterAll(async () => {
+        delete process.env['LLM_DRIVER'];
         await pg.end();
         await app.close();
         await isolated.drop();

@@ -73,6 +73,15 @@ export class MarketDocumentsRepository extends BareGlobalRepository<'MarketDocum
             .execute();
     }
 
+    public async findExtracted(limit: number): Promise<MarketDocumentRow[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('status', '=', DOCUMENT_STATUSES.extracted)
+            .orderBy('publishedAt', 'desc')
+            .limit(limit)
+            .execute();
+    }
+
     public async transitionPending(id: string, patch: TransitionPatch): Promise<boolean> {
         const rows: MarketDocumentRow[] = await this.updateManyRows({ id, status: DOCUMENT_STATUSES.pending }, patch);
         return rows.length > 0;

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
+import { LlmModule } from '../../../core/llm/llm.module';
 import { ObservabilityModule } from '../../../core/observability/observability.module';
 import { CatalogApplicationModule } from '../../catalog/application/catalog-application.module';
 import { MarketDataApplicationModule } from '../../market-data/application/market-data-application.module';
@@ -12,9 +13,11 @@ import { CvmItrDfpDriver } from '../drivers/cvm-itr-dfp.driver';
 import { FnetFiiDocumentsDriver } from '../drivers/fnet-fii-documents.driver';
 import { MARKET_DOCUMENT_SOURCES, MarketDocumentSourcePort } from '../ports/market-document-source.port';
 import { MarketDocumentSourceRegistryService, selectDocumentSources } from '../services/market-document-source-registry.service';
+import { MarketDocumentSummarizerService } from '../services/market-document-summarizer.service';
 import { MarketDocumentTextService } from '../services/market-document-text.service';
 import { MarketDocumentsCollectorService } from '../services/market-documents-collector.service';
 import { MarketDocumentsExtractorService } from '../services/market-documents-extractor.service';
+import { MarketDocumentsRetentionService } from '../services/market-documents-retention.service';
 import { MarketDocumentsLogService } from '../services/market-documents-log.service';
 import { MarketDocumentsMetricsService } from '../services/market-documents-metrics.service';
 import { MarketDocumentsSweepApplication } from './market-documents-sweep.application';
@@ -26,6 +29,7 @@ import { MarketDocumentsSweepApplication } from './market-documents-sweep.applic
         CatalogApplicationModule,
         MarketDataApplicationModule,
         PortfolioEventsApplicationModule,
+        LlmModule,
         ObservabilityModule
     ],
     providers: [
@@ -33,6 +37,8 @@ import { MarketDocumentsSweepApplication } from './market-documents-sweep.applic
         MarketDocumentsCollectorService,
         MarketDocumentsExtractorService,
         MarketDocumentTextService,
+        MarketDocumentSummarizerService,
+        MarketDocumentsRetentionService,
         MarketDocumentSourceRegistryService,
         MarketDocumentsLogService,
         MarketDocumentsMetricsService,

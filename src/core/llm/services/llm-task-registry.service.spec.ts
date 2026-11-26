@@ -7,7 +7,7 @@ describe('LlmTaskRegistryService', () => {
         const registry: LlmTaskRegistryService = new LlmTaskRegistryService();
 
         expect(registry.resolve('summary_month').task).toBe('summary_month');
-        expect(registry.list()).toHaveLength(6);
+        expect(registry.list()).toHaveLength(7);
     });
 
     it('tarefa desconhecida é erro de programação (500)', () => {

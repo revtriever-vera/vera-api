@@ -10,6 +10,7 @@ import {
     SkipReason,
     DocumentSource
 } from './market-documents.types';
+import { ExtractedDocument, SUMMARY_FAIL_REASON } from './market-document-summary.types';
 
 function merged(left: MarketDocumentWrite, right: MarketDocumentWrite): MarketDocumentWrite {
     return { ...left, assetIds: [...new Set<string>([...left.assetIds, ...right.assetIds])] };
@@ -59,6 +60,34 @@ export class MarketDocumentDomain {
             document.id,
             attempts >= maxAttempts ? { attempts, status: DOCUMENT_STATUSES.failed, skipReason: FAIL_REASONS.unreachable } : { attempts }
         );
+    }
+
+    public async findExtracted(limit: number): Promise<ExtractedDocument[]> {
+        const rows: MarketDocumentRow[] = await this.documents.findExtracted(limit);
+        return rows.map((row: MarketDocumentRow): ExtractedDocument => ({
+            id: row.id,
+            category: row.category,
+            title: row.title,
+            publishedAt: row.publishedAt,
+            assetIds: row.assetIds,
+            attempts: row.attempts,
+            text: row.extractedText ?? ''
+        }));
+    }
+
+    public async recordSummaryAttempt(document: ExtractedDocument, maxAttempts: number): Promise<boolean> {
+        const attempts: number = document.attempts + 1;
+        return attempts >= maxAttempts
+            ? this.markSummaryFailed(document.id)
+            : this.documents.transitionExtracted(document.id, { attempts });
+    }
+
+    public async markSummaryFailed(id: string): Promise<boolean> {
+        return this.documents.transitionExtracted(id, {
+            status: DOCUMENT_STATUSES.failed,
+            skipReason: SUMMARY_FAIL_REASON,
+            extractedText: null
+        });
     }
 
     public async markSummarized(id: string): Promise<boolean> {

@@ -67,7 +67,9 @@ function noticesFor(notices: readonly IncomeNotice[], assetClass: ShareClass | n
         const key: string = `${notice.kind}:${notice.exDate}`;
         declarations.set(key, [...(declarations.get(key) ?? []), notice]);
     }
-    return [...declarations.values()].flatMap((group: IncomeNotice[]): IncomeNotice[] => noticeFor(group, assetClass) ?? []);
+    return [...declarations.values()]
+        .map((group: IncomeNotice[]): IncomeNotice | null => noticeFor(group, assetClass))
+        .filter((notice: IncomeNotice | null): notice is IncomeNotice => notice !== null);
 }
 
 function incomeDraft(link: IssuerLink, notice: IncomeNotice, document: IpeDocument): PortfolioEventDraft {

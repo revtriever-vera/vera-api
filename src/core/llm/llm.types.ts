@@ -8,7 +8,8 @@ export const LLM_TASKS = {
     summaryPortfolio: 'summary_portfolio',
     askVeraStep: 'ask_vera_step',
     askVeraAppStep: 'ask_vera_app_step',
-    investmentExtract: 'investment_extract'
+    investmentExtract: 'investment_extract',
+    marketDocumentSummary: 'market_document_summary'
 } as const;
 
 export const LLM_REASONING_LEVELS = ['provider-default', 'minimal'] as const;
@@ -19,8 +20,16 @@ export type LlmModelRole = (typeof LLM_MODEL_ROLES)[number];
 
 export type LlmTask = (typeof LLM_TASKS)[keyof typeof LLM_TASKS];
 
-export const LLM_FEATURES = ['ai', 'whatsapp', 'help'] as const;
+export const LLM_FEATURES = ['ai', 'whatsapp', 'help', 'market_docs'] as const;
 export type LlmFeature = (typeof LLM_FEATURES)[number];
+
+export const PLATFORM_LLM_FEATURES = ['market_docs'] as const;
+export type PlatformLlmFeature = (typeof PLATFORM_LLM_FEATURES)[number];
+export type TenantLlmFeature = Exclude<LlmFeature, PlatformLlmFeature>;
+
+export function isPlatformFeature(feature: string): feature is PlatformLlmFeature {
+    return new Set<string>(PLATFORM_LLM_FEATURES).has(feature);
+}
 
 export const LLM_DRIVERS = { gateway: 'gateway', openaiCompatible: 'openai_compatible', mock: 'mock' } as const;
 export type LlmDriverName = (typeof LLM_DRIVERS)[keyof typeof LLM_DRIVERS];

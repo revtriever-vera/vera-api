@@ -25,6 +25,7 @@ const schema = z.object({
     MARKET_DOC_MAX_CHARS: withDefault('60000').pipe(positiveInteger),
     MARKET_DOC_MAX_BYTES: withDefault('5000000').pipe(positiveInteger),
     MARKET_DOC_EXTRACT_BATCH: withDefault('20').pipe(positiveInteger),
+    MARKET_DOC_SUMMARY_BATCH: withDefault('20').pipe(positiveInteger),
     MARKET_DOC_MAX_ATTEMPTS: withDefault('3').pipe(positiveInteger),
     MARKET_DOC_RETENTION_DAYS: withDefault('365').pipe(positiveInteger),
     MARKET_DOC_REQUEST_SPACING_MS: withDefault('10000').pipe(nonNegativeInteger),
