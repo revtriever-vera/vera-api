@@ -71,18 +71,33 @@ export function byChangeOrder(left: ChangeItem, right: ChangeItem): number {
     return scoreOf(right) - scoreOf(left) || right.date.localeCompare(left.date) || left.id.localeCompare(right.id);
 }
 
+function resendKeyOf(document: PublicDocumentView, asset: HeldAsset): string {
+    return [asset.assetId, document.source, document.category, DateUtil.onlyDateString(document.publishedAt)].join('|');
+}
+
+function isNewer(candidate: PublicDocumentView, current: PublicDocumentView): boolean {
+    const gap: number = candidate.publishedAt.getTime() - current.publishedAt.getTime();
+    return (gap || candidate.id.localeCompare(current.id)) > 0;
+}
+
 export function changeItemsOf(
     documents: readonly PublicDocumentView[],
     held: ReadonlyMap<string, HeldAsset>,
     locale: AppLocale
 ): ChangeItem[] {
-    const items: ChangeItem[] = [];
+    const newest: Map<string, { readonly document: PublicDocumentView; readonly asset: HeldAsset }> = new Map();
     for (const document of documents) {
         const asset: HeldAsset | null = heaviestOf(document, held);
-        if (asset !== null) {
-            items.push(itemOf(document, asset, locale));
+        if (asset === null) {
+            continue;
+        }
+        const key: string = resendKeyOf(document, asset);
+        const current = newest.get(key);
+        if (current === undefined || isNewer(document, current.document)) {
+            newest.set(key, { document, asset });
         }
     }
+    const items: ChangeItem[] = [...newest.values()].map(({ document, asset }): ChangeItem => itemOf(document, asset, locale));
     return items.sort(byChangeOrder);
 }
 
