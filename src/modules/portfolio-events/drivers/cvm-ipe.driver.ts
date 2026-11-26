@@ -5,8 +5,17 @@ import { DateUtil } from '../../../shared/utils/date.util';
 import { CvmIpeReaderService, IpeDocument } from '../../catalog/services/cvm-ipe-reader.service';
 import { ProviderHttpService } from '../../market-data/services/provider-http.service';
 import { portfolioEventsConfig } from '../config/portfolio-events.config';
-import { IncomeNotice, parseIncomeNotice } from '../domain/income-notice-parser';
-import { EVENT_KINDS, EVENT_SOURCES, EventSource, ISSUER_KINDS, IssuerLink, PortfolioEventDraft } from '../domain/portfolio-events.types';
+import { IncomeNotice, parseIncomeNotices } from '../domain/income-notice-parser';
+import {
+    EVENT_KINDS,
+    EVENT_SOURCES,
+    EventSource,
+    ISSUER_KINDS,
+    IssuerLink,
+    PortfolioEventDraft,
+    SHARE_CLASSES,
+    ShareClass
+} from '../domain/portfolio-events.types';
 import { PortfolioEventSourcePort } from '../ports/portfolio-event-source.port';
 import { PortfolioEventsMetricsService } from '../services/portfolio-events-metrics.service';
 import { noticePdfText } from './notice-pdf-text';
@@ -40,7 +49,19 @@ function isTrustedUrl(url: string): boolean {
     return URL.canParse(url) && new URL(url).protocol === 'https:' && new URL(url).hostname.endsWith(CVM_HOST_SUFFIX);
 }
 
-function incomeDraft(cnpj: string, notice: IncomeNotice, document: IpeDocument): PortfolioEventDraft {
+const ALL_CLASSES: string = 'ALL';
+
+function noticeFor(notices: readonly IncomeNotice[], assetClass: ShareClass | null): IncomeNotice | null {
+    const sameClass: IncomeNotice | undefined = notices.find((notice: IncomeNotice): boolean => notice.shareClass === assetClass);
+    const shared: IncomeNotice | undefined = notices.find((notice: IncomeNotice): boolean => notice.shareClass === null);
+    const preferredSeries: boolean = assetClass === SHARE_CLASSES.pna || assetClass === SHARE_CLASSES.pnb;
+    const preferred: IncomeNotice | undefined = preferredSeries
+        ? notices.find((notice: IncomeNotice): boolean => notice.shareClass === SHARE_CLASSES.pn)
+        : undefined;
+    return sameClass ?? shared ?? preferred ?? null;
+}
+
+function incomeDraft(link: IssuerLink, notice: IncomeNotice, document: IpeDocument): PortfolioEventDraft {
     return {
         kind: notice.kind,
         exDate: notice.exDate,
@@ -48,7 +69,7 @@ function incomeDraft(cnpj: string, notice: IncomeNotice, document: IpeDocument):
         eventDate: null,
         amountPerUnit: notice.amountPerUnit,
         currency: 'BRL',
-        externalKey: `${cnpj}:${notice.kind}:${notice.exDate}`,
+        externalKey: `${link.cnpj}:${notice.kind}:${notice.exDate}:${link.assetClass ?? ALL_CLASSES}`,
         documentUrl: document.url
     };
 }
@@ -94,7 +115,7 @@ export class CvmIpeDriver extends PortfolioEventSourcePort {
             .sort(byNewest)
             .filter((document: IpeDocument): boolean => document.referenceDate >= this.since(today))
             .map((document: IpeDocument): PortfolioEventDraft => assemblyDraft(link.cnpj, document));
-        const income: PortfolioEventDraft[] = await this.incomeOf(link.cnpj, documents.filter(isIncomeNotice), today);
+        const income: PortfolioEventDraft[] = await this.incomeOf(link, documents.filter(isIncomeNotice), today);
         return this.newestPerKey([...income, ...assemblies]);
     }
 
@@ -102,7 +123,7 @@ export class CvmIpeDriver extends PortfolioEventSourcePort {
         return DateUtil.onlyDateString(DateUtil.addDays(new Date(`${today}T12:00:00Z`), -this.config.PORTFOLIO_EVENTS_LOOKBACK_DAYS));
     }
 
-    private async incomeOf(cnpj: string, notices: readonly IpeDocument[], today: string): Promise<PortfolioEventDraft[]> {
+    private async incomeOf(link: IssuerLink, notices: readonly IpeDocument[], today: string): Promise<PortfolioEventDraft[]> {
         const recent: IpeDocument[] = notices
             .filter((document: IpeDocument): boolean => document.deliveryDate >= this.since(today))
             .sort(byNewest)
@@ -110,17 +131,17 @@ export class CvmIpeDriver extends PortfolioEventSourcePort {
         const drafts: PortfolioEventDraft[] = [];
         let unparsed: number = 0;
         for (const document of recent) {
-            const notice: IncomeNotice | null = await this.readNotice(document);
+            const notice: IncomeNotice | null = noticeFor(await this.readNotices(document), link.assetClass);
             unparsed += notice === null ? 1 : 0;
-            drafts.push(...(notice === null ? [] : [incomeDraft(cnpj, notice, document)]));
+            drafts.push(...(notice === null ? [] : [incomeDraft(link, notice, document)]));
         }
         this.metrics.unparsed(this.source, unparsed);
         return drafts;
     }
 
-    private async readNotice(document: IpeDocument): Promise<IncomeNotice | null> {
+    private async readNotices(document: IpeDocument): Promise<IncomeNotice[]> {
         if (!isTrustedUrl(document.url)) {
-            return null;
+            return [];
         }
         try {
             await this.pace();
@@ -131,10 +152,10 @@ export class CvmIpeDriver extends PortfolioEventSourcePort {
                 maxBytes: MAX_PDF_BYTES
             });
             const text: string | null = await noticePdfText(bytes);
-            return text === null ? null : parseIncomeNotice(text);
+            return text === null ? [] : parseIncomeNotices(text);
         } catch {
             this.metrics.sourceFailed(this.source, 'document_unreadable');
-            return null;
+            return [];
         }
     }
 

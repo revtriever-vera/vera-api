@@ -1,10 +1,11 @@
-import { EVENT_KINDS } from './portfolio-events.types';
+import { EVENT_KINDS, SHARE_CLASSES, ShareClass } from './portfolio-events.types';
 
 export interface IncomeNotice {
     readonly kind: typeof EVENT_KINDS.dividend | typeof EVENT_KINDS.jcp;
     readonly exDate: string;
     readonly paymentDate: string | null;
     readonly amountPerUnit: string;
+    readonly shareClass: ShareClass | null;
 }
 
 interface DateToken {
@@ -60,6 +61,25 @@ const MIN_YEAR: number = 2000;
 const MAX_YEAR: number = 2100;
 const MONTH_COUNT: number = 12;
 const PAD: number = 2;
+
+const CLASS_SOURCE: string = String.raw`[Oo]rdin[áa]ri[ao]s?|[Pp]referenci(?:al|ais)(?:\s+classe\s+[AB]\b)?|\bON\b|\bPN[AB]?\b|\b(?:[Uu]nits?|UNITS?)\b`;
+const CLASS_TERM: RegExp = new RegExp(CLASS_SOURCE, 'g');
+const CLASS_LIST: string = String.raw`(?:${CLASS_SOURCE})(?:\s?(?:,|e|ou|/)\s?(?:${CLASS_SOURCE}))*`;
+const CLASS_BEFORE: RegExp = new RegExp(String.raw`(${CLASS_LIST})[\s:\-–)]{0,4}(?:(?:de|é|igual a|no valor de)\s)?$`);
+const CLASS_AFTER: RegExp = new RegExp(String.raw`^[^R]{0,70}?(?:por|para cada)\s(?:cada\s)?(?:uma das\s)?((?:${SHARE})\b.{0,40})`, 'i');
+const CLASS_TABLE_ROW: RegExp = new RegExp(String.raw`(${CLASS_SOURCE})[\s:\-–]{1,3}(\d{1,3}(?:\.\d{3})*,\d+|\d+,\d+)(?![\d%]|\s%)`, 'g');
+const PER_SHARE_MAGNITUDE: RegExp = /^\d{1,3},\d+$/;
+const UNIT_TERM: RegExp = /\bunits?\b/i;
+const UNIT_COMPOSITION: RegExp = /(?:composta|formada|representad\S+)\s+por\s+(\w+)\s+a\S+\s+ordin\S+\s+e\s+(\w+)\s+a\S+\s+prefer/i;
+const NUMBER_WORDS: Readonly<Record<string, number>> = { um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5 };
+const AMOUNT_SCALE: number = 12;
+const MIN_DECIMALS: number = 2;
+const TEN: bigint = 10n;
+
+interface AmountEntry {
+    readonly classes: readonly ShareClass[];
+    readonly amount: string;
+}
 
 const EX_DATE_RULES: readonly { readonly keyword: RegExp; readonly gap: number }[] = [
     { keyword: /data[\s-]*com\b/gi, gap: 20 },
@@ -162,17 +182,121 @@ function isPerShare(before: string, after: string): boolean {
     return PER_SHARE_BEFORE.test(before) || PER_SHARE_AFTER.test(after);
 }
 
-function grossPerShareAmounts(text: string): Set<string> {
+function classOf(label: string): ShareClass {
+    const lower: string = label.toLowerCase();
+    if (lower.startsWith('ordin') || label === 'ON') {
+        return SHARE_CLASSES.on;
+    }
+    if (lower.startsWith('unit')) {
+        return SHARE_CLASSES.unit;
+    }
+    const series: string = /classe\s+([AB])$/.exec(label)?.[1] ?? /^PN([AB])$/.exec(label)?.[1] ?? '';
+    if (series === 'A') {
+        return SHARE_CLASSES.pna;
+    }
+    return series === 'B' ? SHARE_CLASSES.pnb : SHARE_CLASSES.pn;
+}
+
+function classesIn(segment: string): ShareClass[] {
+    return [...new Set<ShareClass>([...segment.matchAll(CLASS_TERM)].map((match: RegExpExecArray): ShareClass => classOf(match[0])))];
+}
+
+function classesFor(before: string, after: string): ShareClass[] {
+    const labelBefore: string | undefined = CLASS_BEFORE.exec(before)?.[1];
+    if (labelBefore !== undefined) {
+        return classesIn(labelBefore);
+    }
+    const labelAfter: string | undefined = CLASS_AFTER.exec(after)?.[1];
+    return labelAfter === undefined ? [] : classesIn(labelAfter.split(/[.;,]/)[0] ?? '');
+}
+
+function amountEntries(text: string): AmountEntry[] {
     const matches: RegExpExecArray[] = [...text.matchAll(AMOUNT_TOKEN)];
-    const gross: Set<string> = new Set<string>();
+    const entries: AmountEntry[] = [];
     matches.forEach((match: RegExpExecArray, index: number): void => {
         const before: string = text.slice(Math.max(0, match.index - NET_LOOKBEHIND), match.index);
         const after: string = text.slice(match.index + match[0].length, matches[index + 1]?.index ?? text.length);
-        if (isPerShare(before, after) && !NET_BEFORE.test(before)) {
-            gross.add(decimalOf(match[1] ?? ''));
+        const classes: ShareClass[] = classesFor(before, after);
+        const labeled: boolean = classes.length > 0 && PER_SHARE_MAGNITUDE.test(match[1] ?? '');
+        if ((labeled || isPerShare(before, after)) && !NET_BEFORE.test(before)) {
+            entries.push({ classes: labeled ? classes : [], amount: decimalOf(match[1] ?? '') });
         }
     });
-    return gross;
+    const rows: AmountEntry[] = [...text.matchAll(CLASS_TABLE_ROW)].map((match: RegExpExecArray): AmountEntry => ({
+        classes: [classOf(match[1] ?? '')],
+        amount: decimalOf(match[2] ?? '')
+    }));
+    return [...entries, ...rows];
+}
+
+function amountsByClass(entries: readonly AmountEntry[]): Map<ShareClass | null, Set<string>> {
+    const grouped: Map<ShareClass | null, Set<string>> = new Map<ShareClass | null, Set<string>>();
+    const pairs: [ShareClass | null, string][] = entries.flatMap((entry: AmountEntry): [ShareClass | null, string][] =>
+        (entry.classes.length === 0 ? [null] : entry.classes).map((shareClass: ShareClass | null): [ShareClass | null, string] => [
+            shareClass,
+            entry.amount
+        ])
+    );
+    for (const [shareClass, amount] of pairs) {
+        grouped.set(shareClass, (grouped.get(shareClass) ?? new Set<string>()).add(amount));
+    }
+    return grouped;
+}
+
+function numberOf(word: string): number {
+    return Number(word) || (NUMBER_WORDS[word.toLowerCase().normalize('NFD').replaceAll(/[̀-ͯ]/g, '')] ?? 0);
+}
+
+function scaled(amount: string): bigint {
+    const [whole, fraction]: string[] = amount.split('.');
+    return BigInt(`${whole ?? '0'}${(fraction ?? '').padEnd(AMOUNT_SCALE, '0')}`);
+}
+
+function unscaled(value: bigint): string {
+    const unit: bigint = TEN ** BigInt(AMOUNT_SCALE);
+    const digits: string = (value % unit).toString().padStart(AMOUNT_SCALE, '0');
+    let end: number = digits.length;
+    while (end > MIN_DECIMALS && digits[end - 1] === '0') {
+        end -= 1;
+    }
+    return `${(value / unit).toString()}.${digits.slice(0, end)}`;
+}
+
+function unitAmount(text: string, amounts: ReadonlyMap<ShareClass, string>): string | null {
+    const composition: RegExpExecArray | null = UNIT_TERM.test(text) ? UNIT_COMPOSITION.exec(text) : null;
+    const common: string | undefined = amounts.get(SHARE_CLASSES.on);
+    const preferred: string | undefined = amounts.get(SHARE_CLASSES.pn);
+    const commonCount: number = numberOf(composition?.[1] ?? '');
+    const preferredCount: number = numberOf(composition?.[2] ?? '');
+    if (common === undefined || preferred === undefined || commonCount === 0 || preferredCount === 0) {
+        return null;
+    }
+    return unscaled(scaled(common) * BigInt(commonCount) + scaled(preferred) * BigInt(preferredCount));
+}
+
+function grossAmountsByClass(text: string): Map<ShareClass | null, string> | null {
+    const grouped: Map<ShareClass | null, Set<string>> = amountsByClass(amountEntries(text));
+    const labeled: [ShareClass | null, Set<string>][] = [...grouped].filter(
+        ([shareClass]: [ShareClass | null, Set<string>]): boolean => shareClass !== null
+    );
+    const chosen: [ShareClass | null, Set<string>][] = labeled.length > 0 ? labeled : [...grouped];
+    if (chosen.length === 0 || chosen.some(([, amounts]: [ShareClass | null, Set<string>]): boolean => amounts.size !== 1)) {
+        return null;
+    }
+    return new Map<ShareClass | null, string>(
+        chosen.map(([shareClass, amounts]: [ShareClass | null, Set<string>]): [ShareClass | null, string] => [
+            shareClass,
+            [...amounts][0] ?? ''
+        ])
+    );
+}
+
+function withUnit(text: string, amounts: Map<ShareClass | null, string>): Map<ShareClass | null, string> {
+    const classed: Map<ShareClass, string> = new Map<ShareClass, string>(
+        [...amounts].filter((entry: [ShareClass | null, string]): entry is [ShareClass, string] => entry[0] !== null)
+    );
+    const unit: string | null = classed.has(SHARE_CLASSES.unit) ? null : unitAmount(text, classed);
+    return unit === null ? amounts : new Map<ShareClass | null, string>([...amounts, [SHARE_CLASSES.unit, unit]]);
 }
 
 function currentWording(text: string): string {
@@ -185,14 +309,20 @@ function portugueseBody(rawText: string): string {
     return english > 0 ? rawText.slice(0, english) : rawText;
 }
 
-export function parseIncomeNotice(rawText: string): IncomeNotice | null {
+export function parseIncomeNotices(rawText: string): IncomeNotice[] {
     const text: string = currentWording(plain(portugueseBody(rawText)));
     const kind: IncomeNotice['kind'] | null = kindOf(text);
     const exDate: string | null = exDateOf(text);
-    const amounts: string[] = [...grossPerShareAmounts(text)];
-    const [amount]: string[] = amounts;
-    if (kind === null || exDate === null || amounts.length !== 1 || amount === undefined) {
-        return null;
+    const found: Map<ShareClass | null, string> | null = grossAmountsByClass(text);
+    if (kind === null || exDate === null || found === null) {
+        return [];
     }
-    return { kind, exDate, paymentDate: paymentDateOf(text, exDate), amountPerUnit: amount };
+    const paymentDate: string | null = paymentDateOf(text, exDate);
+    return [...withUnit(text, found)].map(([shareClass, amountPerUnit]: [ShareClass | null, string]): IncomeNotice => ({
+        kind,
+        exDate,
+        paymentDate,
+        amountPerUnit,
+        shareClass
+    }));
 }

@@ -19,7 +19,7 @@ describe('IssuerLinksApplication.refresh', () => {
         const saveMany: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(2);
         const findMany: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue([
             { id: 'asset-1', externalId: 'HGLG11' },
-            { id: 'asset-2', externalId: 'ITUB4' }
+            { id: 'asset-2', externalId: 'ITUB4', kind: 'stock' }
         ] as Asset[]);
         const application: IssuerLinksApplication = new IssuerLinksApplication(
             {
@@ -34,8 +34,15 @@ describe('IssuerLinksApplication.refresh', () => {
 
         expect(findMany).toHaveBeenCalledWith('B3', ['HGLG11', 'ITUB4', 'ZZZZ11']);
         expect(saveMany).toHaveBeenCalledWith([
-            { assetId: 'asset-1', issuerKind: 'fund', cnpj: '11728688000147', cvmCode: null, source: 'cvm_inf_mensal_fii' },
-            { assetId: 'asset-2', issuerKind: 'company', cnpj: '11728688000147', cvmCode: null, source: 'cvm_fca' }
+            {
+                assetId: 'asset-1',
+                issuerKind: 'fund',
+                cnpj: '11728688000147',
+                cvmCode: null,
+                source: 'cvm_inf_mensal_fii',
+                assetClass: null
+            },
+            { assetId: 'asset-2', issuerKind: 'company', cnpj: '11728688000147', cvmCode: null, source: 'cvm_fca', assetClass: 'PN' }
         ]);
     });
 });

@@ -8,7 +8,7 @@ import { FnetFiiNoticesDriver } from './fnet-fii-notices.driver';
 const SAMPLE: string = readFileSync(join(__dirname, 'fixtures', 'fnet-aviso-estruturado-sample.xml'), 'utf8');
 const CORRECTED: string = SAMPLE.replace('1,10', '1,12');
 const encode = (xml: string): string => Buffer.from(xml, 'utf8').toString('base64');
-const LINK = { assetId: 'asset-1', issuerKind: 'fund', cnpj: '11728688000147' } as const;
+const LINK = { assetId: 'asset-1', issuerKind: 'fund', cnpj: '11728688000147', assetClass: null } as const;
 
 function driverWith(responses: Record<string, unknown>): { driver: FnetFiiNoticesDriver; getJson: ReturnType<typeof vi.fn> } {
     const getJson: ReturnType<typeof vi.fn> = vi.fn(({ url }: { url: string }): Promise<unknown> => {

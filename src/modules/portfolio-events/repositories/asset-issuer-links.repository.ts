@@ -39,6 +39,7 @@ export class AssetIssuerLinksRepository extends BareGlobalRepository<'AssetIssue
                     issuerKind: eb.ref('excluded.issuerKind'),
                     cnpj: eb.ref('excluded.cnpj'),
                     cvmCode: eb.ref('excluded.cvmCode'),
+                    assetClass: eb.ref('excluded.assetClass'),
                     source: eb.ref('excluded.source'),
                     updatedAt: new Date()
                 }))
