@@ -10,7 +10,14 @@ export function selectEventSources(
     config: PortfolioEventsSettings,
     live: Readonly<Record<EventSource, PortfolioEventSourcePort>>
 ): PortfolioEventSourcePort[] {
-    return config.PORTFOLIO_EVENTS_FNET_ENABLED ? [live[EVENT_SOURCES.fnet]] : [];
+    const enabled: PortfolioEventSourcePort[] = [];
+    if (config.PORTFOLIO_EVENTS_FNET_ENABLED) {
+        enabled.push(live[EVENT_SOURCES.fnet]);
+    }
+    if (config.PORTFOLIO_EVENTS_CVM_IPE_ENABLED) {
+        enabled.push(live[EVENT_SOURCES.cvmIpe]);
+    }
+    return enabled;
 }
 
 @Injectable()

@@ -7,6 +7,7 @@ import { MarketDataApplicationModule } from '../../market-data/application/marke
 import { portfolioEventsConfig } from '../config/portfolio-events.config';
 import { PortfolioEventsDomainModule } from '../domain/portfolio-events-domain.module';
 import { EventSource, EVENT_SOURCES } from '../domain/portfolio-events.types';
+import { CvmIpeDriver } from '../drivers/cvm-ipe.driver';
 import { FnetFiiNoticesDriver } from '../drivers/fnet-fii-notices.driver';
 import { PORTFOLIO_EVENT_SOURCES, PortfolioEventSourcePort } from '../ports/portfolio-event-source.port';
 import { PortfolioEventSourceRegistryService, selectEventSources } from '../services/portfolio-event-source-registry.service';
@@ -35,11 +36,19 @@ import { PortfolioEventsSweepApplication } from './portfolio-events-sweep.applic
         PortfolioEventsMetricsService,
         PortfolioEventsReaderService,
         FnetFiiNoticesDriver,
+        CvmIpeDriver,
         {
             provide: PORTFOLIO_EVENT_SOURCES,
-            inject: [portfolioEventsConfig.KEY, FnetFiiNoticesDriver],
-            useFactory: (config: ConfigType<typeof portfolioEventsConfig>, fnet: FnetFiiNoticesDriver): PortfolioEventSourcePort[] =>
-                selectEventSources(config, { [EVENT_SOURCES.fnet]: fnet } satisfies Record<EventSource, PortfolioEventSourcePort>)
+            inject: [portfolioEventsConfig.KEY, FnetFiiNoticesDriver, CvmIpeDriver],
+            useFactory: (
+                config: ConfigType<typeof portfolioEventsConfig>,
+                fnet: FnetFiiNoticesDriver,
+                cvmIpe: CvmIpeDriver
+            ): PortfolioEventSourcePort[] =>
+                selectEventSources(config, {
+                    [EVENT_SOURCES.fnet]: fnet,
+                    [EVENT_SOURCES.cvmIpe]: cvmIpe
+                } satisfies Record<EventSource, PortfolioEventSourcePort>)
         }
     ],
     exports: [IssuerLinksApplication, PortfolioEventsBatchApplication, PortfolioEventsSweepApplication, PortfolioEventsReaderService]
