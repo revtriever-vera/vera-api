@@ -17,7 +17,8 @@ export const QUEUES = {
     portfolioWatch: 'vera-portfolio-watch',
     billing: 'vera-billing',
     investmentImport: 'vera-investment-import',
-    portfolioEvents: 'vera-portfolio-events'
+    portfolioEvents: 'vera-portfolio-events',
+    marketDocuments: 'vera-market-documents'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -77,7 +78,8 @@ export const MESSAGE_TYPES = {
     billingTrialSweepRequested: 'billing.trial-sweep.requested',
     portfolioEventsDailyRequested: 'portfolio-events.daily.requested',
     portfolioEventsLinksRequested: 'portfolio-events.links.requested',
-    portfolioEventsBatchRequested: 'portfolio-events.batch.requested'
+    portfolioEventsBatchRequested: 'portfolio-events.batch.requested',
+    marketDocumentsSweepRequested: 'market-documents.sweep.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

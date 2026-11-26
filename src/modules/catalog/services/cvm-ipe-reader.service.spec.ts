@@ -29,18 +29,18 @@ afterEach(() => {
 });
 
 describe('CvmIpeReaderService', () => {
-    it('keeps only the notice, market communication and meeting categories, delivered in the window or referring to a future date', async () => {
+    it('keeps every category, delivered in the window or referring to a future date', async () => {
         serve(SAMPLE);
 
         const documents: readonly IpeDocument[] = await reader().documents(WINDOW);
 
-        expect(documents.map((document: IpeDocument): number => document.sequence)).toEqual([100, 101, 102, 105]);
+        expect(documents.map((document: IpeDocument): number => document.sequence)).toEqual([100, 101, 102, 103, 105]);
     });
 
     it('reads the CNPJ as digits, the sequence of the document and the version', async () => {
         serve(SAMPLE);
 
-        const [first, , , last]: readonly IpeDocument[] = await reader().documents(WINDOW);
+        const [first, , , , last]: readonly IpeDocument[] = await reader().documents(WINDOW);
 
         expect(first).toMatchObject({
             cnpj: '01083200000118',
@@ -71,6 +71,17 @@ describe('CvmIpeReaderService', () => {
             `${BASE}/CIA_ABERTA/DOC/IPE/DADOS/ipe_cia_aberta_2025.zip`,
             URL_2026
         ]);
+    });
+
+    it('downloads again when a wider window is asked after a narrower one', async () => {
+        const mock = serve(SAMPLE);
+        const service: CvmIpeReaderService = reader();
+
+        await service.documents({ today: '2026-11-25', deliveredSince: '2026-11-19' });
+        const wider: readonly IpeDocument[] = await service.documents(WINDOW);
+
+        expect(mock).toHaveBeenCalledTimes(2);
+        expect(wider).toHaveLength(5);
     });
 
     it('fails when the source is unavailable', async () => {

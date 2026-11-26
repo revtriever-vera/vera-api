@@ -32,7 +32,8 @@ export const COMMAND_KEYS = {
     billingStandingSweep: 'billing-standing-sweep-command',
     billingTrialSweep: 'billing-trial-sweep-command',
     portfolioEventsDaily: 'portfolio-events-daily-command',
-    portfolioEventsLinksWeekly: 'portfolio-events-links-weekly-command'
+    portfolioEventsLinksWeekly: 'portfolio-events-links-weekly-command',
+    marketDocumentsSweep: 'market-documents-sweep-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];

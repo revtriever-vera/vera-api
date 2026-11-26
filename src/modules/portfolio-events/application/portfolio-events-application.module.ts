@@ -10,6 +10,7 @@ import { EventSource, EVENT_SOURCES } from '../domain/portfolio-events.types';
 import { CvmIpeDriver } from '../drivers/cvm-ipe.driver';
 import { FnetFiiNoticesDriver } from '../drivers/fnet-fii-notices.driver';
 import { PORTFOLIO_EVENT_SOURCES, PortfolioEventSourcePort } from '../ports/portfolio-event-source.port';
+import { IssuerLinkReaderService } from '../services/issuer-link-reader.service';
 import { PortfolioEventSourceRegistryService, selectEventSources } from '../services/portfolio-event-source-registry.service';
 import { PortfolioEventsLogService } from '../services/portfolio-events-log.service';
 import { PortfolioEventsMetricsService } from '../services/portfolio-events-metrics.service';
@@ -35,6 +36,7 @@ import { PortfolioEventsSweepApplication } from './portfolio-events-sweep.applic
         PortfolioEventsLogService,
         PortfolioEventsMetricsService,
         PortfolioEventsReaderService,
+        IssuerLinkReaderService,
         FnetFiiNoticesDriver,
         CvmIpeDriver,
         {
@@ -51,6 +53,12 @@ import { PortfolioEventsSweepApplication } from './portfolio-events-sweep.applic
                 } satisfies Record<EventSource, PortfolioEventSourcePort>)
         }
     ],
-    exports: [IssuerLinksApplication, PortfolioEventsBatchApplication, PortfolioEventsSweepApplication, PortfolioEventsReaderService]
+    exports: [
+        IssuerLinksApplication,
+        PortfolioEventsBatchApplication,
+        PortfolioEventsSweepApplication,
+        PortfolioEventsReaderService,
+        IssuerLinkReaderService
+    ]
 })
 export class PortfolioEventsApplicationModule {}

@@ -29,6 +29,7 @@ export interface IpeWindow {
 interface CachedYear {
     readonly etag: string | null;
     readonly checkedAt: number;
+    readonly deliveredSince: string;
     readonly documents: readonly IpeDocument[];
 }
 
@@ -38,7 +39,6 @@ const FRESH_MS: number = 60 * 60 * 1000;
 const IPE_PATH: string = 'CIA_ABERTA/DOC/IPE/DADOS';
 const ENCODING: string = 'windows-1252';
 const REQUIRED_COLUMNS: readonly string[] = ['CNPJ_Companhia', 'Data_Referencia', 'Categoria', 'Data_Entrega', 'Versao', 'Link_Download'];
-const CATEGORIES: ReadonlySet<string> = new Set<string>(['Aviso aos Acionistas', 'Comunicado ao Mercado', 'Assembleia']);
 const DATE_PATTERN: RegExp = /^\d{4}-\d{2}-\d{2}$/;
 const CNPJ_LENGTH: number = 14;
 const SEQUENCE_PATTERN: RegExp = /numSequencia=(\d+)/;
@@ -51,7 +51,7 @@ function yearsOf(window: IpeWindow): string[] {
 
 function wellFormed(document: IpeDocument): boolean {
     return (
-        CATEGORIES.has(document.category) &&
+        document.category !== '' &&
         document.cnpj.length === CNPJ_LENGTH &&
         Number.isInteger(document.sequence) &&
         document.sequence > 0 &&
@@ -101,7 +101,8 @@ export class CvmIpeReaderService {
     }
 
     private async readYear(year: string, window: IpeWindow): Promise<readonly IpeDocument[]> {
-        const cached: CachedYear | undefined = this.cache.get(year);
+        const stored: CachedYear | undefined = this.cache.get(year);
+        const cached: CachedYear | undefined = stored !== undefined && stored.deliveredSince <= window.deliveredSince ? stored : undefined;
         if (cached !== undefined && Date.now() - cached.checkedAt < FRESH_MS) {
             return cached.documents;
         }
@@ -131,7 +132,12 @@ export class CvmIpeReaderService {
             throw sourceErrorOfStatus(response.status);
         }
         const documents: IpeDocument[] = await this.parse(response, window);
-        this.cache.set(year, { etag: response.headers.get('etag'), checkedAt: Date.now(), documents });
+        this.cache.set(year, {
+            etag: response.headers.get('etag'),
+            checkedAt: Date.now(),
+            deliveredSince: window.deliveredSince,
+            documents
+        });
         return documents;
     }
 

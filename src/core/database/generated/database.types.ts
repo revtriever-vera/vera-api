@@ -683,6 +683,25 @@ export interface LlmCalls {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface MarketDocuments {
+    assetIds: Generated<string[]>;
+    attempts: Generated<number>;
+    category: string;
+    createdAt: Generated<Timestamp>;
+    externalId: string;
+    extractedText: string | null;
+    id: string;
+    issuerCnpj: string | null;
+    publishedAt: Timestamp;
+    skipReason: string | null;
+    source: string;
+    status: Generated<string>;
+    textHash: string | null;
+    title: string;
+    updatedAt: Generated<Timestamp>;
+    url: string;
+}
+
 export interface MarketIndexPoints {
     close: Numeric;
     date: Timestamp;
@@ -1350,6 +1369,7 @@ export interface DB {
     InvestmentImports: InvestmentImports;
     InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;
+    MarketDocuments: MarketDocuments;
     MarketIndexPoints: MarketIndexPoints;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;
