@@ -51,6 +51,14 @@ export class PortfolioWatchLogService {
         this.logService.info({ message: 'portfolio monthly review saved', identifier: LOG_IDENTIFIER, meta: { month, recorded } });
     }
 
+    public reviewAnnounced(withParagraph: boolean, emails: number): void {
+        this.logService.info({
+            message: 'portfolio monthly review announced',
+            identifier: LOG_IDENTIFIER,
+            meta: { withParagraph, emails }
+        });
+    }
+
     public reviewSkippedNoSnapshot(month: string): void {
         this.logService.warn({
             message: 'portfolio monthly review skipped: no complete snapshot at the end of the month',

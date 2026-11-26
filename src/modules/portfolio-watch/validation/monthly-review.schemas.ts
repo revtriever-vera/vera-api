@@ -102,3 +102,16 @@ export const monthlyReviewListSchema = z.object({
 });
 
 export type MonthlyReviewList = z.infer<typeof monthlyReviewListSchema>;
+
+export const monthlyReviewParagraphsPropSchema = z.array(z.string());
+
+export const monthlyReviewResponseSchema = monthlyReviewSchema.extend({
+    summary: z
+        .string()
+        .nullable()
+        .describe(
+            'Paragraph written over the numbers (paragraphs separated by a blank line, the main figure wrapped in ** **); null on the free plan, without the permission to send the numbers, or when it was not written'
+        )
+});
+
+export type MonthlyReviewResponse = z.infer<typeof monthlyReviewResponseSchema>;

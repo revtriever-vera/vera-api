@@ -19,6 +19,12 @@ import { PortfolioAgendaService } from '../services/portfolio-agenda.service';
 import { PortfolioIncomeLedgerService } from '../services/portfolio-income-ledger.service';
 import { PortfolioWatchAccountEraser } from '../services/portfolio-watch-account.eraser';
 import { PortfolioWatchAccountExporter } from '../services/portfolio-watch-account.exporter';
+import { AiAssistantApplicationModule } from '../../ai-assistant/application/ai-assistant-application.module';
+import { AllocationApplicationModule } from '../../allocation/application/allocation-application.module';
+import { MonthlyReviewAnnouncerService } from '../services/monthly-review-announcer.service';
+import { MonthlyReviewSourceService } from '../services/monthly-review-source.service';
+import { MonthlyReviewNarrativeService } from '../services/monthly-review-narrative.service';
+import { PortfolioMonthlyReviewTemplates } from '../services/portfolio-monthly-review.templates';
 import { PortfolioWeeklyChangesTemplates } from '../services/portfolio-weekly-changes.templates';
 import { PortfolioWatchDigestTemplates } from '../services/portfolio-watch-digest.templates';
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
@@ -56,12 +62,18 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
         PlansApplicationModule,
         ConcentrationApplicationModule,
         FixedIncomeCoverageApplicationModule,
-        MarketBenchmarksApplicationModule
+        MarketBenchmarksApplicationModule,
+        AiAssistantApplicationModule,
+        AllocationApplicationModule
     ],
     providers: [
         PortfolioWatchSnapshotApplication,
         PortfolioMonthlyReviewApplication,
         MonthlyReviewService,
+        MonthlyReviewNarrativeService,
+        MonthlyReviewSourceService,
+        MonthlyReviewAnnouncerService,
+        PortfolioMonthlyReviewTemplates,
         MonthlyReviewBenchmarksService,
         MonthlyReviewConcentrationService,
         PortfolioWatchDailyApplication,

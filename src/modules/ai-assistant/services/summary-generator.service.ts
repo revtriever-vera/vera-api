@@ -13,7 +13,7 @@ import { AiTextRenderer } from '../domain/context/ai-text-renderer';
 import { summarySystemPromptOf } from '../domain/prompts/summary-prompts';
 import { GuardCheck, GuardResult, guardSummary } from '../domain/summary-guard';
 import { summaryOutputSchema } from '../domain/summary-output.schemas';
-import { SUMMARY_TASKS, SummaryKind } from '../domain/summary.types';
+import { SUMMARY_TASKS, GeneratedSummaryKind } from '../domain/summary.types';
 import { AiAssistantLogService } from './ai-assistant-log.service';
 import { AiAssistantMetricsService } from './ai-assistant-metrics.service';
 
@@ -21,7 +21,7 @@ const MAX_ATTEMPTS: number = 2;
 const RESPONSE_SCHEMA: JsonObject = toolInputSchemaOf(summaryOutputSchema);
 
 export interface GenerateRequest {
-    readonly kind: SummaryKind;
+    readonly kind: GeneratedSummaryKind;
     readonly periodKey: string;
     readonly built: BuiltContext<AiContext>;
     readonly locale: AppLocale;
@@ -37,7 +37,7 @@ type Attempt =
     | { readonly ok: true; readonly paragraphs: readonly string[]; readonly callId: string; readonly costMicros: number }
     | { readonly ok: false; readonly check: GuardCheck; readonly detail: string; readonly text: string; readonly costMicros: number };
 
-function specOf(kind: SummaryKind): LlmTaskSpec {
+function specOf(kind: GeneratedSummaryKind): LlmTaskSpec {
     const spec: LlmTaskSpec | undefined = LLM_TASK_CATALOG.find((item: LlmTaskSpec): boolean => item.task === SUMMARY_TASKS[kind]);
     if (spec === undefined) {
         throw new Error(`task "${SUMMARY_TASKS[kind]}" is not in the LLM task catalog`);
@@ -45,7 +45,7 @@ function specOf(kind: SummaryKind): LlmTaskSpec {
     return spec;
 }
 
-export function promptVersionOf(kind: SummaryKind): number {
+export function promptVersionOf(kind: GeneratedSummaryKind): number {
     return Number(specOf(kind).promptVersion.replaceAll(/\D/g, ''));
 }
 

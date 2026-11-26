@@ -1,4 +1,8 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, MockInstance, vi } from 'vitest';
+import { EnqueueMailRequest } from '../../src/core/mail/mailer.port';
+import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
+import { PlanContractService } from '../../src/modules/plans/services/plan-contract.service';
+import { monthlyReviewContextSchema } from '../../src/modules/ai-assistant/validation/ai-payload.schemas';
 import { IndexSyncApplication } from '../../src/modules/fixed-income/application/index-sync.application';
 import { addDays } from '../../src/modules/fixed-income/domain/curve/business-days';
 import { PortfolioMonthlyReviewApplication } from '../../src/modules/portfolio-watch/application/portfolio-monthly-review.application';
@@ -6,15 +10,22 @@ import { MonthlyReview, MonthlyReviewList } from '../../src/modules/portfolio-wa
 import { DateUtil } from '../../src/shared/utils/date.util';
 import { Account, AllocationHarness } from './support/allocation-harness';
 import { seedPrototypeAssets } from './support/portfolio-seed';
-import { CapturingPublisher } from './support/queue';
+import { CapturingPublisher, PublishedMessage } from './support/queue';
 
 process.env['FIXED_INCOME_INDEX_DRIVER'] = 'mock';
+process.env['LLM_REPEAT_LIMIT'] = '1000';
 
 const TODAY: string = DateUtil.todayInBrazil();
 const MONTH: string = '2026-10';
 const NEXT: string = '2026-11';
 const EQUITY: string = '0199b5b8-1c2d-7000-8000-0000000000a1';
 const REVIEW_COMPANY_TYPE: string = 'portfolio-watch.monthly-review.company.requested';
+const MAIL_MESSAGE: string = 'email.send.requested';
+const REVIEW_TEMPLATE: string = 'portfolio-monthly-review';
+const GOOD_PARAGRAPHS: string = JSON.stringify({
+    paragraphs: ['A carteira rendeu **+10,46%** em outubro.', '[[ativo:custom_1]] subiu +10,00% no preço.']
+});
+const INVENTED_PARAGRAPHS: string = JSON.stringify({ paragraphs: ['A carteira rendeu **+55,00%** em outubro.'] });
 
 interface Photo {
     readonly month: string;
@@ -35,6 +46,8 @@ describe('revisão mensal da carteira', () => {
     let harness: AllocationHarness;
     let publisher: CapturingPublisher;
     let assetIds: Record<string, string>;
+    let calls: MockInstance<MockLlmDriver['generate']>;
+    let mock: MockLlmDriver;
 
     beforeAll(async () => {
         publisher = new CapturingPublisher();
@@ -44,14 +57,18 @@ describe('revisão mensal da carteira', () => {
         await sync.syncWindow({ series: 'cdi_daily', from, to: TODAY });
         await sync.syncWindow({ series: 'ipca_monthly', from, to: TODAY });
         assetIds = await seedPrototypeAssets(harness);
+        mock = harness.app.get(MockLlmDriver, { strict: false });
+        calls = vi.spyOn(mock, 'generate');
     });
 
     afterAll(async () => {
+        delete process.env['LLM_REPEAT_LIMIT'];
         await harness.stop();
     });
 
     beforeEach(() => {
         publisher.published.length = 0;
+        calls.mockClear();
     });
 
     async function photo(account: Account, item: Photo): Promise<void> {
@@ -233,5 +250,170 @@ describe('revisão mensal da carteira', () => {
         const asked: string[] = publisher.ofType(REVIEW_COMPANY_TYPE).map((message) => message.options?.jobId ?? '');
         expect(asked).toContain(`portfolio-watch-review-${holder.company.id}-2026-10`);
         expect(asked.some((jobId: string) => jobId.includes(nobody.company.id))).toBe(false);
+    });
+    async function premium(account: Account, consent: boolean): Promise<void> {
+        await harness.inCompany(account.company.id, async () =>
+            harness.app.get(PlanContractService, { strict: false }).open('premium', {
+                startsAt: new Date('2026-11-01T00:00:00Z'),
+                subscriptionId: crypto.randomUUID()
+            })
+        );
+        if (consent) {
+            expect(
+                (await harness.call(account.token, 'PUT', '/ai/consent', { noticeVersion: 1, source: 'summary_card' })).status
+            ).toBeLessThan(300);
+        }
+    }
+
+    async function ready(name: string): Promise<Account> {
+        const account: Account = await withPhotos(name, itub(MONTH, '100', '30', 300_000), itub(NEXT, '150', '33', 495_000));
+        await operations(account, [
+            { kind: 'buy', tradeDate: '2026-10-16', quantity: '50', grossMinor: 160_000 },
+            { kind: 'income', tradeDate: '2026-10-20', quantity: '100', grossMinor: 5000 }
+        ]);
+        return account;
+    }
+
+    function reviewMails(): EnqueueMailRequest[] {
+        return publisher
+            .ofType(MAIL_MESSAGE)
+            .map((message: PublishedMessage): EnqueueMailRequest => message.payload as EnqueueMailRequest)
+            .filter((request: EnqueueMailRequest): boolean => request.template === REVIEW_TEMPLATE);
+    }
+
+    async function stored(account: Account): Promise<number> {
+        const rows = await harness.pg.query<{ total: number }>(
+            `SELECT count(*)::int AS total FROM "AiSummaries" WHERE "companyId" = $1 AND "kind" = 'monthly_review'`,
+            [account.company.id]
+        );
+        return rows.rows[0]?.total ?? 0;
+    }
+
+    async function summaryOf(account: Account): Promise<string | null> {
+        return (await harness.call<{ summary: string | null }>(account.token, 'GET', `/portfolio-watch/monthly-reviews/${MONTH}`)).body
+            .summary;
+    }
+
+    it('Free: os números ficam, sem chamada ao modelo, sem e-mail e sem parágrafo', async () => {
+        const account: Account = await ready('rev-free');
+
+        await review(account);
+
+        expect(calls).not.toHaveBeenCalled();
+        expect(reviewMails()).toHaveLength(0);
+        expect(await stored(account)).toBe(0);
+        expect((await fetched(account)).returnPct).toBeCloseTo(10.46, 2);
+        expect(await summaryOf(account)).toBeNull();
+        expect((await harness.call(account.token, 'GET', `/ai/payload?kind=monthly_review&month=${MONTH}`)).status).toBe(402);
+    });
+
+    it('Premium sem a permissão de envio: e-mail só com os números e nenhuma chamada ao modelo', async () => {
+        const account: Account = await ready('rev-noconsent');
+        await premium(account, false);
+
+        await review(account);
+
+        expect(calls).not.toHaveBeenCalled();
+        expect(reviewMails()).toHaveLength(1);
+        expect(reviewMails()[0]?.props['paragraphs']).toBeUndefined();
+        expect(reviewMails()[0]?.props['returnPct']).toBe('10.46');
+        expect(await stored(account)).toBe(0);
+        expect(await summaryOf(account)).toBeNull();
+    });
+
+    it('Premium com permissão: escreve o parágrafo, guarda, manda no e-mail, mostra na tela e não reenvia nem chama de novo no mês repetido', async () => {
+        const account: Account = await ready('rev-premium');
+        await premium(account, true);
+        mock.enqueue(GOOD_PARAGRAPHS);
+
+        await review(account);
+        await harness.pg.query(`DELETE FROM "MonthlyReviews" WHERE "companyId" = $1`, [account.company.id]);
+        await review(account);
+
+        expect(calls).toHaveBeenCalledTimes(1);
+        expect(await stored(account)).toBe(1);
+        const sent: EnqueueMailRequest[] = reviewMails();
+        expect(sent).toHaveLength(1);
+        expect(sent[0]?.to.email).toBe(account.user.email);
+        expect(sent[0]?.unsubscribeUrl).toContain('/notifications/unsubscribe/');
+        expect(JSON.parse(sent[0]?.props['paragraphs'] ?? '[]')).toEqual([
+            'A carteira rendeu **+10,46%** em outubro.',
+            'ITUB4 subiu +10,00% no preço.'
+        ]);
+        expect(await summaryOf(account)).toBe('A carteira rendeu **+10,46%** em outubro.\n\nITUB4 subiu +10,00% no preço.');
+    });
+
+    it('o que é enviado ao modelo aparece só com percentuais e chaves, sem o ticker, e vale o esquema documentado', async () => {
+        const account: Account = await ready('rev-payload');
+        await premium(account, false);
+        await review(account);
+
+        const response = await harness.call<{ payload: Record<string, unknown> }>(
+            account.token,
+            'GET',
+            `/ai/payload?kind=monthly_review&month=${MONTH}`
+        );
+
+        expect(response.status).toBe(200);
+        expect(monthlyReviewContextSchema.safeParse(response.body.payload).success).toBe(true);
+        expect(JSON.stringify(response.body)).not.toContain('ITUB4');
+        expect(response.body.payload).toMatchObject({
+            mes: MONTH,
+            rentabilidade_pct: '+10,46%',
+            maiores_altas: [{ chave: 'custom_1', variacao_pct: '+10,00%' }]
+        });
+        expect(calls).not.toHaveBeenCalled();
+    });
+
+    it('número inventado pelo modelo é reprovado pelo guard: sem parágrafo, e-mail só com os números', async () => {
+        const account: Account = await ready('rev-invented');
+        await premium(account, true);
+        mock.enqueue(INVENTED_PARAGRAPHS);
+        mock.enqueue(INVENTED_PARAGRAPHS);
+
+        await review(account);
+
+        expect(calls).toHaveBeenCalledTimes(2);
+        expect(await stored(account)).toBe(0);
+        expect(reviewMails()).toHaveLength(1);
+        expect(reviewMails()[0]?.props['paragraphs']).toBeUndefined();
+    });
+
+    it('quem desligou o aviso do Raio-X não recebe o e-mail', async () => {
+        const account: Account = await ready('rev-muted');
+        await premium(account, false);
+        const off = await harness.call(account.token, 'PATCH', '/notifications/preferences', {
+            type: 'portfolio_monthly_review',
+            enabled: false
+        });
+        expect(off.status).toBe(200);
+
+        await review(account);
+
+        expect(reviewMails()).toHaveLength(0);
+    });
+
+    it('duas contas Premium: cada uma recebe o seu parágrafo e só vê o seu', async () => {
+        const first: Account = await ready('rev-two-a');
+        const second: Account = await ready('rev-two-b');
+        const outsider: Account = await harness.signUp('rev-two-c');
+        await premium(first, true);
+        await premium(second, true);
+        await premium(outsider, true);
+        mock.enqueue(GOOD_PARAGRAPHS);
+        mock.enqueue(GOOD_PARAGRAPHS);
+
+        await review(first);
+        await review(second);
+
+        expect(await stored(first)).toBe(1);
+        expect(await stored(second)).toBe(1);
+        expect(
+            reviewMails()
+                .map((request: EnqueueMailRequest): string => request.to.email)
+                .sort()
+        ).toEqual([first.user.email, second.user.email].sort());
+        expect((await harness.call(outsider.token, 'GET', `/portfolio-watch/monthly-reviews/${MONTH}`)).status).toBe(404);
+        expect((await harness.call(outsider.token, 'GET', `/ai/payload?kind=monthly_review&month=${MONTH}`)).status).toBe(204);
     });
 });

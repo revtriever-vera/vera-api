@@ -23,8 +23,11 @@ import {
     AiFundPerformanceContext,
     AiMaturitiesContext,
     AiMonthContext,
+    AiMonthlyReviewContext,
     AiPortfolioContext,
-    BuiltContext
+    BuiltContext,
+    ReviewClassLabel,
+    ReviewSource
 } from '../domain/context/ai-context.types';
 import { contextHash } from '../domain/context/context-hash';
 import { buildBenchmarksContext } from '../domain/context/benchmarks.context';
@@ -32,6 +35,7 @@ import { buildConcentrationContext } from '../domain/context/concentration.conte
 import { buildCutsContext } from '../domain/context/cuts.context';
 import { buildMaturitiesContext } from '../domain/context/maturities.context';
 import { buildMonthContext } from '../domain/context/month.context';
+import { buildMonthlyReviewContext } from '../domain/context/monthly-review.context';
 import { buildPortfolioContext } from '../domain/context/portfolio.context';
 import { buildAssetLookupContext, buildFixedIncomeBenchmarkContext, buildFundPerformanceContext } from '../domain/context/research.context';
 
@@ -49,6 +53,10 @@ export class AiContextBuilderService {
 
     public portfolio(snapshot: PortfolioSnapshot, contribution: ContributionSuggestion | null): BuiltContext<AiPortfolioContext> {
         return buildPortfolioContext(snapshot, contribution, this.context.get().locale);
+    }
+
+    public monthlyReview(review: ReviewSource, labels: readonly ReviewClassLabel[]): BuiltContext<AiMonthlyReviewContext> {
+        return buildMonthlyReviewContext(review, labels, this.context.get().locale);
     }
 
     public concentration(response: ConcentrationResponse): BuiltContext<AiConcentrationContext> {

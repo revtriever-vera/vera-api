@@ -13,8 +13,9 @@ import {
     MonthlyReview,
     MonthlyReviewList,
     MonthlyReviewParamsDto,
+    MonthlyReviewResponse,
     monthlyReviewListSchema,
-    monthlyReviewSchema
+    monthlyReviewResponseSchema
 } from '../../validation/monthly-review.schemas';
 import {
     AgendaQueryDto,
@@ -224,10 +225,16 @@ export class PortfolioWatchController {
             'The numbers of one month, all written by the code: return of the portfolio and of each class (only where the imported ' +
             'operations explain the change in quantities), CDI, IPCA and Ibovespa for the month, assets that rose and fell the most, ' +
             'income, concentration by issuer and sector and the exposure above the FGC limit. Built once at the start of the next ' +
-            'month. Available on every plan.'
+            'month. The numbers are on every plan; `summary`, the paragraph written over them, comes only on Premium and only when it ' +
+            'was written (it needs the permission to send the numbers).'
     })
     @ApiParam({ name: 'month', description: 'Month of the review, YYYY-MM', example: '2026-11' })
-    @ApiZodResponse({ status: 200, description: 'Review of the month', schema: monthlyReviewSchema, example: REVIEW_EXAMPLE })
+    @ApiZodResponse({
+        status: 200,
+        description: 'Review of the month',
+        schema: monthlyReviewResponseSchema,
+        example: { ...REVIEW_EXAMPLE, summary: null }
+    })
     @ApiProblemResponse({
         status: 400,
         description: 'Invalid month (zod validation details in meta.errors)',
@@ -248,7 +255,7 @@ export class PortfolioWatchController {
             meta: { month: '2026-11' }
         }
     })
-    public async monthlyReviewOf(@Param() params: MonthlyReviewParamsDto): Promise<MonthlyReview> {
-        return this.reviews.get(params.month);
+    public async monthlyReviewOf(@Param() params: MonthlyReviewParamsDto): Promise<MonthlyReviewResponse> {
+        return this.reviews.getWithSummary(params.month);
     }
 }
