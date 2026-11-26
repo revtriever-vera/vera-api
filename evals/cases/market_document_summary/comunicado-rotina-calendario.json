@@ -1,0 +1,30 @@
+{
+  "id": "comunicado-rotina-calendario",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Bancorp Litoral (empresa fictícia)",
+    "tickers": ["BLIT4"],
+    "category": "Calendário de Eventos Corporativos",
+    "publishedAt": "2026-01-20",
+    "text": "Em atendimento à regulamentação, a Bancorp Litoral divulga seu calendário anual de eventos corporativos de 2026. O documento lista as datas previstas de divulgação de resultados e da assembleia geral ordinária, sem alterações em relação ao calendário do ano anterior."
+  },
+  "expectDiscard": true,
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "routine",
+    "relevance": 0,
+    "discard": true,
+    "numbers": ["2026"]
+  },
+  "reference": ["A Bancorp Litoral divulgou o calendário de eventos corporativos de 2026, sem alterações em relação ao do ano anterior."]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "comunicado-rotina-endereco",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Papel Cedro (empresa fictícia)",
+    "tickers": ["PCDR3"],
+    "category": "Comunicado ao Mercado",
+    "publishedAt": "2026-04-02",
+    "text": "COMUNICADO AO MERCADO. A Papel Cedro informa aos acionistas e ao mercado que o endereço de seu escritório de atendimento a investidores foi alterado para a Rua das Acácias, 450, sala 12, São Paulo. Os canais de contato por e-mail e telefone permanecem os mesmos."
+  },
+  "expectDiscard": true,
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "routine",
+    "relevance": 0,
+    "discard": true,
+    "numbers": []
+  },
+  "reference": [
+    "A Papel Cedro avisou que mudou o endereço do escritório de atendimento a investidores, e os canais de contato continuam os mesmos."
+  ]
+}

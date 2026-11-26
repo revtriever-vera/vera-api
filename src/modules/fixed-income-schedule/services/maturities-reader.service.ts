@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ANY_HOLDER, HolderFilter } from '../../../shared/holder/holder-filter';
 import { ReferenceRates, referenceRatesOf } from '../../fixed-income/services/index-series-math';
 import { buildMaturities } from '../domain/maturity-schedule';
 import { MATURITIES_MAX_LIMIT, MaturityItem, ScheduleInputs } from '../domain/schedule.types';
@@ -16,12 +17,12 @@ export interface MaturitiesReading {
 export class MaturitiesReaderService {
     public constructor(private readonly source: ScheduleSourceService) {}
 
-    public async readAll(): Promise<MaturitiesReading> {
-        return this.read(MATURITIES_MAX_LIMIT);
+    public async readAll(filter: HolderFilter = ANY_HOLDER): Promise<MaturitiesReading> {
+        return this.read(MATURITIES_MAX_LIMIT, filter);
     }
 
-    public async read(limit: number): Promise<MaturitiesReading> {
-        const inputs: ScheduleInputs = await this.source.load(new Date());
+    public async read(limit: number, filter: HolderFilter = ANY_HOLDER): Promise<MaturitiesReading> {
+        const inputs: ScheduleInputs = await this.source.load(new Date(), filter);
         const rates: ReferenceRates = referenceRatesOf(inputs.series);
         return { asOf: inputs.today, rates, items: buildMaturities(inputs, rates, limit) };
     }

@@ -9,7 +9,19 @@ import { redactPersonalData } from '../../src/shared/utils/personal-data-redacti
 import { INVESTMENT_NOTICE_PHRASES } from '../../src/modules/ai-assistant/domain/ask-fixed-replies';
 import { mentionsAsset } from '../../src/modules/ai-assistant/domain/asset-mention';
 import { INVESTMENT_NOTICE_TOOLS } from '../../src/modules/ai-assistant/domain/ask-vera.types';
-import { AskCase, EvalCase, isAskCase, SummaryCase } from './case.schemas';
+import {
+    adviceIn,
+    NOTICE_TEXT,
+    numbersIn,
+    sentencesIn as summarySentencesIn,
+    unknownNumber
+} from '../../src/modules/market-documents/domain/market-document-summary-guard';
+import { MAX_SUMMARY_SENTENCES } from '../../src/modules/market-documents/domain/market-document-summary.types';
+import {
+    MarketDocumentSummaryOutput,
+    marketDocumentSummaryOutputSchema
+} from '../../src/modules/market-documents/domain/market-document-summary.schemas';
+import { AskCase, DocumentCase, EvalCase, isAskCase, isDocumentCase, SummaryCase } from './case.schemas';
 import { builtOf } from './cases';
 import type { CallTrace } from './generate';
 
@@ -104,9 +116,44 @@ function mentionFailures(item: EvalCase, text: string): CheckFailure[] {
     return [...missing, ...present];
 }
 
+const REVIEW_ADVICE: readonly RegExp[] = [
+    /(?<![\p{L}\p{N}_])(?:aumente|aumentem|reduza|reduzam|diversifique|diversifiquem|resgate|resgatem|realoque|rebalanceie|considere|aproveite)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:increase|reduce|diversify|redeem|rebalance|consider|you should|should you)(?![\p{L}\p{N}_])/iu
+];
+const REVIEW_PROMISE: readonly RegExp[] = [
+    /(?<![\p{L}\p{N}_])(?:vai|v[aã]o)\s+(?:continuar|seguir|manter|subir|cair|melhorar|piorar)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:deve|devem|tende|tendem)\s+a\s+(?:continuar|seguir|manter|subir|cair)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:pr[oó]ximo m[eê]s|pr[oó]ximos meses)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])(?:will|is going to|are going to)\s+(?:continue|keep|rise|fall|improve)(?![\p{L}\p{N}_])/iu,
+    /(?<![\p{L}\p{N}_])next months?(?![\p{L}\p{N}_])/iu
+];
+const REVIEW_NOTICE: RegExp = /recomenda[çc][ãa]o|recommendation|n[aã]o [eé] (?:uma )?(?:conselho|oferta)|not (?:an? )?(?:advice|offer)/iu;
+
+function reviewFailures(item: EvalCase, text: string): CheckFailure[] {
+    if (item.task !== 'summary_monthly_review') {
+        return [];
+    }
+    const advice: CheckFailure[] = REVIEW_ADVICE.filter((pattern: RegExp): boolean => pattern.test(text)).map((): CheckFailure =>
+        fail('forbidden_term', 'advice on what to do with the portfolio')
+    );
+    const promise: CheckFailure[] = REVIEW_PROMISE.filter((pattern: RegExp): boolean => pattern.test(text)).map((): CheckFailure =>
+        fail('forbidden_term', 'a promise or forecast about the next period')
+    );
+    const notice: CheckFailure[] = REVIEW_NOTICE.test(text)
+        ? [fail('no_notice_in_model_text', 'the model wrote the investment notice, which is the code')]
+        : [];
+    return [...advice, ...promise, ...notice];
+}
+
 function softChecks(item: EvalCase, rendered: readonly string[]): CheckFailure[] {
     const text: string = plainOf(rendered);
-    return [...sentenceFailure(item, text), ...languageFailure(item, text), ...toneFailure(text), ...mentionFailures(item, text)];
+    return [
+        ...reviewFailures(item, text),
+        ...sentenceFailure(item, text),
+        ...languageFailure(item, text),
+        ...toneFailure(text),
+        ...mentionFailures(item, text)
+    ];
 }
 
 type Parsed = { readonly ok: true; readonly paragraphs: readonly string[] } | { readonly ok: false; readonly failure: CheckFailure };
@@ -292,10 +339,49 @@ function askOutcome(input: CheckInput, item: AskCase): CheckOutcome {
     return { failures, rendered: [input.text] };
 }
 
+export function documentChecks(item: DocumentCase, output: MarketDocumentSummaryOutput): CheckFailure[] {
+    const summary: string = output.summary;
+    const sentences: number = summarySentencesIn(summary);
+    const unknown: string | undefined = unknownNumber([...numbersIn(summary), ...output.numbers.flatMap(numbersIn)], item.document.text);
+    return [
+        ...(unknown === undefined ? [] : [fail('numbers_from_source', `the figure ${unknown} is not in the document`)]),
+        ...(sentences > MAX_SUMMARY_SENTENCES
+            ? [fail('sentences_max', `${String(sentences)} sentences, at most ${String(MAX_SUMMARY_SENTENCES)}`)]
+            : []),
+        ...(adviceIn(summary) ? [fail('no_advice', 'advice, a promise, an exclamation, an emoji or a mention of AI')] : []),
+        ...(output.discard === item.expectDiscard
+            ? []
+            : [fail('discard_expected', `discard ${String(output.discard)}, expected ${String(item.expectDiscard)}`)]),
+        ...(NOTICE_TEXT.test(summary) ? [fail('no_notice_in_model_text', 'the model wrote the investment notice, which is the code')] : []),
+        ...languageFailure(item, summary),
+        ...toneFailure(summary),
+        ...mentionFailures(item, summary)
+    ];
+}
+
+function documentOutcome(input: CheckInput, item: DocumentCase): CheckOutcome {
+    if (input.stopReason === 'max_tokens') {
+        return { failures: [fail('truncated', 'the answer hit maxOutputTokens')], rendered: [] };
+    }
+    if (input.text === '') {
+        return { failures: [fail('empty', 'the model returned no text')], rendered: [] };
+    }
+    const parsed: ReturnType<typeof marketDocumentSummaryOutputSchema.safeParse> = marketDocumentSummaryOutputSchema.safeParse(
+        parseJsonObject(input.text)
+    );
+    if (!parsed.success) {
+        return { failures: [fail('schema', parsed.error.issues[0]?.message ?? 'invalid shape')], rendered: [] };
+    }
+    return { failures: documentChecks(item, parsed.data), rendered: [parsed.data.summary] };
+}
+
 export function checkOutput(input: CheckInput): CheckOutcome {
     const item: EvalCase = input.item;
     if (isAskCase(item)) {
         return askOutcome(input, item);
+    }
+    if (isDocumentCase(item)) {
+        return documentOutcome(input, item);
     }
     if (!input.fixed) {
         return modelOutcome(input, item);

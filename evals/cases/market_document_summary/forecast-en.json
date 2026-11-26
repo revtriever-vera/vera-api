@@ -1,0 +1,32 @@
+{
+  "id": "forecast-en",
+  "task": "market_document_summary",
+  "locale": "en",
+  "labels": {},
+  "document": {
+    "issuer": "Atlas Mining Ltd. (fictional)",
+    "tickers": ["ATLS"],
+    "category": "Guidance",
+    "publishedAt": "2026-05-27",
+    "text": "Atlas Mining Ltd. said it expects 2026 copper output of between 210,000 and 230,000 tonnes, assuming its new plant starts on schedule in October. Management cautioned that the outlook is a forecast and not a guarantee."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["210,000"],
+    "mustMention": ["expects"],
+    "mustNotMention": ["buy", "sell", "worth", "will rise", "will produce", "will reach"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "relevant_fact",
+    "relevance": 2,
+    "discard": false,
+    "numbers": ["2026", "210,000", "230,000"]
+  },
+  "reference": [
+    "Atlas Mining expects 2026 copper output of 210,000 to 230,000 tonnes, assuming its new plant starts on schedule in October. The company says this is a forecast, not a guarantee."
+  ]
+}

@@ -22,7 +22,8 @@ export const APP_AI_TOOLS: ReadonlySet<string> = new Set([
     'market_benchmarks',
     'asset_lookup',
     'fund_performance',
-    'fixed_income_vs_benchmark'
+    'fixed_income_vs_benchmark',
+    'portfolio_news'
 ]);
 
 export const APP_WRITE_TOOLS: ReadonlySet<string> = new Set(['goal_create', 'transaction_categorize']);

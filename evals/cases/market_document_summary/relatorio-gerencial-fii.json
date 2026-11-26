@@ -1,0 +1,32 @@
+{
+  "id": "relatorio-gerencial-fii",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Fundo Pampa Recebíveis (fictício)",
+    "tickers": ["PMPR11"],
+    "category": "Relatório Gerencial",
+    "publishedAt": "2026-07-09",
+    "text": "Relatório gerencial de junho de 2026. O patrimônio líquido do fundo era de R$ 540 milhões, com 96% da carteira alocada em CRI. A inadimplência da carteira foi de 1,3%. O fundo distribuiu R$ 1,05 por cota no mês e o valor patrimonial por cota fechou em R$ 98,40."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["540"],
+    "mustMention": ["CRI"],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "management",
+    "relevance": 2,
+    "discard": false,
+    "numbers": ["R$ 540 milhões", "96%", "1,3%", "R$ 1,05"]
+  },
+  "reference": [
+    "O relatório de junho de 2026 mostra patrimônio líquido de R$ 540 milhões, com 96% da carteira em CRI e inadimplência de 1,3%. O fundo distribuiu R$ 1,05 por cota no mês."
+  ]
+}

@@ -58,6 +58,30 @@ const portfolioContext = z.object({
     aporte_planejado: z.object({ total: z.string(), por_classe: z.array(z.object({ chave: z.string(), valor: z.string() })) }).optional()
 });
 
+const reviewClass = z.object({
+    chave: z.string(),
+    rotulo_padrao: z.string().optional(),
+    rentabilidade_pct: z.string().nullable()
+});
+
+const reviewMove = z.object({ chave: z.string(), variacao_pct: z.string() });
+
+const monthlyReviewContext = z.object({
+    mes: z.string(),
+    rentabilidade_pct: z.string().nullable(),
+    sem_rentabilidade_motivo: z.enum(['no_operations', 'no_previous_snapshot', 'classes_not_closing', 'no_base']).nullable(),
+    por_classe: z.array(reviewClass),
+    indices: z.object({ cdi_pct: z.string().nullable(), ipca_pct: z.string().nullable(), ibovespa_pct: z.string().nullable() }),
+    maiores_altas: z.array(reviewMove),
+    maiores_quedas: z.array(reviewMove),
+    proventos_pct_carteira: z.string().nullable(),
+    concentracao: z.object({
+        maior_emissor_pct: z.string().nullable(),
+        maior_setor_pct: z.string().nullable(),
+        acima_do_fgc: z.boolean()
+    })
+});
+
 const expectations = z.object({
     mustCite: z.array(z.string()),
     mustMention: z.array(z.string()),
@@ -86,6 +110,25 @@ const askFields = {
     screen: z.string().optional()
 };
 
+const documentFields = {
+    ...common,
+    task: z.literal('market_document_summary'),
+    document: z.object({
+        issuer: z.string(),
+        tickers: z.array(z.string()),
+        category: z.string(),
+        publishedAt: z.string(),
+        text: z.string().min(1)
+    }),
+    expectDiscard: z.boolean(),
+    referenceOutput: z.object({
+        kind: z.enum(['result', 'income', 'relevant_fact', 'meeting', 'management', 'routine']),
+        relevance: z.number().int().min(0).max(3),
+        discard: z.boolean(),
+        numbers: z.array(z.string())
+    })
+};
+
 const askCase = z.object({ ...askFields, task: z.literal('ask_vera_step') });
 const askAppCase = z.object({ ...askFields, task: z.literal('ask_vera_app_step') });
 
@@ -94,15 +137,22 @@ export const evalCaseSchema = z.discriminatedUnion('task', [
     askAppCase,
     z.object({ ...common, task: z.literal('summary_month'), context: monthContext }),
     z.object({ ...common, task: z.literal('summary_cuts'), context: cutsContext }),
-    z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext })
+    z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext }),
+    z.object({ ...common, task: z.literal('summary_monthly_review'), context: monthlyReviewContext }),
+    z.object(documentFields)
 ]);
 
 export type EvalCase = z.infer<typeof evalCaseSchema>;
 export type EvalTask = EvalCase['task'];
 export type AskTask = 'ask_vera_step' | 'ask_vera_app_step';
-export type SummaryCase = Exclude<EvalCase, { task: AskTask }>;
+export type SummaryCase = Extract<EvalCase, { task: 'summary_month' | 'summary_cuts' | 'summary_portfolio' | 'summary_monthly_review' }>;
+export type DocumentCase = Extract<EvalCase, { task: 'market_document_summary' }>;
 export type AskCase = Extract<EvalCase, { task: AskTask }>;
 
 export function isAskCase(item: EvalCase): item is AskCase {
     return item.task === 'ask_vera_step' || item.task === 'ask_vera_app_step';
+}
+
+export function isDocumentCase(item: EvalCase): item is DocumentCase {
+    return item.task === 'market_document_summary';
 }

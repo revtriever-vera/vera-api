@@ -1,0 +1,28 @@
+{
+  "id": "fato-relevante-maior-acao",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "teve fato relevante da minha maior ação?",
+  "history": [],
+  "tools": {
+    "required": ["portfolio_news"],
+    "allowed": ["help_search", "where_is", "portfolio_overview", "asset_lookup", "fund_performance", "market_benchmarks", "portfolio_news"]
+  },
+  "mockTools": [
+    {
+      "name": "portfolio_news",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["18/03/2026"],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
+    "mustNotMention": ["compre", "venda seus", "mantenha"],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["Sim: em 18/03/2026 a **VALE3** teve um fato relevante, com a revisão da meta de produção de minério de ferro para o ano."]
+}

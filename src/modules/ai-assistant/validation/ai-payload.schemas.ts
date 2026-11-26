@@ -5,6 +5,7 @@ import {
     AiCutsContext,
     AiMaturitiesContext,
     AiMonthContext,
+    AiMonthlyReviewContext,
     AiPortfolioContext
 } from '../domain/context/ai-context.types';
 
@@ -150,9 +151,55 @@ export const maturitiesContextSchema: z.ZodType<AiMaturitiesContext> = z
     })
     .strict();
 
+const reviewMoveSchema = z
+    .object({ chave: text('Key of the asset, to be written as a marker'), variacao_pct: text('Price variation in the month, formatted') })
+    .strict();
+
+export const monthlyReviewContextSchema: z.ZodType<AiMonthlyReviewContext> = z
+    .object({
+        mes: text('Month reviewed, YYYY-MM'),
+        rentabilidade_pct: nullableText('Return of the portfolio in the month, formatted with sign'),
+        sem_rentabilidade_motivo: z
+            .enum(['no_operations', 'no_previous_snapshot', 'classes_not_closing', 'no_base'])
+            .nullable()
+            .describe('Why the return is missing'),
+        por_classe: z
+            .array(
+                z
+                    .object({
+                        chave: text('Stable key of the class: the system key or custom_<n>'),
+                        rotulo_padrao: text('Default label of a system class in the effective locale').optional(),
+                        rentabilidade_pct: nullableText('Return of the class in the month, formatted with sign')
+                    })
+                    .strict()
+            )
+            .describe('Return by class'),
+        indices: z
+            .object({
+                cdi_pct: nullableText('CDI in the month, formatted'),
+                ipca_pct: nullableText('IPCA in the month, formatted'),
+                ibovespa_pct: nullableText('Ibovespa in the month, formatted')
+            })
+            .strict(),
+        maiores_altas: z.array(reviewMoveSchema).describe('Assets that rose the most'),
+        maiores_quedas: z.array(reviewMoveSchema).describe('Assets that fell the most'),
+        proventos_pct_carteira: nullableText('Income of the month as a share of the portfolio, formatted'),
+        concentracao: z
+            .object({
+                maior_emissor_pct: nullableText('Share of the largest issuer, formatted'),
+                maior_setor_pct: nullableText('Share of the largest sector of the equity portfolio, formatted'),
+                acima_do_fgc: z.boolean().describe('Whether any amount is above the FGC limit')
+            })
+            .strict()
+    })
+    .strict();
+
 export const payloadQuerySchema = z.object({
-    kind: z.enum(['month', 'cuts', 'portfolio']).describe('Which summary the payload is for'),
-    month: z.string().optional().describe('Month, YYYY-MM, for month and cuts; defaults to the last closed month'),
+    kind: z.enum(['month', 'cuts', 'portfolio', 'monthly_review']).describe('Which summary the payload is for'),
+    month: z
+        .string()
+        .optional()
+        .describe('Month, YYYY-MM, for month and cuts (defaults to the last closed month) and monthly_review (required)'),
     goalBps: z.coerce.number().int().min(0).max(MAX_GOAL_BPS).optional().describe('Simulated savings goal in basis points, for cuts'),
     contributionMinor: z.coerce
         .number()
@@ -164,10 +211,10 @@ export const payloadQuerySchema = z.object({
 });
 
 export const payloadResponseSchema = z.object({
-    kind: z.enum(['month', 'cuts', 'portfolio']).describe('Which summary the payload is for'),
+    kind: z.enum(['month', 'cuts', 'portfolio', 'monthly_review']).describe('Which summary the payload is for'),
     noticeVersion: z.number().int().describe('Current notice version'),
     payload: z
-        .union([monthContextSchema, cutsContextSchema, portfolioContextSchema])
+        .union([monthContextSchema, cutsContextSchema, portfolioContextSchema, monthlyReviewContextSchema])
         .describe('Exactly the object sent to the language model, figures only')
 });
 

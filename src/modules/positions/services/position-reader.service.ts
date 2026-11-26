@@ -12,4 +12,8 @@ export class PositionReaderService {
     public async listForCompany(filter: HolderFilter): Promise<readonly Position[]> {
         return this.positions.listByHolder(filter);
     }
+
+    public async companyIdsWithRealPositions(): Promise<readonly string[]> {
+        return this.positions.listCompanyIdsWithRealAcrossTenants();
+    }
 }

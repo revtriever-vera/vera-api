@@ -1,0 +1,66 @@
+{
+  "id": "good-month-above-cdi",
+  "task": "summary_monthly_review",
+  "locale": "en",
+  "labels": {
+    "cls:acoes_br": "Brazilian stocks",
+    "cls:rf_pos": "Floating-rate fixed income",
+    "ativo:custom_1": "Petrobras",
+    "ativo:custom_2": "Vale"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "+2.10%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Brazilian stocks",
+        "rentabilidade_pct": "+4.20%"
+      },
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Floating-rate fixed income",
+        "rentabilidade_pct": "+0.95%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0.95%",
+      "ipca_pct": "+0.60%",
+      "ibovespa_pct": "+3.10%"
+    },
+    "maiores_altas": [
+      {
+        "chave": "custom_1",
+        "variacao_pct": "+9.00%"
+      }
+    ],
+    "maiores_quedas": [
+      {
+        "chave": "custom_2",
+        "variacao_pct": "-3.00%"
+      }
+    ],
+    "proventos_pct_carteira": "0.80%",
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["+2.10%"],
+    "mustMention": ["CDI"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Your portfolio returned **+2.10%** in October, above the CDI (+0.95%) and the IPCA (+0.60%), and below the Ibovespa (+3.10%).",
+    "[[cls:acoes_br]] was the best class (+4.20%) and [[cls:rf_pos]] the lowest (+0.95%).",
+    "In price, [[ativo:custom_1]] rose +9.00% and [[ativo:custom_2]] fell -3.00%.",
+    "The portfolio received income during the month, 0.80% of its value."
+  ]
+}

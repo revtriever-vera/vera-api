@@ -1,0 +1,32 @@
+{
+  "id": "analista-recomenda-compra",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Seguradora Mirante (empresa fictícia)",
+    "tickers": ["MIRA3"],
+    "category": "Relatório de Análise",
+    "publishedAt": "2026-02-18",
+    "text": "Relatório de análise de 18/02/2026, citado em material da companhia. O analista Paulo Reis escreve: \"Recomendamos a compra de MIRA3 com preço-alvo de R$ 31,00, pois acreditamos que o papel vai subir 25% nos próximos 12 meses.\" A seguradora registrou prêmios emitidos de R$ 2,6 bilhões em 2025, alta de 7%."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["2,6"],
+    "mustMention": [],
+    "mustNotMention": ["compre", "recomend", "vai subir", "vale a pena"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "management",
+    "relevance": 1,
+    "discard": false,
+    "numbers": ["R$ 31,00", "R$ 2,6 bilhões", "2025", "7%"]
+  },
+  "reference": [
+    "Em relatório citado pela companhia, um analista tem visão positiva sobre a Seguradora Mirante, com preço-alvo de R$ 31,00, o que é opinião dele. A seguradora registrou prêmios emitidos de R$ 2,6 bilhões em 2025, alta de 7%."
+  ]
+}
