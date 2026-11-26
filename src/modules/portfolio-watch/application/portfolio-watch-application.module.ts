@@ -24,6 +24,7 @@ import { PortfolioWatchDigestTemplates } from '../services/portfolio-watch-diges
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
 import { PortfolioWatchNoticeRegistrar } from '../services/portfolio-watch-notice.registrar';
 import { PortfolioWatchPublisherService } from '../services/portfolio-watch-publisher.service';
+import { PortfolioNewsTool } from '../services/portfolio-news.tool';
 import { PortfolioChangesReaderService } from '../services/portfolio-changes-reader.service';
 import { PortfolioAgendaApplication } from './portfolio-agenda.application';
 import { PortfolioChangesApplication } from './portfolio-changes.application';
@@ -54,6 +55,7 @@ import { PortfolioWatchSnapshotApplication } from './portfolio-watch-snapshot.ap
         PortfolioAgendaApplication,
         PortfolioChangesApplication,
         PortfolioChangesReaderService,
+        PortfolioNewsTool,
         PortfolioAgendaService,
         PortfolioWatchNoticeRegistrar,
         PortfolioWatchDigestTemplates,

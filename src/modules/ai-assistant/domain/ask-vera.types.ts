@@ -75,7 +75,8 @@ export const INVESTMENT_NOTICE_TOOLS: ReadonlySet<string> = new Set([
     'market_benchmarks',
     'asset_lookup',
     'fund_performance',
-    'fixed_income_vs_benchmark'
+    'fixed_income_vs_benchmark',
+    'portfolio_news'
 ]);
 
 export interface AskVeraToolProposal {

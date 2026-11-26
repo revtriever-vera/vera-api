@@ -14,6 +14,12 @@ export interface ChangesQuery {
     readonly holder: HolderFilter;
 }
 
+export interface ChangeItemsQuery {
+    readonly days: number;
+    readonly classId: string | null;
+    readonly holder: HolderFilter;
+}
+
 export interface HeldAsset {
     readonly assetId: string;
     readonly symbol: string;
