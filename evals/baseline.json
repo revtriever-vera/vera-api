@@ -36,6 +36,13 @@
       "judgeAverage": 4.49,
       "averageLatencyMs": 4549,
       "costBrlPerRun": 0.4944
+    },
+    "market_document_summary": {
+      "promptVersion": "v1",
+      "reasoning": "minimal",
+      "judgeAverage": 4.61,
+      "averageLatencyMs": 3144,
+      "costBrlPerRun": 0.0572
     }
   }
 }

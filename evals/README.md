@@ -9,7 +9,7 @@ Teste com mock prova o encanamento, não a qualidade do texto. Os evals rodam os
 - `baseline.json`: notas da última rodada live aprovada.
 - `out/`: relatórios de cada rodada (ignorado pelo git).
 
-Tarefas cobertas: `summary_month`, `summary_cuts`, `summary_portfolio`, `ask_vera_step` (perguntas do copiloto, armadilhas e sondas) e `ask_vera_app_step` (a Vera dentro do app: ajuda do produto, onde fica cada tela, função que não existe, papel sem acesso, dado pessoal, Free perguntando de números e de mercado, aviso de compra ou venda).
+Tarefas cobertas: `market_document_summary` (resumo de documento público de emissor: `document` com o texto, `expectDiscard` e `referenceOutput` com o JSON de referência; checagens `numbers_from_source`, `sentences_max`, `no_advice`, `discard_expected` e `no_notice_in_model_text`, o aviso é do código; a rodada mede uma chamada, sem a segunda rodada de correção do produto), `summary_month`, `summary_cuts`, `summary_portfolio`, `ask_vera_step` (perguntas do copiloto, armadilhas e sondas) e `ask_vera_app_step` (a Vera dentro do app: ajuda do produto, onde fica cada tela, função que não existe, papel sem acesso, dado pessoal, Free perguntando de números e de mercado, aviso de compra ou venda).
 
 Nos casos de `ask_vera_step`, `tools.required` lista as ferramentas que a rodada precisa chamar (`tool_missing` reprova) e `tools.allowed` as permitidas (`tool_unexpected`). `pending: true` marca o caso que espera outra entrega: só `empty`, `truncated`, ferramenta e `mustNotMention` contam, e a taxa de ferramenta dele sai à parte (`pending`), fora do portão.
 

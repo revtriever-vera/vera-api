@@ -86,6 +86,25 @@ const askFields = {
     screen: z.string().optional()
 };
 
+const documentFields = {
+    ...common,
+    task: z.literal('market_document_summary'),
+    document: z.object({
+        issuer: z.string(),
+        tickers: z.array(z.string()),
+        category: z.string(),
+        publishedAt: z.string(),
+        text: z.string().min(1)
+    }),
+    expectDiscard: z.boolean(),
+    referenceOutput: z.object({
+        kind: z.enum(['result', 'income', 'relevant_fact', 'meeting', 'management', 'routine']),
+        relevance: z.number().int().min(0).max(3),
+        discard: z.boolean(),
+        numbers: z.array(z.string())
+    })
+};
+
 const askCase = z.object({ ...askFields, task: z.literal('ask_vera_step') });
 const askAppCase = z.object({ ...askFields, task: z.literal('ask_vera_app_step') });
 
@@ -94,15 +113,21 @@ export const evalCaseSchema = z.discriminatedUnion('task', [
     askAppCase,
     z.object({ ...common, task: z.literal('summary_month'), context: monthContext }),
     z.object({ ...common, task: z.literal('summary_cuts'), context: cutsContext }),
-    z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext })
+    z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext }),
+    z.object(documentFields)
 ]);
 
 export type EvalCase = z.infer<typeof evalCaseSchema>;
 export type EvalTask = EvalCase['task'];
 export type AskTask = 'ask_vera_step' | 'ask_vera_app_step';
-export type SummaryCase = Exclude<EvalCase, { task: AskTask }>;
+export type SummaryCase = Extract<EvalCase, { task: 'summary_month' | 'summary_cuts' | 'summary_portfolio' }>;
+export type DocumentCase = Extract<EvalCase, { task: 'market_document_summary' }>;
 export type AskCase = Extract<EvalCase, { task: AskTask }>;
 
 export function isAskCase(item: EvalCase): item is AskCase {
     return item.task === 'ask_vera_step' || item.task === 'ask_vera_app_step';
+}
+
+export function isDocumentCase(item: EvalCase): item is DocumentCase {
+    return item.task === 'market_document_summary';
 }

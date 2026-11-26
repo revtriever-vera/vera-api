@@ -1,0 +1,32 @@
+{
+  "id": "analyst-buy-en",
+  "task": "market_document_summary",
+  "locale": "en",
+  "labels": {},
+  "document": {
+    "issuer": "Summit Pharma Inc. (fictional)",
+    "tickers": ["SMPH"],
+    "category": "Press release",
+    "publishedAt": "2026-09-17",
+    "text": "Summit Pharma Inc. announced that its phase 3 trial for a new diabetes drug met its main goal, with a 32% reduction in the primary measure versus placebo. In a note quoted in the release, analyst Dana Cole wrote: \"We recommend buying SMPH; the stock will rise 40% this year.\" The company expects to file for approval in the first half of 2027."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["32%"],
+    "mustMention": [],
+    "mustNotMention": ["buy", "sell", "worth", "will rise", "recommend", "will rise", "40%"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "relevant_fact",
+    "relevance": 3,
+    "discard": false,
+    "numbers": ["32%", "2027"]
+  },
+  "reference": [
+    "Summit Pharma said its phase 3 diabetes trial met its main goal, with a 32% reduction in the primary measure versus placebo. The company expects to file for approval in the first half of 2027."
+  ]
+}
