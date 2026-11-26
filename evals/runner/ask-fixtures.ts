@@ -3,10 +3,13 @@ import { JsonObject } from '../../src/core/llm/llm.types';
 import { AppLocale } from '../../src/shared/i18n/locale';
 import { AskVeraTool, AskVeraToolOutput } from '../../src/modules/ai-assistant/domain/ask-vera.types';
 import {
+    assetLookupInputSchema,
     benchmarksInputSchema,
     byCategoryInputSchema,
     contributionInputSchema,
     cutsInputSchema,
+    fixedIncomeBenchmarkInputSchema,
+    fundPerformanceInputSchema,
     monthSummaryInputSchema,
     maturitiesInputSchema,
     noInputSchema
@@ -14,6 +17,11 @@ import {
 import { buildBenchmarksContext } from '../../src/modules/ai-assistant/domain/context/benchmarks.context';
 import { buildConcentrationContext } from '../../src/modules/ai-assistant/domain/context/concentration.context';
 import { buildMaturitiesContext } from '../../src/modules/ai-assistant/domain/context/maturities.context';
+import {
+    buildAssetLookupContext,
+    buildFixedIncomeBenchmarkContext,
+    buildFundPerformanceContext
+} from '../../src/modules/ai-assistant/domain/context/research.context';
 import { HELP_CATALOG } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { HelpRole } from '../../src/modules/ai-assistant/domain/help/help.types';
 import { HelpSearchTool } from '../../src/modules/ai-assistant/services/tools/help-search.tool';
@@ -23,7 +31,10 @@ import type { AiConsentService } from '../../src/modules/ai-assistant/services/a
 import { WhereIsTool } from '../../src/modules/ai-assistant/services/tools/where-is.tool';
 import type { CurrentUserService } from '../../src/modules/identity/services/current-user.service';
 import type { ConcentrationResponse } from '../../src/modules/concentration/services/concentration-reader.service';
+import type { LookupEntry } from '../../src/modules/market-benchmarks/services/asset-lookup.service';
 import type { BenchmarkWindows } from '../../src/modules/market-benchmarks/services/benchmark.service';
+import type { FixedIncomeComparison } from '../../src/modules/market-benchmarks/services/fixed-income-benchmark.service';
+import type { FundPerformance } from '../../src/modules/market-benchmarks/services/fund-performance.service';
 import type { MaturityItem } from '../../src/modules/fixed-income-schedule/services/maturities-reader.service';
 import { AskCase, SummaryCase } from './case.schemas';
 import { casesOf, keysOf, numbersOf } from './cases';
@@ -62,6 +73,18 @@ const DESCRIPTIONS: Readonly<Record<string, Readonly<Record<AppLocale, string>>>
             'Indicadores de referência do mercado já acumulados: CDI e IPCA, Selic meta e Ibovespa, com a data até onde vão e a fonte.',
         en: 'Ready-made market reference figures: CDI and IPCA, the Selic target and the Ibovespa, with the date they run to and the source.'
     },
+    asset_lookup: {
+        'pt-BR': 'Pesquisa um ativo ou fundo pelo nome ou código: tipo, classe, mercado e última cotação com a data.',
+        en: 'Looks an asset or fund up by name or code: type, class, market and the latest quote with its date.'
+    },
+    fund_performance: {
+        'pt-BR': 'Rentabilidade passada da cota de um fundo em 1, 3, 6, 12 e 36 meses contra o CDI, com a diferença já calculada.',
+        en: 'Past return of a fund quota over 1, 3, 6, 12 and 36 months against the CDI, with the difference already computed.'
+    },
+    fixed_income_vs_benchmark: {
+        'pt-BR': 'Compara um título de renda fixa da carteira com o CDI e o IPCA de 12 meses; sem a chave, lista os títulos.',
+        en: 'Compares a fixed income security of the portfolio with the 12-month CDI and IPCA; without the key it lists the securities.'
+    },
     portfolio_overview: {
         'pt-BR': 'Total da carteira, exposição ao dólar e cada classe de ativo contra a meta.',
         en: 'Portfolio total, dollar exposure and each asset class against its target.'
@@ -86,13 +109,18 @@ function outputOf(item: SummaryCase, payload: JsonObject): AskVeraToolOutput {
     return { payload, numbers: numbersOf(item), keys: keysOf(item) };
 }
 
-function toolOf(name: string, schema: AskVeraTool['inputSchema'], locale: AppLocale, payload: () => AskVeraToolOutput): AskVeraTool {
+function toolOf(
+    name: string,
+    schema: AskVeraTool['inputSchema'],
+    locale: AppLocale,
+    payload: (input: unknown) => AskVeraToolOutput
+): AskVeraTool {
     return {
         name,
         kind: 'read',
         inputSchema: schema,
         description: (): string => DESCRIPTIONS[name]?.[locale] ?? name,
-        run: (): Promise<AskVeraToolOutput> => Promise.resolve(payload())
+        run: (input: unknown): Promise<AskVeraToolOutput> => Promise.resolve(payload(input))
     };
 }
 
@@ -204,26 +232,149 @@ const BENCHMARKS_FIXTURE: BenchmarkWindows = {
     }
 };
 
+const LOOKUP_BASE: Pick<LookupEntry, 'typeGroup' | 'suggestedClassKey' | 'currency' | 'market' | 'kind'> = {
+    typeGroup: 'acoes_br',
+    suggestedClassKey: 'acoes_br',
+    currency: 'BRL',
+    market: 'B3',
+    kind: 'stock'
+};
+
+const LOOKUP_FIXTURE: readonly LookupEntry[] = [
+    {
+        ...LOOKUP_BASE,
+        externalId: 'PETR4',
+        symbol: 'PETR4',
+        name: 'Petrobras PN',
+        quote: { price: '38.52', currency: 'BRL', date: '2026-03-19', stale: false }
+    },
+    {
+        ...LOOKUP_BASE,
+        externalId: 'VALE3',
+        symbol: 'VALE3',
+        name: 'Vale ON',
+        quote: { price: '61.9', currency: 'BRL', date: '2026-03-19', stale: false }
+    },
+    {
+        ...LOOKUP_BASE,
+        externalId: '11111111000191',
+        symbol: 'ALFA',
+        name: 'Fundo Alfa Referenciado DI',
+        typeGroup: 'fundos',
+        suggestedClassKey: null,
+        market: 'CVM',
+        kind: 'fund',
+        quote: null
+    }
+];
+
+const FUND_FIXTURE: FundPerformance = {
+    state: 'ok',
+    name: 'Fundo Alfa Referenciado DI',
+    lastDate: '2026-03-19',
+    stale: false,
+    complete: true,
+    cdiLastDate: '2026-03-19',
+    cdiSource: 'Banco Central, série 12',
+    source: 'CVM, informe diário',
+    windows: {
+        m1: { fundBps: 98, cdiBps: 105, differenceBps: -7 },
+        m3: { fundBps: 330, cdiBps: 310, differenceBps: 20 },
+        m6: { fundBps: 700, cdiBps: 620, differenceBps: 80 },
+        m12: { fundBps: 1410, cdiBps: 1280, differenceBps: 130 }
+    },
+    missing: ['m36']
+};
+
+const FIXED_INCOME_REFERENCE: FixedIncomeComparison['reference'] = {
+    cdi12Bps: 1280,
+    cdiLastDate: '2026-03-19',
+    cdiSource: 'Banco Central, série 12',
+    ipca12Bps: 480,
+    ipcaLastDate: '2026-02-01',
+    ipcaSource: 'Banco Central, série 433'
+};
+
+const FIXED_INCOME_TITLES: FixedIncomeComparison['titles'] = [
+    {
+        key: 'rf1',
+        kind: 'cdb',
+        indexer: 'cdi_percent',
+        rateBps: 11000,
+        appliedAt: '2025-06-10',
+        nominalAnnualBps: 1408,
+        realAnnualBps: 880,
+        beatsInflation: true,
+        versusCdiBps: 128,
+        estimated: true
+    },
+    {
+        key: 'rf2',
+        kind: 'lci',
+        indexer: 'prefixed',
+        rateBps: 1050,
+        appliedAt: '2025-09-02',
+        nominalAnnualBps: 1050,
+        realAnnualBps: 540,
+        beatsInflation: true,
+        versusCdiBps: -230,
+        estimated: false
+    }
+];
+
+function lookupOf(input: unknown): readonly LookupEntry[] {
+    const query: string = (assetLookupInputSchema.safeParse(input).data?.query ?? '').toLowerCase();
+    const words: readonly string[] = query.split(/\s+/).filter((word: string): boolean => word.length >= 3);
+    return LOOKUP_FIXTURE.filter((entry: LookupEntry): boolean =>
+        words.some((word: string): boolean => `${entry.name} ${entry.symbol}`.toLowerCase().includes(word))
+    );
+}
+
+function fixedIncomeOf(input: unknown): FixedIncomeComparison {
+    const key: string | undefined = fixedIncomeBenchmarkInputSchema.safeParse(input).data?.holdingKey;
+    if (key === undefined) {
+        return { state: 'list', reference: FIXED_INCOME_REFERENCE, titles: FIXED_INCOME_TITLES };
+    }
+    const chosen: FixedIncomeComparison['titles'] = FIXED_INCOME_TITLES.filter((title): boolean => title.key === key);
+    return { state: chosen.length === 0 ? 'not_found' : 'ok', reference: FIXED_INCOME_REFERENCE, titles: chosen };
+}
+
+function outputOfBuilt(built: { payload: object; numbers: readonly number[]; keys: AskVeraToolOutput['keys'] }): AskVeraToolOutput {
+    return { payload: jsonOf(built.payload), numbers: built.numbers, keys: built.keys };
+}
+
+function assetLookupOutput(input: unknown, locale: AppLocale): AskVeraToolOutput {
+    const found: readonly LookupEntry[] = lookupOf(input);
+    return found.length === 0 ? { payload: { status: 'no_match' } } : outputOfBuilt(buildAssetLookupContext(found, locale));
+}
+
+function fundPerformanceOutput(input: unknown, locale: AppLocale): AskVeraToolOutput {
+    const known: boolean = fundPerformanceInputSchema.safeParse(input).data?.fundId === '11111111000191';
+    const performance: FundPerformance = known ? FUND_FIXTURE : { ...FUND_FIXTURE, state: 'not_found', name: '', windows: {} };
+    return outputOfBuilt(buildFundPerformanceContext(performance, ['m1', 'm3', 'm6', 'm12', 'm36'], locale));
+}
+
+function researchToolsOf(locale: AppLocale): readonly AskVeraTool[] {
+    return [
+        toolOf('asset_lookup', assetLookupInputSchema, locale, (input: unknown): AskVeraToolOutput => assetLookupOutput(input, locale)),
+        toolOf('fund_performance', fundPerformanceInputSchema, locale, (input: unknown): AskVeraToolOutput =>
+            fundPerformanceOutput(input, locale)
+        ),
+        toolOf('fixed_income_vs_benchmark', fixedIncomeBenchmarkInputSchema, locale, (input: unknown): AskVeraToolOutput =>
+            outputOfBuilt(buildFixedIncomeBenchmarkContext(fixedIncomeOf(input), locale))
+        )
+    ];
+}
+
 export function appFixtureToolsOf(locale: AppLocale): readonly AskVeraTool[] {
     const concentration: ReturnType<typeof buildConcentrationContext> = buildConcentrationContext(CONCENTRATION_FIXTURE, locale);
     const maturities: ReturnType<typeof buildMaturitiesContext> = buildMaturitiesContext(MATURITIES_FIXTURE, '2027-03', locale);
     const benchmarks: ReturnType<typeof buildBenchmarksContext> = buildBenchmarksContext(BENCHMARKS_FIXTURE, undefined, locale);
     return [
-        toolOf('concentration_overview', noInputSchema, locale, (): AskVeraToolOutput => ({
-            payload: jsonOf(concentration.payload),
-            numbers: concentration.numbers,
-            keys: concentration.keys
-        })),
-        toolOf('fixed_income_maturities', maturitiesInputSchema, locale, (): AskVeraToolOutput => ({
-            payload: jsonOf(maturities.payload),
-            numbers: maturities.numbers,
-            keys: maturities.keys
-        })),
-        toolOf('market_benchmarks', benchmarksInputSchema, locale, (): AskVeraToolOutput => ({
-            payload: jsonOf(benchmarks.payload),
-            numbers: benchmarks.numbers,
-            keys: benchmarks.keys
-        }))
+        toolOf('concentration_overview', noInputSchema, locale, (): AskVeraToolOutput => outputOfBuilt(concentration)),
+        toolOf('fixed_income_maturities', maturitiesInputSchema, locale, (): AskVeraToolOutput => outputOfBuilt(maturities)),
+        toolOf('market_benchmarks', benchmarksInputSchema, locale, (): AskVeraToolOutput => outputOfBuilt(benchmarks)),
+        ...researchToolsOf(locale)
     ];
 }
 

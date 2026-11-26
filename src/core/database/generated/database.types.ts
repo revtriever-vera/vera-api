@@ -485,6 +485,25 @@ export interface FixedIncomeTitles {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface FundQuoteCoverage {
+    assetId: string;
+    coveredFrom: Timestamp;
+    coveredTo: Timestamp;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    readAt: Generated<Timestamp>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface FundQuotePoints {
+    assetId: string;
+    createdAt: Generated<Timestamp>;
+    date: Timestamp;
+    fetchedAt: Generated<Timestamp>;
+    id: string;
+    quota: Numeric;
+}
+
 export interface GlobalPlanCapabilities {
     capability: string;
     planId: string;
@@ -1276,6 +1295,8 @@ export interface DB {
     ExchangeRates: ExchangeRates;
     FinancialAccounts: FinancialAccounts;
     FixedIncomeTitles: FixedIncomeTitles;
+    FundQuoteCoverage: FundQuoteCoverage;
+    FundQuotePoints: FundQuotePoints;
     GlobalPlanCapabilities: GlobalPlanCapabilities;
     GlobalPlanProducts: GlobalPlanProducts;
     GlobalPlans: GlobalPlans;

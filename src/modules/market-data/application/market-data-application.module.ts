@@ -24,8 +24,10 @@ import { ExchangeRatePort } from '../ports/exchange-rate.port';
 import { MarketIndexSourcePort } from '../ports/market-index-source.port';
 import { QUOTE_PROVIDERS, QuoteProviderPort } from '../ports/quote-provider.port';
 import { ExchangeRateReaderService } from '../services/exchange-rate-reader.service';
+import { FundQuoteHistoryService } from '../services/fund-quote-history.service';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
+import { MarketDataPruneService } from '../services/market-data-prune.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
 import { MarketIndexReaderService } from '../services/market-index-reader.service';
 import { MarketIndexSyncService } from '../services/market-index-sync.service';
@@ -66,6 +68,7 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         ReferenceDataApplication,
         QuoteReaderService,
         ExchangeRateReaderService,
+        FundQuoteHistoryService,
         MarketIndexReaderService,
         MarketIndexSyncService,
         PtaxUsdRateAdapter,
@@ -75,6 +78,7 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         HeldAssetsService,
         MarketDataLogService,
         MarketDataMetricsService,
+        MarketDataPruneService,
         EmptyHeldAssetsDriver,
         BrapiQuoteDriver,
         FinnhubQuoteDriver,
@@ -124,6 +128,7 @@ const LIVE_QUOTE_DRIVERS: Type<QuoteProviderPort>[] = [
         ReferenceDataApplication,
         QuoteReaderService,
         ExchangeRateReaderService,
+        FundQuoteHistoryService,
         MarketIndexReaderService,
         ProviderBudgetService
     ]

@@ -61,7 +61,7 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         timeoutMs: 45_000,
         maxRetries: 2,
         evalThreshold: 0.8,
-        promptVersion: 'v5'
+        promptVersion: 'v6'
     },
     {
         task: LLM_TASKS.investmentExtract,

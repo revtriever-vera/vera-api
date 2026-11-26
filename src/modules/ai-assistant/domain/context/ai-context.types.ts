@@ -140,8 +140,82 @@ export interface AiBenchmarksContext {
     readonly ibovespa: AiBenchmarkSeries & { readonly status: AiIbovespaStatus };
 }
 
+export interface AiAssetQuote {
+    readonly valor: string;
+    readonly data: string;
+    readonly atrasada: boolean;
+}
+
+export interface AiAssetEntry {
+    readonly nome: string;
+    readonly ticker: string;
+    readonly tipo: string;
+    readonly classe: string | null;
+    readonly mercado: string;
+    readonly cotacao: AiAssetQuote | null;
+    readonly fund_id?: string;
+}
+
+export interface AiAssetLookupContext {
+    readonly ativos: readonly AiAssetEntry[];
+}
+
+export type AiFundStatus = 'ok' | 'fundo_nao_encontrado' | 'sem_dados';
+
+export interface AiFundWindowEntry {
+    readonly periodo: string;
+    readonly fundo: string;
+    readonly cdi: string | null;
+    readonly diferenca: string | null;
+    readonly situacao: 'acima_do_cdi' | 'abaixo_do_cdi' | 'igual_ao_cdi' | null;
+}
+
+export interface AiFundPerformanceContext {
+    readonly status: AiFundStatus;
+    readonly fundo: string;
+    readonly fonte: string;
+    readonly ate: string | null;
+    readonly atrasado: boolean;
+    readonly cdi_fonte: string;
+    readonly cdi_ate: string | null;
+    readonly historico_completo: boolean;
+    readonly janelas: readonly AiFundWindowEntry[];
+    readonly sem_historico: readonly string[];
+}
+
+export type AiFixedIncomeStatus = 'ok' | 'escolha_um_titulo' | 'titulo_nao_encontrado' | 'sem_titulos' | 'sem_indice';
+
+export interface AiFixedIncomeEntry {
+    readonly chave: string;
+    readonly tipo: string;
+    readonly indexador: string;
+    readonly taxa_contratada: string;
+    readonly aplicado_em: string;
+    readonly taxa_nominal_estimada: string | null;
+    readonly taxa_real_estimada: string | null;
+    readonly ganha_da_inflacao: boolean | null;
+    readonly contra_cdi_12m: string | null;
+    readonly situacao_contra_cdi: 'acima' | 'abaixo' | 'igual' | null;
+    readonly estimado: boolean;
+}
+
+export interface AiFixedIncomeBenchmarkContext {
+    readonly status: AiFixedIncomeStatus;
+    readonly cdi_12m: { readonly valor: string | null; readonly fonte: string; readonly ate: string | null };
+    readonly ipca_12m: { readonly valor: string | null; readonly fonte: string; readonly ate: string | null };
+    readonly titulos: readonly AiFixedIncomeEntry[];
+}
+
 export type AiContext =
-    AiMonthContext | AiCutsContext | AiPortfolioContext | AiConcentrationContext | AiMaturitiesContext | AiBenchmarksContext;
+    | AiMonthContext
+    | AiCutsContext
+    | AiPortfolioContext
+    | AiConcentrationContext
+    | AiMaturitiesContext
+    | AiBenchmarksContext
+    | AiAssetLookupContext
+    | AiFundPerformanceContext
+    | AiFixedIncomeBenchmarkContext;
 
 export interface BuiltContext<T extends AiContext> {
     readonly payload: T;

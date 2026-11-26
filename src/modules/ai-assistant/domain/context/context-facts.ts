@@ -1,5 +1,5 @@
 import { AppLocale } from '../../../../shared/i18n/locale';
-import { moneyText, percentText, pointsText, ratePercentText, signedPercentText } from './money-text';
+import { moneyText, percentText, pointsText, priceText, ratePercentText, signedPercentText } from './money-text';
 
 const MINOR_PER_MAJOR: number = 100;
 const BPS_PER_PERCENT: number = 100;
@@ -15,6 +15,11 @@ export class ContextFacts {
     public money(minor: number): string {
         this.cited.add(Math.abs(Math.round(minor / MINOR_PER_MAJOR)));
         return moneyText(minor, this.currency, this.locale);
+    }
+
+    public price(price: string, currency: string): string {
+        this.cited.add(Math.abs(Math.round(Number(price))));
+        return priceText(price, currency, this.locale);
     }
 
     public moneyOrNull(minor: number | null): string | null {

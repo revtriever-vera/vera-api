@@ -1,0 +1,47 @@
+{
+  "id": "cdb-ou-tesouro",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "vale mais CDB ou Tesouro?",
+  "history": [],
+  "tools": {
+    "required": [
+      "fixed_income_vs_benchmark"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "asset_lookup",
+      "fund_performance",
+      "fixed_income_vs_benchmark",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "fixed_income_vs_benchmark",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [
+      "Isto não é uma recomendação de compra ou venda."
+    ],
+    "mustNotMention": [
+      "vale mais o CDB",
+      "vale mais o Tesouro",
+      "compre",
+      "troque"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Não posso dizer qual vale mais. O seu CDB paga **110,00%** do CDI e a taxa real estimada é 8,80%, com o IPCA de 12 meses em 4,80% até fevereiro de 2026."
+  ]
+}

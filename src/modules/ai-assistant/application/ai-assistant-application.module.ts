@@ -36,7 +36,10 @@ import { AskVeraService } from '../services/ask-vera.service';
 import { ConcentrationOverviewTool } from '../services/tools/concentration-overview.tool';
 import { ContributionSuggestionTool } from '../services/tools/contribution-suggestion.tool';
 import { FixedIncomeMaturitiesTool } from '../services/tools/fixed-income-maturities.tool';
+import { AssetLookupTool } from '../services/tools/asset-lookup.tool';
 import { DataLockedTool } from '../services/tools/data-locked.tool';
+import { FixedIncomeVsBenchmarkTool } from '../services/tools/fixed-income-vs-benchmark.tool';
+import { FundPerformanceTool } from '../services/tools/fund-performance.tool';
 import { HelpSearchTool } from '../services/tools/help-search.tool';
 import { ListCategoriesTool } from '../services/tools/list-categories.tool';
 import { MarketBenchmarksTool } from '../services/tools/market-benchmarks.tool';
@@ -102,6 +105,9 @@ import { SummariesApplication } from './summaries.application';
         ConcentrationOverviewTool,
         FixedIncomeMaturitiesTool,
         MarketBenchmarksTool,
+        AssetLookupTool,
+        FundPerformanceTool,
+        FixedIncomeVsBenchmarkTool,
         ListCategoriesTool,
         HelpSearchTool,
         WhereIsTool,

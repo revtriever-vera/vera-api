@@ -41,3 +41,19 @@ export function ratePercentText(bps: number, locale: AppLocale): string {
     });
     return plain(formatter.format(bps / BPS_PER_PERCENT / BPS_PER_PERCENT));
 }
+
+const SMALL_PRICE: number = 1;
+const SMALL_PRICE_DIGITS: number = 4;
+const PRICE_DIGITS: number = 2;
+
+export function priceText(price: string, currency: string, locale: AppLocale): string {
+    const value: number = Number(price);
+    const digits: number = Math.abs(value) < SMALL_PRICE ? SMALL_PRICE_DIGITS : PRICE_DIGITS;
+    const formatter: Intl.NumberFormat = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: PRICE_DIGITS,
+        maximumFractionDigits: digits
+    });
+    return plain(formatter.format(value));
+}
