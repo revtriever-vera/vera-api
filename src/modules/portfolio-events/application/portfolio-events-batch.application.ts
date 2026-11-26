@@ -13,8 +13,10 @@ interface BatchOutcome {
     failed: number;
 }
 
+const KNOWN_SOURCE_ERRORS: ReadonlySet<string> = new Set<string>(['ProviderError', 'CatalogSourceError']);
+
 function reasonOf(error: unknown): string {
-    return error instanceof Error && error.name === 'ProviderError' ? error.message : 'unexpected';
+    return error instanceof Error && KNOWN_SOURCE_ERRORS.has(error.name) ? error.message : 'unexpected';
 }
 
 @Injectable()

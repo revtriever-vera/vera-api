@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { parsePortfolioEventsConfig } from '../config/portfolio-events.config';
+import { ProviderHttpService } from '../../market-data/services/provider-http.service';
 import { FnetFiiNoticesDriver } from './fnet-fii-notices.driver';
 
 const SAMPLE: string = readFileSync(join(__dirname, 'fixtures', 'fnet-aviso-estruturado-sample.xml'), 'utf8');
@@ -15,7 +16,7 @@ function driverWith(responses: Record<string, unknown>): { driver: FnetFiiNotice
         return Promise.resolve(responses[key]);
     });
     const config = parsePortfolioEventsConfig({ PORTFOLIO_EVENTS_REQUEST_SPACING_MS: '0' });
-    return { driver: new FnetFiiNoticesDriver(config, { getJson }), getJson };
+    return { driver: new FnetFiiNoticesDriver(config, { getJson } as unknown as ProviderHttpService), getJson };
 }
 
 describe('FnetFiiNoticesDriver', () => {

@@ -18,6 +18,9 @@ function withDefault(fallback: string): z.ZodType<string, z.ZodTypeDef, string |
 
 const schema = z.object({
     PORTFOLIO_EVENTS_FNET_ENABLED: flag,
+    PORTFOLIO_EVENTS_CVM_IPE_ENABLED: flag,
+    PORTFOLIO_EVENTS_CVM_REQUEST_SPACING_MS: withDefault('2000').pipe(nonNegativeInteger),
+    PORTFOLIO_EVENTS_CVM_MAX_NOTICES: withDefault('12').pipe(positiveInteger),
     PORTFOLIO_EVENTS_FNET_BASE_URL: withDefault('https://fnet.bmfbovespa.com.br/fnet/publico').pipe(z.string().url()),
     PORTFOLIO_EVENTS_HTTP_TIMEOUT_MS: withDefault('8000').pipe(positiveInteger),
     PORTFOLIO_EVENTS_REQUEST_SPACING_MS: withDefault('10000').pipe(nonNegativeInteger),

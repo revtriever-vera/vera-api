@@ -14,7 +14,7 @@ export const EVENT_KINDS = {
 } as const;
 export type EventKind = (typeof EVENT_KINDS)[keyof typeof EVENT_KINDS];
 
-export const EVENT_SOURCES = { fnet: 'fnet' } as const;
+export const EVENT_SOURCES = { fnet: 'fnet', cvmIpe: 'cvm_ipe' } as const;
 export type EventSource = (typeof EVENT_SOURCES)[keyof typeof EVENT_SOURCES];
 
 export type AssetIssuerLinkRow = Selectable<AssetIssuerLinks>;
