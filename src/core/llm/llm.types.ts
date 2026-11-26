@@ -6,6 +6,7 @@ export const LLM_TASKS = {
     summaryMonth: 'summary_month',
     summaryCuts: 'summary_cuts',
     summaryPortfolio: 'summary_portfolio',
+    summaryMonthlyReview: 'summary_monthly_review',
     askVeraStep: 'ask_vera_step',
     askVeraAppStep: 'ask_vera_app_step',
     investmentExtract: 'investment_extract',

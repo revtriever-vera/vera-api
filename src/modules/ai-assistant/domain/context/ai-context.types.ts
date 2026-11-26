@@ -1,4 +1,4 @@
-export type AiMarkerKind = 'cat' | 'cls';
+export type AiMarkerKind = 'cat' | 'cls' | 'ativo';
 
 export interface LabelSource {
     readonly kind: AiMarkerKind;
@@ -206,10 +206,71 @@ export interface AiFixedIncomeBenchmarkContext {
     readonly titulos: readonly AiFixedIncomeEntry[];
 }
 
+export interface ReviewClassLabel {
+    readonly classId: string;
+    readonly systemKey: string | null;
+    readonly displayName: string;
+}
+
+export interface ReviewSource {
+    readonly month: string;
+    readonly baseCurrency: string;
+    readonly returnPct?: number;
+    readonly byClass: readonly { readonly classId: string | null; readonly endMinor: number; readonly returnPct?: number }[];
+    readonly benchmarks: Readonly<Record<'cdi' | 'ipca' | 'ibovespa', { readonly state: string; readonly returnPct: number | null }>>;
+    readonly topGainers: readonly { readonly symbol: string; readonly variationPct: number }[];
+    readonly topLosers: readonly { readonly symbol: string; readonly variationPct: number }[];
+    readonly income: { readonly amountMinor: number };
+    readonly concentration: {
+        readonly topIssuers: readonly { readonly name: string | null; readonly shareBps: number }[];
+        readonly sectors: readonly { readonly shareBps: number }[];
+        readonly fgcExposure: { readonly overLimitMinor: number };
+    };
+    readonly coverage: { readonly reason: AiReviewCoverage | null };
+}
+
+export type AiReviewCoverage = 'no_operations' | 'no_previous_snapshot' | 'classes_not_closing' | 'no_base';
+
+export interface AiReviewClassEntry {
+    readonly chave: string;
+    readonly rotulo_padrao?: string;
+    readonly rentabilidade_pct: string | null;
+}
+
+export interface AiReviewMoveEntry {
+    readonly chave: string;
+    readonly variacao_pct: string;
+}
+
+export interface AiReviewIndices {
+    readonly cdi_pct: string | null;
+    readonly ipca_pct: string | null;
+    readonly ibovespa_pct: string | null;
+}
+
+export interface AiReviewConcentration {
+    readonly maior_emissor_pct: string | null;
+    readonly maior_setor_pct: string | null;
+    readonly acima_do_fgc: boolean;
+}
+
+export interface AiMonthlyReviewContext {
+    readonly mes: string;
+    readonly rentabilidade_pct: string | null;
+    readonly sem_rentabilidade_motivo: AiReviewCoverage | null;
+    readonly por_classe: readonly AiReviewClassEntry[];
+    readonly indices: AiReviewIndices;
+    readonly maiores_altas: readonly AiReviewMoveEntry[];
+    readonly maiores_quedas: readonly AiReviewMoveEntry[];
+    readonly proventos_pct_carteira: string | null;
+    readonly concentracao: AiReviewConcentration;
+}
+
 export type AiContext =
     | AiMonthContext
     | AiCutsContext
     | AiPortfolioContext
+    | AiMonthlyReviewContext
     | AiConcentrationContext
     | AiMaturitiesContext
     | AiBenchmarksContext

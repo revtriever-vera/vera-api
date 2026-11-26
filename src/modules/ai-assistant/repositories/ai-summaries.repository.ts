@@ -3,7 +3,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { AiSummary, SaveSummaryInput, SummaryKind } from '../domain/summary.types';
+import { AiSummary, GeneratedSummaryKind, SaveSummaryInput } from '../domain/summary.types';
 
 const PURGE_BATCH: number = 500;
 const EXPORT_LIMIT: number = 2000;
@@ -26,7 +26,7 @@ export class AiSummariesRepository extends TenantRepository<'AiSummaries'> {
         super(database, context, 'AiSummaries');
     }
 
-    public async findStored(kind: SummaryKind, periodKey: string, locale: string): Promise<AiSummary | null> {
+    public async findStored(kind: GeneratedSummaryKind, periodKey: string, locale: string): Promise<AiSummary | null> {
         return this.findOne({ kind, periodKey, locale });
     }
 

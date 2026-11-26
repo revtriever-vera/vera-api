@@ -42,6 +42,16 @@ export function ratePercentText(bps: number, locale: AppLocale): string {
     return plain(formatter.format(bps / BPS_PER_PERCENT / BPS_PER_PERCENT));
 }
 
+export function signedRatePercentText(bps: number, locale: AppLocale): string {
+    const formatter: Intl.NumberFormat = new Intl.NumberFormat(locale, {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        signDisplay: 'exceptZero'
+    });
+    return plain(formatter.format(bps / BPS_PER_PERCENT / BPS_PER_PERCENT));
+}
+
 const SMALL_PRICE: number = 1;
 const SMALL_PRICE_DIGITS: number = 4;
 const PRICE_DIGITS: number = 2;

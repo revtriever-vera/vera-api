@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { LogService } from '../../../core/observability/log.service';
-import { AiConsentSource, AiPayloadKind } from '../domain/ai-assistant.types';
+import { AiConsentSource } from '../domain/ai-assistant.types';
 import { AnswerCheck } from '../domain/ask-answer-guard';
 import { GuardCheck } from '../domain/summary-guard';
-import { SummaryKind, SummarySourceKind } from '../domain/summary.types';
+import { GeneratedSummaryKind, SummarySourceKind } from '../domain/summary.types';
 
 const CONSENT_IDENTIFIER: string = 'ai-consent';
 const PAYLOAD_IDENTIFIER: string = 'ai-payload';
@@ -31,11 +31,11 @@ export class AiAssistantLogService {
         this.logService.info({ message: 'ai consent revoked', identifier: CONSENT_IDENTIFIER, meta: { purged } });
     }
 
-    public payloadBuilt(kind: AiPayloadKind, bytes: number): void {
+    public payloadBuilt(kind: GeneratedSummaryKind, bytes: number): void {
         this.logService.debug({ message: 'ai payload built', identifier: PAYLOAD_IDENTIFIER, meta: { kind, bytes } });
     }
 
-    public summaryServed(kind: SummaryKind, cached: boolean, source: SummarySourceKind): void {
+    public summaryServed(kind: GeneratedSummaryKind, cached: boolean, source: SummarySourceKind): void {
         this.logService.info({
             message: 'ai summary served',
             identifier: SUMMARY_IDENTIFIER,
@@ -43,7 +43,7 @@ export class AiAssistantLogService {
         });
     }
 
-    public summaryGenerated(kind: SummaryKind, source: SummarySourceKind, attempts: number, costMicros: number): void {
+    public summaryGenerated(kind: GeneratedSummaryKind, source: SummarySourceKind, attempts: number, costMicros: number): void {
         this.logService.info({
             message: 'ai summary generated',
             identifier: SUMMARY_IDENTIFIER,
@@ -51,7 +51,7 @@ export class AiAssistantLogService {
         });
     }
 
-    public summaryGuardFailed(kind: SummaryKind, check: GuardCheck, attempt: number): void {
+    public summaryGuardFailed(kind: GeneratedSummaryKind, check: GuardCheck, attempt: number): void {
         this.logService.warn({ message: 'ai summary check failed', identifier: SUMMARY_IDENTIFIER, meta: { kind, check, attempt } });
     }
 

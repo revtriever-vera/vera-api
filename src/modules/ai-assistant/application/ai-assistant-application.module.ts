@@ -48,6 +48,8 @@ import { SpendingByCategoryTool } from '../services/tools/spending-by-category.t
 import { SpendingCutsTool } from '../services/tools/spending-cuts.tool';
 import { SpendingMonthSummaryTool } from '../services/tools/spending-month-summary.tool';
 import { WhereIsTool } from '../services/tools/where-is.tool';
+import { MonthlyReviewSourceRegistry } from '../services/monthly-review-source.registry';
+import { MonthlyReviewSummaryService } from '../services/monthly-review-summary.service';
 import { SummaryGeneratorService } from '../services/summary-generator.service';
 import { SummarySubjectService } from '../services/summary-subject.service';
 import { AiConsentApplication } from './ai-consent.application';
@@ -80,6 +82,8 @@ import { SummariesApplication } from './summaries.application';
         SummariesApplication,
         SummaryGeneratorService,
         SummarySubjectService,
+        MonthlyReviewSummaryService,
+        MonthlyReviewSourceRegistry,
         AiSummariesPurge,
         AiSummariesEraser,
         AiSummariesExporter,
@@ -121,6 +125,7 @@ import { SummariesApplication } from './summaries.application';
         AiConsentGuard,
         AiContextBuilderService,
         AiTextRenderer,
+        MonthlyReviewSummaryService,
         AskVeraService
     ]
 })

@@ -8,10 +8,12 @@ import { MonthlyReviewRow } from '../domain/monthly-review.types';
 import { monthOf } from '../domain/monthly-snapshot-entries';
 import { MonthlyReviewNotFoundError } from '../domain/portfolio-watch.errors';
 import { monthBefore } from '../domain/review-months';
+import { MonthlyReviewAnnouncerService } from '../services/monthly-review-announcer.service';
+import { MonthlyReviewNarrativeService } from '../services/monthly-review-narrative.service';
 import { MonthlyReviewService } from '../services/monthly-review.service';
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
 import { PortfolioWatchPublisherService } from '../services/portfolio-watch-publisher.service';
-import { MonthlyReview, MonthlyReviewList, monthlyReviewSchema } from '../validation/monthly-review.schemas';
+import { MonthlyReview, MonthlyReviewList, MonthlyReviewResponse, monthlyReviewSchema } from '../validation/monthly-review.schemas';
 
 @Injectable()
 export class PortfolioMonthlyReviewApplication {
@@ -21,6 +23,8 @@ export class PortfolioMonthlyReviewApplication {
         private readonly reviews: MonthlyReviewService,
         private readonly stored: MonthlyReviewDomain,
         private readonly publisher: PortfolioWatchPublisherService,
+        private readonly announcer: MonthlyReviewAnnouncerService,
+        private readonly narrative: MonthlyReviewNarrativeService,
         private readonly logs: PortfolioWatchLogService
     ) {}
 
@@ -45,6 +49,7 @@ export class PortfolioMonthlyReviewApplication {
         }
         const recorded: boolean = await this.stored.record(month, review);
         this.logs.reviewSaved(month, recorded);
+        await this.announcer.announce(companyId, await this.get(month));
         return recorded;
     }
 
@@ -54,6 +59,11 @@ export class PortfolioMonthlyReviewApplication {
             throw new MonthlyReviewNotFoundError(month);
         }
         return monthlyReviewSchema.parse(row.payload);
+    }
+
+    public async getWithSummary(month: string): Promise<MonthlyReviewResponse> {
+        const review: MonthlyReview = await this.get(month);
+        return { ...review, summary: await this.narrative.storedOf(month) };
     }
 
     public async list(): Promise<MonthlyReviewList> {

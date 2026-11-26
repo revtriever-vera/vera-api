@@ -23,10 +23,37 @@ const RULES: Readonly<Record<AppLocale, readonly string[]>> = {
     ]
 };
 
-export function summaryRulesOf(locale: AppLocale): string {
-    return RULES[locale].map((rule: string): string => `- ${rule}`).join('\n');
+const ASSET_RULE_INDEX: number = 3;
+const ADVICE_RULE_INDEX: number = 4;
+
+const ASSET_RULES: Readonly<Record<AppLocale, { readonly marker: string; readonly advice: string }>> = {
+    'pt-BR': {
+        marker: 'Nunca use o nome de uma classe nem o código de um ativo. Escreva o marcador [[cls:chave]] para classe ou [[ativo:chave]] para ativo, com a "chave" exata do JSON. O sistema troca o marcador pelo nome.',
+        advice: 'Não dê conselho de investimento: não diga para comprar, vender, trocar ou aumentar posição, não prometa retorno nem diga que o movimento vai continuar. Ativo só aparece pelo marcador, para dizer quanto o preço subiu ou caiu no mês.'
+    },
+    en: {
+        marker: 'Never use the name of a class or the code of an asset. Write the marker [[cls:key]] for a class or [[ativo:key]] for an asset, with the exact "chave" from the JSON. The system swaps the marker for the name.',
+        advice: 'Give no investment advice: do not say to buy, sell, swap or increase a position, do not promise returns and do not say the move will continue. An asset appears only through its marker, to say how much its price rose or fell in the month.'
+    }
+};
+
+export function summaryRulesOf(locale: AppLocale, withAssets: boolean = false): string {
+    const rules: readonly string[] = withAssets
+        ? RULES[locale].map((rule: string, index: number): string => {
+              if (index === ASSET_RULE_INDEX) {
+                  return ASSET_RULES[locale].marker;
+              }
+              return index === ADVICE_RULE_INDEX ? ASSET_RULES[locale].advice : rule;
+          })
+        : RULES[locale];
+    return rules.map((rule: string): string => `- ${rule}`).join('\n');
 }
 
-export function summaryPromptOf(locale: AppLocale, task: string, example: Readonly<Record<AppLocale, string>>): string {
-    return `${task}\n\n${summaryRulesOf(locale)}\n\n${example[locale]}`;
+export function summaryPromptOf(
+    locale: AppLocale,
+    task: string,
+    example: Readonly<Record<AppLocale, string>>,
+    withAssets: boolean = false
+): string {
+    return `${task}\n\n${summaryRulesOf(locale, withAssets)}\n\n${example[locale]}`;
 }

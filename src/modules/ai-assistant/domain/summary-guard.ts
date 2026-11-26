@@ -6,7 +6,7 @@ import { MAX_PARAGRAPHS, MAX_TOTAL_CHARS } from './summary-output.schemas';
 
 const MAX_FREE_COUNT: number = 12;
 const ROUNDING_TOLERANCE: number = 1;
-const MARKER: RegExp = /\[\[(?:cat|cls):[a-z0-9_]+\]\]/g;
+const MARKER: RegExp = /\[\[(?:cat|cls|ativo):[a-z0-9_]+\]\]/g;
 const ISO_MONTH: RegExp = /\d{4}-\d{2}/g;
 const NUMBER: RegExp = /\d[\d.,]*\d|\d/g;
 const MONEY_BEFORE: RegExp = /(?:R\$|US\$|\$|€)\s*$/;
