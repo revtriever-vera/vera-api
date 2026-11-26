@@ -11,6 +11,9 @@ import { InstitutionLogoService } from '../services/institution-logo.service';
 import { SpendingDatasetService } from '../services/spending-dataset.service';
 import { SpendingSampleDatasetService } from '../services/spending-sample-dataset.service';
 import { SpendingSampleDataService } from '../services/spending-sample-data.service';
+import { TransactionAssistantService } from '../services/transaction-assistant.service';
+import { TransactionCategorizeExecutor, TransactionCategorizeTool } from '../services/transaction-assistant.tools';
+import { TransactionRecategorizeService } from '../services/transaction-recategorize.service';
 import { TransactionsAccountExporter } from '../services/transactions-account.exporter';
 import { TransactionAggregatesService } from '../services/transaction-aggregates.service';
 import { TransactionFingerprintService } from '../services/transaction-fingerprint.service';
@@ -40,6 +43,10 @@ import { TransactionRecategorizeApplication } from './transaction-recategorize.a
     providers: [
         TransactionListApplication,
         TransactionRecategorizeApplication,
+        TransactionRecategorizeService,
+        TransactionAssistantService,
+        TransactionCategorizeTool,
+        TransactionCategorizeExecutor,
         AccountApplication,
         TransactionsLogService,
         TransactionsMetricsService,

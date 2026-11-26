@@ -87,6 +87,20 @@ describe('runAskLoop', () => {
         expect(result.costMicros).toBe(20);
     });
 
+    it('deixa a resposta citar o código de um ativo que a ferramenta devolveu, e só esse', async () => {
+        const lookup: AskVeraTool = tool('asset_lookup', 'read', { payload: { ativos: [{ ticker: 'PETR4' }] }, numbers: [4] });
+        const quoted = build([reply('', [use('asset_lookup', {})]), reply('PETR4 é uma ação da Petrobras.')], [lookup]);
+        const invented = build(
+            [reply('', [use('asset_lookup', {})]), reply('VALE3 é uma ação da Vale.'), reply('Não consegui conferir isso.')],
+            [lookup]
+        );
+
+        expect((await quoted.run()).ending).toBe('answered');
+        expect(quoted.onCheckFailure).not.toHaveBeenCalled();
+        await invented.run();
+        expect(invented.onCheckFailure).toHaveBeenCalledWith('forbidden_term');
+    });
+
     it('devolve ao modelo o erro de ferramenta inexistente, sem estourar', async () => {
         const { run, generate, onToolFailure } = build([reply('', [use('nope', {})]), reply('Não consegui conferir isso.')], []);
         const result: AskLoopResult = await run();

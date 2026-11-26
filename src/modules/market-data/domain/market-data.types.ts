@@ -1,5 +1,13 @@
-import { Selectable } from 'kysely';
-import { AssetQuotes, DB, ExchangeRates, MarketIndexPoints, QuoteFetchFailures } from '../../../core/database/generated/database.types';
+import { Selectable, Updateable } from 'kysely';
+import {
+    AssetQuotes,
+    DB,
+    ExchangeRates,
+    FundQuoteCoverage,
+    FundQuotePoints,
+    MarketIndexPoints,
+    QuoteFetchFailures
+} from '../../../core/database/generated/database.types';
 
 export const QUOTE_PROVIDER_IDS = {
     brapi: 'brapi',
@@ -191,4 +199,29 @@ export interface LatestQuotes {
     readonly pendingAssetIds: readonly string[];
 }
 
-export type MarketDataDatabase = Pick<DB, 'AssetQuotes' | 'ExchangeRates' | 'MarketIndexPoints' | 'QuoteFetchFailures' | 'ProviderUsage'>;
+export const FUND_HISTORY_RETENTION_MONTHS: number = 38;
+export const FUND_HISTORY_IDLE_DAYS: number = 90;
+
+export type FundQuotePointRow = Selectable<FundQuotePoints>;
+export type FundCoverageRow = Selectable<FundQuoteCoverage>;
+export type FundCoverageWrite = Pick<Updateable<FundQuoteCoverage>, 'coveredFrom' | 'coveredTo' | 'readAt' | 'updatedAt'>;
+
+export interface FundQuotePoint {
+    readonly date: string;
+    readonly quota: string;
+}
+
+export interface FundCoverage {
+    readonly coveredFrom: string;
+    readonly coveredTo: string;
+}
+
+export interface FundHistory {
+    readonly points: readonly FundQuotePoint[];
+    readonly complete: boolean;
+}
+
+export type MarketDataDatabase = Pick<
+    DB,
+    'AssetQuotes' | 'ExchangeRates' | 'MarketIndexPoints' | 'QuoteFetchFailures' | 'ProviderUsage' | 'FundQuotePoints' | 'FundQuoteCoverage'
+>;

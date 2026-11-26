@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-25",
+  "updatedAt": "2026-11-26",
   "model": "meta/muse-spark-1.3-contributor",
   "tasks": {
     "summary_month": {
@@ -31,11 +31,11 @@
       "costBrlPerRun": 0.179
     },
     "ask_vera_app_step": {
-      "promptVersion": "v5",
+      "promptVersion": "v6",
       "reasoning": "minimal",
-      "judgeAverage": 4.49,
-      "averageLatencyMs": 4549,
-      "costBrlPerRun": 0.4944
+      "judgeAverage": 4.22,
+      "averageLatencyMs": 4936,
+      "costBrlPerRun": 0.5684
     }
   }
 }

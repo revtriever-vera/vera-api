@@ -4,6 +4,10 @@ import { IdentityApplicationModule } from '../../identity/application/identity-a
 import { PortfolioApplicationModule } from '../../portfolio/application/portfolio-application.module';
 import { SpendingSummaryApplicationModule } from '../../spending-summary/application/spending-summary-application.module';
 import { GoalsDomainModule } from '../domain/goals-domain.module';
+import { GoalAssistantService } from '../services/goal-assistant.service';
+import { GoalCreateExecutor, GoalCreateTool } from '../services/goal-assistant.tools';
+import { GoalCreationService } from '../services/goal-creation.service';
+import { GoalRulesService } from '../services/goal-rules.service';
 import { GoalsAccountExporter } from '../services/goals-account.exporter';
 import { GoalsAccountSpreadsheet } from '../services/goals-account.spreadsheet';
 import { GoalsHolderDepartureHandler } from '../services/goals-holder-departure.handler';
@@ -16,6 +20,11 @@ import { GoalsApplication } from './goals.application';
     imports: [ContextModule, GoalsDomainModule, PortfolioApplicationModule, IdentityApplicationModule, SpendingSummaryApplicationModule],
     providers: [
         GoalsApplication,
+        GoalRulesService,
+        GoalCreationService,
+        GoalAssistantService,
+        GoalCreateTool,
+        GoalCreateExecutor,
         GoalsReaderService,
         GoalsOverviewTool,
         GoalsAccountExporter,
