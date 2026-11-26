@@ -45,7 +45,12 @@ interface Built {
     readonly preview: ReturnType<typeof vi.fn>;
 }
 
-function build(action: AssistantPendingAction | null, state: string = 'state-1', claimed: boolean = true): Built {
+function build(
+    action: AssistantPendingAction | null,
+    state: string = 'state-1',
+    claimed: boolean = true,
+    always: boolean | null = null
+): Built {
     const claim: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(claimed ? action : null);
     const close: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(true);
     const execute: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({ text: 'Objetivo criado: Viagem.', reference: null });
@@ -56,6 +61,7 @@ function build(action: AssistantPendingAction | null, state: string = 'state-1',
         stateOf: vi.fn().mockResolvedValue(state),
         execute,
         candidates: vi.fn().mockResolvedValue([]),
+        alwaysOf: vi.fn().mockReturnValue(always),
         preview
     };
     const service: AssistantActionService = new AssistantActionService(
@@ -109,6 +115,31 @@ describe('AssistantActionService', () => {
         const lapsed: Built = build(actionOf({ expiresAt: new Date(Date.now() - 1) }));
         expect(await lapsed.service.view('action-1')).toMatchObject({ importPreview: null, candidates: [] });
         expect(lapsed.preview).not.toHaveBeenCalled();
+    });
+
+    it('a visão traz o always do executor: o proposto na categorização, null nas outras', async () => {
+        expect(await build(actionOf(), 'state-1', true, true).service.view('action-1')).toMatchObject({ always: true });
+        expect(await build(actionOf(), 'state-1', true, false).service.view('action-1')).toMatchObject({ always: false });
+        expect(await build(actionOf()).service.view('action-1')).toMatchObject({ always: null });
+    });
+
+    it('o always do corpo segue para o executor na categorização', async () => {
+        const built: Built = build(actionOf(), 'state-1', true, true);
+
+        await built.service.confirm('action-1', { always: false });
+
+        expect(built.execute).toHaveBeenCalledWith(PAYLOAD, { always: false });
+    });
+
+    it('always em ação que não é de categorização: 422 e nada executa', async () => {
+        const built: Built = build(actionOf());
+
+        await expect(built.service.confirm('action-1', { always: true })).rejects.toMatchObject({
+            code: 'assistant.action_always_not_applicable',
+            status: 422
+        });
+        expect(built.claim).not.toHaveBeenCalled();
+        expect(built.execute).not.toHaveBeenCalled();
     });
 
     it('estado mudou: 409 assistant.confirmation_stale, nada executa e a ação fica stale', async () => {

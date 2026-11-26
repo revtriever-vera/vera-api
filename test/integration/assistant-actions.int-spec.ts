@@ -51,6 +51,7 @@ interface TurnBody {
 }
 
 interface ActionBody extends ActionSummary {
+    readonly always: boolean | null;
     readonly candidates: { id: string; version: string; description: string; amountMinor: number }[];
 }
 
@@ -354,6 +355,7 @@ describe('assistant chat: ações com confirmação', () => {
                 version: picked?.version
             });
 
+            expect(card.body.always).toBe(true);
             expect(card.body.candidates).toHaveLength(1);
             expect(card.body.candidates[0]?.description).toContain('ZEBRA');
             expect(JSON.stringify(requests.map((call: LlmDriverCall) => call.request))).not.toContain(MERCHANT_DESCRIPTION);
@@ -368,6 +370,44 @@ describe('assistant chat: ações com confirmação', () => {
                 ])
             ).toBe(1);
             expect(await count('SELECT count(*)::int AS total FROM "CategoryRules" WHERE "companyId" = $1', [owner.company.id])).toBe(1);
+        });
+
+        it('o always do confirm vale no lugar do proposto: desligar não cria regra e o texto segue', async () => {
+            const owner: Account = await premium('actions-categorize-always-off');
+            await withTransaction(owner);
+            const action: ActionSummary = await propose(owner, 'transaction_categorize', {
+                categoryKey: 'eating_out',
+                always: true,
+                search: 'zebra'
+            });
+            const card = await harness.call<ActionBody>(owner.token, 'GET', `/assistant/actions/${action.id}`);
+            const picked = card.body.candidates[0];
+
+            const confirmed = await harness.call<ActionSummary>(owner.token, 'POST', `/assistant/actions/${action.id}/confirm`, {
+                transactionId: picked?.id,
+                version: picked?.version,
+                always: false
+            });
+
+            expect(card.body.always).toBe(true);
+            expect(confirmed.body.status).toBe('confirmed');
+            expect(confirmed.body.resultText).not.toContain('Regra criada');
+            expect(await count('SELECT count(*)::int AS total FROM "CategoryRules" WHERE "companyId" = $1', [owner.company.id])).toBe(0);
+        });
+
+        it('always em ação de objetivo: card com always null e confirm com always dá 422 sem criar nada', async () => {
+            const owner: Account = await premium('actions-always-goal');
+            const action: ActionSummary = await propose(owner, 'goal_create', GOAL_INPUT);
+
+            const card = await harness.call<ActionBody>(owner.token, 'GET', `/assistant/actions/${action.id}`);
+            const refused = await harness.call<ProblemBody>(owner.token, 'POST', `/assistant/actions/${action.id}/confirm`, {
+                always: true
+            });
+
+            expect(card.body.always).toBeNull();
+            expect(refused.status).toBe(422);
+            expect(refused.body.type).toBe('assistant.action_always_not_applicable');
+            expect(await goalsOf(owner)).toBe(0);
         });
 
         it('a transação mudou depois do cartão: versão velha dá 409 stale e nada é gravado', async () => {

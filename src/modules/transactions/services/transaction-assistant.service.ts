@@ -68,6 +68,10 @@ export class TransactionAssistantService {
             : `${category.id}:${categoryLabelOf(category, this.context.get().locale)}:${category.kind}`;
     }
 
+    public alwaysOf(payload: JsonObject): boolean {
+        return transactionProposalPayloadSchema.parse(payload).always;
+    }
+
     public async candidates(payload: JsonObject): Promise<readonly ActionCandidate[]> {
         const parsed: TransactionProposalPayload = transactionProposalPayloadSchema.parse(payload);
         const rows: Transaction[] = await this.rowsFor(parsed, await this.categories.requireById(parsed.categoryId));
@@ -93,15 +97,16 @@ export class TransactionAssistantService {
         }
         const current: Transaction = await this.pickedOf(choice.transactionId, choice.version);
         const category: SpendingCategory = await this.categories.requireById(parsed.categoryId);
+        const always: boolean = choice.always ?? parsed.always;
         const scope: 'counterparty' | 'description' = current.counterpartyKey === null ? RULE_SCOPES.description : RULE_SCOPES.counterparty;
         const result: RecategorizedView = await this.recategorization.recategorize(current.id, {
             categoryId: category.id,
-            rule: parsed.always ? { scope } : null
+            rule: always ? { scope } : null
         });
         return categorizedText(
             categoryLabelOf(category, this.context.get().locale),
             result.recategorized,
-            parsed.always,
+            always,
             this.context.get().locale
         );
     }

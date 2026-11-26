@@ -126,7 +126,7 @@ const ACTION_SUMMARY_EXAMPLE: ActionSummaryView = {
     resultText: null,
     reference: null
 };
-const ACTION_VIEW_EXAMPLE: ActionView = { ...ACTION_SUMMARY_EXAMPLE, candidates: [], importPreview: null };
+const ACTION_VIEW_EXAMPLE: ActionView = { ...ACTION_SUMMARY_EXAMPLE, always: null, candidates: [], importPreview: null };
 const CONFIRMED_EXAMPLE: ActionSummaryView = {
     ...ACTION_SUMMARY_EXAMPLE,
     status: 'confirmed',
@@ -143,6 +143,11 @@ const ACTION_CONFLICT: ProblemDoc = {
     description:
         'The action was already resolved (assistant.action_resolved), its window passed (assistant.action_expired) or what it refers to changed since it was proposed (assistant.confirmation_stale)',
     example: { type: 'assistant.confirmation_stale', title: 'ConfirmationStaleError', status: 409 }
+};
+const ALWAYS_NOT_APPLICABLE: ProblemDoc = {
+    status: 422,
+    description: '`always` was sent for an action that is not a categorization (assistant.action_always_not_applicable)',
+    example: { type: 'assistant.action_always_not_applicable', title: 'ActionAlwaysNotApplicableError', status: 422 }
 };
 const FORBIDDEN: ProblemDoc = {
     status: 403,
@@ -328,7 +333,8 @@ export class AssistantChatController {
         summary: 'Confirm a pending action',
         description:
             'Runs the action the assistant proposed, once. The code executes it, never the model. Two confirmations at the same time run it once; ' +
-            'the other gets `assistant.action_resolved`. When what the action refers to changed, nothing runs (`assistant.confirmation_stale`).'
+            'the other gets `assistant.action_resolved`. When what the action refers to changed, nothing runs (`assistant.confirmation_stale`). ' +
+            'On a categorize card, `always` replaces what was proposed (the rule is saved or not) and the result text follows it; on other actions it is refused with 422.'
     })
     @ApiParam({ name: 'id', description: 'Pending action id' })
     @ApiZodBody(confirmActionBodySchema)
@@ -338,7 +344,7 @@ export class AssistantChatController {
         schema: actionSummarySchema,
         example: CONFIRMED_EXAMPLE
     })
-    @problems(INVALID, UNAUTHORIZED, FORBIDDEN, ACTION_NOT_FOUND, ACTION_CONFLICT)
+    @problems(INVALID, UNAUTHORIZED, FORBIDDEN, ACTION_NOT_FOUND, ACTION_CONFLICT, ALWAYS_NOT_APPLICABLE)
     public async confirm(@Param() params: ActionIdParamsDto, @Body() body: ConfirmActionBodyDto): Promise<ActionSummaryView> {
         return this.conversations.confirmAction(params.id, body);
     }
