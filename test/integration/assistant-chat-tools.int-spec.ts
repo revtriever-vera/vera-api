@@ -47,6 +47,7 @@ const READ_TOOLS: readonly string[] = [
     'help_search',
     'list_categories',
     'market_benchmarks',
+    'portfolio_news',
     'portfolio_overview',
     'recurring_overview',
     'spending_by_category',
