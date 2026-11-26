@@ -31,6 +31,42 @@ const accessSchema = z
         'Whether the answer was held back: premium_required when the plan lacks the feature, permission_required when the plan has it but the person did not allow sending the figures to the language model, ok otherwise. For a held-back answer, it reflects the state at read time'
     );
 
+export const actionIdParamsSchema = z.object({
+    id: z.string().uuid().describe('Pending action id, as returned in the answer of the turn')
+});
+
+export const confirmActionBodySchema = z
+    .object({
+        transactionId: z.string().uuid().optional().describe('Transaction the person picked on the card, for actions that need one'),
+        version: z.string().min(1).max(40).optional().describe('Version of the picked transaction, as listed on the card')
+    })
+    .strict();
+
+export const actionSummarySchema = z.object({
+    id: z.string().uuid().describe('Pending action id'),
+    tool: z.string().describe('Action kind: goal_create or transaction_categorize'),
+    summary: z.string().describe('What will happen if the person confirms, in the voice of Vera'),
+    status: z
+        .enum(['open', 'confirmed', 'canceled', 'expired', 'stale'])
+        .describe('open while waiting for the person; expired is reported once the confirmation window passed'),
+    expiresAt: z.string().describe('When the confirmation window ends, ISO 8601'),
+    resultText: z.string().nullable().describe('What was done, once confirmed')
+});
+
+const actionCandidateSchema = z.object({
+    id: z.string().uuid().describe('Transaction id'),
+    version: z.string().describe('Version of the transaction, to send back when it is picked'),
+    date: z.string().describe('Transaction date, YYYY-MM-DD'),
+    description: z.string().describe('Transaction description, shown on the card only'),
+    amountMinor: z.number().int().describe('Signed amount in minor units'),
+    currency: z.string().describe('Currency code'),
+    accountName: z.string().describe('Name of the account')
+});
+
+export const actionViewSchema = actionSummarySchema.extend({
+    candidates: z.array(actionCandidateSchema).describe('Transactions the person can pick from; empty for actions that need no choice')
+});
+
 const usageSchema = z.object({
     state: z.enum(['ok', 'warning', 'paused']).describe('State of the usage band that applies to the next turn'),
     usedBps: z.number().int().describe('Share of that band used, in basis points'),
@@ -51,7 +87,10 @@ export const turnResponseSchema = z.object({
             toolsUsed: z.array(z.string()).describe('Names of the tools the answer used'),
             sentAvailable: z.boolean().describe('The figures sent to the language model are still stored'),
             access: accessSchema,
-            notice: z.string().nullable().describe('Investment notice line, when the answer needs one')
+            notice: z.string().nullable().describe('Investment notice line, when the answer needs one'),
+            action: actionSummarySchema
+                .nullable()
+                .describe('Pending action the answer proposes, waiting for the confirmation of the person')
         })
         .optional()
         .describe('Present when the status is done'),
@@ -84,6 +123,7 @@ export const conversationResponseSchema = z.object({
                 access: accessSchema,
                 sentAvailable: z.boolean().describe('The figures sent to the language model are still stored'),
                 notice: z.string().nullable().describe('Investment notice line, when the answer needs one'),
+                action: actionSummarySchema.nullable().describe('Pending action the message proposes'),
                 createdAt: z.string().describe('ISO 8601')
             })
         )
@@ -98,8 +138,13 @@ export type TurnStartedView = z.infer<typeof turnStartedResponseSchema>;
 export type SentView = z.infer<typeof sentResponseSchema>;
 export type ConversationView = z.infer<typeof conversationResponseSchema>;
 export type UsageView = z.infer<typeof usageSchema>;
+export type ActionSummaryView = z.infer<typeof actionSummarySchema>;
+export type ActionView = z.infer<typeof actionViewSchema>;
+export type ConfirmActionBody = z.infer<typeof confirmActionBodySchema>;
 
 export class SendTurnBodyDto extends createZodDto(sendTurnBodySchema) {}
 export class TurnIdParamsDto extends createZodDto(turnIdParamsSchema) {}
 export class ConversationIdParamsDto extends createZodDto(conversationIdParamsSchema) {}
+export class ActionIdParamsDto extends createZodDto(actionIdParamsSchema) {}
+export class ConfirmActionBodyDto extends createZodDto(confirmActionBodySchema) {}
 export class FeedbackBodyDto extends createZodDto(feedbackBodySchema) {}

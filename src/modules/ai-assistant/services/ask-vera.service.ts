@@ -38,9 +38,16 @@ export { INVESTMENT_NOTICE_TOOLS } from '../domain/ask-vera.types';
 export { investmentNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
 export { isReminderRequest } from '../domain/ask-prefilter';
 
+const PROPOSAL_TOOLS: ReadonlySet<string> = new Set(['goal_create', 'transaction_categorize']);
+
 function systemPromptOf(input: AskVeraInput, today: string): string {
     return input.channel === 'app'
-        ? askVeraAppSystemPromptOf(input.locale, today, input.screen)
+        ? askVeraAppSystemPromptOf(
+              input.locale,
+              today,
+              input.screen,
+              [...input.allowedTools].some((tool: string): boolean => PROPOSAL_TOOLS.has(tool))
+          )
         : askVeraSystemPromptOf(input.locale, today);
 }
 

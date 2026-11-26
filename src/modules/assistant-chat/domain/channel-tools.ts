@@ -25,6 +25,13 @@ export const APP_AI_TOOLS: ReadonlySet<string> = new Set([
     'fixed_income_vs_benchmark'
 ]);
 
-export function appToolsOf(mode: TurnMode): ReadonlySet<string> {
-    return mode === TURN_MODES.ai ? APP_AI_TOOLS : APP_HELP_TOOLS;
+export const APP_WRITE_TOOLS: ReadonlySet<string> = new Set(['goal_create', 'transaction_categorize']);
+
+const APP_EDITOR_TOOLS: ReadonlySet<string> = new Set([...APP_AI_TOOLS, ...APP_WRITE_TOOLS]);
+
+export function appToolsOf(mode: TurnMode, canEdit: boolean): ReadonlySet<string> {
+    if (mode !== TURN_MODES.ai) {
+        return APP_HELP_TOOLS;
+    }
+    return canEdit ? APP_EDITOR_TOOLS : APP_AI_TOOLS;
 }

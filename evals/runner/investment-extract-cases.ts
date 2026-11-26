@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
+import { noteCaseSchema } from './note-case.schemas';
 import { ParsedInvestmentStatement, ParsedOperation } from '../../src/modules/investment-import/domain/investment-statement.types';
 import { specsOfModelAnswers, statementOfModelAnswers } from '../../src/modules/investment-import/domain/model/model-statement';
 import { parseSecuritySpec, pickBySecuritySpec, SpecCandidate } from '../../src/modules/investment-import/domain/model/security-spec';
@@ -10,29 +11,7 @@ export const NOTE_CASES_TODAY: string = '2026-11-25';
 const CASES_DIR: string = join(__dirname, '..', 'cases', 'investment_extract');
 const REPO_ROOT: string = join(__dirname, '..', '..');
 
-const expectedLine = z.object({
-    ticker: z.string(),
-    kind: z.enum(['buy', 'sell']),
-    quantity: z.string(),
-    unitPrice: z.string(),
-    grossMinor: z.number(),
-    feesMinor: z.number(),
-    check: z.string().optional()
-});
-
-export const noteCaseSchema = z.object({
-    id: z.string().min(1),
-    description: z.string(),
-    file: z.string(),
-    input: z.enum(['text', 'image']),
-    personalData: z.array(z.string()).min(1),
-    modelAnswer: z.record(z.string(), z.unknown()),
-    expected: z.object({
-        lines: z.array(expectedLine),
-        ignored: z.array(z.object({ description: z.string(), reason: z.string() })),
-        notes: z.array(z.object({ code: z.string(), count: z.number() }))
-    })
-});
+export { noteCaseSchema };
 
 export type NoteCase = z.infer<typeof noteCaseSchema>;
 

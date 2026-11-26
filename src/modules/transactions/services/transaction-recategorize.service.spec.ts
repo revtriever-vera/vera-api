@@ -9,15 +9,15 @@ import { FinancialAccountDomain } from '../domain/financial-account.domain';
 import { TransactionDomain } from '../domain/transaction.domain';
 import { TransactionNotFoundError } from '../domain/transactions.errors';
 import { Transaction } from '../domain/transactions.types';
-import { TransactionViewService } from '../services/transaction-view.service';
-import { TransactionsRecurringService } from '../services/transactions-recurring.service';
-import { TransactionsLogService } from '../services/transactions-log.service';
-import { TransactionsMetricsService } from '../services/transactions-metrics.service';
-import { TransactionsRecategorizationDriver } from '../services/transactions-recategorization.driver';
-import { TransactionRecategorizeApplication } from './transaction-recategorize.application';
+import { TransactionViewService } from './transaction-view.service';
+import { TransactionsRecurringService } from './transactions-recurring.service';
+import { TransactionsLogService } from './transactions-log.service';
+import { TransactionsMetricsService } from './transactions-metrics.service';
+import { TransactionsRecategorizationDriver } from './transactions-recategorization.driver';
+import { TransactionRecategorizeService } from './transaction-recategorize.service';
 
 interface Built {
-    readonly application: TransactionRecategorizeApplication;
+    readonly application: TransactionRecategorizeService;
     readonly patch: ReturnType<typeof vi.fn>;
     readonly upsert: ReturnType<typeof vi.fn>;
     readonly recategorize: ReturnType<typeof vi.fn>;
@@ -35,7 +35,7 @@ function build(current: Transaction, kind: string = 'expense'): Built {
     const recategorize: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(3);
     const categorize: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({ categoryId: 'auto', source: 'dictionary', ruleId: null });
     const recategorizedLog: ReturnType<typeof vi.fn> = vi.fn();
-    const application: TransactionRecategorizeApplication = new TransactionRecategorizeApplication(
+    const application: TransactionRecategorizeService = new TransactionRecategorizeService(
         {
             require: vi
                 .fn()
@@ -66,7 +66,7 @@ beforeEach(() => {
     TransactionalContext.set({ withTransaction: async <T>(fn: () => Promise<T>): Promise<T> => fn() } as unknown as DatabaseClient);
 });
 
-describe('TransactionRecategorizeApplication', () => {
+describe('TransactionRecategorizeService', () => {
     const outgoing: Transaction = makeTransaction({
         id: 't1',
         amountMinor: '-45000',

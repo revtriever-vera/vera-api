@@ -7,18 +7,21 @@ import {
     AccessState,
     AssistantConversation,
     AssistantMessage,
+    AssistantPendingAction,
     CURRENT_MESSAGES_LIMIT,
     MESSAGE_STATUSES,
     RETENTION_DAYS,
     TurnMode
 } from '../domain/assistant-chat.types';
+import { actionSummaryOf } from '../domain/action-view';
 import { AssistantConversationDomain } from '../domain/assistant-conversation.domain';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
 import { accessOf, retentionCutoffOf, sentAvailableOf, splitNotice, toolsOf } from '../domain/turn-view';
+import { AssistantActionService } from '../services/assistant-action.service';
 import { AssistantAccessService } from '../services/assistant-access.service';
 import { AssistantChatLogService } from '../services/assistant-chat-log.service';
 import { AssistantTurnExpiry } from '../services/assistant-turn.expiry';
-import { ConversationView } from '../validation/assistant-chat.schemas';
+import { ActionSummaryView, ActionView, ConfirmActionBody, ConversationView } from '../validation/assistant-chat.schemas';
 
 type MessageView = ConversationView['messages'][number];
 
@@ -27,6 +30,7 @@ export class AssistantConversationApplication {
     public constructor(
         private readonly conversations: AssistantConversationDomain,
         private readonly messages: AssistantMessageDomain,
+        private readonly actionRunner: AssistantActionService,
         private readonly access: AssistantAccessService,
         private readonly expiry: AssistantTurnExpiry,
         private readonly context: AppContext,
@@ -44,17 +48,40 @@ export class AssistantConversationApplication {
         }
         const rows: AssistantMessage[] = await this.messages.latestOf(conversation.id, CURRENT_MESSAGES_LIMIT);
         const settled: AssistantMessage[] = await Promise.all(rows.map(async (row: AssistantMessage) => this.expiry.settled(row)));
-        const lock: AccessState = settled.some(
-            (row: AssistantMessage): boolean => accessOf(row, ACCESS_STATES.premiumRequired) !== ACCESS_STATES.ok
-        )
-            ? await this.access.lockOf()
-            : ACCESS_STATES.ok;
+        const lock: AccessState = await this.lockFor(settled);
+        const pending: Map<string, AssistantPendingAction> = await this.pendingOf(settled);
         return {
             conversationId: conversation.id,
-            messages: settled.map((row: AssistantMessage): MessageView => this.viewOf(row, lock)),
+            messages: settled.map((row: AssistantMessage): MessageView => this.viewOf(row, lock, pending.get(row.id))),
             usage,
             enabled
         };
+    }
+
+    private async lockFor(rows: readonly AssistantMessage[]): Promise<AccessState> {
+        const locked: boolean = rows.some(
+            (row: AssistantMessage): boolean => accessOf(row, ACCESS_STATES.premiumRequired) !== ACCESS_STATES.ok
+        );
+        return locked ? this.access.lockOf() : ACCESS_STATES.ok;
+    }
+
+    private async pendingOf(rows: readonly AssistantMessage[]): Promise<Map<string, AssistantPendingAction>> {
+        const actions: AssistantPendingAction[] = await this.messages.actionsOfTurns(rows.map((row: AssistantMessage): string => row.id));
+        return new Map<string, AssistantPendingAction>(
+            actions.map((action: AssistantPendingAction): [string, AssistantPendingAction] => [action.turnId, action])
+        );
+    }
+
+    public async action(actionId: string): Promise<ActionView> {
+        return this.actionRunner.view(actionId);
+    }
+
+    public async confirmAction(actionId: string, body: ConfirmActionBody): Promise<ActionSummaryView> {
+        return this.actionRunner.confirm(actionId, body);
+    }
+
+    public async cancelAction(actionId: string): Promise<ActionSummaryView> {
+        return this.actionRunner.cancel(actionId);
     }
 
     public async remove(conversationId: string): Promise<void> {
@@ -73,7 +100,7 @@ export class AssistantConversationApplication {
         return conversations + messages;
     }
 
-    private viewOf(row: AssistantMessage, lock: AccessState): MessageView {
+    private viewOf(row: AssistantMessage, lock: AccessState, action: AssistantPendingAction | undefined): MessageView {
         const split: { text: string; notice: string | null } = splitNotice(row.text);
         const done: boolean = row.status === MESSAGE_STATUSES.done;
         return {
@@ -85,6 +112,7 @@ export class AssistantConversationApplication {
             access: accessOf(row, lock),
             sentAvailable: sentAvailableOf(row),
             notice: done ? split.notice : null,
+            action: action === undefined ? null : actionSummaryOf(action, new Date()),
             createdAt: row.createdAt.toISOString()
         };
     }

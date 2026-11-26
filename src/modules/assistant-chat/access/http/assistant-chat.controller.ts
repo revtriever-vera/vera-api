@@ -10,6 +10,13 @@ import { AssistantConversationApplication } from '../../application/assistant-co
 import { AssistantTurnApplication } from '../../application/assistant-turn.application';
 import { TURNS_PER_HOUR } from '../../domain/assistant-chat.types';
 import {
+    ActionIdParamsDto,
+    ActionSummaryView,
+    ActionView,
+    ConfirmActionBodyDto,
+    actionSummarySchema,
+    actionViewSchema,
+    confirmActionBodySchema,
     ConversationIdParamsDto,
     ConversationView,
     FeedbackBodyDto,
@@ -43,7 +50,8 @@ const TURN_EXAMPLE: TurnView = {
         toolsUsed: ['help_search'],
         sentAvailable: false,
         access: 'ok',
-        notice: null
+        notice: null,
+        action: null
     },
     usage: USAGE_EXAMPLE
 };
@@ -71,6 +79,7 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             access: 'ok',
             sentAvailable: false,
             notice: null,
+            action: null,
             createdAt: '2026-11-25T12:00:00.000Z'
         },
         {
@@ -82,11 +91,45 @@ const CONVERSATION_EXAMPLE: ConversationView = {
             access: 'ok',
             sentAvailable: false,
             notice: null,
+            action: null,
             createdAt: '2026-11-25T12:00:00.001Z'
         }
     ],
     usage: USAGE_EXAMPLE,
     enabled: true
+};
+
+const ACTION_ID: string = '0199c5a0-5d20-7d11-a4f3-6c2e9b1d8a05';
+const ACTION_SUMMARY_EXAMPLE: ActionSummaryView = {
+    id: ACTION_ID,
+    tool: 'goal_create',
+    summary: 'Criar o objetivo viagem: R$ 12.000 até dezembro de 2027.',
+    status: 'open',
+    expiresAt: '2026-11-25T12:30:00.000Z',
+    resultText: null
+};
+const ACTION_VIEW_EXAMPLE: ActionView = { ...ACTION_SUMMARY_EXAMPLE, candidates: [] };
+const CONFIRMED_EXAMPLE: ActionSummaryView = {
+    ...ACTION_SUMMARY_EXAMPLE,
+    status: 'confirmed',
+    resultText: 'Objetivo criado: viagem, R$ 12.000 até dezembro de 2027.'
+};
+
+const ACTION_NOT_FOUND: ProblemDoc = {
+    status: 404,
+    description: 'No such pending action for this person (assistant.action_not_found)',
+    example: { type: 'assistant.action_not_found', title: 'ActionNotFoundError', status: 404 }
+};
+const ACTION_CONFLICT: ProblemDoc = {
+    status: 409,
+    description:
+        'The action was already resolved (assistant.action_resolved), its window passed (assistant.action_expired) or what it refers to changed since it was proposed (assistant.confirmation_stale)',
+    example: { type: 'assistant.confirmation_stale', title: 'ConfirmationStaleError', status: 409 }
+};
+const FORBIDDEN: ProblemDoc = {
+    status: 403,
+    description: 'The person has read-only access to the account (members.forbidden_role)',
+    example: { type: 'members.forbidden_role', title: 'RoleForbiddenError', status: 403 }
 };
 
 const UNAUTHORIZED: ProblemDoc = {
@@ -196,6 +239,60 @@ export class AssistantChatController {
     @problems(INVALID, UNAUTHORIZED, NOT_FOUND)
     public async feedback(@Param() params: TurnIdParamsDto, @Body() _body: FeedbackBodyDto): Promise<void> {
         await this.turns.feedback(params.id);
+    }
+
+    @Get('actions/:id')
+    @RequiresRole('viewer')
+    @Header('Cache-Control', NO_STORE)
+    @ApiOperation({
+        summary: 'Read a pending action',
+        description:
+            'The action the assistant proposed, with the transactions the person can pick from when the action needs one. ' +
+            'The descriptions of the transactions are served here, to the screen only: they never go to the language model.'
+    })
+    @ApiParam({ name: 'id', description: 'Pending action id' })
+    @ApiZodResponse({ status: 200, description: 'The action', schema: actionViewSchema, example: ACTION_VIEW_EXAMPLE })
+    @problems(INVALID, UNAUTHORIZED, ACTION_NOT_FOUND)
+    public async action(@Param() params: ActionIdParamsDto): Promise<ActionView> {
+        return this.conversations.action(params.id);
+    }
+
+    @Post('actions/:id/confirm')
+    @RequiresRole('editor')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Confirm a pending action',
+        description:
+            'Runs the action the assistant proposed, once. The code executes it, never the model. Two confirmations at the same time run it once; ' +
+            'the other gets `assistant.action_resolved`. When what the action refers to changed, nothing runs (`assistant.confirmation_stale`).'
+    })
+    @ApiParam({ name: 'id', description: 'Pending action id' })
+    @ApiZodBody(confirmActionBodySchema)
+    @ApiZodResponse({
+        status: 200,
+        description: 'The action, confirmed, with what was done',
+        schema: actionSummarySchema,
+        example: CONFIRMED_EXAMPLE
+    })
+    @problems(INVALID, UNAUTHORIZED, FORBIDDEN, ACTION_NOT_FOUND, ACTION_CONFLICT)
+    public async confirm(@Param() params: ActionIdParamsDto, @Body() body: ConfirmActionBodyDto): Promise<ActionSummaryView> {
+        return this.conversations.confirmAction(params.id, body);
+    }
+
+    @Post('actions/:id/cancel')
+    @RequiresRole('editor')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Cancel a pending action', description: 'Drops the action the assistant proposed; nothing runs.' })
+    @ApiParam({ name: 'id', description: 'Pending action id' })
+    @ApiZodResponse({
+        status: 200,
+        description: 'The action, canceled',
+        schema: actionSummarySchema,
+        example: { ...ACTION_SUMMARY_EXAMPLE, status: 'canceled' }
+    })
+    @problems(INVALID, UNAUTHORIZED, FORBIDDEN, ACTION_NOT_FOUND, ACTION_CONFLICT)
+    public async cancel(@Param() params: ActionIdParamsDto): Promise<ActionSummaryView> {
+        return this.conversations.cancelAction(params.id);
     }
 
     @Get('conversations/current')
