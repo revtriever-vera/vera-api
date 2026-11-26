@@ -14,7 +14,7 @@ const ADVICE: readonly RegExp[] = [
     /(?:buy|sell) (?:it|this|these|shares|the stock)/iu
 ];
 const OTHER_FORBIDDEN: readonly RegExp[] = [/!/u, /\p{Extended_Pictographic}/u, /(?<![\p{L}\p{N}_])(?:IA|AI)(?![\p{L}\p{N}_])/u];
-const NOTICE_TEXT: RegExp = /n[aã]o [eé] (?:uma )?recomenda[çc][ãa]o|not (?:an? )?(?:investment )?(?:advice|recommendation)/iu;
+export const NOTICE_TEXT: RegExp = /n[aã]o [eé] (?:uma )?recomenda[çc][ãa]o|not (?:an? )?(?:investment )?(?:advice|recommendation)/iu;
 
 export type SummaryGuardCheck = 'sentences' | 'number' | 'advice' | 'notice';
 
@@ -43,7 +43,7 @@ function isFreeCount(token: string): boolean {
     return /^\d{1,2}$/.test(token) && Number(token) <= MAX_FREE_COUNT;
 }
 
-function unknownNumber(candidates: readonly string[], source: string): string | undefined {
+export function unknownNumber(candidates: readonly string[], source: string): string | undefined {
     const known: Set<string> = new Set<string>(numbersIn(source).map(signatureOf));
     return candidates.find((token: string): boolean => !isFreeCount(token) && !known.has(signatureOf(token)));
 }

@@ -1,0 +1,32 @@
+{
+  "id": "resultado-trimestral-prejuizo",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Energia Serrana (empresa fictícia)",
+    "tickers": ["ESRN3"],
+    "category": "Informações Trimestrais (ITR)",
+    "publishedAt": "2026-08-13",
+    "text": "Resultado do 2º trimestre de 2026. A companhia registrou prejuízo líquido de R$ 87 milhões, revertendo o lucro de R$ 42 milhões do 2º trimestre de 2025. O resultado foi afetado por provisão de R$ 120 milhões para contingências regulatórias. A receita líquida foi de R$ 1,1 bilhão."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["87"],
+    "mustMention": ["prejuízo"],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "result",
+    "relevance": 3,
+    "discard": false,
+    "numbers": ["R$ 87 milhões", "2º", "R$ 42 milhões", "R$ 120 milhões"]
+  },
+  "reference": [
+    "A Energia Serrana teve prejuízo líquido de R$ 87 milhões no 2º trimestre de 2026, ante lucro de R$ 42 milhões um ano antes. O resultado foi afetado por uma provisão de R$ 120 milhões para contingências regulatórias."
+  ]
+}

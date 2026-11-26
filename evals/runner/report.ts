@@ -42,7 +42,7 @@ export function failuresOf(row: CaseRow): CheckFailure[] {
     return row.reps.flatMap((rep: RepResult): readonly CheckFailure[] => rep.failures);
 }
 
-const ADVICE_CHECKS: ReadonlySet<string> = new Set(['forbidden_term', 'forbidden_text']);
+const ADVICE_CHECKS: ReadonlySet<string> = new Set(['forbidden_term', 'forbidden_text', 'no_advice']);
 
 function countedFailuresOf(row: CaseRow): CheckFailure[] {
     return row.pending

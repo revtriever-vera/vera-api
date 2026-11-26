@@ -347,3 +347,100 @@ describe('tarefa do app', () => {
         expect(appAnswer(app('sem-ativo-sem-aviso'), `Elas ficam em [Carteira-alvo](/portfolio/targets).\n${line}`)).toContain('notice');
     });
 });
+
+describe('tarefa market_document_summary', () => {
+    const TASK: EvalTask = 'market_document_summary';
+    const acquisition: EvalCase = caseOf(TASK, 'fato-relevante-aquisicao');
+    const routine: EvalCase = caseOf(TASK, 'comunicado-rotina-endereco');
+
+    function modelAnswer(item: EvalCase, patch: Record<string, unknown>): CheckOutcome {
+        const base = JSON.parse(
+            JSON.stringify({
+                summary: item.reference[0],
+                kind: 'relevant_fact',
+                relevance: 3,
+                discard: false,
+                numbers: [],
+                ...patch
+            })
+        ) as Record<string, unknown>;
+        return checkOutput({ item, text: JSON.stringify(base), stopReason: 'end', fixed: false });
+    }
+
+    it('tem 16 casos ou mais, com descarte, previsão, recomendação de terceiro e documento em inglês', () => {
+        const cases: EvalCase[] = casesOf(TASK);
+
+        expect(cases.length).toBeGreaterThanOrEqual(16);
+        for (const id of ['comunicado-rotina-endereco', 'previsao-do-emissor', 'analista-recomenda-compra', 'noticia-eua-em-ingles']) {
+            expect(cases.map((item: EvalCase): string => item.id)).toContain(id);
+        }
+        expect(cases.filter((item) => item.task === TASK && item.expectDiscard).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('referência passa em todas as checagens', () => {
+        expect(checksOf(modelAnswer(acquisition, {}))).toEqual([]);
+    });
+
+    it('numbers_from_source reprova número fora do documento', () => {
+        const outcome: CheckOutcome = modelAnswer(acquisition, {
+            summary: 'A Metalúrgica Horizonte comprará a Laminados do Sul por R$ 9,9 bilhões.'
+        });
+
+        expect(checksOf(outcome)).toContain('numbers_from_source');
+    });
+
+    it('numbers_from_source também vale para a lista numbers', () => {
+        expect(checksOf(modelAnswer(acquisition, { numbers: ['R$ 77 milhões'] }))).toContain('numbers_from_source');
+    });
+
+    it('sentences_max reprova mais de 3 frases', () => {
+        const outcome: CheckOutcome = modelAnswer(acquisition, {
+            summary: 'Houve compra. O valor foi de R$ 1,2 bilhão. O fechamento é em 2026. A Laminados do Sul muda de dono.'
+        });
+
+        expect(checksOf(outcome)).toContain('sentences_max');
+    });
+
+    it('no_advice reprova imperativo, "vale a pena" e previsão da Vera', () => {
+        for (const summary of [
+            'Compre a Metalúrgica Horizonte: a compra da Laminados do Sul é de R$ 1,2 bilhão.',
+            'A compra de R$ 1,2 bilhão vale a pena para quem tem a ação.',
+            'A ação vai subir com a compra de R$ 1,2 bilhão.'
+        ]) {
+            expect(checksOf(modelAnswer(acquisition, { summary }))).toContain('no_advice');
+        }
+    });
+
+    it('discard_expected reprova descartar o relevante e guardar a rotina', () => {
+        expect(checksOf(modelAnswer(acquisition, { discard: true }))).toEqual(['discard_expected']);
+        expect(checksOf(modelAnswer(routine, { discard: false }))).toEqual(['discard_expected']);
+        expect(checksOf(modelAnswer(routine, { discard: true }))).toEqual([]);
+    });
+
+    it('no_notice_in_model_text reprova o aviso escrito pelo modelo', () => {
+        const outcome: CheckOutcome = modelAnswer(acquisition, {
+            summary: 'A compra da Laminados do Sul custa R$ 1,2 bilhão. Isto não é uma recomendação de compra ou venda.'
+        });
+
+        expect(checksOf(outcome)).toContain('no_notice_in_model_text');
+    });
+
+    it('resposta que não é o JSON do resumo reprova no schema', () => {
+        const outcome: CheckOutcome = checkOutput({ item: acquisition, text: '{"paragraphs":["x"]}', stopReason: 'end', fixed: false });
+
+        expect(checksOf(outcome)).toEqual(['schema']);
+    });
+
+    it('conselho de compra conta como zero tolerância no resumo da tarefa', async () => {
+        const run: TaskRun = await runTask(engineOf({ mode: 'mock', baseUrl: undefined, model: undefined, maxUsd: 1 }), TASK, {
+            reps: 1,
+            judge: true,
+            reasoning: undefined
+        });
+        const summary: TaskSummary = summaryOf(run, 5.5);
+
+        expect(summary.adviceRepRate).toBe(0);
+        expect(summary.failedCases).toBe(0);
+        expect(summary.judgeAverage).toBe(5);
+    });
+});
