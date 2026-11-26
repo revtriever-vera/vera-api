@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { JsonObject } from '../../../core/llm/llm.types';
 import { AssistantPendingActionsRepository } from '../repositories/assistant-pending-actions.repository';
 import { ActionStatus, AssistantPendingAction, ProposedAction } from './assistant-chat.types';
 
@@ -22,8 +23,8 @@ export class AssistantPendingActionDomain {
         return this.actions.claim(id, now);
     }
 
-    public async recordResult(id: string, resultText: string): Promise<void> {
-        await this.actions.recordResult(id, resultText);
+    public async recordResult(id: string, resultText: string, payload: JsonObject): Promise<void> {
+        await this.actions.recordResult(id, resultText, payload);
     }
 
     public async close(id: string, status: ActionStatus, now: Date): Promise<boolean> {

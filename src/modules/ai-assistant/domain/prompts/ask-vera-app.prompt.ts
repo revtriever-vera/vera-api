@@ -62,6 +62,12 @@ const PROPOSAL_RULES: Readonly<Record<AppLocale, string>> = {
     en: 'When the person asks YOU to create a goal or categorize a transaction, call the tool (goal_create, transaction_categorize) as soon as you have what it needs; "how do I create..." is about using Vera and is answered with help_search; if the amount, month or category is missing, ask in one sentence; the goal name can be the subject the person said ("trip" becomes "Trip"). Never write that you created or categorized it, and never ask "Confirm?": the app shows the confirmation card and the system runs it. In goal_create the amount is in cents and the month is YYYY-MM. In transaction_categorize use the key from list_categories; the person picks the transaction on the card, so never ask for or write a transaction description.'
 };
 
+const IMPORT_RULES: Readonly<Record<AppLocale, string>> = {
+    'pt-BR':
+        'A pessoa anexou um arquivo para importar na carteira. Chame investment_import uma vez e não escreva mais nada: o app mostra o cartão com a tabela para ela conferir e confirmar. Você não vê o arquivo, as operações nem os valores: nunca os descreva, nunca diga que importou e nunca peça "Confirma?".',
+    en: 'The person attached a file to import into the portfolio. Call investment_import once and write nothing else: the app shows the card with the table for them to check and confirm. You do not see the file, the operations or the amounts: never describe them, never say it was imported and never ask "Confirm?".'
+};
+
 const SCREEN_LABELS: ReadonlyMap<string, Readonly<Record<AppLocale, string>>> = new Map(
     HELP_CATALOG.flatMap((entry: HelpEntry): [string, Readonly<Record<AppLocale, string>>][] =>
         entry.screen === undefined ? [] : [[entry.screen.path, entry.screen.label]]
@@ -87,10 +93,17 @@ function screenRuleOf(locale: AppLocale, screen: AskVeraScreen | undefined): str
     ];
 }
 
-export function askVeraAppSystemPromptOf(locale: AppLocale, today: string, screen: AskVeraScreen | undefined, canPropose: boolean): string {
+export function askVeraAppSystemPromptOf(
+    locale: AppLocale,
+    today: string,
+    screen: AskVeraScreen | undefined,
+    canPropose: boolean,
+    importAttached: boolean
+): string {
     const date: string = locale === 'pt-BR' ? `Hoje é ${today}.` : `Today is ${today}.`;
     const proposal: string[] = canPropose ? [PROPOSAL_RULES[locale]] : [];
-    const rules: string = [...APP_RULES[locale], ...proposal, ...screenRuleOf(locale, screen)]
+    const attached: string[] = importAttached ? [IMPORT_RULES[locale]] : [];
+    const rules: string = [...APP_RULES[locale], ...proposal, ...attached, ...screenRuleOf(locale, screen)]
         .map((rule: string): string => `- ${rule}`)
         .join('\n');
     return `${date}\n\n${rules}`;

@@ -1,8 +1,8 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor, PayloadTooLargeException, Type } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Observable } from 'rxjs';
-import { FileTooLargeError } from '../../domain/investment-import.errors';
-import { MAX_FIELD_BYTES, MAX_FILE_BYTES, MAX_MULTIPART_FIELDS } from '../../domain/investment-import.types';
+import { FileTooLargeError } from '../domain/investment-import.errors';
+import { MAX_FIELD_BYTES, MAX_FILE_BYTES, MAX_MULTIPART_FIELDS } from '../domain/investment-import.types';
 
 const UPLOAD_OPTIONS: Record<string, unknown> = {
     limits: { fileSize: MAX_FILE_BYTES, files: 1, fields: MAX_MULTIPART_FIELDS, fieldSize: MAX_FIELD_BYTES },

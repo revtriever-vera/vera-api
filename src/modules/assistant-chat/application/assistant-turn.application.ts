@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { AppContext, AppContextData } from '../../../core/context/app-context.port';
 import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
-import { QueuePublisherPort } from '../../../core/queue/queue.types';
-import { MESSAGE_TYPES, QUEUES } from '../../../shared/constants/queues.constants';
 import { AssistantConversation, AssistantMessage, StartedTurn, TurnMode, MESSAGE_STATUSES } from '../domain/assistant-chat.types';
-import { TurnNotFoundError } from '../domain/assistant-chat.errors';
+import { TurnNotFoundError, TurnTextRequiredError } from '../domain/assistant-chat.errors';
 import { AssistantConversationDomain } from '../domain/assistant-conversation.domain';
 import { AssistantMessageDomain } from '../domain/assistant-message.domain';
 import { accessOf, modeOf, sentAvailableOf, sentOf, splitNotice, toolsOf } from '../domain/turn-view';
+import type { ImportProposal, UploadedReport } from '../../investment-import/services/investment-import-assistant.service';
+import { questionTextOf } from '../domain/attachment-line';
 import { AssistantAccessService } from '../services/assistant-access.service';
-import { AssistantChatLogService } from '../services/assistant-chat-log.service';
+import { AssistantAttachmentService } from '../services/assistant-attachment.service';
+import { AssistantTurnPublisher } from '../services/assistant-turn.publisher';
 import { AssistantChatMetricsService } from '../services/assistant-chat-metrics.service';
 import { actionSummaryOf } from '../domain/action-view';
 import { AssistantTurnExpiry } from '../services/assistant-turn.expiry';
@@ -20,6 +21,13 @@ const NO_TOOL: string = 'none';
 
 type TurnActionView = ActionSummaryView | null;
 
+type Attachment = ImportProposal;
+
+function screenOf(input: SendTurnBody): { screenPath?: string } {
+    const path: string | undefined = input.screen?.path ?? input.screenPath;
+    return path === undefined ? {} : { screenPath: path };
+}
+
 @Injectable()
 export class AssistantTurnApplication {
     public constructor(
@@ -27,18 +35,29 @@ export class AssistantTurnApplication {
         private readonly messages: AssistantMessageDomain,
         private readonly access: AssistantAccessService,
         private readonly expiry: AssistantTurnExpiry,
-        private readonly publisher: QueuePublisherPort,
+        private readonly publisher: AssistantTurnPublisher,
+        private readonly attachments: AssistantAttachmentService,
         private readonly context: AppContext,
-        private readonly logs: AssistantChatLogService,
         private readonly metrics: AssistantChatMetricsService
     ) {}
 
-    public async start(input: SendTurnBody): Promise<TurnStartedView> {
+    public async start(input: SendTurnBody, file: UploadedReport | undefined): Promise<TurnStartedView> {
         const mode: TurnMode = await this.access.modeOf();
         await this.access.assertCanAsk(mode);
-        const started: StartedTurn = await this.persist(input, mode);
-        await this.publish(started, input);
+        const attachment: Attachment | null = await this.attach(input, file);
+        const started: StartedTurn = await this.persist(input, mode, attachment);
+        await this.publish(started, input, attachment);
         return { turnId: started.turnId, conversationId: started.conversationId };
+    }
+
+    private async attach(input: SendTurnBody, file: UploadedReport | undefined): Promise<Attachment | null> {
+        if (file === undefined) {
+            if (input.text === undefined) {
+                throw new TurnTextRequiredError();
+            }
+            return null;
+        }
+        return this.attachments.propose(this.userId(), file, input.modelConsent);
     }
 
     public async get(turnId: string): Promise<TurnView> {
@@ -95,11 +114,12 @@ export class AssistantTurnApplication {
     }
 
     @UsingTransaction()
-    private async persist(input: SendTurnBody, mode: TurnMode): Promise<StartedTurn> {
+    private async persist(input: SendTurnBody, mode: TurnMode, attachment: Attachment | null): Promise<StartedTurn> {
         const now: Date = new Date();
         const existing: AssistantConversation | null = await this.conversationFor(input.conversationId);
         const conversation: AssistantConversation = existing ?? (await this.conversations.open(this.userId(), now));
-        const ids: { questionId: string; turnId: string } = await this.messages.startTurn(conversation.id, input.text, mode, now);
+        const text: string = questionTextOf(input.text, attachment?.fileName ?? null);
+        const ids: { questionId: string; turnId: string } = await this.messages.startTurn(conversation.id, text, mode, now);
         await this.conversations.touch(conversation.id, new Date(now.getTime() + 1));
         return { conversationId: conversation.id, ...ids, newConversation: existing === null };
     }
@@ -115,22 +135,19 @@ export class AssistantTurnApplication {
         return owned;
     }
 
-    private async publish(started: StartedTurn, input: SendTurnBody): Promise<void> {
+    private async publish(started: StartedTurn, input: SendTurnBody, attachment: Attachment | null): Promise<void> {
         const context: AppContextData = this.context.get();
         const payload: TurnRequestedPayload = {
             turnId: started.turnId,
             questionId: started.questionId,
             userId: this.userId(),
             locale: context.locale,
-            ...(input.screen === undefined ? {} : { screenPath: input.screen.path })
+            ...screenOf(input),
+            ...(attachment === null ? {} : { importProposal: { summary: attachment.summary, payload: attachment.payload } })
         };
         try {
-            await this.publisher.publish(QUEUES.assistantChat, MESSAGE_TYPES.assistantTurnRequested, payload, {
-                jobId: `assistant-turn-${started.turnId}`,
-                attempts: 1
-            });
+            await this.publisher.request(payload);
         } catch (error: unknown) {
-            this.logs.publishFailed(started.turnId, error);
             await this.discard(started);
             throw error;
         }

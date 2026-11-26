@@ -57,7 +57,7 @@ import {
     THROTTLED_EXAMPLE,
     UNAUTHORIZED_EXAMPLE
 } from './investment-imports.examples';
-import { InvestmentUploadInterceptor } from './investment-upload.interceptor';
+import { InvestmentUploadInterceptor } from '../../services/investment-upload.interceptor';
 
 const UNAUTHORIZED: string = 'Missing or invalid access token (identity.unauthorized)';
 const FORBIDDEN: string = 'The member is a viewer (identity.insufficient_role)';

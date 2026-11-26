@@ -26,6 +26,7 @@ export const RETENTION_DAYS: number = 30;
 export const TURN_TIMEOUT_MS: number = 3 * 60 * 1000;
 export const TURNS_PER_HOUR: number = 20;
 export const MAX_SCREEN_PATH_CHARS: number = 200;
+export const MAX_IMPORT_CORRECTIONS: number = 5000;
 
 export type AssistantConversation = Selectable<AssistantConversations>;
 export type AssistantMessage = Selectable<AssistantMessages>;
