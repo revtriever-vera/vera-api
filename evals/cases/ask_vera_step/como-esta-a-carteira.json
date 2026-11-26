@@ -6,7 +6,7 @@
   "question": "como está minha carteira?",
   "history": [],
   "tools": {
-    "required": [],
+    "required": ["portfolio_overview"],
     "allowed": [
       "list_categories",
       "spending_month_summary",
@@ -24,11 +24,11 @@
   ],
   "expect": {
     "mustCite": ["R$ 412.000"],
-    "mustMention": [],
+    "mustMention": ["Isto não é uma recomendação de compra ou venda."],
     "mustNotMention": [],
     "sentences": {
       "min": 1,
-      "max": 3
+      "max": 4
     }
   },
   "reference": ["Sua carteira soma **R$ 412.000**, com 18% em dólar. [[cls:acoes_br]] está acima da meta (38% contra 30%)."]

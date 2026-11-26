@@ -15,6 +15,7 @@ import { AssetCatalogService } from '../services/asset-catalog.service';
 import { AssetSourceRegistryService, selectAssetSources } from '../services/asset-source-registry.service';
 import { CatalogLogService } from '../services/catalog-log.service';
 import { CatalogMetricsService } from '../services/catalog-metrics.service';
+import { IssuerLinkSourceService } from '../services/issuer-link-source.service';
 import { CvmDailyInformeReaderService } from '../services/cvm-daily-informe-reader.service';
 import { TesouroCsvReaderService } from '../services/tesouro-csv-reader.service';
 import { AssetSearchApplication } from './asset-search.application';
@@ -31,6 +32,7 @@ import { CatalogSyncApplication } from './catalog-sync.application';
         CatalogMetricsService,
         TesouroCsvReaderService,
         CvmDailyInformeReaderService,
+        IssuerLinkSourceService,
         CvmInstrumentsDriver,
         FinnhubSymbolsDriver,
         CoinGeckoMarketsDriver,
@@ -63,6 +65,13 @@ import { CatalogSyncApplication } from './catalog-sync.application';
                 } satisfies Record<CatalogSource, AssetSourcePort>)
         }
     ],
-    exports: [AssetSearchApplication, CatalogSyncApplication, AssetCatalogService, TesouroCsvReaderService, CvmDailyInformeReaderService]
+    exports: [
+        AssetSearchApplication,
+        CatalogSyncApplication,
+        AssetCatalogService,
+        TesouroCsvReaderService,
+        CvmDailyInformeReaderService,
+        IssuerLinkSourceService
+    ]
 })
 export class CatalogApplicationModule {}

@@ -1,0 +1,79 @@
+{
+  "id": "nota-layout-proprio",
+  "description": "Layout próprio de corretora, com coluna de código de negociação",
+  "file": "test/fixtures/investment-import/generated/notes/nota-layout-proprio.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "2020003",
+        "tradeDate": "2026-11-05",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": "WEGE3",
+            "securitySpec": "WEG ON NM",
+            "market": "VISTA",
+            "quantity": "80",
+            "unitPrice": "42.30",
+            "grossMinor": 338400,
+            "dayTrade": null
+          },
+          {
+            "side": "sell",
+            "code": "PETR4",
+            "securitySpec": "PETROBRAS PN N2",
+            "market": "VISTA",
+            "quantity": "40",
+            "unitPrice": "38.90",
+            "grossMinor": 155600,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 494000,
+        "netMinor": -182960,
+        "fees": {
+          "settlementMinor": 136,
+          "exchangeMinor": 16,
+          "brokerageMinor": 0,
+          "issMinor": 0,
+          "irrfMinor": 8,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "WEGE3",
+        "kind": "buy",
+        "quantity": "80",
+        "unitPrice": "42.30",
+        "grossMinor": 338400,
+        "feesMinor": 104
+      },
+      {
+        "ticker": "PETR4",
+        "kind": "sell",
+        "quantity": "40",
+        "unitPrice": "38.90",
+        "grossMinor": 155600,
+        "feesMinor": 48
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

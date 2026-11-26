@@ -8,13 +8,16 @@ export const QUEUES = {
     identity: 'vera-identity',
     usage: 'vera-usage',
     aiAssistant: 'vera-ai-assistant',
+    assistantChat: 'vera-assistant-chat',
     whatsapp: 'vera-whatsapp',
     reminders: 'vera-reminders',
     recurring: 'vera-recurring',
     goalNotices: 'vera-goal-notices',
     recurringNotices: 'vera-recurring-notices',
     portfolioWatch: 'vera-portfolio-watch',
-    billing: 'vera-billing'
+    billing: 'vera-billing',
+    investmentImport: 'vera-investment-import',
+    portfolioEvents: 'vera-portfolio-events'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -37,7 +40,10 @@ export const MESSAGE_TYPES = {
     usageThresholdCrossed: 'usage.threshold.crossed',
     usageCleanupRequested: 'usage.cleanup.requested',
     usageGaugeRequested: 'usage.gauge.requested',
+    investmentImportPreviewsPurgeRequested: 'investment-import.previews.purge.requested',
     aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
+    assistantTurnRequested: 'assistant-chat.turn.requested',
+    assistantRetentionRequested: 'assistant-chat.retention.requested',
     whatsappWebhookReceived: 'whatsapp.webhook.received',
     whatsappInboundReceived: 'whatsapp.inbound.received',
     whatsappStatusReceived: 'whatsapp.status.received',
@@ -66,7 +72,10 @@ export const MESSAGE_TYPES = {
     billingEventsReplayRequested: 'billing.events-replay.requested',
     billingInvoicesReconcileRequested: 'billing.invoices-reconcile.requested',
     billingStandingSweepRequested: 'billing.standing-sweep.requested',
-    billingTrialSweepRequested: 'billing.trial-sweep.requested'
+    billingTrialSweepRequested: 'billing.trial-sweep.requested',
+    portfolioEventsDailyRequested: 'portfolio-events.daily.requested',
+    portfolioEventsLinksRequested: 'portfolio-events.links.requested',
+    portfolioEventsBatchRequested: 'portfolio-events.batch.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

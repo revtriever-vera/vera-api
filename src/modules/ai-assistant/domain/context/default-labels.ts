@@ -28,6 +28,13 @@ const CLASS_LABELS: Dictionary = {
     cripto: { 'pt-BR': 'Cripto', en: 'Crypto' }
 };
 
+const BUCKET_LABELS: Dictionary = {
+    missing_issuer: { 'pt-BR': 'Emissor não informado', en: 'Issuer not informed' },
+    funds: { 'pt-BR': 'Fundos', en: 'Funds' },
+    crypto: { 'pt-BR': 'Cripto', en: 'Crypto' },
+    unmapped: { 'pt-BR': 'Emissor não mapeado', en: 'Unmapped issuer' }
+};
+
 function labelOf(dictionary: Dictionary, systemKey: string | null, locale: AppLocale): string | null {
     if (systemKey === null || !Object.hasOwn(dictionary, systemKey)) {
         return null;
@@ -41,4 +48,8 @@ export function defaultCategoryLabel(systemKey: string | null, locale: AppLocale
 
 export function defaultClassLabel(systemKey: string | null, locale: AppLocale): string | null {
     return labelOf(CLASS_LABELS, systemKey, locale);
+}
+
+export function bucketLabel(key: string, locale: AppLocale): string {
+    return labelOf(BUCKET_LABELS, key, locale) ?? key;
 }

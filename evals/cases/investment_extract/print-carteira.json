@@ -1,0 +1,97 @@
+{
+  "id": "print-carteira",
+  "description": "Print de tela de carteira (quantidade e preço, sem operação): vira compra com custo assumido",
+  "file": "test/fixtures/investment-import/generated/prints/tela-nitida.png",
+  "input": "image",
+  "personalData": ["PESSOA EXEMPLO", "123.456.789-00", "9000001", "0001234-5"],
+  "modelAnswer": {
+    "documentType": "screenshot",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": null,
+    "positions": [
+      {
+        "block": "equities",
+        "symbol": "PETR4",
+        "quantity": "227",
+        "price": "38.52"
+      },
+      {
+        "block": "equities",
+        "symbol": "VALE3",
+        "quantity": "100",
+        "price": "61.10"
+      },
+      {
+        "block": "equities",
+        "symbol": "ITUB4",
+        "quantity": "400",
+        "price": "33.45"
+      },
+      {
+        "block": "equities",
+        "symbol": "BOVA11",
+        "quantity": "50",
+        "price": "128.90"
+      },
+      {
+        "block": "equities",
+        "symbol": "HGLG11",
+        "quantity": "60",
+        "price": "158.20"
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "PETR4",
+        "kind": "buy",
+        "quantity": "227",
+        "unitPrice": "38.52",
+        "grossMinor": 874404,
+        "feesMinor": 0,
+        "check": "assumed_cost"
+      },
+      {
+        "ticker": "VALE3",
+        "kind": "buy",
+        "quantity": "100",
+        "unitPrice": "61.10",
+        "grossMinor": 611000,
+        "feesMinor": 0,
+        "check": "assumed_cost"
+      },
+      {
+        "ticker": "ITUB4",
+        "kind": "buy",
+        "quantity": "400",
+        "unitPrice": "33.45",
+        "grossMinor": 1338000,
+        "feesMinor": 0,
+        "check": "assumed_cost"
+      },
+      {
+        "ticker": "BOVA11",
+        "kind": "buy",
+        "quantity": "50",
+        "unitPrice": "128.90",
+        "grossMinor": 644500,
+        "feesMinor": 0,
+        "check": "assumed_cost"
+      },
+      {
+        "ticker": "HGLG11",
+        "kind": "buy",
+        "quantity": "60",
+        "unitPrice": "158.20",
+        "grossMinor": 949200,
+        "feesMinor": 0,
+        "check": "assumed_cost"
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "id": "avenue-2026-07-text",
+  "task": "investment_extract",
+  "mode": "text",
+  "file": "avenue/avenue-2026-07.pdf",
+  "expected": "avenue/avenue-2026-07.expected.json",
+  "sections": ["period", "operations", "income", "positions", "taxWithholdings", "cashMovements"]
+}

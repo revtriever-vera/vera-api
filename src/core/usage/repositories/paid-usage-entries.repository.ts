@@ -32,7 +32,7 @@ export class PaidUsageEntriesRepository extends BareTenantRepository<'PaidUsageE
             .where('period', '=', period)
             .groupBy('feature')
             .execute();
-        const totals: Record<UsageFeature, number> = { ai: 0, whatsapp: 0 };
+        const totals: Record<UsageFeature, number> = { ai: 0, whatsapp: 0, help: 0 };
         for (const row of rows) {
             totals[row.feature as UsageFeature] = Number(row.total);
         }

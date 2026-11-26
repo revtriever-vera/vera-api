@@ -1,0 +1,9 @@
+export const SYNTHETIC_HOLDER_NAME: string = 'PESSOA EXEMPLO';
+export const SYNTHETIC_HOLDER_CPF: string = '123.456.789-00';
+export const SYNTHETIC_BROKER: string = 'CORRETORA EXEMPLO';
+export const SYNTHETIC_ISSUER: string = 'BANCO EXEMPLO';
+export const SYNTHETIC_CLIENT_CODE: string = '9000001';
+export const SYNTHETIC_ACCOUNT: string = '0001234-5';
+export const SYNTHETIC_ADMINISTRATOR: string = 'ADMINISTRADOR EXEMPLO';
+export const SYNTHETIC_BOOKKEEPER: string = 'ESCRITURADOR EXEMPLO';
+export const REFERENCE_DATE: string = '2026-10-30';

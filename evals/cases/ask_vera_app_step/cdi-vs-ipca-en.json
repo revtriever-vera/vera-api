@@ -1,0 +1,46 @@
+{
+  "id": "cdi-vs-ipca-en",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "CDI against IPCA over 12 months?",
+  "history": [],
+  "tools": {
+    "required": [
+      "market_benchmarks"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "market_benchmarks",
+      "input": {
+        "windows": [
+          "m12"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "12.80%",
+      "4.80%"
+    ],
+    "mustMention": [
+      "This is not a recommendation to buy or sell."
+    ],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Over 12 months the CDI returned **12.80%** and the IPCA 4.80%, so the CDI was higher. The CDI runs to 03/19/2026 and the IPCA to February 2026, both from the Banco Central."
+  ]
+}

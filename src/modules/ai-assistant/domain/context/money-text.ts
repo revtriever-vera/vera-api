@@ -32,3 +32,12 @@ export function pointsText(bps: number, locale: AppLocale): string {
     const formatter: Intl.NumberFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
     return `${formatter.format(bps / BPS_PER_PERCENT)} pp`;
 }
+
+export function ratePercentText(bps: number, locale: AppLocale): string {
+    const formatter: Intl.NumberFormat = new Intl.NumberFormat(locale, {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return plain(formatter.format(bps / BPS_PER_PERCENT / BPS_PER_PERCENT));
+}

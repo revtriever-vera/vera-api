@@ -7,7 +7,10 @@ type AssistantPart = Extract<
     { type: 'text' | 'tool-call' }
 >;
 type ToolPart = Extract<Extract<ModelMessage, { role: 'tool' }>['content'][number], { type: 'tool-result' }>;
-type UserPart = { type: 'text'; text: string };
+type UserPart =
+    | { type: 'text'; text: string }
+    | { type: 'image'; image: Uint8Array; mediaType: string }
+    | { type: 'file'; data: Uint8Array; mediaType: string };
 
 function blocksOf(message: LlmMessage): readonly LlmContentBlock[] {
     return typeof message.content === 'string' ? [] : message.content;
@@ -42,13 +45,21 @@ function toolPartOf(block: LlmToolResultBlock, names: ReadonlyMap<string, string
     };
 }
 
+function userPartsOf(block: LlmContentBlock): UserPart[] {
+    if (block.kind === 'text') {
+        return [{ type: 'text', text: block.text }];
+    }
+    if (block.kind === 'image') {
+        return [{ type: 'image', image: block.data, mediaType: block.mediaType }];
+    }
+    return block.kind === 'file' ? [{ type: 'file', data: block.data, mediaType: block.mediaType }] : [];
+}
+
 function userMessagesOf(blocks: readonly LlmContentBlock[], names: ReadonlyMap<string, string>): ModelMessage[] {
     const results: ToolPart[] = blocks
         .filter((block: LlmContentBlock): block is LlmToolResultBlock => block.kind === 'tool_result')
         .map((block: LlmToolResultBlock): ToolPart => toolPartOf(block, names));
-    const parts: UserPart[] = blocks.flatMap((block: LlmContentBlock): UserPart[] =>
-        block.kind === 'text' ? [{ type: 'text', text: block.text }] : []
-    );
+    const parts: UserPart[] = blocks.flatMap(userPartsOf);
     const tools: ModelMessage[] = results.length > 0 ? [{ role: 'tool', content: results }] : [];
     const said: ModelMessage[] = parts.length > 0 ? [{ role: 'user', content: parts }] : [];
     return [...tools, ...said];

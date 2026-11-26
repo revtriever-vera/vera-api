@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MailContent } from '../../../core/mail/mail.types';
-import { baseLayout } from '../../../core/mail/templates/base-layout';
+import { baseLayout, textSeal } from '../../../core/mail/templates/base-layout';
 import { TemplateProps, TemplateRegistry } from '../../../core/mail/template.registry';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { escapeHtml } from './escape-html.util';
@@ -61,7 +61,7 @@ function render(name: string, locale: AppLocale): Renderer {
                 title: copy?.title ?? name,
                 bodyHtml: lines.map((line: string): string => `<p>${escapeHtml(line)}</p>`).join('')
             }),
-            text: lines.join('\n\n')
+            text: `${lines.join('\n\n')}\n\n${textSeal(locale)}`
         };
     };
 }

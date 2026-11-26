@@ -8,6 +8,7 @@ export interface RateLimitSubject {
     readonly params: Readonly<Record<string, string>>;
     readonly ip: string;
     readonly companyId?: string;
+    readonly userId?: string;
 }
 
 export interface RateLimitOptions {

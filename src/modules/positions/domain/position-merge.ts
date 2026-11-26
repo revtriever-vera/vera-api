@@ -2,8 +2,8 @@ import Decimal from 'decimal.js';
 import { DecimalUtil } from '../../../shared/utils/decimal.util';
 import { Position, PositionPatch } from './positions.types';
 
-const QUANTITY_SCALE: number = 10;
-const PRICE_SCALE: number = 8;
+export const QUANTITY_SCALE: number = 10;
+export const PRICE_SCALE: number = 8;
 
 function weightedPrice(kept: Position, folded: Position, total: Decimal): string | null {
     if (kept.averagePrice === null || folded.averagePrice === null) {

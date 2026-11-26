@@ -9,7 +9,11 @@ Teste com mock prova o encanamento, não a qualidade do texto. Os evals rodam os
 - `baseline.json`: notas da última rodada live aprovada.
 - `out/`: relatórios de cada rodada (ignorado pelo git).
 
-Tarefas cobertas: `summary_month`, `summary_cuts` e `summary_portfolio`. A tarefa `ask_vera_step` entra quando o prompt dela existir (#124), junto com as perguntas-armadilha.
+Tarefas cobertas: `summary_month`, `summary_cuts`, `summary_portfolio`, `ask_vera_step` (perguntas do copiloto, armadilhas e sondas) e `ask_vera_app_step` (a Vera dentro do app: ajuda do produto, onde fica cada tela, função que não existe, papel sem acesso, dado pessoal, Free perguntando de números e de mercado, aviso de compra ou venda).
+
+Nos casos de `ask_vera_step`, `tools.required` lista as ferramentas que a rodada precisa chamar (`tool_missing` reprova) e `tools.allowed` as permitidas (`tool_unexpected`). `pending: true` marca o caso que espera outra entrega: só `empty`, `truncated`, ferramenta e `mustNotMention` contam, e a taxa de ferramenta dele sai à parte (`pending`), fora do portão.
+
+Nos casos de `ask_vera_app_step`, `plan: free` entrega só `help_search` e `where_is` (como o registro faz com o Free), `role` define o papel que `where_is` enxerga, `screen` é a tela em que a pessoa está, e a pergunta e o histórico passam pela mascaragem de dado pessoal antes de ir ao modelo. As ferramentas de ajuda são as reais, sobre o catálogo (`HELP_CATALOG`). Mínimo de 12 casos em pt-BR e 4 em en, com ao menos um caso por família do catálogo (carteira, gastos, configurações e produto). No plano `premium`, as ferramentas de leitura do app (inclusive `concentration_overview`, `fixed_income_maturities` e `market_benchmarks`, de `appFixtureToolsOf`) devolvem dados inventados no mesmo formato que o modelo recebe; os casos delas exigem a linha do aviso de investimento.
 
 ## Comandos
 
@@ -19,7 +23,13 @@ npm run eval -- --task all --mode mock --judge
 EVALS_SECRETS_FILE=<arquivo local> npm run eval:live -- --task all --reps 3 --judge
 ```
 
-Saída: uma linha por caso (passou ou falhou, com o motivo), uma linha por tarefa (casos, nota do juiz, taxa de texto vazio, tempo, tokens de saída, custo em BRL) e o custo total. Código de saída diferente de zero se uma checagem dura falhar, a nota média do juiz ficar abaixo de `evalThreshold` (do catálogo, em fração de 5) ou cair mais de 0,5 frente à baseline na mesma versão de prompt.
+Notas de corretagem (`investment_extract`): `cases/investment_extract/*.json` traz o arquivo sintético (`test/fixtures/investment-import/generated/notes`), a resposta de referência do modelo e o gabarito de cada linha (ticker resolvido, quantidade, preço, valor, taxa rateada, `check`), das linhas ignoradas e dos avisos da nota. O gerador de fixtures escreve esses arquivos (`npm run fixtures:investment-import`); não edite à mão. Em mock (specs, sem chave) a resposta de referência passa pelo pós-processamento e pelo `ModelReaderService` e tem de dar o gabarito. Ao vivo: `EVALS_SECRETS_FILE=<arquivo local> npm run eval:notes [-- <id do caso>]` manda cada nota ao modelo pelo `ModelReaderService` de verdade (texto mascarado ou PDF escaneado, prompt e schema do catálogo) e compara com o gabarito.
+
+Sondas de entrada de arquivo: `EVALS_SECRETS_FILE=<arquivo local> npx tsx --tsconfig tsconfig.evals.json evals/probes/brokerage-note.ts <imagem.png> <nota.pdf>` manda uma nota de corretagem sintética ao modelo e confere ativo, quantidade, preço e data.
+
+Tarefa `investment_extract` (leitura por modelo de documento de investimento): `cases/investment_extract/*.json` aponta para um arquivo de `test/fixtures/investment-import/generated` e para o gabarito (`*.expected.json`). `npm run eval:extract` roda no modo mock (o gabarito vira a resposta: prova os casos) e `EVALS_SECRETS_FILE=<arquivo local> npm run eval:extract -- --live` manda o PDF ao modelo (`EVALS_EXTRACT_MODEL` troca o modelo) e compara período, operações, proventos, posições, retenções e remessas contra o gabarito. Valor bruto só é comparado quando o modelo o devolve (o produto deriva de quantidade vezes preço) e só em ações. Sai com código 1 se algum caso falhar.
+
+Saída: uma linha por caso (passou ou falhou, com o motivo), uma linha por tarefa (casos, nota do juiz, taxa de texto vazio, tempo, tokens de saída, custo em BRL) e o custo total. Código de saída diferente de zero se uma checagem dura falhar, a nota média do juiz ficar abaixo de `evalThreshold` (do catálogo, em fração de 5) ou cair mais de 0,5 frente à baseline na mesma versão de prompt. Também reprova: texto vazio acima de 2%, ferramenta certa abaixo de 90% nos casos que exigem ferramenta (fora os `pending`) qualquer rodada com conselho de compra ou venda (`forbidden_term`/`forbidden_text`, tolerância zero) e mais de 10% das rodadas reprovadas numa checagem dura (o modelo varia de uma repetição para outra; abaixo disso o `summary-guard` do produto já cai no texto de reserva). Quando texto vazio, o relatório lista `finishReason`, tokens de saída e de raciocínio e se houve texto de raciocínio (sem conteúdo).
 
 ## Checagens duras
 
@@ -30,6 +40,13 @@ Saída: uma linha por caso (passou ou falhou, com o motivo), uma linha por taref
 - `language`: idioma por heurística de stopwords.
 - `tone`: menção a "assistente" ou "inteligência artificial".
 - `expected_text` e `forbidden_text`: números e trechos que o caso exige ou proíbe.
+
+Só na tarefa do app:
+
+- `link_in_catalog`: link em markdown para rota que o catálogo de ajuda não tem.
+- `catalog_grounded`: nome de tela (link ou negrito) que não está no catálogo, ou frase que afirma função que a Vera não tem (boleto, cartão de crédito, empréstimo, conta digital) sem negar.
+- `redaction`: padrão de dado pessoal (CPF, CNPJ, e-mail, telefone, cartão, CEP, chave Pix aleatória) em alguma requisição montada para o modelo.
+- `notice`: resposta que cita ativo (ou usou ferramenta de carteira) sem a linha do aviso, ou com a linha sem ativo. O texto é o mesmo nos dois canais.
 
 Exclamação, emoji, "IA" e conselho de compra ou venda caem em `forbidden_term`.
 

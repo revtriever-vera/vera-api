@@ -30,7 +30,8 @@ export class RateLimitGuard implements CanActivate {
             body: (request.body ?? {}) as Readonly<Record<string, unknown>>,
             params: request.params as Readonly<Record<string, string>>,
             ip: request.ip ?? '',
-            companyId: this.context.getOrNull()?.companyId
+            companyId: this.context.getOrNull()?.companyId,
+            userId: this.context.getOrNull()?.userId
         };
         const identity: string | null = options.identify(subject);
         if (!identity) {

@@ -1,5 +1,7 @@
 import {
     JsonObject,
+    LlmFeature,
+    LlmTask,
     JsonValue,
     LlmContentBlock,
     LlmGenerationRequest,
@@ -13,12 +15,12 @@ import { AppLocale } from '../../../shared/i18n/locale';
 import { figuresIn } from './summary-guard';
 import { LabelSource } from './context/ai-context.types';
 import { AnswerCheck, AnswerFacts, AnswerVerdict } from './ask-answer-guard';
+import { assetKeysIn } from './forbidden-terms';
 import {
     ASK_VERA_MAX_TOOL_BYTES,
-    ASK_VERA_FEATURE,
-    ASK_VERA_TASK,
     ASK_VERA_TOOL_KINDS,
     AskVeraProposal,
+    AskVeraSent,
     AskVeraTool,
     AskVeraToolOutput,
     AskVeraTurn,
@@ -30,6 +32,9 @@ export interface AskLoopInput {
     readonly messages: readonly LlmMessage[];
     readonly tools: readonly AskVeraTool[];
     readonly locale: AppLocale;
+    readonly task: LlmTask;
+    readonly feature: LlmFeature;
+    readonly knownAssets: ReadonlySet<string>;
     readonly messageId: string;
     readonly maxSteps: number;
     readonly generate: (request: LlmGenerationRequest) => Promise<LlmGenerationResponse>;
@@ -46,12 +51,16 @@ export interface AskLoopResult {
     readonly steps: number;
     readonly toolsUsed: readonly string[];
     readonly proposals: readonly AskVeraProposal[];
+    readonly sent: readonly AskVeraSent[];
     readonly costMicros: number;
 }
 
 interface Run {
     readonly toolsUsed: string[];
     readonly proposals: AskVeraProposal[];
+    readonly sent: AskVeraSent[];
+    readonly assets: Set<string>;
+    readonly links: Set<string>;
     readonly numbers: Set<number>;
     readonly keys: Map<string, LabelSource>;
     readonly ambiguous: Set<string>;
@@ -125,12 +134,36 @@ function absorb(run: Run, output: AskVeraToolOutput, locale: AppLocale): void {
     }
 }
 
+const ROUTE: RegExp = /^\/[\w\-/#?=&.]*$/;
+const MARKDOWN_ROUTE: RegExp = /\]\((\/[^)\s]*)\)/g;
+
+function routesIn(text: string): readonly string[] {
+    const inline: string[] = [...text.matchAll(MARKDOWN_ROUTE)].map((match: RegExpMatchArray): string => match[1] ?? '');
+    return ROUTE.test(text) ? [text, ...inline] : inline;
+}
+
+function keepSent(run: Run, tool: string, payload: JsonObject): void {
+    run.sent.push({ tool, payload });
+    for (const leaf of leavesIn(payload)) {
+        if (typeof leaf !== 'string') {
+            continue;
+        }
+        assetKeysIn(leaf).forEach((key: string): Set<string> => run.assets.add(key));
+        routesIn(leaf).forEach((route: string): Set<string> => run.links.add(route));
+    }
+}
+
 function factsOf(run: Run): AnswerFacts {
     const keys: Map<string, LabelSource> = new Map(run.keys);
     for (const key of run.ambiguous) {
         keys.delete(key);
     }
-    return { numbers: [...run.numbers].sort((left: number, right: number): number => left - right), keys };
+    return {
+        numbers: [...run.numbers].sort((left: number, right: number): number => left - right),
+        keys,
+        assets: run.assets,
+        links: run.links
+    };
 }
 
 function errorBlock(use: LlmToolUse, detail: string): ToolOutcome {
@@ -178,7 +211,11 @@ function outcomeOf(use: LlmToolUse, tool: AskVeraTool, output: AskVeraToolOutput
         return resultBlock(use, { status: 'proposed', note: 'tell the person this is waiting for their confirmation' });
     }
     absorb(run, output, locale);
-    return resultBlock(use, output.payload);
+    const outcome: ToolOutcome = resultBlock(use, output.payload);
+    if (outcome.block.kind === 'tool_result' && !outcome.block.isError) {
+        keepSent(run, tool.name, output.payload);
+    }
+    return outcome;
 }
 
 async function runTools(uses: readonly LlmToolUse[], run: Run, input: AskLoopInput): Promise<Executed> {
@@ -233,20 +270,28 @@ interface Executed {
     readonly direct: string | null;
 }
 
-class AskVeraLoop {
-    private readonly run: Run = {
+function runOf(input: AskLoopInput): Run {
+    return {
         toolsUsed: [],
         proposals: [],
+        sent: [],
+        assets: new Set<string>(input.knownAssets),
+        links: new Set<string>(),
         numbers: new Set<number>(),
         keys: new Map<string, LabelSource>(),
         ambiguous: new Set<string>(),
         costMicros: 0,
         checkFailures: 0
     };
+}
+
+class AskVeraLoop {
+    private readonly run: Run;
     private readonly definitions: readonly LlmToolDefinition[];
     private messages: readonly LlmMessage[];
 
     public constructor(private readonly input: AskLoopInput) {
+        this.run = runOf(input);
         this.definitions = definitionsOf(input.tools, input.locale);
         this.messages = input.messages;
     }
@@ -263,8 +308,8 @@ class AskVeraLoop {
 
     private async step(step: number): Promise<AskLoopResult | null> {
         const response: LlmGenerationResponse = await this.input.generate({
-            task: ASK_VERA_TASK,
-            feature: ASK_VERA_FEATURE,
+            task: this.input.task,
+            feature: this.input.feature,
             system: this.input.system,
             messages: this.messages,
             tools: this.definitions,
@@ -308,7 +353,15 @@ class AskVeraLoop {
     }
 
     private result(ending: AskLoopEnding, text: string, steps: number): AskLoopResult {
-        return { ending, text, steps, toolsUsed: this.run.toolsUsed, proposals: this.run.proposals, costMicros: this.run.costMicros };
+        return {
+            ending,
+            text,
+            steps,
+            toolsUsed: this.run.toolsUsed,
+            proposals: this.run.proposals,
+            sent: this.run.sent,
+            costMicros: this.run.costMicros
+        };
     }
 }
 

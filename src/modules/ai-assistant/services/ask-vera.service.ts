@@ -8,7 +8,13 @@ import { UsageState } from '../../../core/usage/usage.types';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { CompanyTimezoneService } from '../../identity/services/company-timezone.service';
 import { AiTextRenderer } from '../domain/context/ai-text-renderer';
-import { cvmNoticeText, failureText, greetingText, pixRefusalText } from '../domain/ask-fixed-replies';
+import { failureText, greetingText, pixRefusalText } from '../domain/ask-fixed-replies';
+import { needsInvestmentNotice, withInvestmentNotice } from '../domain/ask-notice';
+import { ChannelProfile, channelProfileOf } from '../domain/ask-channel-profiles';
+import { redactPersonalData } from '../../../shared/utils/personal-data-redaction';
+import { redactTurns } from '../domain/ask-redaction';
+import { assetKeysIn } from '../domain/forbidden-terms';
+import { HELP_ROUTES } from '../domain/help/help-catalog';
 import { AnswerCheck, AnswerFacts, AnswerVerdict, guardAnswer } from '../domain/ask-answer-guard';
 import { prefilterOf, PrefilterVerdict } from '../domain/ask-prefilter';
 import { AskLoopInput, AskLoopResult, messagesOf, runAskLoop } from '../domain/ask-vera-loop';
@@ -18,21 +24,34 @@ import {
     AskVeraAnswer,
     AskVeraInput,
     AskVeraOutcome,
-    CVM_NOTICE_TOOLS
+    AskVeraTurn
 } from '../domain/ask-vera.types';
+import { askVeraAppSystemPromptOf } from '../domain/prompts/ask-vera-app.prompt';
 import { askVeraSystemPromptOf } from '../domain/prompts/ask-vera.prompt';
 import { AskVeraAccessService } from './ask-vera-access.service';
 import { AskVeraTelemetryService } from './ask-vera-telemetry.service';
 import { AskVeraToolPort } from './ask-vera-tool.port';
 import { AskVeraToolRegistry } from './ask-vera-tool.registry';
 
-export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraTurn } from '../domain/ask-vera.types';
-export { CVM_NOTICE_TOOLS } from '../domain/ask-vera.types';
-export { cvmNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
+export type { AskVeraAnswer, AskVeraInput, AskVeraProposal, AskVeraSent, AskVeraTurn } from '../domain/ask-vera.types';
+export { INVESTMENT_NOTICE_TOOLS } from '../domain/ask-vera.types';
+export { investmentNoticeText, pixRefusalText } from '../domain/ask-fixed-replies';
 export { isReminderRequest } from '../domain/ask-prefilter';
 
-function isCvmNoticeTool(tool: string): boolean {
-    return CVM_NOTICE_TOOLS.has(tool);
+function systemPromptOf(input: AskVeraInput, today: string): string {
+    return input.channel === 'app'
+        ? askVeraAppSystemPromptOf(input.locale, today, input.screen)
+        : askVeraSystemPromptOf(input.locale, today);
+}
+
+interface Question {
+    readonly text: string;
+    readonly history: readonly AskVeraTurn[];
+}
+
+function knownAssetsOf(question: Question): ReadonlySet<string> {
+    const texts: readonly string[] = [...question.history.map((turn: AskVeraTurn): string => turn.text), question.text];
+    return new Set<string>(texts.flatMap(assetKeysIn));
 }
 
 @Injectable()
@@ -49,37 +68,40 @@ export class AskVeraService {
     ) {}
 
     public async ask(input: AskVeraInput): Promise<AskVeraAnswer> {
-        const text: string = input.text.trim().slice(0, ASK_VERA_MAX_QUESTION_CHARS);
-        const verdict: PrefilterVerdict = prefilterOf(text);
+        const question: Question = {
+            text: redactPersonalData(input.text.trim()).slice(0, ASK_VERA_MAX_QUESTION_CHARS),
+            history: redactTurns(input.history)
+        };
+        const verdict: PrefilterVerdict = prefilterOf(question.text);
         if (verdict !== null) {
-            return this.prefiltered(verdict, input.locale);
+            return this.prefiltered(verdict, input);
         }
-        await this.access.assertAllowed();
+        await this.access.assertAllowed(input);
         return this.context.run({ ...this.context.get(), locale: input.locale }, async (): Promise<AskVeraAnswer> =>
-            this.answer(input, text)
+            this.answer(input, question)
         );
     }
 
-    private async prefiltered(verdict: 'refusal' | 'greeting', locale: AppLocale): Promise<AskVeraAnswer> {
+    private async prefiltered(verdict: 'refusal' | 'greeting', input: AskVeraInput): Promise<AskVeraAnswer> {
         const outcome: AskVeraOutcome = verdict === 'refusal' ? 'fixed_refusal' : 'fixed_greeting';
-        const text: string = verdict === 'refusal' ? pixRefusalText(locale) : greetingText(locale);
+        const text: string = verdict === 'refusal' ? pixRefusalText(input.locale) : greetingText(input.locale, input);
         this.telemetry.finished({
             outcome,
             meta: { source: 'fixed', steps: 0, toolsUsed: [], truncated: false, proposals: 0, costMicros: 0 }
         });
-        return this.answerOf({ text, source: 'fixed', toolsUsed: [], proposals: [], truncated: false });
+        return this.answerOf({ text, notice: false, sent: [], source: 'fixed', toolsUsed: [], proposals: [], truncated: false });
     }
 
-    private async answer(input: AskVeraInput, text: string): Promise<AskVeraAnswer> {
-        const tools: readonly AskVeraToolPort[] = await this.registry.available(input.allowedTools);
+    private async answer(input: AskVeraInput, question: Question): Promise<AskVeraAnswer> {
+        const tools: readonly AskVeraToolPort[] = await this.registry.available(input.allowedTools, input);
         const today: string = await this.timezones.todayInCompany();
-        const result: AskLoopResult = await this.loop(input, text, tools, today);
-        return this.finish(result, input.locale);
+        const result: AskLoopResult = await this.loop(input, question, tools, today);
+        return this.finish(result, input.locale, question.text);
     }
 
-    private async loop(input: AskVeraInput, text: string, tools: readonly AskVeraToolPort[], today: string): Promise<AskLoopResult> {
+    private async loop(input: AskVeraInput, question: Question, tools: readonly AskVeraToolPort[], today: string): Promise<AskLoopResult> {
         try {
-            return await runAskLoop(this.loopInput(input, text, tools, today));
+            return await runAskLoop(this.loopInput(input, question, tools, today));
         } catch (error: unknown) {
             if (error instanceof CapReachedError) {
                 this.telemetry.capReached();
@@ -88,17 +110,27 @@ export class AskVeraService {
         }
     }
 
-    private loopInput(input: AskVeraInput, text: string, tools: readonly AskVeraToolPort[], today: string): AskLoopInput {
+    private loopInput(input: AskVeraInput, question: Question, tools: readonly AskVeraToolPort[], today: string): AskLoopInput {
+        const profile: ChannelProfile = channelProfileOf(input.channel);
         return {
-            system: askVeraSystemPromptOf(input.locale, today),
-            messages: messagesOf(input.history, text),
+            system: systemPromptOf(input, today),
+            messages: messagesOf(question.history, question.text),
             tools,
             locale: input.locale,
+            task: profile.task,
+            feature: input.feature,
+            knownAssets: knownAssetsOf(question),
             messageId: input.messageId,
             maxSteps: ASK_VERA_MAX_STEPS,
             generate: (request: LlmGenerationRequest): Promise<LlmGenerationResponse> => this.llm.generate(request),
             check: (answer: string, facts: AnswerFacts): AnswerVerdict =>
-                guardAnswer({ text: answer, facts, locale: input.locale, renderer: this.renderer }),
+                guardAnswer({ text: answer, facts, locale: input.locale, renderer: this.renderer, profile, routes: HELP_ROUTES }),
+            ...this.hooks()
+        };
+    }
+
+    private hooks(): Pick<AskLoopInput, 'onToolFailure' | 'onCheckFailure'> {
+        return {
             onToolFailure: (name: string): void => {
                 this.telemetry.toolFailed(name);
             },
@@ -108,23 +140,20 @@ export class AskVeraService {
         };
     }
 
-    private async finish(result: AskLoopResult, locale: AppLocale): Promise<AskVeraAnswer> {
+    private async finish(result: AskLoopResult, locale: AppLocale, question: string): Promise<AskVeraAnswer> {
         const failed: boolean = result.ending === 'truncated' || result.ending === 'check_failed';
         const truncated: boolean = result.ending === 'truncated';
-        const text: string = failed ? failureText(locale) : this.withNotice(result, locale);
+        const notice: boolean = !failed && needsInvestmentNotice(result, question);
         this.record(result, failed, truncated);
         return this.answerOf({
-            text,
+            text: failed ? failureText(locale) : withInvestmentNotice(result.text, notice, locale),
+            notice,
+            sent: failed ? [] : result.sent,
             source: failed ? 'fixed' : 'model',
             toolsUsed: result.toolsUsed,
             proposals: result.proposals,
             truncated
         });
-    }
-
-    private withNotice(result: AskLoopResult, locale: AppLocale): string {
-        const cited: boolean = result.toolsUsed.some(isCvmNoticeTool);
-        return cited && result.ending === 'answered' ? `${result.text}\n${cvmNoticeText(locale)}` : result.text;
     }
 
     private record(result: AskLoopResult, failed: boolean, truncated: boolean): void {

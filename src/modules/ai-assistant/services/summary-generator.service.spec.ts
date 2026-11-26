@@ -54,7 +54,7 @@ describe('SummaryGeneratorService', () => {
         expect(sent).toMatchObject({ task: 'summary_month', feature: 'ai', referenceId: 'summary:month:2026-09:1' });
         expect(sent.messages).toEqual([{ role: 'user', content: JSON.stringify(BUILT.payload) }]);
         expect(sent.responseSchema).toMatchObject({ type: 'object', required: ['paragraphs'] });
-        expect(result).toEqual({ paragraphs: ['Entraram **R$ 28.000**, com Delivery em alta.'], callId: 'call-1', promptVersion: 2 });
+        expect(result).toEqual({ paragraphs: ['Entraram **R$ 28.000**, com Delivery em alta.'], callId: 'call-1', promptVersion: 3 });
     });
 
     it('reprovou na primeira: descreve a falha ao modelo e grava a segunda', async () => {

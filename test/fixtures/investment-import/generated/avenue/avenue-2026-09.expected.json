@@ -1,0 +1,87 @@
+{
+  "documentType": "foreign_statement",
+  "currency": "USD",
+  "periodStart": "2026-09-01",
+  "periodEnd": "2026-09-30",
+  "operations": [
+    {
+      "kind": "sell",
+      "incomeKind": null,
+      "direction": "debit",
+      "tradeDate": "2026-09-09",
+      "ticker": "AAPL",
+      "market": "equities",
+      "securityId": "AAA111AA0",
+      "quantity": "5",
+      "unitPrice": "210.00",
+      "grossMinor": 105000,
+      "currency": "USD"
+    },
+    {
+      "kind": "buy",
+      "incomeKind": null,
+      "direction": "credit",
+      "tradeDate": "2026-09-22",
+      "ticker": "KO",
+      "market": "equities",
+      "securityId": "CCC333CC0",
+      "quantity": "8",
+      "unitPrice": "62.50",
+      "grossMinor": 50000,
+      "currency": "USD"
+    },
+    {
+      "kind": "income",
+      "incomeKind": "dividend",
+      "direction": "credit",
+      "tradeDate": "2026-09-18",
+      "ticker": "MSFT",
+      "market": "equities",
+      "securityId": "BBB222BB0",
+      "quantity": "0",
+      "unitPrice": null,
+      "grossMinor": 300,
+      "currency": "USD"
+    }
+  ],
+  "positions": [
+    {
+      "block": "equities",
+      "symbol": "AAPL",
+      "quantity": "10",
+      "price": "208.00"
+    },
+    {
+      "block": "equities",
+      "symbol": "MSFT",
+      "quantity": "3",
+      "price": "433.00"
+    },
+    {
+      "block": "equities",
+      "symbol": "KO",
+      "quantity": "8",
+      "price": "63.00"
+    },
+    {
+      "block": "fixed_income",
+      "symbol": "UST4.25-2031",
+      "quantity": "2000",
+      "price": "99.70"
+    }
+  ],
+  "taxWithholdings": [
+    {
+      "tradeDate": "2026-09-18",
+      "ticker": "MSFT",
+      "amountMinor": 90
+    }
+  ],
+  "cashMovements": [
+    {
+      "tradeDate": "2026-09-01",
+      "direction": "credit",
+      "amountMinor": 100000
+    }
+  ]
+}

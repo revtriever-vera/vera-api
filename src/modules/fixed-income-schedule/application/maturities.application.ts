@@ -1,39 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { buildMaturities } from '../domain/maturity-schedule';
-import { ReferenceRates, referenceRatesOf } from '../../fixed-income/services/index-series-math';
-import { REQUEST_RESULTS, ScheduleInputs } from '../domain/schedule.types';
+import { REQUEST_RESULTS } from '../domain/schedule.types';
+import { MaturitiesReaderService, MaturitiesReading } from '../services/maturities-reader.service';
 import { ScheduleLogService } from '../services/schedule-log.service';
 import { ScheduleMetricsService } from '../services/schedule-metrics.service';
-import { ScheduleSourceService } from '../services/schedule-source.service';
 import { MaturitiesResponse } from '../validation/schedule.schemas';
 
 @Injectable()
 export class MaturitiesApplication {
     public constructor(
-        private readonly source: ScheduleSourceService,
+        private readonly reader: MaturitiesReaderService,
         private readonly logs: ScheduleLogService,
         private readonly metrics: ScheduleMetricsService
     ) {}
 
     public async list(limit: number): Promise<MaturitiesResponse> {
-        const inputs: ScheduleInputs = await this.source.load(new Date());
-        const rates: ReferenceRates = referenceRatesOf(inputs.series);
-        this.report(rates);
+        const reading: MaturitiesReading = await this.reader.read(limit);
+        this.report(reading);
         return {
-            asOf: inputs.today,
+            asOf: reading.asOf,
             reference: {
-                cdiAnnualBps: rates.cdiAnnualBps,
-                ipca12mBps: rates.ipca12mBps,
-                cdiDate: rates.cdiDate,
-                ipcaMonth: rates.ipcaMonth
+                cdiAnnualBps: reading.rates.cdiAnnualBps,
+                ipca12mBps: reading.rates.ipca12mBps,
+                cdiDate: reading.rates.cdiDate,
+                ipcaMonth: reading.rates.ipcaMonth
             },
-            items: buildMaturities(inputs, rates, limit)
+            items: [...reading.items]
         };
     }
 
-    private report(rates: ReferenceRates): void {
-        const cdiMissing: boolean = rates.cdiAnnual === null;
-        const ipcaMissing: boolean = rates.ipca12m === null;
+    private report(reading: MaturitiesReading): void {
+        const cdiMissing: boolean = reading.rates.cdiAnnual === null;
+        const ipcaMissing: boolean = reading.rates.ipca12m === null;
         if (cdiMissing || ipcaMissing) {
             this.logs.referenceMissing('maturities', cdiMissing, ipcaMissing);
         }

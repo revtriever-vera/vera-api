@@ -74,17 +74,24 @@ const common = {
     fixedFigures: z.object({ goalBps: z.number(), surplusMinor: z.number(), currency: z.string() }).optional()
 };
 
-const askCase = z.object({
+const askFields = {
     ...common,
-    task: z.literal('ask_vera_step'),
+    pending: z.boolean().default(false),
     question: z.string().min(1),
     history: z.array(z.object({ role: z.enum(['person', 'vera']), text: z.string() })),
     tools: z.object({ required: z.array(z.string()), allowed: z.array(z.string()) }),
-    mockTools: z.array(z.object({ name: z.string(), input: z.record(z.string(), z.unknown()) }))
-});
+    mockTools: z.array(z.object({ name: z.string(), input: z.record(z.string(), z.unknown()) })),
+    plan: z.enum(['free', 'premium']).default('premium'),
+    role: z.enum(['viewer', 'editor', 'owner']).default('owner'),
+    screen: z.string().optional()
+};
+
+const askCase = z.object({ ...askFields, task: z.literal('ask_vera_step') });
+const askAppCase = z.object({ ...askFields, task: z.literal('ask_vera_app_step') });
 
 export const evalCaseSchema = z.discriminatedUnion('task', [
     askCase,
+    askAppCase,
     z.object({ ...common, task: z.literal('summary_month'), context: monthContext }),
     z.object({ ...common, task: z.literal('summary_cuts'), context: cutsContext }),
     z.object({ ...common, task: z.literal('summary_portfolio'), context: portfolioContext })
@@ -92,5 +99,10 @@ export const evalCaseSchema = z.discriminatedUnion('task', [
 
 export type EvalCase = z.infer<typeof evalCaseSchema>;
 export type EvalTask = EvalCase['task'];
-export type SummaryCase = Exclude<EvalCase, { task: 'ask_vera_step' }>;
-export type AskCase = Extract<EvalCase, { task: 'ask_vera_step' }>;
+export type AskTask = 'ask_vera_step' | 'ask_vera_app_step';
+export type SummaryCase = Exclude<EvalCase, { task: AskTask }>;
+export type AskCase = Extract<EvalCase, { task: AskTask }>;
+
+export function isAskCase(item: EvalCase): item is AskCase {
+    return item.task === 'ask_vera_step' || item.task === 'ask_vera_app_step';
+}

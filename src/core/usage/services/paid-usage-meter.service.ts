@@ -14,6 +14,7 @@ import {
     NoticeKind,
     RecordUsageInput,
     UsageDetail,
+    UsageFeature,
     UsageState,
     USAGE_STATES,
     UsageThresholdPayload
@@ -21,6 +22,18 @@ import {
 import { UsageLogService } from './usage-log.service';
 import { UsageMetricsService } from './usage-metrics.service';
 import { UsageSnapshotService } from './usage-snapshot.service';
+
+interface Budget {
+    readonly capMicros: number | null;
+    readonly usedMicros: number;
+}
+
+function budgetOf(state: UsageState, feature: UsageFeature): Budget {
+    if (feature === 'help' && state.help.separate) {
+        return { capMicros: state.help.capMicros, usedMicros: state.help.usedMicros };
+    }
+    return { capMicros: state.capMicros, usedMicros: state.usedMicros };
+}
 
 @Injectable()
 export class PaidUsageMeter {
@@ -41,10 +54,11 @@ export class PaidUsageMeter {
 
     public async assertRoom(input: AssertRoomInput): Promise<void> {
         const state: UsageState = await this.snapshots.state();
-        if (state.capMicros === null) {
+        const budget: Budget = budgetOf(state, input.feature);
+        if (budget.capMicros === null) {
             return;
         }
-        const remaining: number = state.capMicros - state.usedMicros;
+        const remaining: number = budget.capMicros - budget.usedMicros;
         if (remaining > 0 && input.estimateMicros <= remaining) {
             return;
         }

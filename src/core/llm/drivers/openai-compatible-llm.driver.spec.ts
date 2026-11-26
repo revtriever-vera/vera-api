@@ -2,6 +2,7 @@ import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http
 import { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LogService } from '../../observability/log.service';
+import { LlmContentBlock } from '../llm.types';
 import { LlmDriverCall } from './llm-driver';
 import { OpenAiCompatibleLlmDriver } from './openai-compatible-llm.driver';
 import { ProviderCallError } from './provider-failures';
@@ -77,6 +78,7 @@ describe('OpenAiCompatibleLlmDriver', () => {
             credentials: { driver: 'openai_compatible', baseUrl: url, apiKey: 'account-key', modelId: 'local-model' },
             spec: {
                 task: 'summary_month',
+                model: 'primary',
                 maxOutputTokens: 50,
                 maxCostMicros: 1,
                 temperature: 0.1,
@@ -139,6 +141,22 @@ describe('OpenAiCompatibleLlmDriver', () => {
 
         expect(result.attempts).toBe(2);
         expect(seen).toHaveLength(2);
+    });
+
+    it('aceita imagem como parte da mensagem e recusa arquivo com erro tipado, sem chamar o provedor nem logar bytes', async () => {
+        const image: LlmContentBlock = { kind: 'image', mediaType: 'image/png', data: new Uint8Array([137, 80, 78, 71]) };
+        const file: LlmContentBlock = { kind: 'file', mediaType: 'application/pdf', data: new Uint8Array([37, 80, 68, 70]) };
+
+        await driver.generate(call(0, { messages: [{ role: 'user', content: [{ kind: 'text', text: 'leia' }, image] }] }));
+        expect(JSON.stringify(seen[0]?.body['messages'])).toContain('image_url');
+
+        seen.length = 0;
+        await expect(driver.generate(call(0, { messages: [{ role: 'user', content: [file] }] }))).rejects.toMatchObject({
+            code: 'ai.unsupported_content',
+            status: 422
+        });
+        expect(seen).toHaveLength(0);
+        expect(JSON.stringify([logService.warn.mock.calls, logService.error.mock.calls])).not.toContain('37,80');
     });
 
     it('não segue redirecionamento', async () => {

@@ -9,6 +9,7 @@ import { UsdRatePort } from './usd-rate.port';
 function config(cap: number): UsageConfig {
     return {
         PAID_USAGE_CAP_MICROS: cap,
+        PAID_HELP_CAP_MICROS: 500_000,
         PAID_USAGE_MIN_ROOM_MICROS: 20_000,
         PAID_USAGE_WARNING_BPS: 8000,
         USAGE_USD_BRL_FALLBACK: '5.1000',
@@ -33,6 +34,7 @@ describe('UsageContextHolder', () => {
         const holder: UsageContextHolder = new UsageContextHolder(config(2_500_000));
         const port: UsageContextPort = {
             capMicros: vi.fn().mockResolvedValue(900),
+            helpCapMicros: vi.fn().mockResolvedValue(null),
             timezone: vi.fn().mockResolvedValue('Asia/Tokyo')
         };
 
@@ -40,6 +42,16 @@ describe('UsageContextHolder', () => {
 
         expect(await holder.capMicros()).toBe(900);
         expect(await holder.timezone()).toBe('Asia/Tokyo');
+    });
+
+    it('o teto da ajuda é nulo sem porta e vem da porta quando registrada', async () => {
+        const holder: UsageContextHolder = new UsageContextHolder(config(2_500_000));
+        expect(await holder.helpCapMicros()).toBeNull();
+        expect(holder.configuredHelpCapMicros()).toBe(500_000);
+
+        holder.register({ capMicros: vi.fn(), helpCapMicros: vi.fn().mockResolvedValue(300_000), timezone: vi.fn() });
+
+        expect(await holder.helpCapMicros()).toBe(300_000);
     });
 });
 

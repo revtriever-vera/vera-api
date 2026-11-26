@@ -1,0 +1,61 @@
+{
+  "id": "nota-etf",
+  "description": "Compra de cota de ETF (especificação com CI)",
+  "file": "test/fixtures/investment-import/generated/notes/nota-etf.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010010",
+        "tradeDate": "2026-11-16",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "ISHARES IBOVESPA CI",
+            "market": "VISTA",
+            "quantity": "20",
+            "unitPrice": "128.90",
+            "grossMinor": 257800,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 257800,
+        "netMinor": -258394,
+        "fees": {
+          "settlementMinor": 71,
+          "exchangeMinor": 8,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 0,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "BOVA11",
+        "kind": "buy",
+        "quantity": "20",
+        "unitPrice": "128.90",
+        "grossMinor": 257800,
+        "feesMinor": 594
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}

@@ -35,6 +35,7 @@ export class UsageSnapshotService {
             period,
             resetsAt: resetsAtOf(now, timezone),
             capMicros: await this.holder.capMicros(),
+            helpCapMicros: await this.holder.helpCapMicros(),
             byFeatureMicros: await this.totalsOf(period),
             warningBps: this.config.PAID_USAGE_WARNING_BPS,
             minRoomMicros: this.config.PAID_USAGE_MIN_ROOM_MICROS

@@ -11,8 +11,10 @@ export const COMMAND_KEYS = {
     plansTrialSweep: 'plans-trial-sweep-command',
     identityMembersCleanup: 'identity-members-cleanup-command',
     usageCleanup: 'usage-cleanup-command',
+    investmentImportPreviewsPurge: 'investment-import-previews-purge-command',
     usageGauge: 'usage-gauge-command',
     aiSummariesRetention: 'ai-summaries-retention-command',
+    assistantChatRetention: 'assistant-chat-retention-command',
     whatsappTemplatesSync: 'whatsapp-templates-sync-command',
     whatsappHealth: 'whatsapp-health-command',
     whatsappRetention: 'whatsapp-retention-command',
@@ -27,7 +29,9 @@ export const COMMAND_KEYS = {
     billingEventsReplay: 'billing-events-replay-command',
     billingInvoicesReconcile: 'billing-invoices-reconcile-command',
     billingStandingSweep: 'billing-standing-sweep-command',
-    billingTrialSweep: 'billing-trial-sweep-command'
+    billingTrialSweep: 'billing-trial-sweep-command',
+    portfolioEventsDaily: 'portfolio-events-daily-command',
+    portfolioEventsLinksWeekly: 'portfolio-events-links-weekly-command'
 } as const;
 
 export type CommandKey = (typeof COMMAND_KEYS)[keyof typeof COMMAND_KEYS];
@@ -42,6 +46,7 @@ export const CRON = {
     everyDayAtSixAm: '0 6 * * *',
     everyDayAtFourAm: '0 4 * * *',
     everyDayAtSevenAm: '0 7 * * *',
+    everyMondayAtSevenAm: '0 7 * * 1',
     everyDayAtNineAm: '0 9 * * *',
     everyDayAtNineThirtyAm: '30 9 * * *',
     twiceDaily: '0 9,21 * * *',

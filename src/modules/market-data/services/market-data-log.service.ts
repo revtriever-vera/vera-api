@@ -7,6 +7,7 @@ const CHUNK: string = 'market-data-chunk';
 const PROVIDER: string = 'market-data-provider';
 const FX: string = 'market-data-fx';
 const BUDGET: string = 'market-data-budget';
+const INDEX: string = 'market-data-index';
 
 @Injectable()
 export class MarketDataLogService {
@@ -46,5 +47,17 @@ export class MarketDataLogService {
 
     public invalidPayload(type: string): void {
         this.logService.error({ message: 'invalid payload', identifier: SWEEP, meta: { type } });
+    }
+
+    public indexStored(symbol: string, range: string, stored: number): void {
+        this.logService.info({ message: 'market index stored', identifier: INDEX, meta: { symbol, range, stored } });
+    }
+
+    public indexNotConfigured(symbol: string): void {
+        this.logService.warn({ message: 'market index source not configured', identifier: INDEX, meta: { symbol } });
+    }
+
+    public indexFailed(symbol: string, error: unknown): void {
+        this.logService.error({ message: 'market index failed', identifier: INDEX, meta: { symbol }, error });
     }
 }

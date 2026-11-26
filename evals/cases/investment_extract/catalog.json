@@ -1,0 +1,62 @@
+[
+  {
+    "symbol": "PETR3",
+    "name": "PETROLEO BRASILEIRO S.A. PETROBRAS",
+    "kind": "stock"
+  },
+  {
+    "symbol": "PETR4",
+    "name": "PETROLEO BRASILEIRO S.A. PETROBRAS",
+    "kind": "stock"
+  },
+  {
+    "symbol": "BRDT3",
+    "name": "PETROBRAS DISTRIBUIDORA S.A.",
+    "kind": "stock"
+  },
+  {
+    "symbol": "VALE3",
+    "name": "VALE S.A.",
+    "kind": "stock"
+  },
+  {
+    "symbol": "ITUB3",
+    "name": "ITAU UNIBANCO HOLDING S.A.",
+    "kind": "stock"
+  },
+  {
+    "symbol": "ITUB4",
+    "name": "ITAU UNIBANCO HOLDING S.A.",
+    "kind": "stock"
+  },
+  {
+    "symbol": "BBDC4",
+    "name": "BANCO BRADESCO S.A.",
+    "kind": "stock"
+  },
+  {
+    "symbol": "WEGE3",
+    "name": "WEG S.A.",
+    "kind": "stock"
+  },
+  {
+    "symbol": "HGLG11",
+    "name": "CSHG LOGISTICA FUNDO DE INVESTIMENTO IMOBILIARIO",
+    "kind": "fii"
+  },
+  {
+    "symbol": "XPML11",
+    "name": "XP MALLS FUNDO DE INVESTIMENTO IMOBILIARIO",
+    "kind": "fii"
+  },
+  {
+    "symbol": "BOVA11",
+    "name": "ISHARES IBOVESPA FUNDO DE INDICE",
+    "kind": "etf"
+  },
+  {
+    "symbol": "AAPL34",
+    "name": "APPLE INC",
+    "kind": "bdr"
+  }
+]

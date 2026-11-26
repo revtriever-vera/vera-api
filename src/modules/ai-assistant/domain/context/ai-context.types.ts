@@ -72,7 +72,76 @@ export interface AiPortfolioContext {
     readonly aporte_planejado?: AiPlannedContribution;
 }
 
-export type AiContext = AiMonthContext | AiCutsContext | AiPortfolioContext;
+export interface AiIssuerEntry {
+    readonly emissor: string;
+    readonly valor: string;
+    readonly pct: string;
+}
+
+export interface AiSectorEntry {
+    readonly setor: string;
+    readonly valor: string;
+    readonly pct: string;
+}
+
+export interface AiConcentrationContext {
+    readonly moeda_base: string;
+    readonly total: string;
+    readonly total_acoes: string;
+    readonly por_emissor: readonly AiIssuerEntry[];
+    readonly outros_emissores?: { readonly pct: string; readonly grupos: number };
+    readonly por_setor: readonly AiSectorEntry[];
+}
+
+export interface AiMaturityEntry {
+    readonly mes: string;
+    readonly valor: string;
+}
+
+export interface AiMaturityKindEntry {
+    readonly tipo: string;
+    readonly total: string;
+    readonly vencimentos: readonly AiMaturityEntry[];
+}
+
+export interface AiMaturitiesContext {
+    readonly moeda_base: string;
+    readonly ate: string;
+    readonly total: string;
+    readonly estimado: boolean;
+    readonly por_tipo: readonly AiMaturityKindEntry[];
+}
+
+export interface AiBenchmarkPeriod {
+    readonly periodo: string;
+    readonly valor: string;
+}
+
+export interface AiBenchmarkSeries {
+    readonly fonte: string;
+    readonly ate: string | null;
+    readonly atrasado: boolean;
+    readonly acumulado: readonly AiBenchmarkPeriod[];
+    readonly sem_historico: readonly string[];
+}
+
+export type AiIbovespaStatus = 'ok' | 'nao_configurado' | 'sem_dados';
+
+export interface AiBenchmarksContext {
+    readonly referencia: string;
+    readonly cdi: AiBenchmarkSeries;
+    readonly ipca: AiBenchmarkSeries;
+    readonly selic_meta: {
+        readonly fonte: string;
+        readonly ate: string | null;
+        readonly atrasado: boolean;
+        readonly valor: string | null;
+    };
+    readonly ibovespa: AiBenchmarkSeries & { readonly status: AiIbovespaStatus };
+}
+
+export type AiContext =
+    AiMonthContext | AiCutsContext | AiPortfolioContext | AiConcentrationContext | AiMaturitiesContext | AiBenchmarksContext;
 
 export interface BuiltContext<T extends AiContext> {
     readonly payload: T;

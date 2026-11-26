@@ -112,6 +112,17 @@ export interface AssetClasses {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface AssetIssuerLinks {
+    assetId: string;
+    cnpj: string;
+    createdAt: Generated<Timestamp>;
+    cvmCode: string | null;
+    id: string;
+    issuerKind: string;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface AssetQuotes {
     assetId: string;
     currency: string;
@@ -142,6 +153,29 @@ export interface Assets {
     suggestedClassKey: string | null;
     symbol: string;
     typeGroup: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface AssistantConversations {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    lastMessageAt: Generated<Timestamp>;
+    updatedAt: Generated<Timestamp>;
+    userId: string;
+}
+
+export interface AssistantMessages {
+    companyId: string;
+    conversationId: string;
+    createdAt: Generated<Timestamp>;
+    id: string;
+    mode: string | null;
+    role: string;
+    sent: Json | null;
+    status: string;
+    text: Generated<string>;
+    toolsUsed: Generated<Json>;
     updatedAt: Generated<Timestamp>;
 }
 
@@ -450,6 +484,7 @@ export interface FixedIncomeTitles {
     deletedAt: Timestamp | null;
     holderUserId: string | null;
     id: string;
+    importId: string | null;
     indexer: string;
     isSample: Generated<boolean>;
     issuerId: string | null;
@@ -567,6 +602,63 @@ export interface IntegrationCredentials {
     verifiedAt: Timestamp;
 }
 
+export interface InvestmentImportPreviews {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    createdBy: string | null;
+    expiresAt: Timestamp;
+    fileName: string;
+    fileSha256: string;
+    holderUserId: string | null;
+    id: string;
+    payload: Json;
+    source: string;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface InvestmentImports {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    createdBy: string | null;
+    deletedAt: Timestamp | null;
+    fileName: string;
+    fileSha256: string;
+    id: string;
+    noteNumbers: Generated<string[]>;
+    positionsAfter: Generated<Json>;
+    positionsBefore: Generated<Json>;
+    source: string;
+    status: Generated<string>;
+    updatedAt: Generated<Timestamp>;
+}
+
+export interface InvestmentOperations {
+    appliedToPosition: Generated<boolean>;
+    assetId: string;
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    dayTrade: Generated<boolean>;
+    deletedAt: Timestamp | null;
+    feesMinor: Generated<Int8>;
+    fingerprint: string;
+    fxRate: Numeric | null;
+    grossBrlMinor: Int8 | null;
+    grossMinor: Int8;
+    holderUserId: string | null;
+    id: string;
+    importId: string;
+    incomeKind: string | null;
+    kind: string;
+    lineNumber: Generated<number>;
+    quantity: Numeric;
+    settlementDate: Timestamp | null;
+    tradeDate: Timestamp;
+    unitPrice: Numeric;
+    updatedAt: Generated<Timestamp>;
+    withheldTaxMinor: Int8 | null;
+}
+
 export interface LlmCalls {
     attempts: number;
     cacheReadTokens: Generated<number>;
@@ -588,6 +680,14 @@ export interface LlmCalls {
     servedModelId: string | null;
     task: string;
     updatedAt: Generated<Timestamp>;
+}
+
+export interface MarketIndexPoints {
+    close: Numeric;
+    date: Timestamp;
+    fetchedAt: Generated<Timestamp>;
+    source: string;
+    symbol: string;
 }
 
 export interface NoticePreferences {
@@ -688,6 +788,22 @@ export interface PluggyCredentials {
     status: string;
     updatedAt: Generated<Timestamp>;
     verifiedWith: Generated<string>;
+}
+
+export interface PortfolioEvents {
+    amountPerUnit: Numeric | null;
+    assetId: string;
+    createdAt: Generated<Timestamp>;
+    currency: string;
+    documentUrl: string | null;
+    eventDate: Timestamp | null;
+    exDate: Timestamp | null;
+    externalKey: string;
+    id: string;
+    kind: string;
+    paymentDate: Timestamp | null;
+    source: string;
+    updatedAt: Generated<Timestamp>;
 }
 
 export interface PortfolioIncomeLedger {
@@ -1191,8 +1307,11 @@ export interface DB {
     AiSummaries: AiSummaries;
     AssetClassAssignments: AssetClassAssignments;
     AssetClasses: AssetClasses;
+    AssetIssuerLinks: AssetIssuerLinks;
     AssetQuotes: AssetQuotes;
     Assets: Assets;
+    AssistantConversations: AssistantConversations;
+    AssistantMessages: AssistantMessages;
     AuthIdentities: AuthIdentities;
     BankConnectionAccounts: BankConnectionAccounts;
     BankConnections: BankConnections;
@@ -1226,7 +1345,11 @@ export interface DB {
     Goals: Goals;
     IndexSeriesPoints: IndexSeriesPoints;
     IntegrationCredentials: IntegrationCredentials;
+    InvestmentImportPreviews: InvestmentImportPreviews;
+    InvestmentImports: InvestmentImports;
+    InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;
+    MarketIndexPoints: MarketIndexPoints;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;
     OnboardingStates: OnboardingStates;
@@ -1235,6 +1358,7 @@ export interface DB {
     PlatformAccessTokens: PlatformAccessTokens;
     PlatformAuditLog: PlatformAuditLog;
     PluggyCredentials: PluggyCredentials;
+    PortfolioEvents: PortfolioEvents;
     PortfolioIncomeLedger: PortfolioIncomeLedger;
     PortfolioMonthlySnapshots: PortfolioMonthlySnapshots;
     PortfolioSettings: PortfolioSettings;

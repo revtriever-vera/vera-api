@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { GatewayLlmDriver } from '../drivers/gateway-llm.driver';
 import { OpenAiCompatibleLlmDriver } from '../drivers/openai-compatible-llm.driver';
 import { ProviderCallError } from '../drivers/provider-failures';
+import { LlmConfig } from '../config/llm.config';
 import { LlmProviderUnavailableError } from '../llm.errors';
 import { LlmCredentials } from '../llm.types';
 import { LlmProbeService } from './llm-probe.service';
@@ -9,12 +10,13 @@ import { LlmProbeService } from './llm-probe.service';
 const GATEWAY: LlmCredentials = { driver: 'gateway', apiKey: 'k', modelId: 'vendor/m' };
 const SELF: LlmCredentials = { driver: 'openai_compatible', baseUrl: 'http://h/v1', apiKey: 'k', modelId: 'local' };
 
-function build() {
+function build(vision?: string) {
     const gateway = { generate: vi.fn().mockResolvedValue({}) };
     const openai = { generate: vi.fn().mockResolvedValue({}) };
     const service: LlmProbeService = new LlmProbeService(
         gateway as unknown as GatewayLlmDriver,
-        openai as unknown as OpenAiCompatibleLlmDriver
+        openai as unknown as OpenAiCompatibleLlmDriver,
+        { LLM_VISION_MODEL: vision } as LlmConfig
     );
     return { service, gateway, openai };
 }
@@ -53,5 +55,17 @@ describe('LlmProbeService', () => {
         openai.generate.mockRejectedValue(new Error('boom'));
 
         expect(await service.test(SELF)).toEqual({ ok: false, reason: 'unreachable' });
+    });
+
+    it('testVision sonda o modelo de visão quando configurado e o principal quando não', async () => {
+        const configured = build('vendor/visao');
+        await configured.service.testVision(GATEWAY);
+        expect(configured.gateway.generate).toHaveBeenCalledWith(
+            expect.objectContaining({ credentials: { ...GATEWAY, modelId: 'vendor/visao' } })
+        );
+
+        const plain = build();
+        await plain.service.testVision(GATEWAY);
+        expect(plain.gateway.generate).toHaveBeenCalledWith(expect.objectContaining({ credentials: GATEWAY }));
     });
 });

@@ -25,6 +25,7 @@ export interface GuardInput {
     readonly built: Pick<BuiltContext<AiContext>, 'numbers' | 'keys'>;
     readonly locale: AppLocale;
     readonly renderer: AiTextRenderer;
+    readonly knownAssets?: ReadonlySet<string>;
 }
 
 export type FigureKind = 'money' | 'percent' | 'points' | 'bare';
@@ -128,7 +129,7 @@ export function guardSummary(input: GuardInput): GuardResult {
         return failure('length', `the summary must have at most ${String(MAX_TOTAL_CHARS)} characters in total`);
     }
     const plain: readonly string[] = paragraphs.map(plainOf);
-    if (plain.some(forbiddenTermIn)) {
+    if (plain.some((paragraph: string): boolean => forbiddenTermIn(paragraph, input.knownAssets))) {
         return failure('forbidden_term', 'the text has a forbidden term: advice, asset names, exclamation, emoji or a mention of AI');
     }
     if (paragraphs.some(emphasisBroken)) {

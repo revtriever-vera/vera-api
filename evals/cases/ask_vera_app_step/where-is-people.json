@@ -1,0 +1,30 @@
+{
+  "id": "where-is-people",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "where do I add my spouse to the account?",
+  "history": [],
+  "tools": {
+    "required": ["where_is"],
+    "allowed": ["help_search", "where_is"]
+  },
+  "mockTools": [
+    {
+      "name": "where_is",
+      "input": {
+        "topic": "add a person to the account"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": ["/settings/people"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": ["You add people in [People](/settings/people), in Settings. Only the account Owner can do it."]
+}

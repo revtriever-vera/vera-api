@@ -1,0 +1,30 @@
+{
+  "id": "concentration-by-issuer",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "how concentrated am I in one issuer?",
+  "history": [],
+  "tools": {
+    "required": ["concentration_overview"],
+    "allowed": ["help_search", "where_is", "concentration_overview", "fixed_income_maturities", "portfolio_overview"]
+  },
+  "mockTools": [
+    {
+      "name": "concentration_overview",
+      "input": {}
+    }
+  ],
+  "expect": {
+    "mustCite": ["30%"],
+    "mustMention": ["This is not a recommendation to buy or sell."],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Your largest issuer is Tesouro Nacional, with **30%** of the portfolio (R$123,600), then Itaú Unibanco with 15%. The other issuers add up to 50%, spread over 9 groups."
+  ]
+}

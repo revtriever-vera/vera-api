@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AssetQuotesRepository } from '../repositories/asset-quotes.repository';
 import { ExchangeRatesRepository } from '../repositories/exchange-rates.repository';
+import { MarketIndexPointsRepository } from '../repositories/market-index-points.repository';
 import { QuoteFetchFailuresRepository } from '../repositories/quote-fetch-failures.repository';
 import { AssetQuoteDomain } from './asset-quote.domain';
 import { ExchangeRateDomain } from './exchange-rate.domain';
+import { MarketIndexDomain } from './market-index.domain';
 import { QuoteFetchFailureDomain } from './quote-fetch-failure.domain';
 
 describe('AssetQuoteDomain.save', () => {
@@ -78,5 +80,29 @@ describe('ExchangeRateDomain', () => {
 
         expect(upsertRate).toHaveBeenCalledWith({ currency: 'USD', date: '2026-10-09', brlPerUnit: '5.4', source: 'mock' }, at);
         expect(await domain.latestOnOrBefore('USD', '2026-10-09')).toBeNull();
+    });
+});
+
+describe('MarketIndexDomain', () => {
+    it('lê fechamentos como texto de data e guarda pelo repositório', async () => {
+        const listSince: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValue([{ symbol: '^BVSP', date: new Date(2026, 10, 24), close: '166000.0000', source: 'brapi' }]);
+        const upsertMany: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined);
+        const findLast: ReturnType<typeof vi.fn> = vi
+            .fn()
+            .mockResolvedValueOnce({ date: new Date(2026, 10, 24) })
+            .mockResolvedValueOnce(null);
+        const domain: MarketIndexDomain = new MarketIndexDomain({
+            listSince,
+            upsertMany,
+            findLast
+        } as unknown as MarketIndexPointsRepository);
+
+        expect(await domain.loadSince('^BVSP', '2023-11-01')).toEqual([{ date: '2026-11-24', close: '166000.0000' }]);
+        expect(await domain.save('^BVSP', 'brapi', [{ date: '2026-11-24', close: '166000' }])).toBe(1);
+        expect(upsertMany).toHaveBeenCalledWith('^BVSP', 'brapi', [{ date: '2026-11-24', close: '166000' }]);
+        expect(await domain.lastDate('^BVSP')).toBe('2026-11-24');
+        expect(await domain.lastDate('^BVSP')).toBeNull();
     });
 });

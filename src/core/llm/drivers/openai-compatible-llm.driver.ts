@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 import { LogService } from '../../observability/log.service';
-import { LlmProviderUnavailableError } from '../llm.errors';
+import { LlmProviderUnavailableError, LlmUnsupportedContentError } from '../llm.errors';
+import { LlmContentBlock, LlmMessage } from '../llm.types';
 import { AiSdkLlmDriver, AttemptMode, CallOptions } from './ai-sdk-llm.driver';
 import { LlmDriverCall, LlmDriverResult } from './llm-driver';
 import { ProviderCallError } from './provider-failures';
@@ -26,6 +27,7 @@ export class OpenAiCompatibleLlmDriver extends AiSdkLlmDriver {
     }
 
     public override async generate(call: LlmDriverCall): Promise<LlmDriverResult> {
+        this.assertNoFiles(call);
         try {
             return await this.generateIn(call, { textOnly: false });
         } catch (error: unknown) {
@@ -68,6 +70,15 @@ export class OpenAiCompatibleLlmDriver extends AiSdkLlmDriver {
             return call.request.system;
         }
         return `${call.request.system}\n\nAnswer only with one JSON object that follows this JSON Schema: ${JSON.stringify(call.request.responseSchema)}`;
+    }
+
+    private assertNoFiles(call: LlmDriverCall): void {
+        const file: LlmContentBlock | undefined = call.request.messages
+            .flatMap((message: LlmMessage): readonly LlmContentBlock[] => (typeof message.content === 'string' ? [] : message.content))
+            .find((block: LlmContentBlock): boolean => block.kind === 'file');
+        if (file?.kind === 'file') {
+            throw new LlmUnsupportedContentError(call.request.task, file.mediaType);
+        }
     }
 
     private formatRefused(call: LlmDriverCall, error: unknown): boolean {

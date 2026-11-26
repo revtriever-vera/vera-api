@@ -1,0 +1,61 @@
+{
+  "id": "nota-fii",
+  "description": "Compra de cota de FII (especificação com CI)",
+  "file": "test/fixtures/investment-import/generated/notes/nota-fii.pdf",
+  "input": "text",
+  "personalData": [
+    "PESSOA EXEMPLO",
+    "123.456.789-00",
+    "9000001",
+    "0001234-5"
+  ],
+  "modelAnswer": {
+    "documentType": "note",
+    "currency": "BRL",
+    "totalMinor": null,
+    "operations": [],
+    "notes": [
+      {
+        "number": "1010009",
+        "tradeDate": "2026-11-13",
+        "broker": "CORRETORA EXEMPLO",
+        "trades": [
+          {
+            "side": "buy",
+            "code": null,
+            "securitySpec": "FII CSHG LOG CI",
+            "market": "VISTA",
+            "quantity": "10",
+            "unitPrice": "158.20",
+            "grossMinor": 158200,
+            "dayTrade": null
+          }
+        ],
+        "operationsTotalMinor": 158200,
+        "netMinor": -158764,
+        "fees": {
+          "settlementMinor": 44,
+          "exchangeMinor": 5,
+          "brokerageMinor": 490,
+          "issMinor": 25,
+          "irrfMinor": 0,
+          "otherMinor": 0
+        }
+      }
+    ]
+  },
+  "expected": {
+    "lines": [
+      {
+        "ticker": "HGLG11",
+        "kind": "buy",
+        "quantity": "10",
+        "unitPrice": "158.20",
+        "grossMinor": 158200,
+        "feesMinor": 564
+      }
+    ],
+    "ignored": [],
+    "notes": []
+  }
+}
