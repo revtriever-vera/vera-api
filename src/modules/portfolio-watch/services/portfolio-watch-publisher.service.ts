@@ -18,7 +18,8 @@ export class PortfolioWatchPublisherService {
     public async requestMonthlySnapshot(companyId: string, month: string): Promise<void> {
         const payload: SnapshotPayload = { companyId };
         await this.publisher.publish(QUEUES.portfolioWatch, MESSAGE_TYPES.portfolioWatchMonthlySnapshotCompanyRequested, payload, {
-            jobId: monthlySnapshotJobId(companyId, month)
+            jobId: monthlySnapshotJobId(companyId, month),
+            replaceExisting: true
         });
     }
 

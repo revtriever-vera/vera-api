@@ -51,6 +51,11 @@ export function monthlySnapshotEntriesOf(snapshot: PortfolioSnapshot): MonthlySn
     return [...byKey.values()];
 }
 
+export function missingQuoteCountOf(snapshot: PortfolioSnapshot): number {
+    return snapshot.holdings.filter((holding: Holding): boolean => !holding.isSample && !holding.isZeroQuantity && holding.missingQuote)
+        .length;
+}
+
 export function monthOf(today: string): string {
     return today.slice(0, 7);
 }

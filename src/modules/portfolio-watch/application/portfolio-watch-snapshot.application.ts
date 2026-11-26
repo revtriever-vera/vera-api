@@ -5,7 +5,7 @@ import { DateUtil } from '../../../shared/utils/date.util';
 import { FixedIncomeCompaniesService } from '../../fixed-income/services/fixed-income-companies.service';
 import { PositionReaderService } from '../../positions/services/position-reader.service';
 import { PortfolioSnapshot, PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
-import { monthOf, monthlySnapshotEntriesOf } from '../domain/monthly-snapshot-entries';
+import { missingQuoteCountOf, monthOf, monthlySnapshotEntriesOf } from '../domain/monthly-snapshot-entries';
 import { PortfolioMonthlySnapshotDomain } from '../domain/portfolio-monthly-snapshot.domain';
 import { MonthlySnapshotEntry } from '../domain/portfolio-watch.types';
 import { PortfolioWatchLogService } from '../services/portfolio-watch-log.service';
@@ -41,6 +41,11 @@ export class PortfolioWatchSnapshotApplication {
         const snapshot: PortfolioSnapshot = await this.portfolio.build(ANY_HOLDER);
         const entries: MonthlySnapshotEntry[] = monthlySnapshotEntriesOf(snapshot);
         if (entries.length === 0) {
+            return 0;
+        }
+        const withoutQuote: number = missingQuoteCountOf(snapshot);
+        if (withoutQuote > 0) {
+            this.logs.snapshotSkippedMissingQuotes(month, withoutQuote);
             return 0;
         }
         await this.snapshots.saveMonth(month, entries);
