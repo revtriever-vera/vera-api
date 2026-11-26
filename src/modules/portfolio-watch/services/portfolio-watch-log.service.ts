@@ -15,6 +15,14 @@ export class PortfolioWatchLogService {
         this.logService.info({ message: 'portfolio monthly snapshot saved', identifier: LOG_IDENTIFIER, meta: { month, assets } });
     }
 
+    public snapshotSkippedMissingQuotes(month: string, missingQuotes: number): void {
+        this.logService.warn({
+            message: 'portfolio monthly snapshot skipped: holdings without quote',
+            identifier: LOG_IDENTIFIER,
+            meta: { month, missingQuotes }
+        });
+    }
+
     public incomeRecorded(recorded: boolean): void {
         this.logService.info({ message: 'portfolio income ledger entry', identifier: LOG_IDENTIFIER, meta: { recorded } });
     }

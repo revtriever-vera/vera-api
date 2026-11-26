@@ -16,7 +16,7 @@ describe('PortfolioWatchPublisherService', () => {
             'vera-portfolio-watch',
             'portfolio-watch.monthly-snapshot.company.requested',
             { companyId: 'c1' },
-            { jobId: 'portfolio-watch-snapshot-c1-2026-12' }
+            { jobId: 'portfolio-watch-snapshot-c1-2026-12', replaceExisting: true }
         );
     });
 });

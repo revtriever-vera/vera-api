@@ -17,6 +17,7 @@ function build(holdings: unknown[]) {
         run: (_context: unknown, fn: () => Promise<unknown>) => fn()
     } as unknown as AppContext);
     const requestMonthlySnapshot = vi.fn().mockResolvedValue(undefined);
+    const snapshotSkippedMissingQuotes = vi.fn();
     const saveMonth = vi.fn().mockResolvedValue(undefined);
     const application = new PortfolioWatchSnapshotApplication(
         { companyIdsWithRealPositions: vi.fn().mockResolvedValue(['c1', 'c2']) } as unknown as PositionReaderService,
@@ -24,9 +25,9 @@ function build(holdings: unknown[]) {
         { build: vi.fn().mockResolvedValue({ baseCurrency: 'BRL', holdings }) } as unknown as PortfolioSnapshotService,
         { saveMonth } as unknown as PortfolioMonthlySnapshotDomain,
         { requestMonthlySnapshot } as unknown as PortfolioWatchPublisherService,
-        { snapshotFanOut: vi.fn(), snapshotSaved: vi.fn() } as unknown as PortfolioWatchLogService
+        { snapshotFanOut: vi.fn(), snapshotSaved: vi.fn(), snapshotSkippedMissingQuotes } as unknown as PortfolioWatchLogService
     );
-    return { application, requestMonthlySnapshot, saveMonth };
+    return { application, requestMonthlySnapshot, saveMonth, snapshotSkippedMissingQuotes };
 }
 
 describe('PortfolioWatchSnapshotApplication', () => {
@@ -68,5 +69,26 @@ describe('PortfolioWatchSnapshotApplication', () => {
 
         expect(await application.snapshotCompany('c1', NOW)).toBe(0);
         expect(saveMonth).not.toHaveBeenCalled();
+    });
+
+    it('não grava a foto quando algum ativo está sem cotação', async () => {
+        const holding = (id: string, missingQuote: boolean) => ({
+            kind: 'position',
+            id,
+            assetId: id,
+            classId: 'k',
+            quantity: '1',
+            unitPrice: missingQuote ? null : '2',
+            priceDate: null,
+            valueMinor: missingQuote ? 0 : 200,
+            missingQuote,
+            isSample: false,
+            isZeroQuantity: false
+        });
+        const { application, saveMonth, snapshotSkippedMissingQuotes } = build([holding('a1', false), holding('a2', true)]);
+
+        expect(await application.snapshotCompany('c1', NOW)).toBe(0);
+        expect(saveMonth).not.toHaveBeenCalled();
+        expect(snapshotSkippedMissingQuotes).toHaveBeenCalledWith('2026-12', 1);
     });
 });
