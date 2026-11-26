@@ -23,6 +23,14 @@ export class InvestmentOperationDomain {
         return this.operations.listAll();
     }
 
+    public async listTradedBetween(from: string, to: string): Promise<InvestmentOperation[]> {
+        return this.operations.listTradedBetween(from, to);
+    }
+
+    public async hasAny(): Promise<boolean> {
+        return this.operations.hasAny();
+    }
+
     public async listCreatedAfter(assetIds: readonly string[], after: Date): Promise<InvestmentOperation[]> {
         return this.operations.listCreatedAfter(assetIds, after);
     }

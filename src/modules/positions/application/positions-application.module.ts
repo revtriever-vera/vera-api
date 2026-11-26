@@ -8,6 +8,7 @@ import { PositionsHolderDepartureHandler } from '../services/holder-departure.ha
 import { HeldAssetsService } from '../services/held-assets.service';
 import { InvestmentImportReaderService } from '../services/investment-import-reader.service';
 import { PositionReaderService } from '../services/position-reader.service';
+import { InvestmentOperationsReaderService } from '../services/investment-operations-reader.service';
 import { InvestmentOperationsAccountExporter } from '../services/investment-operations-account.exporter';
 import { PositionOperationsService } from '../services/position-operations.service';
 import { PositionsAccountExporter } from '../services/positions-account.exporter';
@@ -26,11 +27,19 @@ import { PositionApplication } from './position.application';
         HeldAssetsService,
         PositionsAccountExporter,
         InvestmentOperationsAccountExporter,
+        InvestmentOperationsReaderService,
         PositionOperationsService,
         InvestmentImportReaderService,
         PositionsSampleDataService,
         PositionsHolderDepartureHandler
     ],
-    exports: [PositionApplication, PositionReaderService, HeldAssetsService, PositionOperationsService, InvestmentImportReaderService]
+    exports: [
+        PositionApplication,
+        PositionReaderService,
+        HeldAssetsService,
+        PositionOperationsService,
+        InvestmentImportReaderService,
+        InvestmentOperationsReaderService
+    ]
 })
 export class PositionsApplicationModule {}

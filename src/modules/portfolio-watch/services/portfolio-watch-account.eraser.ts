@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AsCompany } from '../../../core/context/as-company.decorator';
 import { AccountDataEraserPort } from '../../identity/services/account-data-eraser.port';
+import { MonthlyReviewDomain } from '../domain/monthly-review.domain';
 import { PortfolioIncomeLedgerDomain } from '../domain/portfolio-income-ledger.domain';
 import { PortfolioMonthlySnapshotDomain } from '../domain/portfolio-monthly-snapshot.domain';
 
@@ -12,13 +13,14 @@ export class PortfolioWatchAccountEraser extends AccountDataEraserPort {
 
     public constructor(
         private readonly snapshots: PortfolioMonthlySnapshotDomain,
-        private readonly ledger: PortfolioIncomeLedgerDomain
+        private readonly ledger: PortfolioIncomeLedgerDomain,
+        private readonly reviews: MonthlyReviewDomain
     ) {
         super();
     }
 
     @AsCompany()
     public async eraseAll(_companyId: string): Promise<number> {
-        return (await this.snapshots.eraseAll()) + (await this.ledger.eraseAll());
+        return (await this.snapshots.eraseAll()) + (await this.ledger.eraseAll()) + (await this.reviews.eraseAll());
     }
 }

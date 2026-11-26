@@ -7,6 +7,8 @@ export type IncomeLedgerRow = Selectable<PortfolioIncomeLedger>;
 export const SNAPSHOT_RETENTION_MONTHS: number = 36;
 export const EXPORT_PAGE: number = 500;
 export const PRUNE_BATCH: number = 500;
+export const SNAPSHOT_MONTH_LIMIT: number = 5000;
+export const LEDGER_MONTH_LIMIT: number = 5000;
 
 export interface MonthlySnapshotEntry {
     readonly assetId: string;

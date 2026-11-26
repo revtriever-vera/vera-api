@@ -1,5 +1,5 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
 import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { holderFilterOf } from '../../../../shared/holder/holder-filter';
@@ -8,6 +8,14 @@ import { RequiresRole } from '../../../identity/services/requires-role.decorator
 import { RolesGuard } from '../../../identity/services/roles.guard';
 import { PortfolioAgendaApplication } from '../../application/portfolio-agenda.application';
 import { PortfolioChangesApplication } from '../../application/portfolio-changes.application';
+import { PortfolioMonthlyReviewApplication } from '../../application/portfolio-monthly-review.application';
+import {
+    MonthlyReview,
+    MonthlyReviewList,
+    MonthlyReviewParamsDto,
+    monthlyReviewListSchema,
+    monthlyReviewSchema
+} from '../../validation/monthly-review.schemas';
 import {
     AgendaQueryDto,
     AgendaResponse,
@@ -81,6 +89,41 @@ const CHANGES_EXAMPLE: ChangesResponse = {
     ]
 };
 
+const REVIEW_LIST_EXAMPLE: MonthlyReviewList = {
+    items: [
+        { month: '2026-11', returnPct: 1.42 },
+        { month: '2026-10', returnPct: null }
+    ]
+};
+
+const REVIEW_EXAMPLE: MonthlyReview = {
+    month: '2026-11',
+    baseCurrency: 'BRL',
+    returnPct: 1.42,
+    byClass: [
+        {
+            classId: '0199b5b8-1c2d-7000-8000-000000000031',
+            startMinor: 10_000_000,
+            endMinor: 10_300_000,
+            returnPct: 1.42
+        }
+    ],
+    benchmarks: {
+        cdi: { state: 'ok', returnPct: 0.95, referenceMonth: '2026-11' },
+        ipca: { state: 'ok', returnPct: 0.31, referenceMonth: '2026-10' },
+        ibovespa: { state: 'not_configured', returnPct: null, referenceMonth: null }
+    },
+    topGainers: [{ assetId: '0199b5b8-1c2d-7000-8000-000000000012', symbol: 'XPLG11', variationPct: 3.4 }],
+    topLosers: [],
+    income: { amountMinor: 78_000, source: 'operations' },
+    concentration: {
+        topIssuers: [{ key: '0199b5b8-1c2d-7000-8000-000000000041', name: 'Banco X', valueMinor: 4_000_000, shareBps: 3900 }],
+        sectors: [{ key: 'real_estate', valueMinor: 2_000_000, shareBps: 5000 }],
+        fgcExposure: { overLimitMinor: 0, groups: [] }
+    },
+    coverage: { reason: null, message: null, generatedAt: '2026-12-01T08:00:00.000Z' }
+};
+
 @ApiTags('portfolio-watch')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -89,7 +132,8 @@ const CHANGES_EXAMPLE: ChangesResponse = {
 export class PortfolioWatchController {
     public constructor(
         private readonly agenda: PortfolioAgendaApplication,
-        private readonly changes: PortfolioChangesApplication
+        private readonly changes: PortfolioChangesApplication,
+        private readonly reviews: PortfolioMonthlyReviewApplication
     ) {}
 
     @Get('agenda')
@@ -154,5 +198,57 @@ export class PortfolioWatchController {
     })
     public async changesOf(@Query() query: ChangesQueryDto): Promise<ChangesResponse> {
         return this.changes.list({ days: query.days, classId: query.classId ?? null, holder: holderFilterOf(query.holder) });
+    }
+
+    @Get('monthly-reviews')
+    @ApiOperation({
+        summary: 'Months that have a monthly review',
+        description:
+            'The months with a review of the portfolio, newest first, with the return of the portfolio in each when there is one. ' +
+            'Available on every plan.'
+    })
+    @ApiZodResponse({ status: 200, description: 'Months with a review', schema: monthlyReviewListSchema, example: REVIEW_LIST_EXAMPLE })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    public async monthlyReviewsOf(): Promise<MonthlyReviewList> {
+        return this.reviews.list();
+    }
+
+    @Get('monthly-reviews/:month')
+    @ApiOperation({
+        summary: 'Monthly review of the portfolio',
+        description:
+            'The numbers of one month, all written by the code: return of the portfolio and of each class (only where the imported ' +
+            'operations explain the change in quantities), CDI, IPCA and Ibovespa for the month, assets that rose and fell the most, ' +
+            'income, concentration by issuer and sector and the exposure above the FGC limit. Built once at the start of the next ' +
+            'month. Available on every plan.'
+    })
+    @ApiParam({ name: 'month', description: 'Month of the review, YYYY-MM', example: '2026-11' })
+    @ApiZodResponse({ status: 200, description: 'Review of the month', schema: monthlyReviewSchema, example: REVIEW_EXAMPLE })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Invalid month (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'There is no review for the month',
+        example: {
+            type: 'portfolio_watch.monthly_review_not_found',
+            title: 'MonthlyReviewNotFoundError',
+            status: 404,
+            meta: { month: '2026-11' }
+        }
+    })
+    public async monthlyReviewOf(@Param() params: MonthlyReviewParamsDto): Promise<MonthlyReview> {
+        return this.reviews.get(params.month);
     }
 }

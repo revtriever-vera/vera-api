@@ -21,3 +21,14 @@ export class FeatureLockedError extends AppError {
         });
     }
 }
+
+export class MonthlyReviewNotFoundError extends AppError {
+    public constructor(month: string) {
+        super({
+            code: 'portfolio_watch.monthly_review_not_found',
+            status: 404,
+            detail: 'There is no monthly review for this month.',
+            meta: { month }
+        });
+    }
+}

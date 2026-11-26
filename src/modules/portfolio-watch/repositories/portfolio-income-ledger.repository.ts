@@ -3,7 +3,7 @@ import { AppContext } from '../../../core/context/app-context.port';
 import { DatabaseClient } from '../../../core/database/database.client';
 import { TenantRepository } from '../../../core/database/repositories/tenant.repository';
 import { IdUtil } from '../../../shared/utils/id.util';
-import { IncomeLedgerEntry, IncomeLedgerRow, PRUNE_BATCH } from '../domain/portfolio-watch.types';
+import { IncomeLedgerEntry, IncomeLedgerRow, LEDGER_MONTH_LIMIT, PRUNE_BATCH } from '../domain/portfolio-watch.types';
 
 @Injectable()
 export class PortfolioIncomeLedgerRepository extends TenantRepository<'PortfolioIncomeLedger'> {
@@ -18,6 +18,16 @@ export class PortfolioIncomeLedgerRepository extends TenantRepository<'Portfolio
             .returning('id')
             .executeTakeFirst();
         return row !== undefined;
+    }
+
+    public async listPaidBetween(from: string, to: string): Promise<IncomeLedgerRow[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('deletedAt', 'is', null)
+            .where('paymentDate', '>=', this.rawSql<Date>`${from}::date`)
+            .where('paymentDate', '<=', this.rawSql<Date>`${to}::date`)
+            .limit(LEDGER_MONTH_LIMIT)
+            .execute();
     }
 
     public async eraseAll(): Promise<number> {

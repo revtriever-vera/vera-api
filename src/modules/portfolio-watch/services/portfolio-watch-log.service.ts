@@ -42,4 +42,20 @@ export class PortfolioWatchLogService {
     public weeklyEvaluated(items: number, emails: number): void {
         this.logService.info({ message: 'portfolio weekly changes evaluated', identifier: LOG_IDENTIFIER, meta: { items, emails } });
     }
+
+    public reviewFanOut(companies: number): void {
+        this.logService.info({ message: 'portfolio monthly review fan-out queued', identifier: LOG_IDENTIFIER, meta: { companies } });
+    }
+
+    public reviewSaved(month: string, recorded: boolean): void {
+        this.logService.info({ message: 'portfolio monthly review saved', identifier: LOG_IDENTIFIER, meta: { month, recorded } });
+    }
+
+    public reviewSkippedNoSnapshot(month: string): void {
+        this.logService.warn({
+            message: 'portfolio monthly review skipped: no complete snapshot at the end of the month',
+            identifier: LOG_IDENTIFIER,
+            meta: { month }
+        });
+    }
 }
