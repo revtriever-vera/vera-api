@@ -663,7 +663,7 @@ export interface InvestmentOperations {
 export interface LlmCalls {
     attempts: number;
     cacheReadTokens: Generated<number>;
-    companyId: string;
+    companyId: string | null;
     costMicros: Generated<Int8>;
     createdAt: Generated<Timestamp>;
     deletedAt: Timestamp | null;
@@ -700,6 +700,20 @@ export interface MarketDocuments {
     title: string;
     updatedAt: Generated<Timestamp>;
     url: string;
+}
+
+export interface MarketDocumentSummaries {
+    createdAt: Generated<Timestamp>;
+    discard: boolean;
+    documentId: string;
+    id: string;
+    kind: string;
+    llmCallId: string | null;
+    locale: string;
+    promptVersion: string;
+    relevance: number;
+    summary: string;
+    updatedAt: Generated<Timestamp>;
 }
 
 export interface MarketIndexPoints {
@@ -1370,6 +1384,7 @@ export interface DB {
     InvestmentOperations: InvestmentOperations;
     LlmCalls: LlmCalls;
     MarketDocuments: MarketDocuments;
+    MarketDocumentSummaries: MarketDocumentSummaries;
     MarketIndexPoints: MarketIndexPoints;
     NoticePreferences: NoticePreferences;
     NoticeSends: NoticeSends;

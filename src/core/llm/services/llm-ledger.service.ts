@@ -1,10 +1,11 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { LlmCallDomain } from '../domain/llm-call.domain';
-import { LlmFeature, LlmOutcome, LlmUsage } from '../llm.types';
+import { isPlatformFeature, LlmFeature, LlmOutcome, LlmUsage, TenantLlmFeature } from '../llm.types';
 import { NoopLlmUsageAdapter } from '../ports/noop-llm-usage.adapter';
 import { LlmUsagePort } from '../ports/llm-usage.port';
 import { LlmLogService } from './llm-log.service';
 import { LlmMetricsService } from './llm-metrics.service';
+import { LlmPlatformBudgetService } from './llm-platform-budget.service';
 
 const BPS_FULL: number = 10_000;
 
@@ -35,17 +36,22 @@ export class LlmLedgerService {
         private readonly calls: LlmCallDomain,
         private readonly logs: LlmLogService,
         private readonly metrics: LlmMetricsService,
+        private readonly platformBudget: LlmPlatformBudgetService,
         @Optional() @Inject(LlmUsagePort) usage: LlmUsagePort | null
     ) {
         this.usage = usage ?? new NoopLlmUsageAdapter();
     }
 
     public async assertRoom(feature: LlmFeature, task: string, estimateMicros: number): Promise<void> {
+        if (isPlatformFeature(feature)) {
+            await this.platformBudget.assertRoom(feature, estimateMicros);
+            return;
+        }
         await this.usage.assertRoom({ feature, task, estimateMicros });
     }
 
-    public async answeredSince(requestHash: string, since: Date): Promise<number> {
-        return this.calls.answeredSince(requestHash, since);
+    public async answeredSince(requestHash: string, since: Date, feature: LlmFeature): Promise<number> {
+        return this.calls.answeredSince(requestHash, since, feature);
     }
 
     public async record(entry: LlmLedgerEntry): Promise<void> {
@@ -61,15 +67,16 @@ export class LlmLedgerService {
         this.metrics.tokens(entry.task, entry.usage);
         this.metrics.cost(entry.task, entry.feature, entry.costMicros);
         this.reportDivergence(entry);
-        if (entry.outsideCap === true) {
+        const feature: LlmFeature = entry.feature;
+        if (entry.outsideCap === true || isPlatformFeature(feature)) {
             return;
         }
-        await this.guarded(entry.task, 'usage', async () => this.recordUsage(entry));
+        await this.guarded(entry.task, 'usage', async () => this.recordUsage(entry, feature));
     }
 
-    private async recordUsage(entry: LlmLedgerEntry): Promise<void> {
+    private async recordUsage(entry: LlmLedgerEntry, feature: TenantLlmFeature): Promise<void> {
         await this.usage.record({
-            feature: entry.feature,
+            feature,
             task: entry.task,
             referenceId: entry.callId,
             costMicros: entry.costMicros,

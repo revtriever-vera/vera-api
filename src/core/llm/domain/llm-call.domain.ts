@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { LlmCall } from '../llm-calls.types';
+import { LlmCall, NewLlmCall } from '../llm-calls.types';
+import { isPlatformFeature } from '../llm.types';
 import { LlmCallsRepository } from '../repositories/llm-calls.repository';
+import { PlatformLlmCallsRepository } from '../repositories/platform-llm-calls.repository';
 
 export interface LlmCallDraft {
     readonly callId: string;
@@ -23,10 +25,36 @@ export interface LlmCallDraft {
 
 @Injectable()
 export class LlmCallDomain {
-    public constructor(private readonly calls: LlmCallsRepository) {}
+    public constructor(
+        private readonly calls: LlmCallsRepository,
+        private readonly platformCalls: PlatformLlmCallsRepository
+    ) {}
 
     public async record(draft: LlmCallDraft): Promise<LlmCall> {
-        return this.calls.insertCall({
+        const row: Omit<NewLlmCall, 'companyId'> = this.rowOf(draft);
+        return isPlatformFeature(draft.feature) ? this.platformCalls.insertCall(row) : this.calls.insertCall(row);
+    }
+
+    public async answeredSince(requestHash: string, since: Date, feature: string): Promise<number> {
+        return isPlatformFeature(feature)
+            ? this.platformCalls.countAnsweredSince(requestHash, since)
+            : this.calls.countAnsweredSince(requestHash, since);
+    }
+
+    public async platformCostSince(feature: string, since: Date): Promise<number> {
+        return this.platformCalls.costSince(feature, since);
+    }
+
+    public async eraseAll(): Promise<number> {
+        return this.calls.eraseAll();
+    }
+
+    public async purgeBefore(cutoff: Date): Promise<number> {
+        return this.calls.purgeBefore(cutoff);
+    }
+
+    private rowOf(draft: LlmCallDraft): Omit<NewLlmCall, 'companyId'> {
+        return {
             id: draft.callId,
             task: draft.task,
             feature: draft.feature,
@@ -43,18 +71,6 @@ export class LlmCallDomain {
             outcome: draft.outcome,
             requestHash: draft.requestHash,
             referenceId: draft.referenceId
-        });
-    }
-
-    public async answeredSince(requestHash: string, since: Date): Promise<number> {
-        return this.calls.countAnsweredSince(requestHash, since);
-    }
-
-    public async eraseAll(): Promise<number> {
-        return this.calls.eraseAll();
-    }
-
-    public async purgeBefore(cutoff: Date): Promise<number> {
-        return this.calls.purgeBefore(cutoff);
+        };
     }
 }

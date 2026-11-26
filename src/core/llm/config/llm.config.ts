@@ -48,6 +48,7 @@ const schema = z
         LLM_TIMEOUT_MS: z.coerce.number().int().min(1).default(DEFAULT_TIMEOUT_MS),
         LLM_MAX_RETRIES: z.coerce.number().int().min(0).default(DEFAULT_MAX_RETRIES),
         LLM_REPEAT_LIMIT: z.coerce.number().int().min(1).default(DEFAULT_REPEAT_LIMIT),
+        MARKET_DOCS_DAILY_CAP_MICROS: z.preprocess(blankAsUndefined, z.coerce.number().int().min(0).optional()),
         DEPLOY_ENV: deployEnvironmentSchema,
         DEPLOYMENT_MODE: z.enum(['hosted', 'self_hosted']).default('hosted')
     })
