@@ -10,7 +10,6 @@ import { InvalidUnsubscribeTokenError } from '../domain/notices.errors';
 export interface UnsubscribeSubject {
     readonly companyId: string;
     readonly userId: string;
-    /** One notice type, or several joined by a comma when the link turns off every type of a grouped e-mail. */
     readonly type: string;
 }
 

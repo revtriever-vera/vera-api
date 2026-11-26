@@ -26,7 +26,7 @@ export const unsubscribeParamsSchema = z.object({
 export class UnsubscribeParamsDto extends createZodDto(unsubscribeParamsSchema) {}
 
 export const unsubscribeResultSchema = z.object({
-    type: z.string().describe('Notice type code the person no longer receives')
+    type: z.string().describe('Notice type code the person no longer receives; several codes joined by a comma when the link came from a grouped e-mail')
 });
 
 export type NoticePreferencesView = z.infer<typeof noticePreferencesSchema>;
