@@ -460,3 +460,81 @@ describe('evidência do juiz nos casos de pergunta', () => {
         expect(evidence).not.toContain('fundo_nao_encontrado');
     });
 });
+
+describe('tarefa summary_monthly_review', () => {
+    const TASK: EvalTask = 'summary_monthly_review';
+    const good: EvalCase = caseOf(TASK, 'mes-bom-acima-do-cdi');
+    const firstMonth: EvalCase = caseOf(TASK, 'primeiro-mes-sem-rentabilidade');
+    const noHistory: EvalCase = caseOf(TASK, 'classe-sem-historico');
+
+    it('tem 10 casos ou mais, com mês bom e ruim, carteira abaixo do CDI, concentração, FGC, sem proventos, sem rentabilidade e en', () => {
+        const ids: string[] = casesOf(TASK).map((item: EvalCase): string => item.id);
+
+        expect(ids.length).toBeGreaterThanOrEqual(10);
+        for (const id of [
+            'mes-bom-acima-do-cdi',
+            'mes-ruim',
+            'carteira-abaixo-do-cdi',
+            'concentracao-alta-emissor',
+            'acima-do-fgc',
+            'sem-proventos',
+            'primeiro-mes-sem-rentabilidade',
+            'classe-sem-historico'
+        ]) {
+            expect(ids).toContain(id);
+        }
+    });
+
+    it('a referência passa em todas as checagens', () => {
+        expect(checksOf(answered(good, good.reference))).toEqual([]);
+    });
+
+    it('number reprova número que não está na entrada', () => {
+        const outcome: CheckOutcome = answered(good, ['Sua carteira rendeu **+6,40%** em outubro, acima do CDI.', 'Foi um mês bom.']);
+
+        expect(checksOf(outcome)).toContain('number');
+    });
+
+    it('forbidden_term reprova conselho e promessa', () => {
+        for (const text of [
+            'Sua carteira rendeu **+2,10%** em outubro. Venda as ações.',
+            'Sua carteira rendeu **+2,10%** em outubro. Aumente a renda fixa.',
+            'Sua carteira rendeu **+2,10%** em outubro. Isso vai continuar no próximo mês.',
+            'Sua carteira rendeu **+2,10%** em outubro. Tende a seguir assim.'
+        ]) {
+            expect(checksOf(answered(good, [text]))).toContain('forbidden_term');
+        }
+    });
+
+    it('no_notice_in_model_text reprova o aviso escrito pelo modelo', () => {
+        const outcome: CheckOutcome = answered(good, [
+            'Sua carteira rendeu **+2,10%** em outubro, acima do CDI (+0,95%).',
+            'Isto não é uma recomendação de investimento.'
+        ]);
+
+        expect(checksOf(outcome)).toContain('no_notice_in_model_text');
+    });
+
+    it('sentences reprova mais de 4 frases', () => {
+        const outcome: CheckOutcome = answered(good, [
+            'Sua carteira rendeu **+2,10%** em outubro, acima do CDI (+0,95%). Foi bom. Foi muito bom. Foi ótimo. Foi o melhor.'
+        ]);
+
+        expect(checksOf(outcome)).toContain('sentences');
+    });
+
+    it('sem rentabilidade, o texto que fala de rentabilidade ou de CDI reprova', () => {
+        const outcome: CheckOutcome = answered(firstMonth, ['Sua carteira rendeu bem em outubro, acima do CDI.']);
+
+        expect(checksOf(outcome)).toEqual(expect.arrayContaining(['forbidden_text']));
+    });
+
+    it('classe sem histórico: citar a classe sem rentabilidade reprova', () => {
+        const outcome: CheckOutcome = answered(noHistory, [
+            'Sua carteira rendeu **+1,30%** em outubro, acima do CDI (+0,95%).',
+            '[[cls:cripto]] foi a classe de menor resultado.'
+        ]);
+
+        expect(checksOf(outcome)).toContain('forbidden_text');
+    });
+});

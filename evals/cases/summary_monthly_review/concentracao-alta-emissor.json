@@ -1,0 +1,54 @@
+{
+  "id": "concentracao-alta-emissor",
+  "task": "summary_monthly_review",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:rf_ipca": "Renda fixa IPCA+"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "+1,10%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "rentabilidade_pct": "+1,00%"
+      },
+      {
+        "chave": "rf_ipca",
+        "rotulo_padrao": "Renda fixa IPCA+",
+        "rentabilidade_pct": "+1,30%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0,95%",
+      "ipca_pct": "+0,60%",
+      "ibovespa_pct": null
+    },
+    "maiores_altas": [],
+    "maiores_quedas": [],
+    "proventos_pct_carteira": "0,30%",
+    "concentracao": {
+      "maior_emissor_pct": "38%",
+      "maior_setor_pct": "52%",
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["+1,10%", "38%"],
+    "mustMention": ["emissor"],
+    "mustNotMention": [],
+    "sentences": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira rendeu **+1,10%** em outubro, acima do CDI (+0,95%) e do IPCA (+0,60%).",
+    "[[cls:rf_ipca]] foi a classe de melhor resultado (+1,30%) e [[cls:rf_pos]] a de menor (+1,00%).",
+    "A carteira recebeu proventos no mês, 0,30% do seu valor.",
+    "Um único emissor concentra 38% da carteira."
+  ]
+}

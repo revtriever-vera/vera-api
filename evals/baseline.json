@@ -43,6 +43,13 @@
       "judgeAverage": 4.61,
       "averageLatencyMs": 3144,
       "costBrlPerRun": 0.0572
+    },
+    "summary_monthly_review": {
+      "promptVersion": "v1",
+      "reasoning": "minimal",
+      "judgeAverage": 4.83,
+      "averageLatencyMs": 5187,
+      "costBrlPerRun": 0.0645
     }
   }
 }

@@ -1,0 +1,61 @@
+{
+  "id": "primeiro-mes-sem-rentabilidade",
+  "task": "summary_monthly_review",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_br": "Ações Brasil",
+    "cls:rf_pos": "Renda fixa pós",
+    "ativo:custom_1": "Petrobras",
+    "ativo:custom_2": "Vale"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": null,
+    "sem_rentabilidade_motivo": "no_previous_snapshot",
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "rentabilidade_pct": null
+      },
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "rentabilidade_pct": null
+      }
+    ],
+    "indices": {
+      "cdi_pct": null,
+      "ipca_pct": null,
+      "ibovespa_pct": null
+    },
+    "maiores_altas": [
+      {
+        "chave": "custom_1",
+        "variacao_pct": "+7,00%"
+      }
+    ],
+    "maiores_quedas": [
+      {
+        "chave": "custom_2",
+        "variacao_pct": "-4,00%"
+      }
+    ],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": [],
+    "mustMention": [],
+    "mustNotMention": ["rentabilidade", "rendeu", "CDI", "Ibovespa", "IPCA", "provento"],
+    "sentences": {
+      "min": 1,
+      "max": 4
+    }
+  },
+  "reference": ["No preço, [[ativo:custom_1]] subiu +7,00% e [[ativo:custom_2]] caiu -4,00%."]
+}

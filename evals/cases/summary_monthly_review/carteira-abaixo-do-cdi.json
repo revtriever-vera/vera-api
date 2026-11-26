@@ -1,0 +1,52 @@
+{
+  "id": "carteira-abaixo-do-cdi",
+  "task": "summary_monthly_review",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:fii": "FIIs",
+    "cls:rf_pos": "Renda fixa pós"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "+0,40%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "fii",
+        "rotulo_padrao": "FIIs",
+        "rentabilidade_pct": "+0,10%"
+      },
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "rentabilidade_pct": "+0,90%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0,95%",
+      "ipca_pct": null,
+      "ibovespa_pct": "+1,50%"
+    },
+    "maiores_altas": [],
+    "maiores_quedas": [],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["+0,40%"],
+    "mustMention": ["abaixo do CDI"],
+    "mustNotMention": ["provento"],
+    "sentences": {
+      "min": 2,
+      "max": 3
+    }
+  },
+  "reference": [
+    "Sua carteira rendeu **+0,40%** em outubro, abaixo do CDI (+0,95%) e do Ibovespa (+1,50%).",
+    "[[cls:rf_pos]] foi a classe de melhor resultado (+0,90%) e [[cls:fii]] a de menor (+0,10%)."
+  ]
+}
