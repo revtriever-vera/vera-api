@@ -15,6 +15,7 @@
       "asset_lookup",
       "fund_performance",
       "fixed_income_vs_benchmark",
+      "fixed_income_maturities",
       "market_benchmarks",
       "portfolio_overview"
     ]
