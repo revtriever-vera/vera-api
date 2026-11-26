@@ -8,7 +8,7 @@ const TASK: Readonly<Record<AppLocale, string>> = {
         'se rentabilidade_pct for nulo, não fale de rentabilidade, nem da carteira nem de classes, nem compare com índices: comece pelas altas e quedas do mês. ' +
         '(2) Cite as classes de por_classe só quando a rentabilidade_pct delas existir, no máximo duas, pela de maior e pela de menor valor; classe com rentabilidade_pct nulo não ganha número nem estimativa. ' +
         '(3) Se houver maiores_altas ou maiores_quedas, cite até um ativo de cada, pelo marcador, com a variacao_pct, dizendo só que o preço subiu ou caiu. ' +
-        '(4) Se proventos_pct_carteira existir, diga que a carteira recebeu proventos no mês e quanto isso representa; sem ele, não fale de proventos. ' +
+        '(4) Se proventos_pct_carteira existir, diga que a carteira recebeu proventos no mês e escreva o percentual sempre dizendo do quê, com as palavras "do valor da carteira" (ex.: "proventos equivalentes a 0,47% do valor da carteira"); nunca deixe esse percentual solto, que parece rentabilidade; sem ele, não fale de proventos. ' +
         '(5) Se concentracao.acima_do_fgc for verdadeiro, diga que há valor acima do limite do FGC; se maior_emissor_pct existir e for alto, diga que um único emissor concentra esse percentual da carteira. ' +
         'Descreva o que aconteceu, sem dizer o que fazer, sem prever o próximo mês e sem repetir o aviso de que não é recomendação de compra ou venda (o sistema o escreve).',
     en:
@@ -17,7 +17,7 @@ const TASK: Readonly<Record<AppLocale, string>> = {
         "if rentabilidade_pct is null, do not talk about returns, neither for the portfolio nor for classes, and do not compare with indices: start with the month's rises and falls. " +
         '(2) Mention the classes in por_classe only when their rentabilidade_pct exists, at most two, the highest and the lowest; a class with null rentabilidade_pct gets no number and no estimate. ' +
         '(3) If there are maiores_altas or maiores_quedas, mention up to one asset of each, through its marker, with the variacao_pct, saying only that the price rose or fell. ' +
-        '(4) If proventos_pct_carteira exists, say that the portfolio received income in the month and how much that is; without it, say nothing about income. ' +
+        '(4) If proventos_pct_carteira exists, say that the portfolio received income in the month and always say what the percentage is of, with the words "of the portfolio value" (e.g. "income equal to 0.47% of the portfolio value"); never leave that percentage alone, as it reads like a return; without it, say nothing about income. ' +
         '(5) If concentracao.acima_do_fgc is true, say there is an amount above the FGC limit; if maior_emissor_pct exists and is high, say a single issuer holds that share of the portfolio. ' +
         'Describe what happened, without saying what to do, without predicting next month and without repeating the notice that this is not a recommendation to buy or sell (the system writes it).'
 };
