@@ -134,3 +134,18 @@ export const changesResponseSchema = z.object({
 });
 
 export type ChangesResponse = z.infer<typeof changesResponseSchema>;
+
+export const weeklyPayloadSchema = z.object({ companyId: z.string().uuid() });
+
+export type WeeklyPayload = z.infer<typeof weeklyPayloadSchema>;
+
+export const weeklyChangePropSchema = z.object({
+    symbol: z.string(),
+    title: z.string(),
+    summary: z.string(),
+    documentUrl: z.string()
+});
+
+export const weeklyChangesPropSchema = z.array(weeklyChangePropSchema).min(1);
+
+export type WeeklyChangeProp = z.infer<typeof weeklyChangePropSchema>;

@@ -34,4 +34,12 @@ export class PortfolioWatchLogService {
     public dailyEvaluated(entries: number, emails: number): void {
         this.logService.info({ message: 'portfolio daily notices evaluated', identifier: LOG_IDENTIFIER, meta: { entries, emails } });
     }
+
+    public weeklyFanOut(companies: number): void {
+        this.logService.info({ message: 'portfolio weekly changes fan-out queued', identifier: LOG_IDENTIFIER, meta: { companies } });
+    }
+
+    public weeklyEvaluated(items: number, emails: number): void {
+        this.logService.info({ message: 'portfolio weekly changes evaluated', identifier: LOG_IDENTIFIER, meta: { items, emails } });
+    }
 }
