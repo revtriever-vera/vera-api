@@ -33,9 +33,9 @@
     "ask_vera_app_step": {
       "promptVersion": "v6",
       "reasoning": "minimal",
-      "judgeAverage": 4.31,
-      "averageLatencyMs": 4889,
-      "costBrlPerRun": 0.7283
+      "judgeAverage": 4.22,
+      "averageLatencyMs": 4936,
+      "costBrlPerRun": 0.5684
     }
   }
 }
