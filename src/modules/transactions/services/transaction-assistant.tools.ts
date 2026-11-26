@@ -56,6 +56,10 @@ export class TransactionCategorizeExecutor extends AssistantActionExecutorPort {
         return this.assistant.candidates(payload);
     }
 
+    public override alwaysOf(payload: JsonObject): boolean | null {
+        return this.assistant.alwaysOf(payload);
+    }
+
     public async execute(payload: JsonObject, choice: ActionChoice | null): Promise<ActionOutcome> {
         return { text: await this.assistant.categorize(payload, choice), reference: null };
     }
