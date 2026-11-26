@@ -34,6 +34,7 @@ function setup(
     };
     const logs = { sent: vi.fn(), released: vi.fn() };
     const links = {
+        appUrl: vi.fn().mockReturnValue('https://app.vera.example'),
         urlFor: vi
             .fn()
             .mockImplementation((subject: { type: string }) => `https://api.vera.example/notifications/unsubscribe/${subject.type}`)
@@ -146,7 +147,7 @@ describe('NoticeService', () => {
             goal_behind: 'https://api.vera.example/notifications/unsubscribe/goal_behind',
             goal_late: 'https://api.vera.example/notifications/unsubscribe/goal_late'
         });
-        expect(first.props).toMatchObject({ extra: '1', firstName: 'Ana' });
+        expect(first.props).toMatchObject({ extra: '1', firstName: 'Ana', appUrl: 'https://app.vera.example' });
     });
 
     it('leaves out the types a person turned off and sends nothing when every entry was already sent', async () => {

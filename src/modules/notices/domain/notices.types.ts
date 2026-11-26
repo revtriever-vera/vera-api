@@ -29,6 +29,7 @@ export interface DigestRequest {
 
 export const DIGEST_ENTRIES_PROP: string = 'entries';
 export const DIGEST_UNSUBSCRIBE_PROP: string = 'unsubscribeUrls';
+export const DIGEST_APP_URL_PROP: string = 'appUrl';
 
 export interface NoticeOutcome {
     readonly sent: number;

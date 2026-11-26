@@ -37,6 +37,7 @@ describe('UnsubscribeLinkService', () => {
 
         expect(service().urlFor(SUBJECT)).toBe(`https://api.vera.example/notifications/unsubscribe/${token}`);
         expect(service().pageUrlOf(token)).toBe(`https://app.vera.example/avisos/sair/${encodeURIComponent(token)}`);
+        expect(service().appUrl()).toBe('https://app.vera.example');
     });
 
     it('rejects a token signed with another key, a changed body, extra parts and garbage', () => {

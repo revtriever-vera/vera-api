@@ -5,6 +5,7 @@ import { MemberRecipient, MemberRecipientsService } from '../../identity/service
 import { NoticePreferenceDomain } from '../domain/notice-preference.domain';
 import { NoticeSendDomain } from '../domain/notice-send.domain';
 import {
+    DIGEST_APP_URL_PROP,
     DIGEST_ENTRIES_PROP,
     DIGEST_UNSUBSCRIBE_PROP,
     DigestEntry,
@@ -36,7 +37,7 @@ function digestEntriesFor(
     return entries.filter((entry: DigestEntry): boolean => optedOut.get(entry.type)?.has(userId) !== true);
 }
 
-export { DIGEST_ENTRIES_PROP, DIGEST_UNSUBSCRIBE_PROP };
+export { DIGEST_APP_URL_PROP, DIGEST_ENTRIES_PROP, DIGEST_UNSUBSCRIBE_PROP };
 export type { DigestEntry, DigestRequest };
 
 interface PendingNotice {
@@ -151,6 +152,7 @@ export class NoticeService {
                 firstName: context.recipient.firstName,
                 [DIGEST_ENTRIES_PROP]: JSON.stringify(claimed.map(({ entry }: ClaimedEntry) => ({ type: entry.type, ...entry.data }))),
                 [DIGEST_UNSUBSCRIBE_PROP]: JSON.stringify(context.urls),
+                [DIGEST_APP_URL_PROP]: this.links.appUrl(),
                 unsubscribeUrl
             },
             to: { email: context.recipient.email, name: context.recipient.firstName },
