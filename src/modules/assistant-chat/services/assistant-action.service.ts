@@ -9,7 +9,7 @@ import { ActionExpiredError, ActionNotFoundError, ActionResolvedError } from '..
 import { ACTION_STATUSES, AssistantMessage, AssistantPendingAction } from '../domain/assistant-chat.types';
 import { AssistantPendingActionDomain } from '../domain/assistant-pending-action.domain';
 import { ActionCandidate, ActionOutcome, AssistantActionExecutorPort } from './assistant-action-executor.port';
-import { ConfirmationStaleError } from './assistant-action.errors';
+import { ActionAlwaysNotApplicableError, ConfirmationStaleError } from './assistant-action.errors';
 import { AssistantActionRegistry } from './assistant-action.registry';
 import { AssistantChatLogService } from './assistant-chat-log.service';
 import { ActionSummaryView, ActionView, ConfirmActionBody } from '../validation/assistant-chat.schemas';
@@ -54,18 +54,21 @@ export class AssistantActionService {
         const summary: ActionSummaryView = actionSummaryOf(action, now);
         const executor: AssistantActionExecutorPort | null = this.registry.executorFor(action.tool);
         if (summary.status !== ACTION_STATUSES.open || executor === null) {
-            return { ...summary, candidates: [], importPreview: null };
+            return { ...summary, always: executor?.alwaysOf(action.payload as JsonObject) ?? null, candidates: [], importPreview: null };
         }
         const payload: JsonObject = action.payload as JsonObject;
         const candidates: readonly ActionCandidate[] = await executor.candidates(payload);
         const importPreview: JsonObject | null = await executor.preview(payload);
-        return { ...summary, candidates: [...candidates], importPreview };
+        return { ...summary, always: executor.alwaysOf(payload), candidates: [...candidates], importPreview };
     }
 
     public async confirm(id: string, body: ConfirmActionBody): Promise<ActionSummaryView> {
         const action: AssistantPendingAction = await this.owned(id);
         this.assertOpen(action);
         const executor: AssistantActionExecutorPort = this.executorOf(action);
+        if (body.always !== undefined && executor.alwaysOf(action.payload as JsonObject) === null) {
+            throw new ActionAlwaysNotApplicableError();
+        }
         try {
             await this.assertFresh(action, executor);
             const outcome: ActionOutcome = await this.run(action, executor, body);

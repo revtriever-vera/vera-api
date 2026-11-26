@@ -1,0 +1,58 @@
+{
+  "id": "classe-sem-historico",
+  "task": "summary_monthly_review",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_br": "Ações Brasil",
+    "cls:rf_pos": "Renda fixa pós",
+    "cls:cripto": "Cripto"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "+1,30%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "rentabilidade_pct": "+2,20%"
+      },
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "rentabilidade_pct": "+0,95%"
+      },
+      {
+        "chave": "cripto",
+        "rotulo_padrao": "Cripto",
+        "rentabilidade_pct": null
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0,95%",
+      "ipca_pct": "+0,60%",
+      "ibovespa_pct": null
+    },
+    "maiores_altas": [],
+    "maiores_quedas": [],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["+1,30%"],
+    "mustMention": [],
+    "mustNotMention": ["Cripto", "provento"],
+    "sentences": {
+      "min": 2,
+      "max": 3
+    }
+  },
+  "reference": [
+    "Sua carteira rendeu **+1,30%** em outubro, acima do CDI (+0,95%) e do IPCA (+0,60%).",
+    "[[cls:acoes_br]] foi a classe de melhor resultado (+2,20%) e [[cls:rf_pos]] a de menor (+0,95%)."
+  ]
+}

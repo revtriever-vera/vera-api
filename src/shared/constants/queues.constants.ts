@@ -14,8 +14,11 @@ export const QUEUES = {
     recurring: 'vera-recurring',
     goalNotices: 'vera-goal-notices',
     recurringNotices: 'vera-recurring-notices',
+    portfolioWatch: 'vera-portfolio-watch',
     billing: 'vera-billing',
-    investmentImport: 'vera-investment-import'
+    investmentImport: 'vera-investment-import',
+    portfolioEvents: 'vera-portfolio-events',
+    marketDocuments: 'vera-market-documents'
 } as const;
 
 export const MESSAGE_TYPES = {
@@ -59,6 +62,14 @@ export const MESSAGE_TYPES = {
     recurringDailyRequested: 'recurring.daily.requested',
     goalNoticesDailyRequested: 'goal-notices.daily.requested',
     goalNoticesEvaluateRequested: 'goal-notices.evaluate.requested',
+    portfolioWatchMonthlySnapshotRequested: 'portfolio-watch.monthly-snapshot.requested',
+    portfolioWatchMonthlySnapshotCompanyRequested: 'portfolio-watch.monthly-snapshot.company.requested',
+    portfolioWatchDailyRequested: 'portfolio-watch.daily.requested',
+    portfolioWatchDailyCompanyRequested: 'portfolio-watch.daily.company.requested',
+    portfolioWatchWeeklyChangesRequested: 'portfolio-watch.weekly-changes.requested',
+    portfolioWatchWeeklyChangesCompanyRequested: 'portfolio-watch.weekly-changes.company.requested',
+    portfolioWatchMonthlyReviewRequested: 'portfolio-watch.monthly-review.requested',
+    portfolioWatchMonthlyReviewCompanyRequested: 'portfolio-watch.monthly-review.company.requested',
     recurringNoticesDailyRequested: 'recurring-notices.daily.requested',
     recurringNoticesScheduleRequested: 'recurring-notices.schedule.requested',
     recurringWeekDue: 'recurring-notices.week.due',
@@ -68,7 +79,11 @@ export const MESSAGE_TYPES = {
     billingEventsReplayRequested: 'billing.events-replay.requested',
     billingInvoicesReconcileRequested: 'billing.invoices-reconcile.requested',
     billingStandingSweepRequested: 'billing.standing-sweep.requested',
-    billingTrialSweepRequested: 'billing.trial-sweep.requested'
+    billingTrialSweepRequested: 'billing.trial-sweep.requested',
+    portfolioEventsDailyRequested: 'portfolio-events.daily.requested',
+    portfolioEventsLinksRequested: 'portfolio-events.links.requested',
+    portfolioEventsBatchRequested: 'portfolio-events.batch.requested',
+    marketDocumentsSweepRequested: 'market-documents.sweep.requested'
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

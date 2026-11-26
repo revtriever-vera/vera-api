@@ -1,0 +1,32 @@
+{
+  "id": "fato-relevante-aquisicao",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Metalúrgica Horizonte (empresa fictícia)",
+    "tickers": ["MHRZ3"],
+    "category": "Fato Relevante",
+    "publishedAt": "2026-03-12",
+    "text": "FATO RELEVANTE. A Metalúrgica Horizonte comunica que celebrou contrato para adquirir 100% das ações da Laminados do Sul pelo valor de R$ 1,2 bilhão, sujeito à aprovação do CADE. O pagamento será feito em dinheiro na data de fechamento, prevista para o segundo semestre de 2026. A operação amplia a capacidade de produção da companhia em 18%."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["1,2 bilhão"],
+    "mustMention": ["Laminados do Sul"],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "relevant_fact",
+    "relevance": 3,
+    "discard": false,
+    "numbers": ["100%", "R$ 1,2 bilhão", "2026"]
+  },
+  "reference": [
+    "A Metalúrgica Horizonte firmou contrato para comprar 100% da Laminados do Sul por R$ 1,2 bilhão, pagos em dinheiro. A operação depende de aprovação do CADE e deve fechar no segundo semestre de 2026."
+  ]
+}

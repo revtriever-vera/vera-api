@@ -44,6 +44,22 @@ export class InvestmentOperationsRepository extends TenantRepository<'Investment
         return this.findMany({}, { limit: MAX_OPERATIONS_PER_IMPORT, orderBy: ORDER_BY_DAY });
     }
 
+    public async listTradedBetween(from: string, to: string): Promise<InvestmentOperation[]> {
+        return this.selectScoped()
+            .selectAll()
+            .where('deletedAt', 'is', null)
+            .where('tradeDate', '>=', this.rawSql<Date>`${from}::date`)
+            .where('tradeDate', '<=', this.rawSql<Date>`${to}::date`)
+            .orderBy('tradeDate', 'asc')
+            .orderBy('lineNumber', 'asc')
+            .limit(MAX_OPERATIONS_PER_IMPORT)
+            .execute();
+    }
+
+    public async hasAny(): Promise<boolean> {
+        return (await this.findMany({}, { limit: 1 })).length > 0;
+    }
+
     public async listCreatedAfter(assetIds: readonly string[], after: Date): Promise<InvestmentOperation[]> {
         return this.findMany(
             { assetId: assetIds, createdAt: { '>': after } },

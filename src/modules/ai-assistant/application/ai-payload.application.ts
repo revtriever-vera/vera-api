@@ -4,17 +4,19 @@ import { ContributionPlannerService, ContributionSuggestion } from '../../contri
 import { PortfolioSnapshot, PortfolioSnapshotService } from '../../portfolio/services/portfolio-snapshot.service';
 import { SpendingCutsService } from '../../spending-cuts/services/spending-cuts.service';
 import { MonthlySummary, SpendingSummaryService } from '../../spending-summary/services/spending-summary.service';
-import { AiPayloadKind } from '../domain/ai-assistant.types';
 import { AI_NOTICE_VERSION } from '../domain/ai-notice';
+import { GeneratedSummaryKind } from '../domain/summary.types';
 import { AiContext, BuiltContext } from '../domain/context/ai-context.types';
 import { serializeContext } from '../domain/context/context-hash';
 import { AiAssistantLogService } from '../services/ai-assistant-log.service';
 import { AiAssistantMetricsService } from '../services/ai-assistant-metrics.service';
 import { AiContextBuilderService } from '../services/ai-context-builder.service';
+import { MonthlyReviewSourceRegistry } from '../services/monthly-review-source.registry';
+import { MonthlyReviewSourceView } from '../services/monthly-review-source.port';
 import { PayloadQuery } from '../validation/ai-payload.schemas';
 
 export interface AiPayloadView {
-    readonly kind: AiPayloadKind;
+    readonly kind: GeneratedSummaryKind;
     readonly noticeVersion: number;
     readonly payload: AiContext;
 }
@@ -27,6 +29,7 @@ export class AiPayloadApplication {
         private readonly snapshots: PortfolioSnapshotService,
         private readonly planner: ContributionPlannerService,
         private readonly builder: AiContextBuilderService,
+        private readonly reviews: MonthlyReviewSourceRegistry,
         private readonly logs: AiAssistantLogService,
         private readonly metrics: AiAssistantMetricsService
     ) {}
@@ -46,11 +49,19 @@ export class AiPayloadApplication {
         if (query.kind === 'portfolio') {
             return this.portfolio(query.contributionMinor);
         }
+        if (query.kind === 'monthly_review') {
+            return this.monthlyReview(query.month);
+        }
         const summary: MonthlySummary = await this.summaries.build(query.month ?? null);
         if (!summary.hasData) {
             return null;
         }
         return query.kind === 'month' ? this.builder.month(summary) : this.builder.cuts(this.cuts.compute(summary, query.goalBps));
+    }
+
+    private async monthlyReview(month: string | undefined): Promise<BuiltContext<AiContext> | null> {
+        const source: MonthlyReviewSourceView | null = month === undefined ? null : await this.reviews.of(month);
+        return source === null ? null : this.builder.monthlyReview(source.review, source.labels);
     }
 
     private async portfolio(contributionMinor: number | undefined): Promise<BuiltContext<AiContext> | null> {

@@ -1,0 +1,32 @@
+{
+  "id": "aviso-rendimento-fii",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Fundo Torres Logísticas (fictício)",
+    "tickers": ["TRLG11"],
+    "category": "Aviso aos Cotistas - Estruturado",
+    "publishedAt": "2026-06-05",
+    "text": "AVISO AOS COTISTAS. O Fundo informa que distribuirá rendimentos referentes a maio de 2026 no valor de R$ 0,92 por cota. Têm direito os cotistas posicionados em 10 de junho de 2026, e o pagamento será realizado em 17 de junho de 2026."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["0,92"],
+    "mustMention": ["por cota"],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "income",
+    "relevance": 2,
+    "discard": false,
+    "numbers": ["R$ 0,92", "10", "17", "2026"]
+  },
+  "reference": [
+    "O fundo vai distribuir R$ 0,92 por cota de rendimentos referentes a maio de 2026. Quem estiver posicionado em 10 de junho recebe em 17 de junho de 2026."
+  ]
+}

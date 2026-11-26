@@ -1,0 +1,32 @@
+{
+  "id": "juros-sobre-capital-proprio",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Bancorp Litoral (empresa fictícia)",
+    "tickers": ["BLIT4"],
+    "category": "Aviso aos Acionistas",
+    "publishedAt": "2026-11-05",
+    "text": "AVISO AOS ACIONISTAS. O Conselho de Administração aprovou o pagamento de juros sobre capital próprio no valor bruto de R$ 0,35 por ação, com retenção de 15% de imposto de renda na fonte. Terão direito os acionistas posicionados em 18 de novembro de 2026, com pagamento até 30 de março de 2027."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["0,35"],
+    "mustMention": [],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "income",
+    "relevance": 2,
+    "discard": false,
+    "numbers": ["R$ 0,35", "15%", "18", "2026", "30", "2027"]
+  },
+  "reference": [
+    "A Bancorp Litoral aprovou juros sobre capital próprio de R$ 0,35 por ação, valor bruto, com 15% de imposto retido na fonte. Têm direito os acionistas posicionados em 18 de novembro de 2026, e o pagamento sai até 30 de março de 2027."
+  ]
+}

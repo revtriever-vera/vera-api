@@ -1,13 +1,13 @@
-import { LlmFeature } from '../llm.types';
+import { TenantLlmFeature } from '../llm.types';
 
 export interface LlmRoomInput {
-    readonly feature: LlmFeature;
+    readonly feature: TenantLlmFeature;
     readonly task: string;
     readonly estimateMicros: number;
 }
 
 export interface LlmRecordInput {
-    readonly feature: LlmFeature;
+    readonly feature: TenantLlmFeature;
     readonly task: string;
     readonly referenceId: string;
     readonly costMicros: number;

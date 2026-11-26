@@ -1,0 +1,59 @@
+{
+  "id": "mes-ruim",
+  "task": "summary_monthly_review",
+  "locale": "pt-BR",
+  "labels": {
+    "cls:acoes_br": "Ações Brasil",
+    "cls:rf_pos": "Renda fixa pós",
+    "ativo:custom_2": "Vale"
+  },
+  "context": {
+    "mes": "2026-10",
+    "rentabilidade_pct": "-1,80%",
+    "sem_rentabilidade_motivo": null,
+    "por_classe": [
+      {
+        "chave": "acoes_br",
+        "rotulo_padrao": "Ações Brasil",
+        "rentabilidade_pct": "-5,10%"
+      },
+      {
+        "chave": "rf_pos",
+        "rotulo_padrao": "Renda fixa pós",
+        "rentabilidade_pct": "+0,95%"
+      }
+    ],
+    "indices": {
+      "cdi_pct": "+0,95%",
+      "ipca_pct": "+0,60%",
+      "ibovespa_pct": "-4,20%"
+    },
+    "maiores_altas": [],
+    "maiores_quedas": [
+      {
+        "chave": "custom_2",
+        "variacao_pct": "-12,00%"
+      }
+    ],
+    "proventos_pct_carteira": null,
+    "concentracao": {
+      "maior_emissor_pct": null,
+      "maior_setor_pct": null,
+      "acima_do_fgc": false
+    }
+  },
+  "expect": {
+    "mustCite": ["-1,80%"],
+    "mustMention": ["abaixo do CDI"],
+    "mustNotMention": ["provento"],
+    "sentences": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "reference": [
+    "Sua carteira rendeu **-1,80%** em outubro, abaixo do CDI (+0,95%) e do IPCA (+0,60%), e acima do Ibovespa (-4,20%).",
+    "[[cls:rf_pos]] foi a classe de melhor resultado (+0,95%) e [[cls:acoes_br]] a de menor (-5,10%).",
+    "No preço, [[ativo:custom_2]] caiu -12,00%."
+  ]
+}

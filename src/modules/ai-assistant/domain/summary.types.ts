@@ -6,11 +6,20 @@ import { AiContext, BuiltContext } from './context/ai-context.types';
 
 export type SummaryKind = AiPayloadKind;
 
+export const MONTHLY_REVIEW_KIND = 'monthly_review' as const;
+
+export type GeneratedSummaryKind = SummaryKind | typeof MONTHLY_REVIEW_KIND;
+
 export const SUMMARY_SOURCES = { model: 'model', fixed: 'fixed' } as const;
 
 export type SummarySourceKind = (typeof SUMMARY_SOURCES)[keyof typeof SUMMARY_SOURCES];
 
-export const SUMMARY_TASKS = { month: 'summary_month', cuts: 'summary_cuts', portfolio: 'summary_portfolio' } as const;
+export const SUMMARY_TASKS = {
+    month: 'summary_month',
+    cuts: 'summary_cuts',
+    portfolio: 'summary_portfolio',
+    monthly_review: 'summary_monthly_review'
+} as const;
 
 export type AiSummary = Selectable<AiSummaries>;
 
@@ -46,7 +55,7 @@ export interface SummaryView {
 }
 
 export interface SaveSummaryInput {
-    readonly kind: SummaryKind;
+    readonly kind: GeneratedSummaryKind;
     readonly periodKey: string;
     readonly locale: string;
     readonly contextHash: string;

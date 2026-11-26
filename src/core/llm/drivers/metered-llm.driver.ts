@@ -156,7 +156,7 @@ export class MeteredLlmDriver extends LlmPort {
 
     private async assertNotRepeated(call: Call): Promise<void> {
         const since: Date = new Date(Date.now() - REPEAT_WINDOW_MS);
-        const answered: number = await this.ledger.answeredSince(call.requestHash, since);
+        const answered: number = await this.ledger.answeredSince(call.requestHash, since, call.request.feature);
         if (answered > this.config.LLM_REPEAT_LIMIT) {
             throw new LlmRepeatedRequestError(call.request.task, answered);
         }

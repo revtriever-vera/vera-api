@@ -12,7 +12,7 @@ export interface RenderOptions {
     readonly requireMarker?: boolean;
 }
 
-const MARKER: RegExp = /\[\[(cat|cls):([a-z0-9_]+)\]\]/g;
+const MARKER: RegExp = /\[\[(cat|cls|ativo):([a-z0-9_]+)\]\]/g;
 const LEFTOVER: RegExp = /\[\[|\]\]/;
 
 @Injectable()

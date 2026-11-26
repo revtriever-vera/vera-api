@@ -1,0 +1,32 @@
+{
+  "id": "noticia-eua-em-ingles",
+  "task": "market_document_summary",
+  "locale": "pt-BR",
+  "labels": {},
+  "document": {
+    "issuer": "Pioneer Cloud Inc. (empresa fictícia)",
+    "tickers": ["PCLD"],
+    "category": "News",
+    "publishedAt": "2026-10-21",
+    "text": "Pioneer Cloud Inc. said on Tuesday it agreed to acquire data security startup Vaultline for $850 million in cash and stock. The deal, expected to close in the first quarter of 2027, adds about $120 million in annual revenue. Pioneer Cloud shares rose 4% in after-hours trading."
+  },
+  "expectDiscard": false,
+  "expect": {
+    "mustCite": ["850"],
+    "mustMention": ["Vaultline"],
+    "mustNotMention": ["compre", "venda", "vale a pena", "vai subir", "vai cair", "acquire", "annual revenue"],
+    "sentences": {
+      "min": 1,
+      "max": 3
+    }
+  },
+  "referenceOutput": {
+    "kind": "relevant_fact",
+    "relevance": 3,
+    "discard": false,
+    "numbers": ["$850 million", "2027", "$120 million"]
+  },
+  "reference": [
+    "A Pioneer Cloud acordou comprar a startup de segurança de dados Vaultline por US$ 850 milhões em dinheiro e ações. O negócio deve fechar no primeiro trimestre de 2027 e soma cerca de US$ 120 milhões em receita anual."
+  ]
+}

@@ -66,7 +66,13 @@ export const confirmActionBodySchema = z
             .array(z.record(z.string(), z.unknown()))
             .max(MAX_IMPORT_CORRECTIONS)
             .optional()
-            .describe('Import cards only: decision by fixed income line, the `fixedIncome` of POST /investment-imports')
+            .describe('Import cards only: decision by fixed income line, the `fixedIncome` of POST /investment-imports'),
+        always: z
+            .boolean()
+            .optional()
+            .describe(
+                'Categorize cards only: whether to also save the "always to this category" rule. When sent, it replaces what the assistant proposed; other cards answer 422 (assistant.action_always_not_applicable)'
+            )
     })
     .strict();
 
@@ -93,6 +99,10 @@ const actionCandidateSchema = z.object({
 });
 
 export const actionViewSchema = actionSummarySchema.extend({
+    always: z
+        .boolean()
+        .nullable()
+        .describe('Categorize cards: whether the assistant proposed the "always to this category" rule; null for other actions'),
     candidates: z.array(actionCandidateSchema).describe('Transactions the person can pick from; empty for actions that need no choice'),
     importPreview: z
         .record(z.string(), z.unknown())

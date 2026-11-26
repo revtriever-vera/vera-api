@@ -4,10 +4,13 @@ import { SpendingSummaryService } from '../../spending-summary/services/spending
 import { AI_NOTICE_VERSION } from '../domain/ai-notice';
 import { AiAssistantLogService } from '../services/ai-assistant-log.service';
 import { AiAssistantMetricsService } from '../services/ai-assistant-metrics.service';
+import { MonthlyReviewSourceRegistry } from '../services/monthly-review-source.registry';
 import { AiContextBuilderService } from '../services/ai-context-builder.service';
 import { AiPayloadApplication } from './ai-payload.application';
 
-function build(overrides: { hasData?: boolean; empty?: boolean; planned?: unknown; cuts?: unknown } = {}) {
+function build(overrides: { hasData?: boolean; empty?: boolean; planned?: unknown; cuts?: unknown; source?: unknown } = {}) {
+    const source = vi.fn().mockResolvedValue(overrides.source ?? null);
+    const monthlyReview = vi.fn().mockReturnValue({ payload: { mes: '2026-10', rentabilidade_pct: '+1,00%' } });
     const month = vi.fn().mockReturnValue({ payload: { mes: '2026-10' } });
     const cutsBuilt = vi.fn().mockReturnValue(overrides.cuts === undefined ? { payload: { status: 'possivel' } } : overrides.cuts);
     const portfolio = vi.fn().mockReturnValue({ payload: { moeda_base: 'BRL' } });
@@ -21,11 +24,12 @@ function build(overrides: { hasData?: boolean; empty?: boolean; planned?: unknow
         { compute },
         { build: vi.fn().mockResolvedValue({ empty: overrides.empty ?? false }) } as unknown as PortfolioSnapshotService,
         { planOrNull },
-        { month, cuts: cutsBuilt, portfolio } as unknown as AiContextBuilderService,
+        { month, cuts: cutsBuilt, portfolio, monthlyReview } as unknown as AiContextBuilderService,
+        { of: source } as unknown as MonthlyReviewSourceRegistry,
         { payloadBuilt } as unknown as AiAssistantLogService,
         { contextBytes } as unknown as AiAssistantMetricsService
     );
-    return { application, buildSummary, compute, planOrNull, month, portfolio, payloadBuilt, contextBytes };
+    return { application, source, monthlyReview, buildSummary, compute, planOrNull, month, portfolio, payloadBuilt, contextBytes };
 }
 
 describe('AiPayloadApplication', () => {
@@ -71,5 +75,24 @@ describe('AiPayloadApplication', () => {
 
     it('carteira vazia: 204', async () => {
         expect(await build({ empty: true }).application.build({ kind: 'portfolio' })).toBeNull();
+    });
+
+    it('o Raio-X do mês monta o contexto da revisão guardada do mês pedido e conta os bytes', async () => {
+        const { application, source, monthlyReview, contextBytes } = build({ source: { review: { month: '2026-10' }, labels: [] } });
+
+        const view = await application.build({ kind: 'monthly_review', month: '2026-10' });
+
+        expect(source).toHaveBeenCalledWith('2026-10');
+        expect(monthlyReview).toHaveBeenCalledWith({ month: '2026-10' }, []);
+        expect(view).toMatchObject({ kind: 'monthly_review', payload: { mes: '2026-10' } });
+        expect(contextBytes).toHaveBeenCalledWith('monthly_review', expect.any(Number));
+    });
+
+    it('o Raio-X do mês sem mês ou sem revisão guardada não tem o que mostrar', async () => {
+        const without = build();
+
+        expect(await without.application.build({ kind: 'monthly_review' })).toBeNull();
+        expect(await without.application.build({ kind: 'monthly_review', month: '2026-10' })).toBeNull();
+        expect(without.source).toHaveBeenCalledTimes(1);
     });
 });

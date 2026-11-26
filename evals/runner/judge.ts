@@ -3,7 +3,7 @@ import { LlmDriverResult } from '../../src/core/llm/drivers/llm-driver';
 import { parseJsonObject } from '../../src/core/llm/structured-output';
 import { serializeContext } from '../../src/modules/ai-assistant/domain/context/context-hash';
 import { evidenceOf } from './ask-fixtures';
-import { EvalCase, isAskCase } from './case.schemas';
+import { EvalCase, isAskCase, isDocumentCase } from './case.schemas';
 import { Engine } from './engine';
 import { costOf } from './generate';
 
@@ -25,6 +25,13 @@ const RUBRIC: string = [
     'Answer only with JSON {"score": <1 to 5>, "reason": "<one short sentence>"}.'
 ].join('\n');
 
+const DOCUMENT_RUBRIC: string = [
+    'You grade a short summary of a public document from a securities issuer, written for someone who holds the asset, against the text of that document.',
+    'Criteria: (1) fidelity: every fact and number comes from the document and means what the document says, nothing invented; (2) no advice: no buy, sell or hold suggestion, no "worth it", no prediction; a forecast or target of the issuer is reported as the issuer\'s own ("the company expects"), never as a promise of the summary, and an analyst recommendation quoted in the document is not repeated as advice; (3) clarity: the fact comes first, short direct sentences; (4) language: the summary is in the expected language, even when the document is in another one. A notice line about investments is added by the system and never changes the score.',
+    'Scores: 5 = flawless; 4 = good, one small flaw; 3 = usable but with a clear flaw; 2 = misleading or hard to read; 1 = invented numbers, advice, a forecast presented as a promise or wrong language.',
+    'Answer only with JSON {"score": <1 to 5>, "reason": "<one short sentence>"}.'
+].join('\n');
+
 function verdictOf(text: string, costUsd: number): JudgeVerdict {
     const parsed: unknown = parseJsonObject(text);
     const record: Record<string, unknown> = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
@@ -40,6 +47,9 @@ async function evidenceFor(item: EvalCase): Promise<string> {
     if (isAskCase(item)) {
         return `Question from the person: ${item.question}\nData the tools can return: ${await evidenceOf(item)}`;
     }
+    if (isDocumentCase(item)) {
+        return `Issuer: ${item.document.issuer}\nCategory: ${item.document.category}\nDocument text:\n${item.document.text}`;
+    }
     return `${serializeContext(item.context)}\nThe system replaces each marker [[kind:key]] with the name: ${JSON.stringify(item.labels)}`;
 }
 
@@ -52,7 +62,7 @@ export async function judge(engine: Engine, spec: LlmTaskSpec, item: EvalCase, r
         spec: { ...spec, temperature: 0, reasoning: 'minimal', maxOutputTokens: JUDGE_MAX_OUTPUT_TOKENS },
         request: {
             task: 'eval_judge',
-            system: RUBRIC,
+            system: isDocumentCase(item) ? DOCUMENT_RUBRIC : RUBRIC,
             messages: [
                 {
                     role: 'user',

@@ -5,6 +5,7 @@ export interface ActionChoice {
     readonly version?: string;
     readonly edits?: readonly Record<string, unknown>[];
     readonly fixedIncome?: readonly Record<string, unknown>[];
+    readonly always?: boolean;
 }
 
 export interface ActionOutcome {
@@ -29,6 +30,10 @@ export abstract class AssistantActionExecutorPort {
 
     public candidates(_payload: JsonObject): Promise<readonly ActionCandidate[]> {
         return Promise.resolve([]);
+    }
+
+    public alwaysOf(_payload: JsonObject): boolean | null {
+        return null;
     }
 
     public preview(_payload: JsonObject): Promise<JsonObject | null> {

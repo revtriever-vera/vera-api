@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { MetricsService } from '../../../core/observability/metrics.service';
-import { AiConsentSource, AiPayloadKind } from '../domain/ai-assistant.types';
+import { AiConsentSource } from '../domain/ai-assistant.types';
 import { AskVeraOutcome } from '../domain/ask-vera.types';
 import { GuardCheck } from '../domain/summary-guard';
-import { SummaryKind } from '../domain/summary.types';
+import { GeneratedSummaryKind } from '../domain/summary.types';
 
 const CONSENT_TOTAL: string = 'vera_ai_consent_total';
 const CONTEXT_BYTES: string = 'vera_ai_context_bytes';
@@ -28,19 +28,19 @@ export class AiAssistantMetricsService {
         this.metrics.count(CONSENT_TOTAL, { action: 'revoked', source: 'none' });
     }
 
-    public contextBytes(kind: AiPayloadKind, bytes: number): void {
+    public contextBytes(kind: GeneratedSummaryKind, bytes: number): void {
         this.metrics.observe(CONTEXT_BYTES, bytes, { kind });
     }
 
-    public summary(kind: SummaryKind, outcome: SummaryOutcome): void {
+    public summary(kind: GeneratedSummaryKind, outcome: SummaryOutcome): void {
         this.metrics.count(SUMMARIES_TOTAL, { kind, outcome });
     }
 
-    public summaryGuardFailure(kind: SummaryKind, check: GuardCheck): void {
+    public summaryGuardFailure(kind: GeneratedSummaryKind, check: GuardCheck): void {
         this.metrics.count(GUARD_FAILURES_TOTAL, { kind, check });
     }
 
-    public summaryRegeneration(kind: SummaryKind): void {
+    public summaryRegeneration(kind: GeneratedSummaryKind): void {
         this.metrics.count(REGENERATIONS_TOTAL, { kind });
     }
 
