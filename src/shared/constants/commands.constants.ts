@@ -25,6 +25,7 @@ export const COMMAND_KEYS = {
     goalNoticesDaily: 'goal-notices-daily-command',
     recurringNoticesDaily: 'recurring-notices-daily-command',
     portfolioWatchMonthlySnapshot: 'portfolio-watch-monthly-snapshot-command',
+    portfolioWatchDaily: 'portfolio-watch-daily-command',
     billingProvisioningRescue: 'billing-provisioning-rescue-command',
     billingEventsReplay: 'billing-events-replay-command',
     billingInvoicesReconcile: 'billing-invoices-reconcile-command',
