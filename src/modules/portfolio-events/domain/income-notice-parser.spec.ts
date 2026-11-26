@@ -139,6 +139,25 @@ describe('parseIncomeNotices', () => {
     });
 
     describe('real notices of the CVM (QA of Fase 1)', () => {
+        it('takes the per-share value and the payment date from the table, never the total of the paragraph (BB Seguridade)', () => {
+            expect(parseIncomeNotices(notice('aviso-bbseguridade-dividendos-tabela'))).toEqual([
+                { kind: 'dividend', exDate: '2026-08-06', paymentDate: '2026-09-03', amountPerUnit: '1.98328466981', shareClass: null }
+            ]);
+        });
+
+        it.each([
+            [
+                'a total with thousands separators followed by a per-share label in the next sentence',
+                'AVISO AOS ACIONISTAS dividendos no montante de R$3.850.048.477,61. Dividendo por ação a definir. Posição acionária de 06/08/2026.'
+            ],
+            [
+                'a total in reais right before "por ação" in the same sentence',
+                'AVISO AOS ACIONISTAS dividendos de R$ 1.500.000,00 por ação, posição acionária de 06/08/2026.'
+            ]
+        ])('does not record %s as value per share', (_name: string, text: string) => {
+            expect(parseIncomeNotices(text)).toEqual([]);
+        });
+
         it('reads the data-com written with curly quotes and ignores the installments after it (Cemig)', () => {
             expect(parseIncomeNotices(notice('aviso-cemig-jcp-com-direitos'))).toEqual([
                 { kind: 'jcp', exDate: '2026-09-22', paymentDate: null, amountPerUnit: '0.06991340114', shareClass: null }
