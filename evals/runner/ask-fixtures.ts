@@ -26,6 +26,9 @@ import {
     buildFixedIncomeBenchmarkContext,
     buildFundPerformanceContext
 } from '../../src/modules/ai-assistant/domain/context/research.context';
+import { portfolioNewsOutputOf } from '../../src/modules/portfolio-watch/domain/portfolio-news-output';
+import type { ChangeItem } from '../../src/modules/portfolio-watch/domain/portfolio-changes.types';
+import { PortfolioNewsInput, portfolioNewsInputSchema } from '../../src/modules/portfolio-watch/validation/portfolio-news.schemas';
 import { HELP_CATALOG } from '../../src/modules/ai-assistant/domain/help/help-catalog';
 import { HelpRole } from '../../src/modules/ai-assistant/domain/help/help.types';
 import { HelpSearchTool } from '../../src/modules/ai-assistant/services/tools/help-search.tool';
@@ -84,6 +87,10 @@ const DESCRIPTIONS: Readonly<Record<string, Readonly<Record<AppLocale, string>>>
     fund_performance: {
         'pt-BR': 'Rentabilidade passada da cota de um fundo em 1, 3, 6, 12 e 36 meses contra o CDI, com a diferença já calculada.',
         en: 'Past return of a fund quota over 1, 3, 6, 12 and 36 months against the CDI, with the difference already computed.'
+    },
+    portfolio_news: {
+        'pt-BR': 'O que saiu de novo (fatos relevantes, resultados, proventos) sobre os ativos da carteira, com o peso de cada um.',
+        en: 'What is new (material facts, earnings, income) about the portfolio assets, with the weight of each one.'
     },
     fixed_income_vs_benchmark: {
         'pt-BR': 'Compara um título de renda fixa da carteira com o CDI e o IPCA de 12 meses; sem a chave, lista os títulos.',
@@ -326,6 +333,60 @@ const FIXED_INCOME_TITLES: FixedIncomeComparison['titles'] = [
     }
 ];
 
+const NEWS_BASE: Omit<ChangeItem, 'id' | 'assetId' | 'symbol' | 'kind' | 'date' | 'summary' | 'relevance' | 'weightBps' | 'weightLine'> = {
+    source: 'b3_fnet',
+    category: 'fato_relevante',
+    title: 'fixture',
+    summaryAvailable: true,
+    documentUrl: 'https://fnet.example/fixture'
+};
+
+const NEWS_FIXTURE: readonly ChangeItem[] = [
+    {
+        ...NEWS_BASE,
+        id: 'news-1',
+        assetId: 'a-vale3',
+        symbol: 'VALE3',
+        kind: 'relevant_fact',
+        date: '2026-03-18',
+        summary: 'A empresa anunciou a revisão da meta de produção de minério de ferro para o ano.',
+        relevance: 3,
+        weightBps: 1500,
+        weightLine: null
+    },
+    {
+        ...NEWS_BASE,
+        id: 'news-2',
+        assetId: 'a-xplg11',
+        symbol: 'XPLG11',
+        kind: 'management',
+        date: '2026-03-12',
+        summary: 'O fundo manteve a vacância física em 4% e distribuiu R$ 0,78 por cota no mês.',
+        relevance: 2,
+        weightBps: 800,
+        weightLine: null
+    },
+    {
+        ...NEWS_BASE,
+        id: 'news-3',
+        assetId: 'a-hglg11',
+        symbol: 'HGLG11',
+        kind: 'income',
+        date: '2026-03-10',
+        summary: 'O fundo anunciou rendimento de R$ 1,10 por cota, com pagamento em abril.',
+        relevance: 2,
+        weightBps: 500,
+        weightLine: null
+    }
+];
+
+function portfolioNewsOutput(input: unknown, locale: AppLocale): AskVeraToolOutput {
+    const parsed: PortfolioNewsInput | undefined = portfolioNewsInputSchema.safeParse(input).data;
+    const items: readonly ChangeItem[] =
+        parsed?.classId === 'fiis' ? NEWS_FIXTURE.filter((item: ChangeItem): boolean => item.symbol.endsWith('11')) : NEWS_FIXTURE;
+    return portfolioNewsOutputOf(items, parsed?.assetKey, parsed?.days ?? 7, locale);
+}
+
 function lookupOf(input: unknown): readonly LookupEntry[] {
     const query: string = (assetLookupInputSchema.safeParse(input).data?.query ?? '').toLowerCase();
     const words: readonly string[] = query.split(/\s+/).filter((word: string): boolean => word.length >= 3);
@@ -378,7 +439,10 @@ export function appFixtureToolsOf(locale: AppLocale): readonly AskVeraTool[] {
         toolOf('concentration_overview', noInputSchema, locale, (): AskVeraToolOutput => outputOfBuilt(concentration)),
         toolOf('fixed_income_maturities', maturitiesInputSchema, locale, (): AskVeraToolOutput => outputOfBuilt(maturities)),
         toolOf('market_benchmarks', benchmarksInputSchema, locale, (): AskVeraToolOutput => outputOfBuilt(benchmarks)),
-        ...researchToolsOf(locale)
+        ...researchToolsOf(locale),
+        toolOf('portfolio_news', portfolioNewsInputSchema, locale, (input: unknown): AskVeraToolOutput =>
+            portfolioNewsOutput(input, locale)
+        )
     ];
 }
 

@@ -10,7 +10,7 @@ describe('ferramentas do app por modo', () => {
         }
     });
 
-    it('ai recebe as de ajuda e as de leitura, com as ferramentas de concentração, vencimentos, indicadores de mercado e pesquisa de ativo e fundo, e nada de agenda nem lembrete', () => {
+    it('ai recebe as de ajuda e as de leitura, com as ferramentas de concentração, vencimentos, indicadores de mercado e pesquisa de ativo e fundo, notícias da carteira, e nada de agenda nem lembrete', () => {
         expect([...appToolsOf('ai', false)].sort()).toEqual([
             'asset_lookup',
             'concentration_overview',
@@ -22,6 +22,7 @@ describe('ferramentas do app por modo', () => {
             'help_search',
             'list_categories',
             'market_benchmarks',
+            'portfolio_news',
             'portfolio_overview',
             'recurring_overview',
             'spending_by_category',
