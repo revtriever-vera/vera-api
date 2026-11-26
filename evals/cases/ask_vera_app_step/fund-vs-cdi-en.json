@@ -1,0 +1,61 @@
+{
+  "id": "fund-vs-cdi-en",
+  "task": "ask_vera_app_step",
+  "locale": "en",
+  "labels": {},
+  "question": "How did the Alfa Referenciado fund do against the CDI over 12 months?",
+  "history": [],
+  "tools": {
+    "required": [
+      "asset_lookup",
+      "fund_performance"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "asset_lookup",
+      "fund_performance",
+      "fixed_income_vs_benchmark",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "asset_lookup",
+      "input": {
+        "query": "Alfa Referenciado"
+      }
+    },
+    {
+      "name": "fund_performance",
+      "input": {
+        "fundId": "11111111000191",
+        "windows": [
+          "m12"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "14.10%",
+      "12.80%"
+    ],
+    "mustMention": [
+      "This is not a recommendation to buy or sell."
+    ],
+    "mustNotMention": [
+      "should buy",
+      "should sell",
+      "worth it"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Over 12 months the Fundo Alfa Referenciado DI returned **14.10%** and the CDI 12.80%, which is 1.3 pp above, with data to 03/19/2026 from the CVM."
+  ]
+}

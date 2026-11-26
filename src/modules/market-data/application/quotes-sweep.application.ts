@@ -11,7 +11,7 @@ import { isQuoteStale } from '../domain/quote-staleness';
 import { HeldAssetsService } from '../services/held-assets.service';
 import { MarketDataLogService } from '../services/market-data-log.service';
 import { MarketDataMetricsService } from '../services/market-data-metrics.service';
-import { ProviderBudgetService } from '../services/provider-budget.service';
+import { MarketDataPruneService } from '../services/market-data-prune.service';
 import { QuoteProviderRegistryService } from '../services/quote-provider-registry.service';
 
 const JOB_HASH_LENGTH: number = 20;
@@ -35,7 +35,7 @@ export class QuotesSweepApplication {
         private readonly catalog: AssetCatalogService,
         private readonly registry: QuoteProviderRegistryService,
         private readonly publisher: QueuePublisherPort,
-        private readonly budget: ProviderBudgetService,
+        private readonly prune: MarketDataPruneService,
         private readonly quotes: AssetQuoteDomain,
         private readonly metrics: MarketDataMetricsService,
         private readonly logs: MarketDataLogService
@@ -49,7 +49,7 @@ export class QuotesSweepApplication {
         for (const job of jobs) {
             await this.publish(job, day);
         }
-        await this.budget.pruneOldUsage();
+        await this.prune.pruneAll();
         await this.refreshStaleGauge(assets);
         this.logs.sweepFinished(heldIds.length, jobs.length);
         return jobs.length;

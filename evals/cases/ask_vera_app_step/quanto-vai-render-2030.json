@@ -1,0 +1,61 @@
+{
+  "id": "quanto-vai-render-2030",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "quanto vai render o fundo Alfa Referenciado DI até 2030?",
+  "history": [],
+  "tools": {
+    "required": [
+      "asset_lookup",
+      "fund_performance"
+    ],
+    "allowed": [
+      "help_search",
+      "where_is",
+      "asset_lookup",
+      "fund_performance",
+      "fixed_income_vs_benchmark",
+      "market_benchmarks",
+      "portfolio_overview"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "asset_lookup",
+      "input": {
+        "query": "Alfa Referenciado"
+      }
+    },
+    {
+      "name": "fund_performance",
+      "input": {
+        "fundId": "11111111000191",
+        "windows": [
+          "m12"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [
+      "14,10%",
+      "12,80%"
+    ],
+    "mustMention": [
+      "Isto não é uma recomendação de compra ou venda."
+    ],
+    "mustNotMention": [
+      "vai render",
+      "renderá",
+      "em 2030 terá"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 6
+    }
+  },
+  "reference": [
+    "Não faço projeções do futuro. Em 12 meses o Fundo Alfa Referenciado DI rendeu **14,10%** contra 12,80% do CDI, com dados até 19/03/2026 da CVM."
+  ]
+}

@@ -32,6 +32,8 @@ export type AskVeraInput = AskRoute & {
     readonly locale: AppLocale;
     readonly messageId: string;
     readonly allowedTools: ReadonlySet<string>;
+    readonly extraTools?: readonly AskVeraTool[];
+    readonly importAttached?: boolean;
 };
 
 export interface AskVeraProposal {
@@ -70,7 +72,10 @@ export const INVESTMENT_NOTICE_TOOLS: ReadonlySet<string> = new Set([
     'goals_overview',
     'concentration_overview',
     'fixed_income_maturities',
-    'market_benchmarks'
+    'market_benchmarks',
+    'asset_lookup',
+    'fund_performance',
+    'fixed_income_vs_benchmark'
 ]);
 
 export interface AskVeraToolProposal {

@@ -17,7 +17,7 @@ const DATE_MONTH_START: number = 5;
 const DATE_YEAR_END: number = 4;
 const MONTH_KEY_LENGTH: number = 7;
 
-const WINDOW_LABELS: Readonly<Record<BenchmarkWindow, Readonly<Record<AppLocale, string>>>> = {
+export const WINDOW_LABELS: Readonly<Record<BenchmarkWindow, Readonly<Record<AppLocale, string>>>> = {
     m1: { 'pt-BR': '1 mês', en: '1 month' },
     m3: { 'pt-BR': '3 meses', en: '3 months' },
     m6: { 'pt-BR': '6 meses', en: '6 months' },
@@ -33,7 +33,7 @@ const IBOVESPA_STATUS: Readonly<Record<IbovespaState, AiIbovespaStatus>> = {
     [IBOVESPA_STATES.noData]: 'sem_dados'
 };
 
-function citeDate(date: string | null, facts: ContextFacts): void {
+export function citeDate(date: string | null, facts: ContextFacts): void {
     if (date === null) {
         return;
     }
@@ -46,7 +46,7 @@ function citeDate(date: string | null, facts: ContextFacts): void {
 
 const SERIES_NUMBER: RegExp = /\d+/;
 
-function citeSource(source: string, facts: ContextFacts): void {
+export function citeSource(source: string, facts: ContextFacts): void {
     const code: string | undefined = SERIES_NUMBER.exec(source)?.[0];
     if (code !== undefined) {
         facts.count(Number(code));

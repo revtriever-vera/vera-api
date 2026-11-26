@@ -132,6 +132,11 @@ function absorb(run: Run, output: AskVeraToolOutput, locale: AppLocale): void {
         }
         run.keys.set(key, source);
     }
+    for (const leaf of leavesIn(output.payload)) {
+        if (typeof leaf === 'string') {
+            assetKeysIn(leaf).forEach((key: string): Set<string> => run.assets.add(key));
+        }
+    }
 }
 
 const ROUTE: RegExp = /^\/[\w\-/#?=&.]*$/;

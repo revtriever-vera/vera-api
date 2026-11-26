@@ -60,10 +60,14 @@ class LatestQuotes {
     }
 }
 
+type RowSink = (key: string, quote: DailyQuote) => void;
+
 class QuoteLineReader {
-    public readonly quotes: LatestQuotes = new LatestQuotes();
+    private rows: number = 0;
     private indexes: ReadonlyMap<string, number> | null = null;
     private cnpjColumn: string = '';
+
+    public constructor(private readonly sink: RowSink) {}
 
     public accept(line: string): void {
         if (line.trim() === '') {
@@ -77,11 +81,11 @@ class QuoteLineReader {
         this.offerRow(line.split(';'), this.indexes);
     }
 
-    public finish(): LatestQuotes {
+    public finish(): number {
         if (this.indexes === null) {
             throw new CatalogSourceError(SOURCE_ERROR_CODES.formatInvalid);
         }
-        return this.quotes;
+        return this.rows;
     }
 
     private offerRow(columns: readonly string[], indexes: ReadonlyMap<string, number>): void {
@@ -91,7 +95,8 @@ class QuoteLineReader {
         if (cnpj === '' || !DATE_PATTERN.test(date) || !QUOTA_PATTERN.test(quota)) {
             return;
         }
-        this.quotes.offer(seriesKeyOf(cnpj, cell(columns, indexes, 'ID_SUBCLASSE')), { date, quota });
+        this.rows += 1;
+        this.sink(seriesKeyOf(cnpj, cell(columns, indexes, 'ID_SUBCLASSE')), { date, quota });
     }
 }
 
@@ -133,6 +138,26 @@ export class CvmDailyInformeReaderService {
         return quotes;
     }
 
+    public async monthPoints(month: string, key: string): Promise<readonly DailyQuote[]> {
+        const startedAt: number = Date.now();
+        const response: Response = await fetchSource(this.urlOf(month), {}, this.config.CATALOG_HTTP_TIMEOUT_MS);
+        if (response.status === HTTP_NOT_FOUND) {
+            this.logs.informeRead(month, false, 0, Date.now() - startedAt);
+            return [];
+        }
+        if (!response.ok) {
+            throw sourceErrorOfStatus(response.status);
+        }
+        const points: Map<string, DailyQuote> = new Map<string, DailyQuote>();
+        const rows: number = await this.parse(response, (found: string, quote: DailyQuote): void => {
+            if (found === key) {
+                points.set(quote.date, quote);
+            }
+        });
+        this.logs.informeRead(month, false, rows, Date.now() - startedAt);
+        return [...points.values()].sort((left: DailyQuote, right: DailyQuote): number => left.date.localeCompare(right.date));
+    }
+
     private async readMonth(month: string): Promise<MonthlySeries> {
         const startedAt: number = Date.now();
         const cached: CachedMonth | undefined = this.cache.get(month);
@@ -157,7 +182,10 @@ export class CvmDailyInformeReaderService {
         if (!response.ok) {
             throw sourceErrorOfStatus(response.status);
         }
-        const quotes: LatestQuotes = await this.parse(response);
+        const quotes: LatestQuotes = new LatestQuotes();
+        await this.parse(response, (key: string, quote: DailyQuote): void => {
+            quotes.offer(key, quote);
+        });
         this.remember(month, response.headers.get('etag'), quotes.result());
         this.logs.informeRead(month, false, quotes.rows, Date.now() - startedAt);
         return quotes.result();
@@ -182,8 +210,8 @@ export class CvmDailyInformeReaderService {
         }
     }
 
-    private async parse(response: Response): Promise<LatestQuotes> {
-        const reader: QuoteLineReader = new QuoteLineReader();
+    private async parse(response: Response, sink: RowSink): Promise<number> {
+        const reader: QuoteLineReader = new QuoteLineReader(sink);
         for await (const line of linesOfBytes(firstZipEntryStream(byteStreamOf(response)), ENCODING)) {
             reader.accept(line);
         }

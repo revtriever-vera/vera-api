@@ -7,7 +7,7 @@ export type PaidFeature = Parameters<PlanGateService['allows']>[0];
 
 export type AskVeraToolFeature = PaidFeature | typeof ASK_VERA_HELP_FEATURE;
 
-export type { AskVeraToolOutput, AskVeraToolProposal } from '../domain/ask-vera.types';
+export type { AskVeraToolKind, AskVeraToolOutput, AskVeraToolProposal } from '../domain/ask-vera.types';
 
 export abstract class AskVeraToolPort implements AskVeraTool {
     public abstract readonly name: string;

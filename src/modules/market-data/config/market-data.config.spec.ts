@@ -46,6 +46,7 @@ describe('parseMarketDataConfig', () => {
         expect(config.LIMITS.twelvedata).toEqual({ minute: 8, day: 800 });
         expect(config.LIMITS.alphavantage).toEqual({ day: 25 });
         expect(config.LIMITS.coingecko).toEqual({ minute: 100, month: 10_000 });
+        expect(config.LIMITS.cvm).toEqual({ day: 200 });
     });
 
     it('reads the budget limits from the environment over the defaults', () => {

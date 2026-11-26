@@ -1,0 +1,52 @@
+{
+  "id": "acao-categorizar-sempre",
+  "task": "ask_vera_app_step",
+  "locale": "pt-BR",
+  "labels": {},
+  "question": "A compra de hoje do iFood deveria ser Delivery, e sempre que aparecer iFood quero nessa categoria.",
+  "history": [],
+  "tools": {
+    "required": [
+      "list_categories",
+      "transaction_categorize"
+    ],
+    "allowed": [
+      "list_categories",
+      "transaction_categorize",
+      "help_search",
+      "where_is"
+    ]
+  },
+  "mockTools": [
+    {
+      "name": "list_categories",
+      "input": {}
+    },
+    {
+      "name": "transaction_categorize",
+      "input": {
+        "categoryKey": "eating_out",
+        "always": true,
+        "search": "ifood"
+      }
+    }
+  ],
+  "expect": {
+    "mustCite": [],
+    "mustMention": [
+      "regra"
+    ],
+    "mustNotMention": [
+      "categorizei",
+      "categorizada como",
+      "foi categorizada"
+    ],
+    "sentences": {
+      "min": 1,
+      "max": 5
+    }
+  },
+  "reference": [
+    "Preparei a categorização. Escolha a transação e confirme no cartão."
+  ]
+}

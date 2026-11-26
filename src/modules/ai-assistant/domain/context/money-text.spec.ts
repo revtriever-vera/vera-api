@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { moneyText, percentText, pointsText, signedPercentText } from './money-text';
+import { moneyText, percentText, pointsText, priceText, signedPercentText } from './money-text';
 
 describe('texto de dinheiro e percentual', () => {
     it('formata em pt-BR sem centavos e com espaço comum', () => {
@@ -18,5 +18,14 @@ describe('texto de dinheiro e percentual', () => {
         expect(moneyText(164_000, 'USD', 'en')).toBe('$1,640');
         expect(percentText(2300, 'en')).toBe('23%');
         expect(pointsText(250, 'en')).toBe('2.5 pp');
+    });
+});
+
+describe('texto de preço', () => {
+    it('mostra centavos e, abaixo de 1, até quatro casas', () => {
+        expect(priceText('38.5', 'BRL', 'pt-BR')).toBe('R$ 38,50');
+        expect(priceText('1234.567', 'BRL', 'pt-BR')).toBe('R$ 1.234,57');
+        expect(priceText('0.0312', 'BRL', 'pt-BR')).toBe('R$ 0,0312');
+        expect(priceText('189.2', 'USD', 'en')).toBe('$189.20');
     });
 });

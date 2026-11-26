@@ -8,6 +8,7 @@ const PROVIDER: string = 'market-data-provider';
 const FX: string = 'market-data-fx';
 const BUDGET: string = 'market-data-budget';
 const INDEX: string = 'market-data-index';
+const FUND_HISTORY: string = 'market-data-fund-history';
 
 @Injectable()
 export class MarketDataLogService {
@@ -59,5 +60,13 @@ export class MarketDataLogService {
 
     public indexFailed(symbol: string, error: unknown): void {
         this.logService.error({ message: 'market index failed', identifier: INDEX, meta: { symbol }, error });
+    }
+
+    public fundHistoryFailed(month: string, error: unknown): void {
+        this.logService.error({ message: 'fund history month failed', identifier: FUND_HISTORY, meta: { month }, error });
+    }
+
+    public fundHistoryPruned(points: number, funds: number): void {
+        this.logService.info({ message: 'fund history pruned', identifier: FUND_HISTORY, meta: { points, funds } });
     }
 }
