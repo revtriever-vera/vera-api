@@ -40,12 +40,12 @@ export function amountRuns(text: string): AmountRun[] {
     for (const match of text.matchAll(AMOUNT_TOKEN)) {
         const last: { start: number; end: number; amounts: string[] } | undefined = runs.at(-1);
         const amount: string = match[1] ?? '';
-        if (last !== undefined && text.slice(last.end, match.index).trim() === '') {
-            last.amounts.push(amount);
-            last.end = match.index + match[0].length;
-        } else {
+        if (last === undefined || text.slice(last.end, match.index).trim() !== '') {
             runs.push({ start: match.index, end: match.index + match[0].length, amounts: [amount] });
+            continue;
         }
+        last.amounts.push(amount);
+        last.end = match.index + match[0].length;
     }
     return runs.filter((run: AmountRun): boolean => run.amounts.length >= COLUMN_RUN_MIN);
 }

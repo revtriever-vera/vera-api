@@ -225,18 +225,28 @@ function classesFor(before: string, after: string): ShareClass[] {
     return labelAfter === undefined ? [] : classesIn(labelAfter.split(/[.;,]/)[0] ?? '');
 }
 
+function isPerShareToken(match: RegExpExecArray, before: string, after: string, labeled: boolean): boolean {
+    const amount: string = match[1] ?? '';
+    return (labeled || isPerShare(before, after)) && !NET_BEFORE.test(before) && isPerShareMagnitude(amount);
+}
+
+function tokenEntry(text: string, matches: readonly RegExpExecArray[], index: number): AmountEntry | null {
+    const match: RegExpExecArray | undefined = matches[index];
+    if (match === undefined) {
+        return null;
+    }
+    const before: string = text.slice(Math.max(0, match.index - NET_LOOKBEHIND), match.index);
+    const after: string = text.slice(match.index + match[0].length, matches[index + 1]?.index ?? text.length);
+    const classes: ShareClass[] = classesFor(before, after);
+    const labeled: boolean = classes.length > 0 && PER_SHARE_MAGNITUDE.test(match[1] ?? '');
+    return isPerShareToken(match, before, after, labeled) ? { classes: labeled ? classes : [], amount: decimalOf(match[1] ?? '') } : null;
+}
+
 function amountEntries(text: string): AmountEntry[] {
     const matches: RegExpExecArray[] = [...text.matchAll(AMOUNT_TOKEN)];
-    const entries: AmountEntry[] = [];
-    matches.forEach((match: RegExpExecArray, index: number): void => {
-        const before: string = text.slice(Math.max(0, match.index - NET_LOOKBEHIND), match.index);
-        const after: string = text.slice(match.index + match[0].length, matches[index + 1]?.index ?? text.length);
-        const classes: ShareClass[] = classesFor(before, after);
-        const labeled: boolean = classes.length > 0 && PER_SHARE_MAGNITUDE.test(match[1] ?? '');
-        if ((labeled || isPerShare(before, after)) && !NET_BEFORE.test(before) && isPerShareMagnitude(match[1] ?? '')) {
-            entries.push({ classes: labeled ? classes : [], amount: decimalOf(match[1] ?? '') });
-        }
-    });
+    const entries: AmountEntry[] = matches
+        .map((_match: RegExpExecArray, index: number): AmountEntry | null => tokenEntry(text, matches, index))
+        .filter((entry: AmountEntry | null): entry is AmountEntry => entry !== null);
     const rows: AmountEntry[] = [...text.matchAll(CLASS_TABLE_ROW)]
         .filter((match: RegExpExecArray): boolean => isPerShareMagnitude(match[2] ?? ''))
         .map((match: RegExpExecArray): AmountEntry => ({
@@ -350,28 +360,42 @@ function exDatesRun(text: string, count: number): string[] | null {
     return runs.find((run: string[] | null): boolean => run !== null) ?? null;
 }
 
+function entriesByKind(declared: readonly DeclaredAmount[]): Map<IncomeNotice['kind'], AmountEntry[]> {
+    const byKind: Map<IncomeNotice['kind'], AmountEntry[]> = new Map<IncomeNotice['kind'], AmountEntry[]>();
+    for (const item of declared) {
+        const entries: AmountEntry[] = byKind.get(item.kind) ?? [];
+        entries.push({ classes: item.shareClasses, amount: item.amount });
+        byKind.set(item.kind, entries);
+    }
+    return byKind;
+}
+
+function singleAmountNotices(
+    kind: IncomeNotice['kind'],
+    entries: readonly AmountEntry[],
+    dates: { exDate: string; paymentDate: string | null }
+): IncomeNotice[] {
+    return [...amountsByClass(entries)]
+        .filter(([, amounts]: [ShareClass | null, Set<string>]): boolean => amounts.size === 1)
+        .map(([shareClass, amounts]: [ShareClass | null, Set<string>]): IncomeNotice => ({
+            kind,
+            exDate: dates.exDate,
+            paymentDate: dates.paymentDate,
+            amountPerUnit: [...amounts][0] ?? '',
+            shareClass
+        }));
+}
+
 function tableNotices(text: string, declared: readonly DeclaredAmount[]): IncomeNotice[] {
     const exDate: string | null = exDateOf(text);
     if (exDate === null) {
         return [];
     }
     const paymentDate: string | null = paymentDateOf(text, exDate);
-    const kinds: IncomeNotice['kind'][] = [...new Set(declared.map((item: DeclaredAmount): IncomeNotice['kind'] => item.kind))];
-    return kinds.flatMap((kind: IncomeNotice['kind']): IncomeNotice[] => {
-        const entries: AmountEntry[] = declared
-            .filter((item: DeclaredAmount): boolean => item.kind === kind)
-            .map((item: DeclaredAmount): AmountEntry => ({ classes: item.shareClasses, amount: item.amount }));
-        const grouped: Map<ShareClass | null, Set<string>> = amountsByClass(entries);
-        return [...grouped]
-            .filter(([, amounts]: [ShareClass | null, Set<string>]): boolean => amounts.size === 1)
-            .map(([shareClass, amounts]: [ShareClass | null, Set<string>]): IncomeNotice => ({
-                kind,
-                exDate,
-                paymentDate,
-                amountPerUnit: [...amounts][0] ?? '',
-                shareClass
-            }));
-    });
+    const dates: { exDate: string; paymentDate: string | null } = { exDate, paymentDate };
+    return [...entriesByKind(declared)].flatMap(([kind, entries]: [IncomeNotice['kind'], AmountEntry[]]): IncomeNotice[] =>
+        singleAmountNotices(kind, entries, dates)
+    );
 }
 
 function columnNotices(text: string, amounts: readonly string[]): IncomeNotice[] {
