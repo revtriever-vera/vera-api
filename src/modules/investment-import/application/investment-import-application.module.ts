@@ -16,6 +16,7 @@ import { InvestmentImportCommitService } from '../services/investment-import-com
 import { InvestmentImportPreviewService } from '../services/investment-import-preview.service';
 import { InvestmentImportLogService } from '../services/investment-import-log.service';
 import { InvestmentImportMetricsService } from '../services/investment-import-metrics.service';
+import { ModelDocumentService } from '../services/model-document.service';
 import { ModelReaderService } from '../services/model-reader.service';
 import { NoteAssetResolverService } from '../services/note-asset-resolver.service';
 import { StatementReaderService } from '../services/statement-reader.service';
@@ -47,6 +48,7 @@ import { InvestmentImportPreviewApplication } from './investment-import-preview.
         FixedIncomeProposalService,
         StatementReaderService,
         ModelReaderService,
+        ModelDocumentService,
         NoteAssetResolverService,
         InvestmentImportLogService,
         InvestmentImportMetricsService
@@ -55,7 +57,8 @@ import { InvestmentImportPreviewApplication } from './investment-import-preview.
         InvestmentImportPreviewApplication,
         InvestmentImportCommitApplication,
         InvestmentImportListApplication,
-        InvestmentImportAssistantService
+        InvestmentImportAssistantService,
+        ModelDocumentService
     ]
 })
 export class InvestmentImportApplicationModule {}

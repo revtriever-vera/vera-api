@@ -1183,6 +1183,18 @@ export interface SpendingSettings {
     updatedAt: Generated<Timestamp>;
 }
 
+export interface StatementImportPreviews {
+    companyId: string;
+    createdAt: Generated<Timestamp>;
+    createdBy: string | null;
+    expiresAt: Timestamp;
+    fileName: string;
+    fileSha256: string;
+    id: string;
+    payload: Json;
+    updatedAt: Generated<Timestamp>;
+}
+
 export interface Throttles {
     count: Generated<number>;
     createdAt: Generated<Timestamp>;
@@ -1469,6 +1481,7 @@ export interface DB {
     SignupRedemptions: SignupRedemptions;
     SpendingCategories: SpendingCategories;
     SpendingSettings: SpendingSettings;
+    StatementImportPreviews: StatementImportPreviews;
     Throttles: Throttles;
     TransactionImports: TransactionImports;
     Transactions: Transactions;

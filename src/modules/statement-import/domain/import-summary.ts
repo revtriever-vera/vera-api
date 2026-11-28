@@ -1,9 +1,9 @@
-import { ImportFormat, ImportSummary } from './statement-import.types';
+import { ImportSummary, StoredImportFormat } from './statement-import.types';
 
 export interface ImportRecord {
     readonly id: string;
     readonly accountId: string;
-    readonly format: ImportFormat;
+    readonly format: StoredImportFormat;
     readonly fileName: string;
     readonly rows: number;
     readonly inserted: number;

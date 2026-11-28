@@ -1,5 +1,52 @@
 import { AppError } from '../../../shared/errors/app.error';
-import { InvalidFileReason } from './statement-import.types';
+import { InvalidFileReason, ModelUnreadableReason } from './statement-import.types';
+
+export class ModelUnavailableError extends AppError {
+    public constructor() {
+        super({
+            code: 'imports.model_unavailable',
+            status: 503,
+            detail: 'No language model is configured: a PDF or image statement cannot be read; OFX and CSV still work.'
+        });
+    }
+}
+
+export class ModelConfirmationRequiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'imports.model_confirmation_required',
+            status: 428,
+            detail: 'The statement would be sent to a language model, transaction descriptions included: resend it with `modelConsent=true` after the person agrees.',
+            meta: {
+                sentTo: 'language_model',
+                provider: 'vercel',
+                includes: ['transaction_descriptions'],
+                mayContain: ['merchant_names', 'person_names']
+            }
+        });
+    }
+}
+
+export class ModelUnreadableError extends AppError {
+    public constructor(reason: ModelUnreadableReason) {
+        super({
+            code: 'imports.model_unreadable',
+            status: 422,
+            detail: 'The statement could not be read: send another file, such as the PDF from the bank or a sharper image.',
+            meta: { reason }
+        });
+    }
+}
+
+export class PreviewExpiredError extends AppError {
+    public constructor() {
+        super({
+            code: 'imports.preview_expired',
+            status: 410,
+            detail: 'The preview expired or was already confirmed: send the file again.'
+        });
+    }
+}
 
 export class FileRequiredError extends AppError {
     public constructor() {

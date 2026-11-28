@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiParamOptions, ApiTags } from '@nestjs/swagger';
 import { ApiProblemResponse } from '../../../../core/http/api-problem.decorator';
-import { ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
+import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../../../core/http/api-zod.decorators';
 import { RateLimit, RateLimitSubject } from '../../../../core/throttle/rate-limit.decorator';
 import { Page } from '../../../../shared/pagination/pagination.types';
 import { JwtAuthGuard } from '../../../identity/services/jwt-auth.guard';
@@ -43,6 +43,8 @@ import {
     ImportListQueryDto,
     importPreviewSchema,
     importRemovedSchema,
+    ModelCommitBodyDto,
+    modelCommitBodySchema,
     multipartBodyOf,
     PreviewBodyDto,
     previewBodySchema
@@ -62,6 +64,18 @@ const NOT_FOUND_EXAMPLE: Record<string, unknown> = { type: 'imports.import_not_f
 
 const REJECTION_EXAMPLE: Record<string, unknown> = { line: 14, reason: 'invalid_amount' };
 
+const MODEL_CONSENT_EXAMPLE: Record<string, unknown> = {
+    type: 'imports.model_confirmation_required',
+    title: 'ModelConfirmationRequiredError',
+    status: 428,
+    meta: {
+        sentTo: 'language_model',
+        provider: 'vercel',
+        includes: ['transaction_descriptions'],
+        mayContain: ['merchant_names', 'person_names']
+    }
+};
+
 const PREVIEW_EXAMPLE: Record<string, unknown> = {
     detectedFormat: 'ofx',
     format: 'ofx',
@@ -76,7 +90,9 @@ const PREVIEW_EXAMPLE: Record<string, unknown> = {
     columns: null,
     accountHint: { institution: 'Nubank', numberLast4: '4321' },
     suggestedAccountId: '0199c3a0-2222-7c52-9d0e-3f6a1b2c4d5e',
-    alreadyImportedAt: null
+    alreadyImportedAt: null,
+    totals: { inflowMinor: 0, outflowMinor: 18450 },
+    model: null
 };
 
 const IMPORT_EXAMPLE: Record<string, unknown> = {
@@ -126,9 +142,14 @@ export class ImportsController {
         summary: 'Preview a bank statement without saving anything',
         description:
             'Detects the format (OFX 1.x or 2.x, Nubank card or account CSV, or a generic CSV), reads the file and returns the period, ' +
-            'a sample, the rows it could not read and the account of the company that matches the file. Nothing is stored: the file is ' +
-            'read in memory and discarded, and the confirmed import sends the same file again. A generic CSV sent without `mapping` ' +
-            'returns only `columns` and the number of data lines, so the client can ask for the mapping.'
+            'a sample, the totals in and out, the rows it could not read and the account of the company that matches the file. ' +
+            'Nothing is stored: the file is read in memory and discarded, and the confirmed import sends the same file again. A ' +
+            'generic CSV sent without `mapping` returns only `columns` and the number of data lines, so the client can ask for the ' +
+            'mapping. A PDF or an image (PNG, JPEG, WEBP, HEIC) is read by the language model only with `modelConsent=true`: the text ' +
+            'of a PDF goes with the holder name, documents and account numbers masked, the transaction descriptions go as printed, ' +
+            'and the cost counts in the AI limit of the account. The reading is kept for 30 minutes and returned in `model` with ' +
+            'every transaction, to be checked and saved with POST /spending/imports/model; sending the same file again in that time ' +
+            'returns the same reading without calling the model.'
     })
     @ApiConsumes('multipart/form-data')
     @ApiBody({ schema: multipartBodyOf(previewBodySchema) })
@@ -145,10 +166,30 @@ export class ImportsController {
         status: 422,
         description:
             'Not a statement (imports.unsupported_format), no valid rows or broken structure (imports.invalid_file, meta.reason), ' +
-            'more than 10,000 rows (imports.too_many_rows)',
-        example: { type: 'imports.unsupported_format', title: 'UnsupportedFormatError', status: 422 }
+            'more than 10,000 rows (imports.too_many_rows). For a PDF or an image: the model read no transaction or answered out of ' +
+            'the schema (imports.model_unreadable, meta.reason no_transactions or invalid_response; ask for another file), a damaged ' +
+            'or too heavy file (file.unreadable) or a scanned PDF with more than 10 pages (file.too_many_pages)',
+        example: { type: 'imports.model_unreadable', title: 'ModelUnreadableError', status: 422, meta: { reason: 'no_transactions' } }
     })
-    @ApiProblemResponse({ status: 429, description: 'More than 60 previews in an hour for the company', example: THROTTLED_EXAMPLE })
+    @ApiProblemResponse({
+        status: 428,
+        description:
+            'A PDF or an image sent without `modelConsent=true` (imports.model_confirmation_required). Nothing was sent to the model; ' +
+            'meta says that the transaction descriptions go with the file and may hold names of stores and people',
+        example: MODEL_CONSENT_EXAMPLE
+    })
+    @ApiProblemResponse({
+        status: 429,
+        description:
+            'More than 60 previews in an hour for the company, more than 30 model readings in an hour (core.too_many_attempts) or ' +
+            'the monthly AI limit of the account reached (usage.cap_reached)',
+        example: THROTTLED_EXAMPLE
+    })
+    @ApiProblemResponse({
+        status: 503,
+        description: 'No language model is configured: a PDF or an image cannot be read (imports.model_unavailable)',
+        example: { type: 'imports.model_unavailable', title: 'ModelUnavailableError', status: 503 }
+    })
     public async preview(@UploadedFile() file: UploadedStatement | undefined, @Body() body: PreviewBodyDto): Promise<ImportPreview> {
         return this.previews.preview(requireFile(file), body);
     }
@@ -191,6 +232,47 @@ export class ImportsController {
     @ApiProblemResponse({ status: 429, description: 'More than 20 imports in an hour for the company', example: THROTTLED_EXAMPLE })
     public async commit(@UploadedFile() file: UploadedStatement | undefined, @Body() body: CommitBodyDto): Promise<ImportCommitView> {
         return this.commits.commit(requireFile(file), body);
+    }
+
+    @Post('model')
+    @RequiresRole('editor')
+    @RateLimit({ key: 'statement-import', limit: IMPORTS_PER_HOUR, windowSeconds: ONE_HOUR_SECONDS, identify: companyOf })
+    @ApiOperation({
+        summary: 'Save a statement read by the language model',
+        description:
+            'Saves the transactions of a PDF or image preview (`previewId`) in an existing account (`accountId`) or in a new one ' +
+            '(`newAccountName` and `newAccountKind`), the same way as an OFX file: duplicates are not created again and ' +
+            '`DELETE /spending/imports/{id}` undoes the batch. The transactions get the source `model` and the import the format ' +
+            '`model`. The model is not called again; the preview is used once.'
+    })
+    @ApiZodBody(modelCommitBodySchema)
+    @ApiZodResponse({
+        status: 201,
+        description: 'The import with its counters and up to 20 examples of rejected rows',
+        schema: importCommitSchema,
+        example: { ...IMPORT_EXAMPLE, format: 'model', fileName: 'extrato-outubro.pdf', rejections: [] }
+    })
+    @ApiProblemResponse({ status: 400, description: INVALID, example: INVALID_EXAMPLE })
+    @ApiProblemResponse({ status: 401, description: UNAUTHORIZED, example: UNAUTHORIZED_EXAMPLE })
+    @ApiProblemResponse({
+        status: 404,
+        description: 'The account does not exist in this company (transactions.account_not_found)',
+        example: { type: 'transactions.account_not_found', title: 'AccountNotFoundError', status: 404 }
+    })
+    @ApiProblemResponse({
+        status: 410,
+        description: 'The preview expired, was already saved or belongs to another company (imports.preview_expired): send the file again',
+        example: { type: 'imports.preview_expired', title: 'PreviewExpiredError', status: 410 }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description:
+            'The currency read differs from the account (imports.currency_mismatch) or the transaction limit (transactions.limit_reached)',
+        example: { type: 'imports.currency_mismatch', title: 'CurrencyMismatchError', status: 422 }
+    })
+    @ApiProblemResponse({ status: 429, description: 'More than 20 imports in an hour for the company', example: THROTTLED_EXAMPLE })
+    public async commitModel(@Body() body: ModelCommitBodyDto): Promise<ImportCommitView> {
+        return this.commits.commitPreview(body);
     }
 
     @Get()

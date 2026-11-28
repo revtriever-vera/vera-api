@@ -22,12 +22,13 @@ export const TRANSACTION_SOURCES = {
     pluggy: 'pluggy',
     ofx: 'ofx',
     csv: 'csv',
+    model: 'model',
     sample: 'sample'
 } as const;
 
 export type TransactionSource = (typeof TRANSACTION_SOURCES)[keyof typeof TRANSACTION_SOURCES];
 
-export const FILE_SOURCES: readonly TransactionSource[] = [TRANSACTION_SOURCES.ofx, TRANSACTION_SOURCES.csv];
+export const FILE_SOURCES: readonly TransactionSource[] = [TRANSACTION_SOURCES.ofx, TRANSACTION_SOURCES.csv, TRANSACTION_SOURCES.model];
 
 export const CATEGORY_ORIGINS = {
     user: 'user',
@@ -43,7 +44,8 @@ export const IMPORT_FORMATS = {
     ofx: 'ofx',
     csvNubankCard: 'csv_nubank_card',
     csvNubankAccount: 'csv_nubank_account',
-    csvGeneric: 'csv_generic'
+    csvGeneric: 'csv_generic',
+    model: 'model'
 } as const;
 
 export type ImportFormat = (typeof IMPORT_FORMATS)[keyof typeof IMPORT_FORMATS];

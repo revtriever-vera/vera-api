@@ -488,6 +488,39 @@ describe('investment import', () => {
             generate.mockRestore();
         });
 
+        it('a leitura entra na cota de IA da conta e, com a cota estourada, responde usage.cap_reached sem chamar o modelo', async () => {
+            const owner: Account = await harness.signUp('modelo-cota');
+            mock.enqueue(modelAnswer([modelRow('PETR4', '100', '10', 100000)]));
+
+            const read: Reply = await upload(owner.token, await printOf(405), { modelConsent: 'true' }, 'print.png');
+
+            expect(read.status).toBe(200);
+            const usage = await harness.pg.query<{ feature: string; task: string }>(
+                'SELECT "feature", "task" FROM "PaidUsageEntries" WHERE "companyId" = $1',
+                [owner.company.id]
+            );
+            expect(usage.rows).toEqual([{ feature: 'ai', task: 'investment_extract' }]);
+
+            const capped: Account = await harness.signUp('modelo-cota-estourada');
+            await harness.pg.query(
+                `INSERT INTO "PaidUsageEntries" ("id","companyId","period","feature","task","referenceId","costMicros","outcome")
+                 VALUES ($1,$2,to_char(now() AT TIME ZONE 'America/Sao_Paulo','YYYY-MM'),'ai','summary_month','seed',100000000,'answered')`,
+                [crypto.randomUUID(), capped.company.id]
+            );
+            const generate = vi.spyOn(mock, 'generate');
+
+            const blocked: Reply<ProblemBody> = (await upload(
+                capped.token,
+                await printOf(406),
+                { modelConsent: 'true' },
+                'print.png'
+            )) as never;
+
+            expect([blocked.status, blocked.body.type]).toEqual([429, 'usage.cap_reached']);
+            expect(generate).not.toHaveBeenCalled();
+            generate.mockRestore();
+        });
+
         function snapshotAnswer(positions: Record<string, unknown>[]): string {
             return JSON.stringify({ documentType: 'screenshot', currency: 'BRL', operations: null, notes: null, positions });
         }

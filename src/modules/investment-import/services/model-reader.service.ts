@@ -5,24 +5,18 @@ import { LLM_TASK_CATALOG } from '../../../core/llm/catalog/llm-task.catalog';
 import { LlmTaskSpec } from '../../../core/llm/catalog/llm-task.types';
 import { LlmInvalidResponseError, LlmProviderDisabledError } from '../../../core/llm/llm.errors';
 import { LlmPort } from '../../../core/llm/llm.port';
-import { LLM_TASKS, LlmContentBlock, LlmGenerationResponse } from '../../../core/llm/llm.types';
+import { LLM_TASKS, LlmGenerationResponse } from '../../../core/llm/llm.types';
 import { LlmAvailabilityService } from '../../../core/llm/services/llm-availability.service';
 import { ThrottleService } from '../../../core/throttle/throttle.service';
 import { DateUtil } from '../../../shared/utils/date.util';
-import {
-    FileTooManyPagesError,
-    ModelConfirmationRequiredError,
-    ModelUnavailableError,
-    ModelUnreadableError
-} from '../domain/investment-import.errors';
+import { ModelConfirmationRequiredError, ModelUnavailableError, ModelUnreadableError } from '../domain/investment-import.errors';
 import { MODEL_READS_PER_HOUR, ONE_HOUR_SECONDS } from '../domain/investment-import.types';
 import { ParsedInvestmentStatement } from '../domain/investment-statement.types';
 import { modelFileKindOf } from '../domain/model/file-kind';
-import { MODEL_FILE_KINDS, ModelFileKind } from '../domain/model/model-file.types';
-import { PreparedImage, prepareImage } from '../domain/model/image-prepare';
+import { ModelFileKind } from '../domain/model/model-file.types';
+import { collectAnswers, ModelAnswers, ModelDocument, modelDocumentOf, ModelPrompts, ModelRequest } from '../domain/model/model-requests';
 import { specsOfModelAnswers, statementOfModelAnswers } from '../domain/model/model-statement';
 import { maskStatementText } from '../domain/model/statement-masking';
-import { MAX_SCANNED_PAGES, PdfContent, readPdfContent, splitPdfPages } from '../domain/pdf-text';
 import {
     INVESTMENT_EXTRACT_IMAGE_INTRO,
     INVESTMENT_EXTRACT_SYSTEM_PROMPT,
@@ -32,19 +26,12 @@ import { InvestmentImportLogService } from './investment-import-log.service';
 import { NoteAssetResolverService } from './note-asset-resolver.service';
 
 const THROTTLE_KEY: string = 'investment-import-model';
-const TEXT_PAGE_LABEL: string = 'text';
 
-interface ModelRequest {
-    readonly label: string;
-    readonly content: readonly LlmContentBlock[];
-}
-
-interface Answers {
-    readonly texts: string[];
-    readonly labels: string[];
-    readonly unread: string[];
-    readonly costMicros: number;
-}
+const INVESTMENT_PROMPTS: ModelPrompts = {
+    textIntro: INVESTMENT_EXTRACT_TEXT_INTRO,
+    imageIntro: INVESTMENT_EXTRACT_IMAGE_INTRO,
+    maskText: maskStatementText
+};
 
 function specOf(): LlmTaskSpec {
     const spec: LlmTaskSpec | undefined = LLM_TASK_CATALOG.find(
@@ -54,45 +41,6 @@ function specOf(): LlmTaskSpec {
         throw new ModelUnavailableError();
     }
     return spec;
-}
-
-function textRequestOf(content: PdfContent): ModelRequest[] {
-    const text: string = content.pages
-        .map((page: string, index: number): string => `--- page ${String(index + 1)} ---\n${maskStatementText(page)}`)
-        .join('\n');
-    return [{ label: TEXT_PAGE_LABEL, content: [{ kind: 'text', text: `${INVESTMENT_EXTRACT_TEXT_INTRO}\n${text}` }] }];
-}
-
-async function scannedRequestsOf(bytes: Uint8Array, content: PdfContent): Promise<ModelRequest[]> {
-    if (content.pageCount > MAX_SCANNED_PAGES) {
-        throw new FileTooManyPagesError(MAX_SCANNED_PAGES);
-    }
-    const pages: Uint8Array[] = await splitPdfPages(bytes, content.pageCount);
-    return pages.map((page: Uint8Array, index: number): ModelRequest => ({
-        label: `p${String(index + 1)}`,
-        content: [
-            { kind: 'text', text: INVESTMENT_EXTRACT_IMAGE_INTRO },
-            { kind: 'file', mediaType: 'application/pdf', data: page }
-        ]
-    }));
-}
-
-async function pdfRequestsOf(bytes: Uint8Array): Promise<ModelRequest[]> {
-    const content: PdfContent = await readPdfContent(bytes);
-    return content.hasTextLayer ? textRequestOf(content) : scannedRequestsOf(bytes, content);
-}
-
-async function imageRequestsOf(bytes: Uint8Array, kind: ModelFileKind): Promise<ModelRequest[]> {
-    const image: PreparedImage = await prepareImage(bytes, kind);
-    return [
-        {
-            label: 'p1',
-            content: [
-                { kind: 'text', text: INVESTMENT_EXTRACT_IMAGE_INTRO },
-                { kind: 'image', mediaType: image.mediaType, data: image.data }
-            ]
-        }
-    ];
 }
 
 function isEmptyReading(statement: ParsedInvestmentStatement): boolean {
@@ -121,12 +69,19 @@ export class ModelReaderService {
             throw new ModelUnreadableError('invalid_response');
         }
         await this.assertAllowed(consent);
-        const requests: ModelRequest[] = kind === MODEL_FILE_KINDS.pdf ? await pdfRequestsOf(bytes) : await imageRequestsOf(bytes, kind);
-        const answers: Answers = await this.ask(requests);
+        const document: ModelDocument = await modelDocumentOf(bytes, kind, INVESTMENT_PROMPTS);
+        const answers: ModelAnswers = await collectAnswers(document.requests, specOf().maxCostMicros, async (request: ModelRequest) =>
+            this.generate(request)
+        );
         const statement: ParsedInvestmentStatement = await this.statementOf(answers, kind, bytes.byteLength);
+        this.report(answers, statement, kind, bytes.byteLength);
+        return statement;
+    }
+
+    private report(answers: ModelAnswers, statement: ParsedInvestmentStatement, kind: ModelFileKind, sizeBytes: number): void {
         this.logs.modelRead({
             kind,
-            sizeBytes: bytes.byteLength,
+            sizeBytes,
             calls: answers.texts.length,
             pagesNotRead: answers.unread.length,
             costMicros: answers.costMicros,
@@ -134,7 +89,6 @@ export class ModelReaderService {
             rejected: statement.rejected.length,
             documentType: statement.documentType ?? null
         });
-        return statement;
     }
 
     private async assertAllowed(consent: boolean): Promise<void> {
@@ -146,23 +100,6 @@ export class ModelReaderService {
         }
         const companyId: string = this.context.get().companyId ?? '';
         await this.throttle.assertAllowed(`${THROTTLE_KEY}:${companyId}`, MODEL_READS_PER_HOUR, ONE_HOUR_SECONDS);
-    }
-
-    private async ask(requests: readonly ModelRequest[]): Promise<Answers> {
-        const cap: number = specOf().maxCostMicros;
-        const answers: Answers = { texts: [], labels: [], unread: [], costMicros: 0 };
-        let costMicros: number = 0;
-        for (const request of requests) {
-            if (costMicros >= cap) {
-                answers.unread.push(request.label);
-                continue;
-            }
-            const response: LlmGenerationResponse = await this.generate(request);
-            costMicros += response.costMicros;
-            answers.texts.push(response.text);
-            answers.labels.push(request.label);
-        }
-        return { ...answers, costMicros };
     }
 
     private async generate(request: ModelRequest): Promise<LlmGenerationResponse> {
@@ -184,7 +121,7 @@ export class ModelReaderService {
         }
     }
 
-    private async statementOf(answers: Answers, kind: ModelFileKind, sizeBytes: number): Promise<ParsedInvestmentStatement> {
+    private async statementOf(answers: ModelAnswers, kind: ModelFileKind, sizeBytes: number): Promise<ParsedInvestmentStatement> {
         const statement: ParsedInvestmentStatement = statementOfModelAnswers(answers.texts, {
             labels: answers.labels,
             unreadPages: answers.unread,

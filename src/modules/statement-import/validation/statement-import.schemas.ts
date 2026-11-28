@@ -9,7 +9,8 @@ import {
     MAX_REJECTION_EXAMPLES,
     NEW_ACCOUNT_KINDS,
     PREVIEW_SAMPLE_SIZE,
-    REJECTION_REASON_VALUES
+    REJECTION_REASON_VALUES,
+    STORED_FORMAT_VALUES
 } from '../domain/statement-import.types';
 
 const ACCOUNT_NAME_MAX_LENGTH: number = 60;
@@ -22,6 +23,7 @@ const CONTROL_CHARACTERS: RegExp = /^[^\p{Cc}]*$/u;
 const columnIndex = (description: string): z.ZodNumber => z.number().int().min(0).max(MAX_COLUMN_INDEX).describe(description);
 
 const importFormatSchema = z.enum(IMPORT_FORMAT_VALUES);
+const storedFormatSchema = z.enum(STORED_FORMAT_VALUES);
 
 export const csvMappingSchema = z
     .object({
@@ -76,44 +78,76 @@ const mappingTextSchema = z
     );
 
 export const previewBodySchema = z.object({
-    format: importFormatSchema.optional().describe('Forces the format instead of the detected one'),
-    mapping: mappingTextSchema.optional()
+    format: importFormatSchema.optional().describe('Forces the format instead of the detected one; ignored for a PDF or an image'),
+    mapping: mappingTextSchema.optional(),
+    modelConsent: z
+        .enum(['true', 'false'])
+        .optional()
+        .transform((value: 'true' | 'false' | undefined): boolean => value === 'true')
+        .describe(
+            'Send `true` after the person agrees that this PDF or image goes to a language model, transaction descriptions included (they may hold names of stores and people). Without it, such a file is refused with imports.model_confirmation_required and nothing is sent. Valid only for this request'
+        )
 });
+
+const accountChoiceShape = {
+    accountId: z.string().uuid().optional().describe('Existing financial account of the company that receives the transactions'),
+    newAccountName: z
+        .string()
+        .trim()
+        .min(1)
+        .max(ACCOUNT_NAME_MAX_LENGTH)
+        .regex(CONTROL_CHARACTERS)
+        .optional()
+        .describe('Name of a new account to create; exclusive with accountId'),
+    newAccountKind: z.enum(NEW_ACCOUNT_KINDS).optional().describe('Kind of the new account; required with newAccountName'),
+    newAccountInstitution: z
+        .string()
+        .trim()
+        .min(1)
+        .max(INSTITUTION_MAX_LENGTH)
+        .regex(CONTROL_CHARACTERS)
+        .optional()
+        .describe('Institution of the new account; defaults to the one found in the file')
+};
+
+interface AccountChoiceBody {
+    readonly accountId?: string;
+    readonly newAccountName?: string;
+    readonly newAccountKind?: string;
+    readonly newAccountInstitution?: string;
+}
+
+function refineAccountChoice(body: AccountChoiceBody, context: z.RefinementCtx): void {
+    const hasExisting: boolean = body.accountId !== undefined;
+    const hasNew: boolean = body.newAccountName !== undefined && body.newAccountKind !== undefined;
+    const partialNew: boolean = (body.newAccountName === undefined) !== (body.newAccountKind === undefined);
+    if (hasExisting === hasNew || partialNew || (hasExisting && body.newAccountInstitution !== undefined)) {
+        context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'send accountId, or newAccountName with newAccountKind, never both nor neither'
+        });
+    }
+}
 
 export const commitBodySchema = z
     .object({
         format: importFormatSchema.describe('Format of the file; send the one the preview returned'),
         mapping: mappingTextSchema.optional(),
-        accountId: z.string().uuid().optional().describe('Existing financial account of the company that receives the transactions'),
-        newAccountName: z
-            .string()
-            .trim()
-            .min(1)
-            .max(ACCOUNT_NAME_MAX_LENGTH)
-            .regex(CONTROL_CHARACTERS)
-            .optional()
-            .describe('Name of a new account to create; exclusive with accountId'),
-        newAccountKind: z.enum(NEW_ACCOUNT_KINDS).optional().describe('Kind of the new account; required with newAccountName'),
-        newAccountInstitution: z
-            .string()
-            .trim()
-            .min(1)
-            .max(INSTITUTION_MAX_LENGTH)
-            .regex(CONTROL_CHARACTERS)
-            .optional()
-            .describe('Institution of the new account; defaults to the one found in the file')
+        ...accountChoiceShape
     })
-    .superRefine((body, context): void => {
-        const hasExisting: boolean = body.accountId !== undefined;
-        const hasNew: boolean = body.newAccountName !== undefined && body.newAccountKind !== undefined;
-        const partialNew: boolean = (body.newAccountName === undefined) !== (body.newAccountKind === undefined);
-        if (hasExisting === hasNew || partialNew || (hasExisting && body.newAccountInstitution !== undefined)) {
-            context.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: 'send accountId, or newAccountName with newAccountKind, never both nor neither'
-            });
-        }
-    });
+    .superRefine(refineAccountChoice);
+
+export const modelCommitBodySchema = z
+    .object({
+        previewId: z.string().uuid().describe('`model.previewId` returned by the preview of a PDF or image statement'),
+        ...accountChoiceShape
+    })
+    .strict()
+    .superRefine(refineAccountChoice);
+
+export const previewExpiredPayloadSchema = z.object({
+    previewId: z.string().uuid()
+});
 
 export const importIdParamsSchema = z.object({
     id: z.string().uuid().describe('Import id')
@@ -135,9 +169,25 @@ const sampleRowSchema = z.object({
     amountMinor: z.number().int().describe('Signed amount in minor units; negative is an outflow')
 });
 
+const modelTransactionSchema = sampleRowSchema.extend({
+    line: z.number().int().describe('Position of the transaction in the reading, counted from 1')
+});
+
+const modelPreviewSchema = z
+    .object({
+        previewId: z.string().uuid().describe('Send it to POST /spending/imports/model to save these transactions'),
+        expiresAt: z.string().datetime().describe('When the reading is discarded; after that the file must be sent again'),
+        transactions: z.array(modelTransactionSchema).describe('Every transaction the model read, for the person to check before saving'),
+        pagesNotRead: z
+            .array(z.string())
+            .describe('Pages of a scanned PDF left unread because the reading cost limit of one file was reached (p3, p4...)')
+    })
+    .nullable()
+    .describe('PDF or image only: what the language model read; null for OFX and CSV');
+
 export const importPreviewSchema = z.object({
-    detectedFormat: importFormatSchema.describe('Format detected from the content'),
-    format: importFormatSchema.describe('Format used to read the file; the forced one when the request sent `format`'),
+    detectedFormat: storedFormatSchema.describe('Format detected from the content; `model` for a PDF or an image'),
+    format: storedFormatSchema.describe('Format used to read the file; the forced one when the request sent `format`'),
     fileName: z.string().describe('Base name of the uploaded file, up to 120 characters'),
     rows: z.number().int().describe('Valid rows; for a generic CSV sent without mapping, the data lines found'),
     rejected: z.number().int().describe('Rows that could not be read'),
@@ -163,14 +213,21 @@ export const importPreviewSchema = z.object({
         .string()
         .datetime()
         .nullable()
-        .describe('When the exact same file was imported before; it only warns, it does not block')
+        .describe('When the exact same file was imported before; it only warns, it does not block'),
+    totals: z
+        .object({
+            inflowMinor: z.number().int().describe('Sum of the positive amounts of the valid rows, in minor units'),
+            outflowMinor: z.number().int().describe('Sum of the negative amounts of the valid rows, as a positive number in minor units')
+        })
+        .describe('Money in and money out of the valid rows'),
+    model: modelPreviewSchema
 });
 
 export const importViewSchema = z.object({
     id: z.string().uuid().describe('Import id'),
     accountId: z.string().uuid().describe('Financial account that received the rows'),
     accountName: z.string().describe('Name of that account'),
-    format: importFormatSchema.describe('Format of the file'),
+    format: storedFormatSchema.describe('Format of the file; `model` when a PDF or an image was read by the language model'),
     fileName: z.string().describe('Base name of the uploaded file'),
     rows: z.number().int().describe('Valid rows of the file'),
     inserted: z.number().int().describe('Rows that became new transactions'),
@@ -213,5 +270,6 @@ export function multipartBodyOf(schema: ZodTypeAny): Record<string, unknown> {
 
 export class PreviewBodyDto extends createZodDto(previewBodySchema) {}
 export class CommitBodyDto extends createZodDto(commitBodySchema) {}
+export class ModelCommitBodyDto extends createZodDto(modelCommitBodySchema) {}
 export class ImportIdParamsDto extends createZodDto(importIdParamsSchema) {}
 export class ImportListQueryDto extends createZodDto(importListQuerySchema) {}

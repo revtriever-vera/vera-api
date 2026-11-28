@@ -1,12 +1,14 @@
 import { maxCodeUnits, minCodeUnits } from '../../../shared/utils/compare-code-units';
 import {
     ImportPreview,
-    ImportFormat,
     MAX_REJECTION_EXAMPLES,
+    ModelPreview,
     ParsedRow,
     ParsedStatement,
     PREVIEW_SAMPLE_SIZE,
-    SampleRow
+    PreviewTotals,
+    SampleRow,
+    StoredImportFormat
 } from './statement-import.types';
 
 export interface PeriodBounds {
@@ -33,11 +35,22 @@ export function sampleOf(rows: readonly ParsedRow[]): SampleRow[] {
         .map((row: ParsedRow): SampleRow => ({ date: row.date, description: row.description, amountMinor: row.amountMinor }));
 }
 
+export function totalsOf(rows: readonly ParsedRow[]): PreviewTotals {
+    return rows.reduce(
+        (totals: PreviewTotals, row: ParsedRow): PreviewTotals =>
+            row.amountMinor > 0
+                ? { ...totals, inflowMinor: totals.inflowMinor + row.amountMinor }
+                : { ...totals, outflowMinor: totals.outflowMinor - row.amountMinor },
+        { inflowMinor: 0, outflowMinor: 0 }
+    );
+}
+
 export interface PreviewContext {
-    readonly detectedFormat: ImportFormat;
+    readonly detectedFormat: StoredImportFormat;
     readonly fileName: string;
     readonly suggestedAccountId: string | null;
     readonly alreadyImportedAt: string | null;
+    readonly model: ModelPreview | null;
 }
 
 export function buildPreview(statement: ParsedStatement, context: PreviewContext): ImportPreview {
@@ -56,7 +69,9 @@ export function buildPreview(statement: ParsedStatement, context: PreviewContext
         columns: statement.columns,
         accountHint: statement.accountHint,
         suggestedAccountId: context.suggestedAccountId,
-        alreadyImportedAt: context.alreadyImportedAt
+        alreadyImportedAt: context.alreadyImportedAt,
+        totals: totalsOf(statement.rows),
+        model: context.model
     };
 }
 
