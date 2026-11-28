@@ -1,7 +1,7 @@
 import { PluggyAuthRejectedError, PluggyNotFoundError, PluggyUnavailableError } from '../ports/pluggy-client.errors';
 import { PluggyCredentialsPair } from './pluggy-session';
 
-export type PluggyRequestKind = 'auth' | 'read';
+export type PluggyRequestKind = 'auth' | 'read' | 'write';
 
 const DEFAULT_RETRY_AFTER_SECONDS: number = 60;
 const HTTP_UNAUTHORIZED: number = 401;
@@ -28,9 +28,19 @@ function readFailureOf(status: number): Error | null {
     return status === HTTP_NOT_FOUND || status === HTTP_FORBIDDEN ? new PluggyNotFoundError() : null;
 }
 
+function writeFailureOf(status: number): Error | null {
+    return status === HTTP_UNAUTHORIZED ? new PluggyAuthRejectedError() : null;
+}
+
+const CLASSIFIERS: Readonly<Record<PluggyRequestKind, (status: number) => Error | null>> = {
+    auth: authFailureOf,
+    read: readFailureOf,
+    write: writeFailureOf
+};
+
 function failureOf(response: Response, kind: PluggyRequestKind): Error {
     const status: number = response.status;
-    const classified: Error | null = kind === 'auth' ? authFailureOf(status) : readFailureOf(status);
+    const classified: Error | null = CLASSIFIERS[kind](status);
     if (classified !== null) {
         return classified;
     }
@@ -78,6 +88,19 @@ export class PluggyHttp {
                 body: JSON.stringify(credentials)
             },
             'auth',
+            this.timeoutMs
+        );
+    }
+
+    public async postConnectToken(path: string, apiKey: string, body: unknown): Promise<unknown> {
+        return execute(
+            `${this.baseUrl}${path}`,
+            {
+                method: 'POST',
+                headers: { 'content-type': 'application/json', accept: 'application/json', 'X-API-KEY': apiKey },
+                body: JSON.stringify(body)
+            },
+            'write',
             this.timeoutMs
         );
     }

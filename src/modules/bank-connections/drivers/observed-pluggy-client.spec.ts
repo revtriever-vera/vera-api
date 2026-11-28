@@ -6,7 +6,7 @@ import { PluggyClientPort } from '../ports/pluggy-client.port';
 import { BankConnectionsLogService } from '../services/bank-connections-log.service';
 import { BankConnectionsMetricsService } from '../services/bank-connections-metrics.service';
 import { ObservedPluggyClient } from './observed-pluggy-client';
-import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
+import { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
 function build(inner: Partial<PluggyClientPort>): {
     client: ObservedPluggyClient;
@@ -44,6 +44,16 @@ describe('ObservedPluggyClient', () => {
             })
         );
         expect(JSON.stringify([count.mock.calls, debug.mock.calls])).not.toContain('secret-sentinel');
+    });
+
+    it('conta o connect token sem registrar o token', async () => {
+        const token: PluggyConnectToken = new PluggyConnectToken('connect-sentinel');
+        const { client, count, debug } = build({ createConnectToken: vi.fn().mockResolvedValue(token) });
+
+        expect(await client.createConnectToken(SESSION, { clientUserId: 'c', webhookUrl: null })).toBe(token);
+
+        expect(count).toHaveBeenCalledWith('vera_pluggy_requests_total', { endpoint: 'connect_token', status: '2xx' });
+        expect(JSON.stringify([count.mock.calls, debug.mock.calls])).not.toContain('connect-sentinel');
     });
 
     it('registra o item inexistente como 404', async () => {

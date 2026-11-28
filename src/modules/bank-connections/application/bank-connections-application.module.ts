@@ -27,10 +27,13 @@ import { PluggyAvailabilityService } from '../services/pluggy-availability.servi
 import { PluggyAuthenticatorService } from '../services/pluggy-authenticator.service';
 import { PluggyCredentialsEraser } from '../services/pluggy-credentials.eraser';
 import { PluggyCredentialsResealer } from '../services/pluggy-credentials.resealer';
+import { ItemRegistrationService } from '../services/item-registration.service';
+import { PluggyWebhookUrlService } from '../services/pluggy-webhook-url.service';
 import { ConnectionSyncApplication } from './connection-sync.application';
 import { ConnectionsApplication } from './connections.application';
 import { CredentialsApplication } from './credentials.application';
 import { ManualSyncApplication } from './manual-sync.application';
+import { PluggyConnectApplication } from './pluggy-connect.application';
 import { SyncFanoutApplication } from './sync-fanout.application';
 
 @Module({
@@ -50,6 +53,9 @@ import { SyncFanoutApplication } from './sync-fanout.application';
         ConnectionSyncApplication,
         SyncFanoutApplication,
         ManualSyncApplication,
+        PluggyConnectApplication,
+        ItemRegistrationService,
+        PluggyWebhookUrlService,
         PluggyAccountSyncService,
         ConnectionDataSyncService,
         PluggyTransactionSyncService,
@@ -91,6 +97,7 @@ import { SyncFanoutApplication } from './sync-fanout.application';
         ConnectionSyncApplication,
         SyncFanoutApplication,
         ManualSyncApplication,
+        PluggyConnectApplication,
         CredentialsVaultService,
         BankConnectionReaderService,
         PluggyClientPort

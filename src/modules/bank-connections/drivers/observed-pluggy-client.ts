@@ -1,8 +1,15 @@
-import { PluggyClientPort, PluggyAccount, PluggyItem, PluggyTransactionPage, PluggyTransactionQuery } from '../ports/pluggy-client.port';
+import {
+    PluggyAccount,
+    PluggyClientPort,
+    PluggyConnectTokenRequest,
+    PluggyItem,
+    PluggyTransactionPage,
+    PluggyTransactionQuery
+} from '../ports/pluggy-client.port';
 import { PluggyAuthRejectedError, PluggyNotFoundError, PluggyUnavailableError } from '../ports/pluggy-client.errors';
 import { BankConnectionsLogService, ProviderEndpoint } from '../services/bank-connections-log.service';
 import { BankConnectionsMetricsService } from '../services/bank-connections-metrics.service';
-import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
+import { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
 const HTTP_OK: number = 200;
 const HTTP_UNAUTHORIZED: number = 401;
@@ -38,6 +45,10 @@ export class ObservedPluggyClient extends PluggyClientPort {
 
     public async authenticate(credentials: PluggyCredentialsPlain): Promise<PluggySession> {
         return this.track('auth', async () => this.inner.authenticate(credentials));
+    }
+
+    public async createConnectToken(session: PluggySession, request: PluggyConnectTokenRequest): Promise<PluggyConnectToken> {
+        return this.track('connect_token', async () => this.inner.createConnectToken(session, request));
     }
 
     public async getItem(session: PluggySession, itemId: string): Promise<PluggyItem | null> {

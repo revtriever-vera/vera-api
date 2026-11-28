@@ -11,6 +11,7 @@ import { PublishOptions, QueuePublisherPort } from '../../src/core/queue/queue.t
 import { QueueName } from '../../src/shared/constants/queues.constants';
 import { ConnectionsApplication } from '../../src/modules/bank-connections/application/connections.application';
 import { CredentialsApplication } from '../../src/modules/bank-connections/application/credentials.application';
+import { PluggyConnectApplication } from '../../src/modules/bank-connections/application/pluggy-connect.application';
 import { bankConnectionsConfig } from '../../src/modules/bank-connections/config/bank-connections.config';
 import { BankConnectionDomain } from '../../src/modules/bank-connections/domain/bank-connection.domain';
 import {
@@ -34,6 +35,8 @@ import { CredentialsVaultService } from '../../src/modules/bank-connections/serv
 import { PluggyAvailabilityService } from '../../src/modules/bank-connections/services/pluggy-availability.service';
 import { PluggyAuthenticatorService } from '../../src/modules/bank-connections/services/pluggy-authenticator.service';
 import { PluggyCredentialsEraser } from '../../src/modules/bank-connections/services/pluggy-credentials.eraser';
+import { ItemRegistrationService } from '../../src/modules/bank-connections/services/item-registration.service';
+import { PluggyWebhookUrlService } from '../../src/modules/bank-connections/services/pluggy-webhook-url.service';
 import { FinancialAccountService } from '../../src/modules/transactions/services/financial-account.service';
 import { InstitutionLogoService } from '../../src/modules/transactions/services/institution-logo.service';
 import { SpendingDatasetService } from '../../src/modules/transactions/services/spending-dataset.service';
@@ -416,16 +419,30 @@ export interface AccountSummary {
     readonly numberLast4: string | null;
 }
 
+const PATH_DEFAULTS: Pick<
+    ConfigType<typeof bankConnectionsConfig>,
+    | 'PLUGGY_AUTH_PATH'
+    | 'PLUGGY_ITEM_PATH'
+    | 'PLUGGY_CONNECT_TOKEN_PATH'
+    | 'PLUGGY_ACCOUNTS_PATH'
+    | 'PLUGGY_TRANSACTIONS_V2_PATH'
+    | 'PLUGGY_TRANSACTIONS_LEGACY_PATH'
+> = {
+    PLUGGY_AUTH_PATH: '/auth',
+    PLUGGY_ITEM_PATH: '/items',
+    PLUGGY_CONNECT_TOKEN_PATH: '/connect_token',
+    PLUGGY_ACCOUNTS_PATH: '/accounts',
+    PLUGGY_TRANSACTIONS_V2_PATH: '/v2/transactions',
+    PLUGGY_TRANSACTIONS_LEGACY_PATH: '/transactions'
+};
+
 export function configOf(overrides: Partial<ConfigType<typeof bankConnectionsConfig>> = {}): ConfigType<typeof bankConnectionsConfig> {
     return {
         PLUGGY_DRIVER: 'mock',
         PLUGGY_BASE_URL: 'https://pluggy.invalid',
         PLUGGY_HTTP_TIMEOUT_MS: 1000,
-        PLUGGY_AUTH_PATH: '/auth',
-        PLUGGY_ITEM_PATH: '/items',
-        PLUGGY_ACCOUNTS_PATH: '/accounts',
-        PLUGGY_TRANSACTIONS_V2_PATH: '/v2/transactions',
-        PLUGGY_TRANSACTIONS_LEGACY_PATH: '/transactions',
+        PLUGGY_WEBHOOK_BASE_URL: null,
+        ...PATH_DEFAULTS,
         PLUGGY_TRANSACTIONS_API: 'v2',
         PLUGGY_SYNC_JOBS_PER_MINUTE: 30,
         PLUGGY_SYNC_SPACING_MS: 2000,
@@ -451,6 +468,8 @@ export interface Fixture {
     readonly vault: CredentialsVaultService;
     readonly credentialsApplication: CredentialsApplication;
     readonly connectionsApplication: ConnectionsApplication;
+    readonly pluggyConnectApplication: PluggyConnectApplication;
+    readonly webhookUrls: PluggyWebhookUrlService;
     readonly eraser: PluggyCredentialsEraser;
     readonly exporter: BankConnectionsExporter;
     readonly credentialsDomain: PluggyCredentialsDomain;
@@ -571,7 +590,7 @@ export function buildFixture(options: BuildOptions = {}): Fixture {
         ...stores,
         ...domains,
         ...core,
-        ...wireApplications(core, domains, observability),
+        ...wireApplications(core, domains, observability, options),
         logCalls: observability.logCalls,
         metricCalls: observability.metricCalls,
         eraser: new PluggyCredentialsEraser(domains.credentialsDomain),
@@ -579,24 +598,62 @@ export function buildFixture(options: BuildOptions = {}): Fixture {
     };
 }
 
-function wireApplications(
-    core: Core,
-    domains: Domains,
-    observability: Observability
-): Pick<Fixture, 'credentialsApplication' | 'connectionsApplication'> {
+export function fakeHmacHex(value: string): string {
+    let hash: bigint = 0xcbf29ce484222325n;
+    for (const char of value) {
+        hash = BigInt.asUintN(64, (hash ^ BigInt(char.codePointAt(0) ?? 0)) * 0x100000001b3n);
+    }
+    return hash.toString(16).padStart(16, '0').repeat(4);
+}
+
+interface Shared {
+    readonly authenticator: PluggyAuthenticatorService;
+    readonly sync: BankSyncPublisherService;
+    readonly accounts: FinancialAccountService;
+    readonly views: ConnectionViewService;
+    readonly registrar: ItemRegistrationService;
+}
+
+function sharedOf(core: Core, domains: Domains, observability: Observability): Shared {
     const authenticator: PluggyAuthenticatorService = new PluggyAuthenticatorService(core.client, core.vault, core.availability);
     const sync: BankSyncPublisherService = new BankSyncPublisherService(core.publisher, core.context, observability.logs);
     const accounts: FinancialAccountService = core.accountService as unknown as FinancialAccountService;
-    const views: ConnectionViewService = new ConnectionViewService(
+    const logos: InstitutionLogoService = new InstitutionLogoService({ sha256Hex: (value: string): string => `sig-${value}` });
+    const views: ConnectionViewService = new ConnectionViewService(domains.connectionDomain, accounts, logos);
+    const registrar: ItemRegistrationService = new ItemRegistrationService(
+        core.client,
         domains.connectionDomain,
-        accounts,
-        new InstitutionLogoService({ sha256Hex: (value: string): string => `sig-${value}` })
+        views,
+        sync,
+        observability.logs
     );
-    const { logs, metrics } = observability;
-    const { vault, client } = core;
-    const { connectionDomain } = domains;
+    return { authenticator, sync, accounts, views, registrar };
+}
+
+function wireApplications(
+    core: Core,
+    domains: Domains,
+    observability: Observability,
+    options: BuildOptions
+): Pick<Fixture, 'credentialsApplication' | 'connectionsApplication' | 'pluggyConnectApplication' | 'webhookUrls'> {
+    const { authenticator, sync, accounts, views, registrar }: Shared = sharedOf(core, domains, observability);
+    const { logs, metrics }: Observability = observability;
+    const { vault, client, publisher, context }: Core = core;
+    const connectionDomain: BankConnectionDomain = domains.connectionDomain;
+    const webhookUrls: PluggyWebhookUrlService = new PluggyWebhookUrlService({ sha256Hex: fakeHmacHex }, configOf(options.config));
     return {
         credentialsApplication: new CredentialsApplication(vault, authenticator, connectionDomain, accounts, sync, logs, metrics),
-        connectionsApplication: new ConnectionsApplication(vault, authenticator, client, connectionDomain, views, accounts, sync, logs)
+        connectionsApplication: new ConnectionsApplication(vault, authenticator, registrar, connectionDomain, views, accounts),
+        pluggyConnectApplication: new PluggyConnectApplication(
+            authenticator,
+            vault,
+            client,
+            registrar,
+            webhookUrls,
+            publisher,
+            context,
+            logs
+        ),
+        webhookUrls
     };
 }

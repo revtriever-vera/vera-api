@@ -73,6 +73,7 @@ describe('CredentialsApplication', () => {
         const fixture: Fixture = buildFixture({
             client: {
                 authenticate: vi.fn().mockRejectedValue(unavailable),
+                createConnectToken: vi.fn(),
                 getItem: vi.fn(),
                 listAccounts: vi.fn(),
                 listTransactions: vi.fn()
@@ -92,6 +93,7 @@ describe('CredentialsApplication', () => {
         const fixture: Fixture = buildFixture({
             client: {
                 authenticate: vi.fn().mockRejectedValue(new Error('boom')),
+                createConnectToken: vi.fn(),
                 getItem: vi.fn(),
                 listAccounts: vi.fn(),
                 listTransactions: vi.fn()
@@ -174,6 +176,7 @@ describe('CredentialsApplication', () => {
         const down: Fixture = buildFixture({
             client: {
                 authenticate: vi.fn().mockRejectedValue(new PluggyUnavailableError('timeout', null, null)),
+                createConnectToken: vi.fn(),
                 getItem: vi.fn(),
                 listAccounts: vi.fn(),
                 listTransactions: vi.fn()

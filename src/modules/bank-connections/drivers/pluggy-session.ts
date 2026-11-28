@@ -29,6 +29,30 @@ export class PluggySession {
     }
 }
 
+export class PluggyConnectToken {
+    readonly #accessToken: string;
+
+    public constructor(accessToken: string) {
+        this.#accessToken = accessToken;
+    }
+
+    public reveal(): string {
+        return this.#accessToken;
+    }
+
+    public toJSON(): string {
+        return REDACTED;
+    }
+
+    public toString(): string {
+        return REDACTED;
+    }
+
+    public [Symbol.for('nodejs.util.inspect.custom')](): string {
+        return REDACTED;
+    }
+}
+
 export class PluggyCredentialsPlain {
     readonly #clientId: string;
     readonly #clientSecret: string;

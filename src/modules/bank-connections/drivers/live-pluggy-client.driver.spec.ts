@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configOf } from '../../../../test/support/bank-connections-fakes';
 import { LivePluggyClientDriver } from './live-pluggy-client.driver';
-import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
+import { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
 function json(status: number, body: unknown, headers: Record<string, string> = {}): Response {
     return new Response(JSON.stringify(body), { status, headers });
@@ -52,6 +52,61 @@ describe('LivePluggyClientDriver', () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, { other: 1 })));
 
         await expect(driver.authenticate(new PluggyCredentialsPlain('id', 'secret-123456789012'))).rejects.toMatchObject({
+            reason: 'format_invalid'
+        });
+    });
+
+    it('cria o connect token com X-API-KEY, clientUserId, avoidDuplicates e o webhookUrl, sem mostrar o token', async () => {
+        const fetchMock: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(json(200, { accessToken: 'connect-sentinel' }));
+        vi.stubGlobal('fetch', fetchMock);
+
+        const token: PluggyConnectToken = await driver.createConnectToken(new PluggySession('key-1'), {
+            clientUserId: 'company-1',
+            webhookUrl: 'https://api.vera.example/webhooks/pluggy/abc'
+        });
+
+        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(url).toBe('https://pluggy.invalid/connect_token');
+        expect(init.method).toBe('POST');
+        expect(init.headers).toMatchObject({ 'X-API-KEY': 'key-1', 'content-type': 'application/json' });
+        expect(JSON.parse(init.body as string)).toEqual({
+            options: { clientUserId: 'company-1', avoidDuplicates: true, webhookUrl: 'https://api.vera.example/webhooks/pluggy/abc' }
+        });
+        expect(token.reveal()).toBe('connect-sentinel');
+        expect(JSON.stringify({ token })).not.toContain('connect-sentinel');
+        expect(String(token)).not.toContain('connect-sentinel');
+    });
+
+    it('sem URL pública omite o webhookUrl do connect token', async () => {
+        const fetchMock: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(json(200, { accessToken: 'tok' }));
+        vi.stubGlobal('fetch', fetchMock);
+
+        await driver.createConnectToken(new PluggySession('key-1'), { clientUserId: 'company-1', webhookUrl: null });
+
+        expect(JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string)).toEqual({
+            options: { clientUserId: 'company-1', avoidDuplicates: true }
+        });
+    });
+
+    it('converte 401 do connect token em recusa, 5xx em indisponibilidade e corpo sem accessToken em formato inválido', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi
+                .fn()
+                .mockResolvedValueOnce(json(401, {}))
+                .mockResolvedValueOnce(json(503, {}))
+                .mockResolvedValueOnce(json(200, { token: 'x' }))
+        );
+        const session: PluggySession = new PluggySession('key-1');
+        const request: { clientUserId: string; webhookUrl: null } = { clientUserId: 'c', webhookUrl: null };
+
+        await expect(driver.createConnectToken(session, request)).rejects.toMatchObject({ name: 'PluggyAuthRejectedError' });
+        await expect(driver.createConnectToken(session, request)).rejects.toMatchObject({
+            name: 'PluggyUnavailableError',
+            reason: 'server_error'
+        });
+        await expect(driver.createConnectToken(session, request)).rejects.toMatchObject({
+            name: 'PluggyUnavailableError',
             reason: 'format_invalid'
         });
     });

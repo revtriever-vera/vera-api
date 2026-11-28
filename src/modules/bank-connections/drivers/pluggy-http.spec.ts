@@ -13,12 +13,12 @@ describe('PluggyHttp', () => {
         vi.unstubAllGlobals();
     });
 
-    it('expõe só postAuth e get, nenhum método de escrita', () => {
+    it('expõe só postAuth, postConnectToken e get, nenhum método de escrita de dados', () => {
         const methods: string[] = Object.getOwnPropertyNames(PluggyHttp.prototype).filter(
             (name: string): boolean => name !== 'constructor'
         );
 
-        expect(methods.sort()).toEqual(['get', 'postAuth']);
+        expect(methods.sort()).toEqual(['get', 'postAuth', 'postConnectToken']);
     });
 
     it('envia o JSON das credenciais em POST /auth e o X-API-KEY nas leituras', async () => {

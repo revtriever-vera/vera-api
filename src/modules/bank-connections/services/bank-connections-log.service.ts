@@ -8,6 +8,7 @@ const PROVIDER: string = 'bank-connections-provider';
 const SYNC_PUBLISH: string = 'bank-connections-sync-publish';
 const SYNC_FANOUT: string = 'bank-connections-sync-fanout';
 const SYNC: string = 'bank-connections-sync';
+const WEBHOOK: string = 'bank-connections-webhook';
 
 export interface SyncLogFields {
     readonly connectionId: string;
@@ -24,7 +25,9 @@ export interface SyncLogFields {
     readonly failureCode: string | null;
 }
 
-export type ProviderEndpoint = 'auth' | 'item' | 'accounts' | 'transactions';
+export type WebhookOutcome = 'queued' | 'ignored' | 'rejected' | 'client_mismatch' | 'credentials_unusable' | ItemOutcome;
+
+export type ProviderEndpoint = 'auth' | 'connect_token' | 'item' | 'accounts' | 'transactions';
 
 @Injectable()
 export class BankConnectionsLogService {
@@ -36,6 +39,15 @@ export class BankConnectionsLogService {
 
     public item(connectionId: string | null, outcome: ItemOutcome, providerStatus: string | null): void {
         this.logService.info({ message: 'pluggy item checked', identifier: ITEM, meta: { connectionId, outcome, providerStatus } });
+    }
+
+    public webhook(event: string | null, outcome: WebhookOutcome): void {
+        const entry: LogEntry = { message: 'pluggy webhook handled', identifier: WEBHOOK, meta: { event, outcome } };
+        if (outcome === 'rejected' || outcome === 'client_mismatch') {
+            this.logService.warn(entry);
+            return;
+        }
+        this.logService.info(entry);
     }
 
     public syncPublishFailed(connectionId: string, trigger: string, error: unknown): void {

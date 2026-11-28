@@ -10,6 +10,7 @@ const DEFAULT_BASE_URL: string = 'https://api.pluggy.ai';
 const DEFAULT_TIMEOUT_MS: number = 10_000;
 const DEFAULT_AUTH_PATH: string = '/auth';
 const DEFAULT_ITEM_PATH: string = '/items';
+const DEFAULT_CONNECT_TOKEN_PATH: string = '/connect_token';
 const DEFAULT_ACCOUNTS_PATH: string = '/accounts';
 const DEFAULT_TRANSACTIONS_V2_PATH: string = '/v2/transactions';
 const DEFAULT_TRANSACTIONS_LEGACY_PATH: string = '/transactions';
@@ -30,6 +31,12 @@ function apiPath(fallback: string): z.ZodType<string, z.ZodTypeDef, unknown> {
 
 const MAX_HISTORY_DAYS: number = 1825;
 
+const httpsUrl = z
+    .string()
+    .trim()
+    .url()
+    .refine((value: string): boolean => value.startsWith('https://'));
+
 const flag = z.preprocess(blankAsUndefined, z.enum(['true', 'false']).default('false'));
 
 const schema = z.object({
@@ -38,6 +45,8 @@ const schema = z.object({
     PLUGGY_HTTP_TIMEOUT_MS: z.preprocess(blankAsUndefined, z.coerce.number().int().positive().default(DEFAULT_TIMEOUT_MS)),
     PLUGGY_AUTH_PATH: apiPath(DEFAULT_AUTH_PATH),
     PLUGGY_ITEM_PATH: apiPath(DEFAULT_ITEM_PATH),
+    PLUGGY_CONNECT_TOKEN_PATH: apiPath(DEFAULT_CONNECT_TOKEN_PATH),
+    PLUGGY_WEBHOOK_BASE_URL: z.preprocess(blankAsUndefined, httpsUrl.optional()),
     PLUGGY_ACCOUNTS_PATH: apiPath(DEFAULT_ACCOUNTS_PATH),
     PLUGGY_TRANSACTIONS_V2_PATH: apiPath(DEFAULT_TRANSACTIONS_V2_PATH),
     PLUGGY_TRANSACTIONS_LEGACY_PATH: apiPath(DEFAULT_TRANSACTIONS_LEGACY_PATH),
@@ -60,6 +69,9 @@ export interface BankConnectionsSettings {
     readonly PLUGGY_HTTP_TIMEOUT_MS: number;
     readonly PLUGGY_AUTH_PATH: string;
     readonly PLUGGY_ITEM_PATH: string;
+    readonly PLUGGY_CONNECT_TOKEN_PATH: string;
+    /** URL pública da API, em https, que a Pluggy chama no `item/created`. Nula desliga o webhook e o fluxo fica só no `onSuccess`. */
+    readonly PLUGGY_WEBHOOK_BASE_URL: string | null;
     readonly PLUGGY_ACCOUNTS_PATH: string;
     readonly PLUGGY_TRANSACTIONS_V2_PATH: string;
     readonly PLUGGY_TRANSACTIONS_LEGACY_PATH: string;
@@ -116,6 +128,8 @@ export function parseBankConnectionsConfig(env: NodeJS.ProcessEnv): BankConnecti
         PLUGGY_HTTP_TIMEOUT_MS: parsed.PLUGGY_HTTP_TIMEOUT_MS,
         PLUGGY_AUTH_PATH: parsed.PLUGGY_AUTH_PATH,
         PLUGGY_ITEM_PATH: parsed.PLUGGY_ITEM_PATH,
+        PLUGGY_CONNECT_TOKEN_PATH: parsed.PLUGGY_CONNECT_TOKEN_PATH,
+        PLUGGY_WEBHOOK_BASE_URL: parsed.PLUGGY_WEBHOOK_BASE_URL === undefined ? null : stripTrailing(parsed.PLUGGY_WEBHOOK_BASE_URL, '/'),
         ...syncSettingsOf(parsed),
         MOCK_PLUGGY_FORCE_401: parsed.MOCK_PLUGGY_FORCE_401 === 'true',
         MOCK_PLUGGY_REVOKED_ITEMS: revokedItemsOf(parsed.MOCK_PLUGGY_REVOKED_ITEMS)

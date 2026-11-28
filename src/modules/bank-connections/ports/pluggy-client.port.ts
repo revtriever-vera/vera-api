@@ -1,6 +1,6 @@
-import type { PluggyCredentialsPlain, PluggySession } from '../drivers/pluggy-session';
+import type { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from '../drivers/pluggy-session';
 
-export type { PluggyCredentialsPlain, PluggySession };
+export type { PluggyConnectToken, PluggyCredentialsPlain, PluggySession };
 
 export interface PluggyItem {
     readonly id: string;
@@ -67,8 +67,14 @@ export interface PluggyTransactionPage {
     readonly next: string | null;
 }
 
+export interface PluggyConnectTokenRequest {
+    readonly clientUserId: string;
+    readonly webhookUrl: string | null;
+}
+
 export abstract class PluggyClientPort {
     public abstract authenticate(credentials: PluggyCredentialsPlain): Promise<PluggySession>;
+    public abstract createConnectToken(session: PluggySession, request: PluggyConnectTokenRequest): Promise<PluggyConnectToken>;
     public abstract getItem(session: PluggySession, itemId: string): Promise<PluggyItem | null>;
     public abstract listAccounts(session: PluggySession, itemId: string): Promise<readonly PluggyAccount[]>;
     public abstract listTransactions(session: PluggySession, query: PluggyTransactionQuery): Promise<PluggyTransactionPage>;

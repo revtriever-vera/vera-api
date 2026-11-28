@@ -9,8 +9,14 @@ import {
 } from '../../../../test/support/bank-connections-fakes';
 import { SpendingDatasetService } from '../../transactions/services/spending-dataset.service';
 import { PluggyAccount, PluggyTransaction, PluggyTransactionPage } from '../ports/pluggy-client.port';
-import { MOCK_INVALID_SECRET, MOCK_PAGE_SIZE, MOCK_UNAVAILABLE_SECRET, MockPluggyClientDriver } from './mock-pluggy-client.driver';
-import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
+import {
+    MOCK_CONNECT_TOKEN_PREFIX,
+    MOCK_INVALID_SECRET,
+    MOCK_PAGE_SIZE,
+    MOCK_UNAVAILABLE_SECRET,
+    MockPluggyClientDriver
+} from './mock-pluggy-client.driver';
+import { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
 function driverOf(overrides: Parameters<typeof configOf>[0] = {}): MockPluggyClientDriver {
     return new MockPluggyClientDriver(configOf(overrides), new SpendingDatasetService());
@@ -56,6 +62,19 @@ describe('MockPluggyClientDriver', () => {
         ).rejects.toMatchObject({
             name: 'PluggyAuthRejectedError'
         });
+    });
+
+    it('gera o connect token dos dois caminhos: só onSuccess sem URL pública e com webhook quando há URL', async () => {
+        const driver: MockPluggyClientDriver = driverOf();
+
+        const onSuccess: PluggyConnectToken = await driver.createConnectToken(SESSION, { clientUserId: 'company-1', webhookUrl: null });
+        const webhook: PluggyConnectToken = await driver.createConnectToken(SESSION, {
+            clientUserId: 'company-1',
+            webhookUrl: 'https://api.vera.example/webhooks/pluggy/t'
+        });
+
+        expect(onSuccess.reveal()).toBe(`${MOCK_CONNECT_TOKEN_PREFIX}-on-success-company-1`);
+        expect(webhook.reveal()).toBe(`${MOCK_CONNECT_TOKEN_PREFIX}-webhook-company-1`);
     });
 
     it('devolve os itens do mock e nulo para o inexistente, o desconhecido e o revogado', async () => {

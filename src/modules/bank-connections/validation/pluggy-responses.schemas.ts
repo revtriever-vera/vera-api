@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const pluggyConnectTokenResponseSchema = z.object({ accessToken: z.string().min(1) });
+
 export const pluggyAuthResponseSchema = z.object({
     apiKey: z.string().min(1)
 });

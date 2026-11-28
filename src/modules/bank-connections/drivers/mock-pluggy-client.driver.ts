@@ -12,6 +12,7 @@ import { PluggyAuthRejectedError, PluggyUnavailableError } from '../ports/pluggy
 import {
     PluggyAccount,
     PluggyClientPort,
+    PluggyConnectTokenRequest,
     PluggyItem,
     PluggyParty,
     PluggyPaymentData,
@@ -19,7 +20,7 @@ import {
     PluggyTransactionPage,
     PluggyTransactionQuery
 } from '../ports/pluggy-client.port';
-import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
+import { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
 export const MOCK_INVALID_SECRET: string = 'mock-invalid-secret';
 export const MOCK_UNAVAILABLE_SECRET: string = 'mock-unavailable-secret';
@@ -28,6 +29,7 @@ export const MOCK_ITEM_ITAU: string = '00000000-0000-4000-8000-00000000a002';
 export const MOCK_ITEM_NOT_FOUND: string = '00000000-0000-4000-8000-00000000a404';
 export const MOCK_ITEM_LOGIN_ERROR: string = '00000000-0000-4000-8000-00000000a409';
 export const MOCK_PAGE_SIZE: number = 50;
+export const MOCK_CONNECT_TOKEN_PREFIX: string = 'mock-connect-token';
 
 const MOCK_API_KEY: string = 'mock-api-key';
 const CONSENT_DAYS: number = 90;
@@ -97,6 +99,11 @@ export class MockPluggyClientDriver extends PluggyClientPort {
             return Promise.reject(new PluggyUnavailableError('server_error', SERVICE_UNAVAILABLE, null));
         }
         return Promise.resolve(new PluggySession(MOCK_API_KEY));
+    }
+
+    public createConnectToken(_session: PluggySession, request: PluggyConnectTokenRequest): Promise<PluggyConnectToken> {
+        const channel: string = request.webhookUrl === null ? 'on-success' : 'webhook';
+        return Promise.resolve(new PluggyConnectToken(`${MOCK_CONNECT_TOKEN_PREFIX}-${channel}-${request.clientUserId}`));
     }
 
     public getItem(_session: PluggySession, itemId: string): Promise<PluggyItem | null> {
