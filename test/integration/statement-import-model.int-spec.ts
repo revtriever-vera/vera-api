@@ -242,6 +242,22 @@ describe('statement import read by the model', () => {
         expect(await rows('SELECT 1 FROM "StatementImportPreviews" WHERE "id" = $1', [previewId])).toHaveLength(0);
     });
 
+    it('com a cota de IA estourada a leitura responde usage.cap_reached e nada vai ao modelo', async () => {
+        const owner: Account = await harness.signUp('model_cap');
+        await harness.pg.query(
+            `INSERT INTO "PaidUsageEntries" ("id","companyId","period","feature","task","referenceId","costMicros","outcome")
+             VALUES ($1,$2,to_char(now() AT TIME ZONE 'America/Sao_Paulo','YYYY-MM'),'ai','summary_month','seed',100000000,'answered')`,
+            [crypto.randomUUID(), owner.company.id]
+        );
+        const before: number = sent.length;
+
+        const reply: Reply = await upload(owner, await statementPdf('F'), { modelConsent: 'true' });
+
+        expect([reply.status, reply.body['type']]).toEqual([429, 'usage.cap_reached']);
+        expect(sent).toHaveLength(before);
+        expect(await rows('SELECT 1 FROM "StatementImportPreviews" WHERE "companyId" = $1', [owner.company.id])).toHaveLength(0);
+    });
+
     it('os logs não levam descrição de transação nem nome da pessoa', () => {
         const text: string = logged.join('\n');
 

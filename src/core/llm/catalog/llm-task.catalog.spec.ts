@@ -89,8 +89,9 @@ describe('catálogo de tarefas', () => {
         expect(byTask(LLM_TASKS.statementExtract).responseSchema).toMatchObject({ required: ['currency', 'transactions'] });
     });
 
-    it('a leitura de extrato entra na cota de IA da conta; a de investimentos continua fora', () => {
-        expect(byTask(LLM_TASKS.statementExtract).outsideCap).toBeUndefined();
-        expect(byTask(LLM_TASKS.investmentExtract).outsideCap).toBe(true);
+    it('toda leitura de arquivo pelo modelo entra na cota de IA da conta (decisão do dono, #386)', () => {
+        for (const spec of LLM_TASK_CATALOG) {
+            expect(spec.outsideCap).toBeUndefined();
+        }
     });
 });

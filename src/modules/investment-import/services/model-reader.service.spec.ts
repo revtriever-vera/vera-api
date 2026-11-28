@@ -6,6 +6,7 @@ import { LlmInvalidResponseError, LlmProviderDisabledError } from '../../../core
 import { LlmContentBlock, LlmGenerationRequest, LlmGenerationResponse, LlmMessage } from '../../../core/llm/llm.types';
 import { LlmAvailabilityService } from '../../../core/llm/services/llm-availability.service';
 import { ThrottleService, TooManyAttemptsError } from '../../../core/throttle/throttle.service';
+import { CapReachedError } from '../../../core/usage/usage.errors';
 import { ParsedInvestmentStatement } from '../domain/investment-statement.types';
 import { ModelReaderService } from './model-reader.service';
 import { InvestmentImportLogService } from './investment-import-log.service';
@@ -223,6 +224,14 @@ describe('ModelReaderService', () => {
         kit.generate.mockRejectedValue(new LlmInvalidResponseError('investment_extract'));
 
         await expect(kit.reader.read(await png(20, 20), true)).rejects.toMatchObject({ code: 'model.unreadable' });
+    });
+
+    it('cota de IA estourada chega como usage.cap_reached, sem virar model.unreadable, e o limite por hora continua', async () => {
+        kit.generate.mockRejectedValue(new CapReachedError('ai', '2026-12-01T00:00:00.000Z'));
+
+        await expect(kit.reader.read(await png(20, 20), true)).rejects.toMatchObject({ code: 'usage.cap_reached', status: 429 });
+        expect(kit.assertAllowed).toHaveBeenCalledWith('investment-import-model:company-1', 30, 3600);
+        expect(kit.logs['modelRead']).not.toHaveBeenCalled();
     });
 
     it('arquivo sem nenhuma operação legível é ilegível', async () => {

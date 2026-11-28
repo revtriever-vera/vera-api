@@ -297,14 +297,23 @@ describe('MeteredLlmDriver', () => {
             );
         });
 
-        it('a leitura de importação não é barrada pela cota mensal e não lança custo nela', async () => {
-            const { metered, ledger } = buildExtract();
+        it('a leitura de importação entra na cota: com a cota estourada é barrada antes de chamar o modelo', async () => {
+            const { metered, ledger, driver } = buildExtract();
             ledger.assertRoom.mockRejectedValue(new CapReachedError('ai', '2026-12-01T00:00:00.000Z'));
+
+            await expect(metered.generate(EXTRACT)).rejects.toMatchObject({ code: 'usage.cap_reached', status: 429 });
+
+            expect(ledger.assertRoom).toHaveBeenCalledWith('ai', 'investment_extract', expect.any(Number));
+            expect(driver.generate).not.toHaveBeenCalled();
+            expect(ledger.record).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'cap_reached', outsideCap: false }));
+        });
+
+        it('com espaço na cota, a leitura de importação lança o custo nela', async () => {
+            const { metered, ledger } = buildExtract();
 
             await expect(metered.generate(EXTRACT)).resolves.toMatchObject({ costMicros: 1234 });
 
-            expect(ledger.assertRoom).not.toHaveBeenCalled();
-            expect(ledger.record).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'answered', outsideCap: true }));
+            expect(ledger.record).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'answered', outsideCap: false }));
         });
 
         it('as tarefas de resumo seguem sob a cota', async () => {
