@@ -9,6 +9,8 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_HTTP_TIMEOUT_MS: 10_000,
             PLUGGY_AUTH_PATH: '/auth',
             PLUGGY_ITEM_PATH: '/items',
+            PLUGGY_CONNECT_TOKEN_PATH: '/connect_token',
+            PLUGGY_WEBHOOK_BASE_URL: null,
             PLUGGY_ACCOUNTS_PATH: '/accounts',
             PLUGGY_TRANSACTIONS_V2_PATH: '/v2/transactions',
             PLUGGY_TRANSACTIONS_LEGACY_PATH: '/transactions',
@@ -42,6 +44,8 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_HTTP_TIMEOUT_MS: '2500',
             PLUGGY_AUTH_PATH: '/v2/auth',
             PLUGGY_ITEM_PATH: '/v2/items',
+            PLUGGY_CONNECT_TOKEN_PATH: '/v2/connect_token',
+            PLUGGY_WEBHOOK_BASE_URL: 'https://api.vera.example/',
             PLUGGY_ACCOUNTS_PATH: '/v2/accounts',
             PLUGGY_TRANSACTIONS_API: 'legacy',
             PLUGGY_SYNC_JOBS_PER_MINUTE: '12',
@@ -58,6 +62,8 @@ describe('parseBankConnectionsConfig', () => {
             PLUGGY_HTTP_TIMEOUT_MS: 2500,
             PLUGGY_AUTH_PATH: '/v2/auth',
             PLUGGY_ITEM_PATH: '/v2/items',
+            PLUGGY_CONNECT_TOKEN_PATH: '/v2/connect_token',
+            PLUGGY_WEBHOOK_BASE_URL: 'https://api.vera.example',
             PLUGGY_ACCOUNTS_PATH: '/v2/accounts',
             PLUGGY_TRANSACTIONS_V2_PATH: '/v2/transactions',
             PLUGGY_TRANSACTIONS_LEGACY_PATH: '/transactions',
@@ -87,6 +93,12 @@ describe('parseBankConnectionsConfig', () => {
         expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_BASE_URL: 'not a url' })).toThrow();
         expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_HTTP_TIMEOUT_MS: '0' })).toThrow();
         expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_AUTH_PATH: 'auth' })).toThrow();
+    });
+
+    it('aceita o webhook da Pluggy só em https e o desliga quando a URL está em branco', () => {
+        expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_WEBHOOK_BASE_URL: 'http://localhost:3333' })).toThrow();
+        expect(() => parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_WEBHOOK_BASE_URL: 'not a url' })).toThrow();
+        expect(parseBankConnectionsConfig({ IS_LOCAL: 'true', PLUGGY_WEBHOOK_BASE_URL: ' ' }).PLUGGY_WEBHOOK_BASE_URL).toBeNull();
     });
 
     it.each([

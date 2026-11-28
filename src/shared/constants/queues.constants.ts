@@ -34,6 +34,7 @@ export const MESSAGE_TYPES = {
     marketDataQuoteOndemandRequested: 'market-data.quote.ondemand.requested',
     bankConnectionsSyncDailyRequested: 'bank-connections.sync.daily.requested',
     bankConnectionsSyncRequested: 'bank-connections.sync.requested',
+    bankConnectionsPluggyItemCreated: 'bank-connections.pluggy-item.created',
     plansPremiumEndedSweepRequested: 'plans.premium-ended.sweep.requested',
     plansPremiumEndedRetryRequested: 'plans.premium-ended.retry.requested',
     plansTrialSweepRequested: 'plans.trial.sweep.requested',

@@ -77,6 +77,7 @@ describe('sigilo do segredo da Pluggy', () => {
         const down: Fixture = buildFixture({
             client: {
                 authenticate: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
+                createConnectToken: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
                 getItem: () => Promise.reject(new PluggyUnavailableError('server_error', 503, null)),
                 listAccounts: () => Promise.resolve([]),
                 listTransactions: () => Promise.resolve({ items: [], next: null })

@@ -38,6 +38,58 @@ export const connectItemsSchema = z.object({
 
 export type ConnectItemsBody = z.infer<typeof connectItemsSchema>;
 
+export const connectResultSchema = z.object({
+    itemIds: z
+        .array(z.string().trim().toLowerCase().uuid().describe('Item ID returned by the Pluggy Connect widget in `onSuccess` (`item.id`)'))
+        .min(1)
+        .max(MAX_ITEM_IDS_PER_REQUEST)
+        .transform((ids: string[]): string[] => [...new Set<string>(ids)])
+        .describe('Item IDs returned by the widget, 1 to 10. Repeated ids are collapsed after trimming and lowercasing')
+});
+
+export type ConnectResultBody = z.infer<typeof connectResultSchema>;
+
+export const connectTokenResponseSchema = z.object({
+    accessToken: z
+        .string()
+        .describe(
+            'Pluggy Connect token generated with the saved credentials, passed to the widget as `connectToken`. Valid for 30 minutes'
+        ),
+    expiresAt: z.string().datetime().describe('When the connect token expires'),
+    webhookEnabled: z
+        .boolean()
+        .describe(
+            'Whether Pluggy will also notify the API through the `item/created` webhook. When false, only `onSuccess` registers items'
+        )
+});
+
+const optionalText = z.preprocess((value: unknown): unknown => (value === null ? undefined : value), z.string().trim().min(1).optional());
+
+export const pluggyWebhookEventSchema = z.object({
+    event: z.string().min(1),
+    eventId: optionalText,
+    itemId: z.preprocess(
+        (value: unknown): unknown => (value === null ? undefined : value),
+        z.string().trim().toLowerCase().uuid().optional()
+    ),
+    clientId: optionalText,
+    clientUserId: optionalText
+});
+
+export type PluggyWebhookEvent = z.infer<typeof pluggyWebhookEventSchema>;
+
+export const itemCreatedPayloadSchema = z.object({
+    itemId: z.string().uuid(),
+    clientId: z.string().nullable(),
+    eventId: z.string().nullable()
+});
+
+export const devItemCreatedSchema = z.object({
+    itemId: z.string().trim().toLowerCase().uuid().describe('Mock Item ID the simulated widget created')
+});
+
+export type DevItemCreatedBody = z.infer<typeof devItemCreatedSchema>;
+
 export const purgeQuerySchema = z.object({
     purgeTransactions: z
         .enum(['true', 'false'])

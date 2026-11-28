@@ -94,3 +94,23 @@ export class SecretSafeValidationError extends AppError {
         });
     }
 }
+
+export class WebhookUnauthorizedError extends AppError {
+    public constructor() {
+        super({
+            code: 'connections.webhook_unauthorized',
+            status: 401,
+            detail: 'The webhook address is not valid.'
+        });
+    }
+}
+
+export class DevRouteDisabledError extends AppError {
+    public constructor() {
+        super({
+            code: 'connections.dev_route_disabled',
+            status: 404,
+            detail: 'This route only exists with the mock Pluggy driver.'
+        });
+    }
+}

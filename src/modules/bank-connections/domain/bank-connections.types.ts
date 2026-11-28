@@ -12,6 +12,9 @@ export const PLUGGY_PROVIDER: string = 'pluggy';
 export const PLUGGY_CREDENTIALS_PURPOSE: string = 'pluggy-credentials';
 export const MAX_ACTIVE_CONNECTIONS: number = 20;
 export const MAX_ITEM_IDS_PER_REQUEST: number = 10;
+export const CONNECT_TOKEN_TTL_SECONDS: number = 1800;
+export const PLUGGY_ITEM_CREATED_EVENT: string = 'item/created';
+export const PLUGGY_WEBHOOK_PATH: string = 'webhooks/pluggy';
 export const CONNECTION_LIST_LIMIT: number = 100;
 export const HINT_EDGE_LENGTH: number = 4;
 export const SYNC_ATTEMPTS: number = 3;
@@ -194,4 +197,16 @@ export interface ConnectionDetails {
     readonly connection: BankConnection;
     readonly links: readonly BankConnectionAccount[];
     readonly lastRun: BankSyncRun | null;
+}
+
+export interface ConnectTokenView {
+    readonly accessToken: string;
+    readonly expiresAt: string;
+    readonly webhookEnabled: boolean;
+}
+
+export interface ItemCreatedPayload {
+    readonly itemId: string;
+    readonly clientId: string | null;
+    readonly eventId: string | null;
 }

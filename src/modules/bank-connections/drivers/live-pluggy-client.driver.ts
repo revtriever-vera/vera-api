@@ -3,19 +3,27 @@ import { ConfigType } from '@nestjs/config';
 import { z } from 'zod';
 import { bankConnectionsConfig } from '../config/bank-connections.config';
 import { sanitizeLogoUrl } from '../domain/institution-logo-url';
-import { PluggyAccount, PluggyClientPort, PluggyItem, PluggyTransactionPage, PluggyTransactionQuery } from '../ports/pluggy-client.port';
+import {
+    PluggyAccount,
+    PluggyClientPort,
+    PluggyConnectTokenRequest,
+    PluggyItem,
+    PluggyTransactionPage,
+    PluggyTransactionQuery
+} from '../ports/pluggy-client.port';
 import { PluggyNotFoundError, PluggyUnavailableError } from '../ports/pluggy-client.errors';
 import {
     PluggyItemResponse,
     pluggyAccountsPageSchema,
     pluggyAuthResponseSchema,
+    pluggyConnectTokenResponseSchema,
     pluggyItemResponseSchema,
     pluggyTransactionsLegacyPageSchema,
     pluggyTransactionsV2PageSchema
 } from '../validation/pluggy-responses.schemas';
 import { PluggyHttp } from './pluggy-http';
 import { toAccount, toTransaction } from './pluggy-response.mapper';
-import { PluggyCredentialsPlain, PluggySession } from './pluggy-session';
+import { PluggyConnectToken, PluggyCredentialsPlain, PluggySession } from './pluggy-session';
 
 const MAX_PAGES: number = 100;
 const LEGACY_PAGE_SIZE: number = 500;
@@ -32,6 +40,14 @@ function dateOf(value: string | null | undefined): Date | null {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function connectTokenBodyOf(request: PluggyConnectTokenRequest): Record<string, unknown> {
+    const options: Record<string, unknown> = { clientUserId: request.clientUserId, avoidDuplicates: true };
+    if (request.webhookUrl !== null) {
+        options['webhookUrl'] = request.webhookUrl;
+    }
+    return { options };
+}
+
 function parsed<T>(schema: z.ZodType<T>, body: unknown): T {
     const result: z.SafeParseReturnType<unknown, T> = schema.safeParse(body);
     if (!result.success) {
@@ -44,6 +60,7 @@ function parsed<T>(schema: z.ZodType<T>, body: unknown): T {
 export class LivePluggyClientDriver extends PluggyClientPort {
     private readonly http: PluggyHttp;
     private readonly itemPath: string;
+    private readonly connectTokenPath: string;
     private readonly accountsPath: string;
     private readonly transactionsApi: 'v2' | 'legacy';
     private readonly transactionsPath: string;
@@ -52,6 +69,7 @@ export class LivePluggyClientDriver extends PluggyClientPort {
         super();
         this.http = new PluggyHttp(config.PLUGGY_BASE_URL, config.PLUGGY_AUTH_PATH, config.PLUGGY_HTTP_TIMEOUT_MS);
         this.itemPath = config.PLUGGY_ITEM_PATH;
+        this.connectTokenPath = config.PLUGGY_CONNECT_TOKEN_PATH;
         this.accountsPath = config.PLUGGY_ACCOUNTS_PATH;
         this.transactionsApi = config.PLUGGY_TRANSACTIONS_API;
         this.transactionsPath =
@@ -61,6 +79,11 @@ export class LivePluggyClientDriver extends PluggyClientPort {
     public async authenticate(credentials: PluggyCredentialsPlain): Promise<PluggySession> {
         const body: unknown = await this.http.postAuth(credentials.pair());
         return new PluggySession(parsed(pluggyAuthResponseSchema, body).apiKey);
+    }
+
+    public async createConnectToken(session: PluggySession, request: PluggyConnectTokenRequest): Promise<PluggyConnectToken> {
+        const body: unknown = await this.http.postConnectToken(this.connectTokenPath, session.headerValue(), connectTokenBodyOf(request));
+        return new PluggyConnectToken(parsed(pluggyConnectTokenResponseSchema, body).accessToken);
     }
 
     public async getItem(session: PluggySession, itemId: string): Promise<PluggyItem | null> {
