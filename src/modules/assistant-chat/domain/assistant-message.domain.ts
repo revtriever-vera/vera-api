@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AssistantMessagesRepository } from '../repositories/assistant-messages.repository';
-import { AssistantMessage, AssistantPendingAction, FinishTurnInput, TurnMode } from './assistant-chat.types';
+import { AssistantMessage, AssistantPendingAction, FinishTurnInput, ScriptedMessageInput, TurnMode } from './assistant-chat.types';
 import { AssistantPendingActionDomain } from './assistant-pending-action.domain';
 
 @Injectable()
@@ -57,6 +57,14 @@ export class AssistantMessageDomain {
 
     public async listOfConversations(conversationIds: readonly string[]): Promise<AssistantMessage[]> {
         return this.messages.listOfConversations(conversationIds);
+    }
+
+    public async appendScripted(conversationId: string, messages: readonly ScriptedMessageInput[], at: Date): Promise<void> {
+        await this.messages.appendScripted(conversationId, messages, at);
+    }
+
+    public async historyOf(conversationId: string): Promise<AssistantMessage[]> {
+        return this.messages.historyOf(conversationId);
     }
 
     public async purgeBefore(cutoff: Date): Promise<number> {

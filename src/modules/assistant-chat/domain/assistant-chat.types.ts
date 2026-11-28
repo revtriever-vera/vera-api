@@ -6,6 +6,12 @@ import type { AskVeraSent } from '../../ai-assistant/services/ask-vera.service';
 export const MESSAGE_ROLES = { person: 'person', vera: 'vera' } as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[keyof typeof MESSAGE_ROLES];
 
+export const SCRIPTED_ROLES = { person: 'person', vera: 'vera', system: 'system' } as const;
+export type ScriptedRole = (typeof SCRIPTED_ROLES)[keyof typeof SCRIPTED_ROLES];
+
+export const CONVERSATION_KINDS = { chat: 'chat', onboarding: 'onboarding' } as const;
+export type ConversationKind = (typeof CONVERSATION_KINDS)[keyof typeof CONVERSATION_KINDS];
+
 export const MESSAGE_STATUSES = { pending: 'pending', done: 'done', failed: 'failed' } as const;
 export type MessageStatus = (typeof MESSAGE_STATUSES)[keyof typeof MESSAGE_STATUSES];
 
@@ -68,6 +74,7 @@ export interface TurnTrail {
 export interface AssistantMessageExport {
     readonly role: string;
     readonly text: string;
+    readonly payload: unknown;
     readonly status: string;
     readonly mode: string | null;
     readonly toolsUsed: readonly string[];
@@ -75,6 +82,13 @@ export interface AssistantMessageExport {
 }
 
 export interface AssistantConversationExport {
+    readonly kind: string;
     readonly createdAt: string;
     readonly messages: readonly AssistantMessageExport[];
+}
+
+export interface ScriptedMessageInput {
+    readonly role: ScriptedRole;
+    readonly text: string;
+    readonly payload: object;
 }

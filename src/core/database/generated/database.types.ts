@@ -161,6 +161,7 @@ export interface AssistantConversations {
     companyId: string;
     createdAt: Generated<Timestamp>;
     id: string;
+    kind: Generated<string>;
     lastMessageAt: Generated<Timestamp>;
     updatedAt: Generated<Timestamp>;
     userId: string;
@@ -172,6 +173,7 @@ export interface AssistantMessages {
     createdAt: Generated<Timestamp>;
     id: string;
     mode: string | null;
+    payload: Json | null;
     role: string;
     sent: Json | null;
     status: string;
@@ -808,6 +810,7 @@ export interface OnboardingStates {
     dismissedAt: Timestamp | null;
     id: string;
     sampleLoadedAt: Timestamp | null;
+    script: Json | null;
     startedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;
 }

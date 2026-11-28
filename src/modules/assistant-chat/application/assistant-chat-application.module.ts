@@ -22,6 +22,7 @@ import { AssistantChatExporter } from '../services/assistant-chat.exporter';
 import { AssistantChatMemberLifecycle } from '../services/assistant-chat.member-lifecycle';
 import { AssistantSentPurge } from '../services/assistant-sent.purge';
 import { AssistantTurnExpiry } from '../services/assistant-turn.expiry';
+import { ScriptedConversationService } from '../services/scripted-conversation.service';
 import { AssistantAnswerApplication } from './assistant-answer.application';
 import { AssistantConversationApplication } from './assistant-conversation.application';
 import { AssistantTurnApplication } from './assistant-turn.application';
@@ -55,8 +56,9 @@ import { AssistantTurnApplication } from './assistant-turn.application';
         AssistantChatExporter,
         AssistantChatEraser,
         AssistantChatMemberLifecycle,
-        AssistantSentPurge
+        AssistantSentPurge,
+        ScriptedConversationService
     ],
-    exports: [AssistantTurnApplication, AssistantConversationApplication, AssistantAnswerApplication]
+    exports: [AssistantTurnApplication, AssistantConversationApplication, AssistantAnswerApplication, ScriptedConversationService]
 })
 export class AssistantChatApplicationModule {}

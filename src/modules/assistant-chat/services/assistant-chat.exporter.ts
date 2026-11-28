@@ -17,6 +17,7 @@ function messageExportOf(message: AssistantMessage): AssistantMessageExport {
     return {
         role: message.role,
         text: message.text,
+        payload: message.payload,
         status: message.status,
         mode: message.mode,
         toolsUsed: toolsOf(message),
@@ -41,7 +42,9 @@ export class AssistantChatExporter extends AccountDataExporterPort {
         if (userId === undefined) {
             return [];
         }
-        const rows: AssistantConversation[] = await this.conversations.listOfUser(userId);
+        const onboarding: AssistantConversation | null = await this.conversations.findOnboarding();
+        const own: AssistantConversation[] = await this.conversations.listOfUser(userId);
+        const rows: AssistantConversation[] = onboarding === null ? own : [onboarding, ...own];
         const messages: AssistantMessage[] = await this.messages.listOfConversations(
             rows.map((row: AssistantConversation): string => row.id)
         );
@@ -50,6 +53,7 @@ export class AssistantChatExporter extends AccountDataExporterPort {
             byConversation.set(message.conversationId, [...(byConversation.get(message.conversationId) ?? []), messageExportOf(message)]);
         }
         return rows.map((row: AssistantConversation): AssistantConversationExport => ({
+            kind: row.kind,
             createdAt: row.createdAt.toISOString(),
             messages: byConversation.get(row.id) ?? []
         }));

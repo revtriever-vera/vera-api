@@ -9,11 +9,13 @@ import {
     MESSAGE_ROLES,
     MESSAGE_STATUSES,
     NewAssistantMessage,
+    ScriptedMessageInput,
     TurnMode
 } from '../domain/assistant-chat.types';
 
 const PURGE_BATCH: number = 500;
 const EXPORT_LIMIT: number = 2000;
+const UNSCRIPTED: { readonly payload: null } = { payload: null };
 
 @Injectable()
 export class AssistantMessagesRepository extends BareTenantRepository<'AssistantMessages'> {
@@ -119,12 +121,47 @@ export class AssistantMessagesRepository extends BareTenantRepository<'Assistant
 
     public async purgeBefore(cutoff: Date): Promise<number> {
         let purged: number = 0;
-        let removed: number = await this.hardDeleteBefore('createdAt', cutoff, PURGE_BATCH);
+        let removed: number = await this.hardDeleteBefore('createdAt', cutoff, PURGE_BATCH, UNSCRIPTED);
         while (removed > 0) {
             purged += removed;
-            removed = await this.hardDeleteBefore('createdAt', cutoff, PURGE_BATCH);
+            removed = await this.hardDeleteBefore('createdAt', cutoff, PURGE_BATCH, UNSCRIPTED);
         }
         return purged;
+    }
+
+    public async appendScripted(conversationId: string, messages: readonly ScriptedMessageInput[], at: Date): Promise<void> {
+        if (messages.length === 0) {
+            return;
+        }
+        await this.createManyRows(
+            messages.map((message: ScriptedMessageInput, index: number): NewAssistantMessage => ({
+                ...this.rowOf(
+                    {
+                        id: IdUtil.newId(),
+                        conversationId,
+                        role: message.role,
+                        status: MESSAGE_STATUSES.done,
+                        text: message.text,
+                        mode: null
+                    },
+                    new Date(at.getTime() + index)
+                ),
+                payload: JSON.stringify(message.payload)
+            }))
+        );
+    }
+
+    public async historyOf(conversationId: string): Promise<AssistantMessage[]> {
+        return this.findMany(
+            { conversationId },
+            {
+                limit: EXPORT_LIMIT,
+                orderBy: [
+                    { property: 'createdAt', direction: 'asc' },
+                    { property: 'id', direction: 'asc' }
+                ]
+            }
+        );
     }
 
     private rowOf(
