@@ -41,7 +41,13 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
         },
         uncategorized: 'Sem categoria',
         origins: { user: 'Sua correção', rule: 'Sua regra', dictionary: 'Dicionário', provider: 'Pluggy', none: '—' },
-        sources: { pluggy: 'Open Finance (Meu Pluggy)', ofx: 'Arquivo OFX', csv: 'Arquivo CSV', sample: 'Exemplo' },
+        sources: {
+            pluggy: 'Open Finance (Meu Pluggy)',
+            ofx: 'Arquivo OFX',
+            csv: 'Arquivo CSV',
+            model: 'Lido pelo modelo',
+            sample: 'Exemplo'
+        },
         categories: {
             housing: 'Moradia',
             education: 'Educação',
@@ -78,7 +84,7 @@ export const EXPORT_LABELS: Readonly<Record<AppLocale, LocaleLabels>> = {
         },
         uncategorized: 'Uncategorized',
         origins: { user: 'Your correction', rule: 'Your rule', dictionary: 'Dictionary', provider: 'Pluggy', none: '—' },
-        sources: { pluggy: 'Open Finance (Meu Pluggy)', ofx: 'OFX file', csv: 'CSV file', sample: 'Example' },
+        sources: { pluggy: 'Open Finance (Meu Pluggy)', ofx: 'OFX file', csv: 'CSV file', model: 'Read by the model', sample: 'Example' },
         categories: {
             housing: 'Housing',
             education: 'Education',

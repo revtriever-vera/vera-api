@@ -10,6 +10,7 @@ export const LLM_TASKS = {
     askVeraStep: 'ask_vera_step',
     askVeraAppStep: 'ask_vera_app_step',
     investmentExtract: 'investment_extract',
+    statementExtract: 'statement_extract',
     marketDocumentSummary: 'market_document_summary'
 } as const;
 

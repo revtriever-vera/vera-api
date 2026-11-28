@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sanitizeFileName } from './file-name';
-import { buildPreview, exceedsYears, periodOf } from './preview-builder';
+import { buildPreview, exceedsYears, periodOf, totalsOf } from './preview-builder';
 import { ParsedRow, ParsedStatement } from './statement-import.types';
 
 function row(index: number, date: string): ParsedRow {
@@ -33,7 +33,8 @@ describe('buildPreview', () => {
             detectedFormat: 'csv_generic',
             fileName: 'x.csv',
             suggestedAccountId: null,
-            alreadyImportedAt: null
+            alreadyImportedAt: null,
+            model: null
         });
 
         expect(preview.sample).toHaveLength(10);
@@ -57,11 +58,25 @@ describe('buildPreview', () => {
             detectedFormat: 'csv_generic',
             fileName: 'x.csv',
             suggestedAccountId: null,
-            alreadyImportedAt: null
+            alreadyImportedAt: null,
+            model: null
         });
 
         expect(preview.rows).toBe(7);
         expect(preview.periodStart).toBeNull();
+    });
+});
+
+describe('totalsOf', () => {
+    it('soma entradas e saídas separadas, a saída como número positivo', () => {
+        const rows: ParsedRow[] = [
+            { line: 1, date: '2026-10-01', amountMinor: 500000, description: 'Salário', externalId: null },
+            { line: 2, date: '2026-10-02', amountMinor: -3250, description: 'Uber', externalId: null },
+            { line: 3, date: '2026-10-03', amountMinor: -1750, description: 'Padaria', externalId: null }
+        ];
+
+        expect(totalsOf(rows)).toEqual({ inflowMinor: 500000, outflowMinor: 5000 });
+        expect(totalsOf([])).toEqual({ inflowMinor: 0, outflowMinor: 0 });
     });
 });
 

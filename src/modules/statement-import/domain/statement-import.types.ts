@@ -1,3 +1,9 @@
+import { Insertable, Selectable } from 'kysely';
+import { StatementImportPreviews } from '../../../core/database/generated/database.types';
+
+export type StatementImportPreview = Selectable<StatementImportPreviews>;
+export type NewStatementImportPreview = Insertable<StatementImportPreviews>;
+
 export const IMPORT_FORMATS = {
     ofx: 'ofx',
     csvNubankCard: 'csv_nubank_card',
@@ -13,6 +19,19 @@ export const IMPORT_FORMAT_VALUES: readonly [ImportFormat, ...ImportFormat[]] = 
     IMPORT_FORMATS.csvNubankAccount,
     IMPORT_FORMATS.csvGeneric
 ];
+
+export const MODEL_FORMAT = 'model' as const;
+
+export type StoredImportFormat = ImportFormat | typeof MODEL_FORMAT;
+
+export const STORED_FORMAT_VALUES: readonly [StoredImportFormat, ...StoredImportFormat[]] = [...IMPORT_FORMAT_VALUES, MODEL_FORMAT];
+
+export const MODEL_UNREADABLE_REASONS = {
+    invalidResponse: 'invalid_response',
+    noTransactions: 'no_transactions'
+} as const;
+
+export type ModelUnreadableReason = (typeof MODEL_UNREADABLE_REASONS)[keyof typeof MODEL_UNREADABLE_REASONS];
 
 export const NEW_ACCOUNT_KINDS: readonly ['checking', 'savings', 'credit_card', 'other'] = ['checking', 'savings', 'credit_card', 'other'];
 
@@ -77,6 +96,10 @@ export const PREVIEWS_PER_HOUR: number = 60;
 export const IMPORTS_PER_HOUR: number = 20;
 export const ONE_HOUR_SECONDS: number = 3600;
 export const SNIFF_BYTES: number = 2048;
+export const MODEL_READS_PER_HOUR: number = 30;
+export const MODEL_PREVIEW_TTL_SECONDS: number = 30 * 60;
+export const MODEL_PREVIEW_EXPIRY_MARGIN_MS: number = 60_000;
+export const MAX_MODEL_TRANSACTIONS_PER_ANSWER: number = 2000;
 
 export interface CsvMapping {
     readonly delimiter?: ',' | ';';
@@ -110,7 +133,7 @@ export interface AccountHint {
 }
 
 export interface ParsedStatement {
-    readonly format: ImportFormat;
+    readonly format: StoredImportFormat;
     readonly rows: readonly ParsedRow[];
     readonly rejections: readonly Rejection[];
     readonly currency: string | null;
@@ -125,9 +148,36 @@ export interface SampleRow {
     readonly amountMinor: number;
 }
 
+export interface PreviewTotals {
+    readonly inflowMinor: number;
+    readonly outflowMinor: number;
+}
+
+export interface ModelTransaction {
+    readonly line: number;
+    readonly date: string;
+    readonly description: string;
+    readonly amountMinor: number;
+}
+
+export interface ModelPreview {
+    readonly previewId: string;
+    readonly expiresAt: string;
+    readonly transactions: readonly ModelTransaction[];
+    readonly pagesNotRead: readonly string[];
+}
+
+export interface ModelReading {
+    readonly rows: readonly ParsedRow[];
+    readonly rejections: readonly Rejection[];
+    readonly currency: string | null;
+    readonly accountHint: AccountHint | null;
+    readonly pagesNotRead: readonly string[];
+}
+
 export interface ImportPreview {
-    readonly detectedFormat: ImportFormat;
-    readonly format: ImportFormat;
+    readonly detectedFormat: StoredImportFormat;
+    readonly format: StoredImportFormat;
     readonly fileName: string;
     readonly rows: number;
     readonly rejected: number;
@@ -140,13 +190,15 @@ export interface ImportPreview {
     readonly accountHint: AccountHint | null;
     readonly suggestedAccountId: string | null;
     readonly alreadyImportedAt: string | null;
+    readonly totals: PreviewTotals;
+    readonly model: ModelPreview | null;
 }
 
 export interface ImportSummary {
     readonly id: string;
     readonly accountId: string;
     readonly accountName: string;
-    readonly format: ImportFormat;
+    readonly format: StoredImportFormat;
     readonly fileName: string;
     readonly rows: number;
     readonly inserted: number;

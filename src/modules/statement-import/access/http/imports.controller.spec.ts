@@ -16,7 +16,7 @@ import { ImportPreviewApplication } from '../../application/import-preview.appli
 import { ImportsController } from './imports.controller';
 
 const previews = { preview: vi.fn() };
-const commits = { commit: vi.fn() };
+const commits = { commit: vi.fn(), commitPreview: vi.fn() };
 const lists = { list: vi.fn(), undo: vi.fn() };
 
 let app: INestApplication;
@@ -204,6 +204,42 @@ describe('POST /spending/imports', () => {
         );
 
         expect(response.status).toBe(413);
+    });
+});
+
+describe('modelo', () => {
+    it('modelConsent chega como booleano e vale false quando ausente', async () => {
+        previews.preview.mockResolvedValue({});
+
+        await post('/spending/imports/preview', form(Buffer.from('%PDF-1.4'), { modelConsent: 'true' }, 'extrato.pdf'));
+        await post('/spending/imports/preview', form(Buffer.from('%PDF-1.4'), {}, 'extrato.pdf'));
+
+        expect(previews.preview.mock.calls.map((call: unknown[]) => (call[1] as { modelConsent: boolean }).modelConsent)).toEqual([
+            true,
+            false
+        ]);
+        expect((await post('/spending/imports/preview', form(Buffer.from('x'), { modelConsent: 'sim' }))).status).toBe(400);
+    });
+
+    it('POST /spending/imports/model grava pelo previewId em JSON e exige uma forma de escolher a conta', async () => {
+        commits.commitPreview.mockResolvedValue({ id: 'i1' });
+        const previewId: string = crypto.randomUUID();
+        const json = async (body: unknown): Promise<number> =>
+            (
+                await fetch(`${origin}/spending/imports/model`, {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify(body)
+                })
+            ).status;
+
+        expect(await json({ previewId, accountId: crypto.randomUUID() })).toBe(201);
+        expect(await json({ previewId, newAccountName: 'Conta', newAccountKind: 'checking' })).toBe(201);
+        expect(await json({ previewId })).toBe(400);
+        expect(await json({ previewId: 'x', accountId: crypto.randomUUID() })).toBe(400);
+        expect(await json({ previewId, accountId: crypto.randomUUID(), format: 'ofx' })).toBe(400);
+        expect(commits.commitPreview).toHaveBeenCalledTimes(2);
+        expect(commits.commitPreview.mock.calls[0]?.[0]).toMatchObject({ previewId });
     });
 });
 

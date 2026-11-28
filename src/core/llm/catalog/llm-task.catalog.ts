@@ -1,6 +1,7 @@
 import { LLM_TASKS } from '../llm.types';
 import { INVESTMENT_EXTRACT_SCHEMA } from './investment-extract.schema';
 import { LlmTaskSpec } from './llm-task.types';
+import { STATEMENT_EXTRACT_SCHEMA } from './statement-extract.schema';
 
 export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
     {
@@ -88,6 +89,19 @@ export const LLM_TASK_CATALOG: readonly LlmTaskSpec[] = [
         evalThreshold: 0.8,
         promptVersion: 'v4',
         outsideCap: true
+    },
+    {
+        task: LLM_TASKS.statementExtract,
+        model: 'vision',
+        responseSchema: STATEMENT_EXTRACT_SCHEMA,
+        maxOutputTokens: 16384,
+        maxCostMicros: 60_000,
+        temperature: 0,
+        reasoning: 'minimal',
+        timeoutMs: 90_000,
+        maxRetries: 1,
+        evalThreshold: 0.8,
+        promptVersion: 'v1'
     },
     {
         task: LLM_TASKS.marketDocumentSummary,

@@ -13,6 +13,7 @@ const MAX_INPUT_TOKENS: Readonly<Record<string, number>> = {
     [LLM_TASKS.askVeraStep]: 100_000,
     [LLM_TASKS.askVeraAppStep]: 100_000,
     [LLM_TASKS.investmentExtract]: 60_000,
+    [LLM_TASKS.statementExtract]: 60_000,
     [LLM_TASKS.marketDocumentSummary]: 20_000
 };
 const CAP_MICROS: number = 4_000_000;
@@ -33,13 +34,14 @@ function byTask(task: string): LlmTaskSpec {
 }
 
 describe('catálogo de tarefas', () => {
-    it('cobre as oito tarefas da Vera, sem repetir nenhuma', () => {
+    it('cobre as nove tarefas da Vera, sem repetir nenhuma', () => {
         expect(LLM_TASK_CATALOG.map((spec: LlmTaskSpec): string => spec.task).sort()).toEqual(
             [
                 'ask_vera_app_step',
                 'ask_vera_step',
                 'investment_extract',
                 'market_document_summary',
+                'statement_extract',
                 'summary_cuts',
                 'summary_month',
                 'summary_monthly_review',
@@ -77,12 +79,18 @@ describe('catálogo de tarefas', () => {
         }
     });
 
-    it('só a extração de investimentos usa o modelo de visão, e ela traz o esquema de resposta', () => {
+    it('só as extrações de investimentos e de extrato usam o modelo de visão, e as duas trazem o esquema de resposta', () => {
         const vision: string[] = LLM_TASK_CATALOG.filter((spec: LlmTaskSpec): boolean => spec.model === 'vision').map(
             (spec: LlmTaskSpec): string => spec.task
         );
 
-        expect(vision).toEqual(['investment_extract']);
+        expect(vision).toEqual(['investment_extract', 'statement_extract']);
         expect(byTask(LLM_TASKS.investmentExtract).responseSchema).toMatchObject({ required: ['documentType', 'currency', 'operations'] });
+        expect(byTask(LLM_TASKS.statementExtract).responseSchema).toMatchObject({ required: ['currency', 'transactions'] });
+    });
+
+    it('a leitura de extrato entra na cota de IA da conta; a de investimentos continua fora', () => {
+        expect(byTask(LLM_TASKS.statementExtract).outsideCap).toBeUndefined();
+        expect(byTask(LLM_TASKS.investmentExtract).outsideCap).toBe(true);
     });
 });

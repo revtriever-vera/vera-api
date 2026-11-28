@@ -90,7 +90,9 @@ export const transactionViewSchema = z.object({
     categoryId: z.string().uuid().nullable().describe('Category of the transaction; null when it has none'),
     categorySource: z.nativeEnum(CATEGORY_ORIGINS).describe('How the category was chosen; `user` is never overwritten by a sync or a rule'),
     ruleId: z.string().uuid().nullable().describe('Rule that categorized the transaction, when categorySource is `rule`'),
-    source: z.nativeEnum(TRANSACTION_SOURCES).describe('Where the transaction came from'),
+    source: z
+        .nativeEnum(TRANSACTION_SOURCES)
+        .describe('Where the transaction came from; `model` means a PDF or image statement read by the language model'),
     installment: z
         .object({ number: z.number().int(), total: z.number().int() })
         .nullable()

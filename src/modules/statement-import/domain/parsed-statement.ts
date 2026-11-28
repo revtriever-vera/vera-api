@@ -2,11 +2,11 @@ import { InvalidFileError } from './statement-import.errors';
 import {
     DESCRIPTION_MAX_LENGTH,
     INVALID_FILE_REASONS,
-    ImportFormat,
     ParsedRow,
     ParsedStatement,
     REJECTION_REASONS,
-    Rejection
+    Rejection,
+    StoredImportFormat
 } from './statement-import.types';
 import { CsvRecord } from './csv-reader';
 import { clip } from './statement-values';
@@ -58,7 +58,7 @@ export interface StatementExtras {
     readonly pendingMappingRecords?: number | null;
 }
 
-export function statementOf(format: ImportFormat, drafts: readonly RowDraft[], extras: StatementExtras = {}): ParsedStatement {
+export function statementOf(format: StoredImportFormat, drafts: readonly RowDraft[], extras: StatementExtras = {}): ParsedStatement {
     const outcomes: RowOutcome[] = drafts.map(outcomeOf);
     return {
         format,

@@ -7,6 +7,7 @@ import { TransactionFingerprintService } from '../../transactions/services/trans
 import { CurrencyMismatchError, MappingRequiredError } from '../domain/statement-import.errors';
 import { StatementImportLogService } from '../services/statement-import-log.service';
 import { StatementImportMetricsService } from '../services/statement-import-metrics.service';
+import { StatementImportPreviewDomain } from '../domain/statement-import-preview.domain';
 import { StatementParserService } from '../services/statement-parser.service';
 import { ImportCommitApplication } from './import-commit.application';
 
@@ -48,16 +49,35 @@ function build(
     };
     const logs = { record: vi.fn(), rollbackFailed: vi.fn() };
     const metrics = { imported: vi.fn(), rows: vi.fn() };
+    const previews = {
+        requireOpen: vi.fn().mockResolvedValue(OPEN_PREVIEW),
+        consume: vi.fn().mockResolvedValue(undefined)
+    };
     const application = new ImportCommitApplication(
         new StatementParserService(new TransactionFingerprintService()),
         imports as unknown as TransactionImportService,
         ingestion as unknown as TransactionIngestionService,
         accounts as unknown as FinancialAccountService,
+        previews as unknown as StatementImportPreviewDomain,
         logs as unknown as StatementImportLogService,
         metrics as unknown as StatementImportMetricsService
     );
-    return { application, imports, ingestion, accounts, logs, metrics };
+    return { application, imports, ingestion, accounts, logs, metrics, previews };
 }
+
+const OPEN_PREVIEW = {
+    preview: { id: 'p-1', fileName: 'extrato-outubro.pdf', fileSha256: 'a'.repeat(64) },
+    reading: {
+        rows: [
+            { line: 1, date: '2026-10-01', amountMinor: 500000, description: 'Salário', externalId: null },
+            { line: 2, date: '2026-10-02', amountMinor: -3250, description: 'Uber', externalId: null }
+        ],
+        rejections: [{ line: 3, reason: 'invalid_date' }],
+        currency: 'BRL',
+        accountHint: { institution: 'Banco Exemplo', numberLast4: '4321' },
+        pagesNotRead: []
+    }
+};
 
 const upload = (name: string) => ({ buffer: fixture(name), originalname: name, size: fixture(name).length });
 
@@ -192,5 +212,48 @@ describe('ImportCommitApplication', () => {
 
         expect(logs.record).toHaveBeenCalledWith('committed', expect.objectContaining({ importId: 'imp-1', inserted: 3, duplicates: 1 }));
         expect(metrics.rows).toHaveBeenCalledWith('ofx', { inserted: 3, duplicate: 1, rejected: 0 });
+    });
+});
+
+describe('ImportCommitApplication.commitPreview', () => {
+    it('grava a leitura do modelo com formato e origem model, consome a prévia e não lê arquivo', async () => {
+        const { application, imports, ingestion, previews } = build(() =>
+            Promise.resolve({ inserted: 2, updated: 0, unchanged: 0, duplicates: 0, superseded: 0, rejected: 0 })
+        );
+        imports.record.mockResolvedValue(view({ format: 'model', fileName: 'extrato-outubro.pdf' }));
+
+        const result = await application.commitPreview({ previewId: 'p-1', accountId: 'acc-1' });
+
+        expect(previews.requireOpen).toHaveBeenCalledWith('p-1');
+        expect(previews.consume).toHaveBeenCalledWith('p-1');
+        expect(imports.record).toHaveBeenCalledWith(
+            expect.objectContaining({ format: 'model', fileName: 'extrato-outubro.pdf', fileSha256: 'a'.repeat(64), rows: 2 })
+        );
+        const batch = (ingestion.ingest.mock.calls as unknown[][])[0]?.[0] as {
+            source: string;
+            items: { externalId: string; description: string }[];
+        };
+        expect(batch.source).toBe('model');
+        expect(batch.items.map((item) => item.description)).toEqual(['Salário', 'Uber']);
+        expect(batch.items.every((item) => item.externalId.startsWith('csv:'))).toBe(true);
+        expect(result).toMatchObject({ inserted: 2, rejected: 1, rejections: [{ line: 3, reason: 'invalid_date' }] });
+    });
+
+    it('conta nova herda instituição e final do número que o modelo leu', async () => {
+        const { application, accounts } = build();
+
+        await application.commitPreview({ previewId: 'p-1', newAccountName: 'Conta', newAccountKind: 'checking' });
+
+        expect(accounts.createFileAccount).toHaveBeenCalledWith(
+            expect.objectContaining({ institutionName: 'Banco Exemplo', numberLast4: '4321', currency: 'BRL' })
+        );
+    });
+
+    it('moeda diferente da conta recusa antes de consumir a prévia', async () => {
+        const { application, accounts, previews } = build();
+        accounts.requireById.mockResolvedValue({ ...ACCOUNT, currency: 'USD' });
+
+        await expect(application.commitPreview({ previewId: 'p-1', accountId: 'acc-1' })).rejects.toBeInstanceOf(CurrencyMismatchError);
+        expect(previews.consume).not.toHaveBeenCalled();
     });
 });

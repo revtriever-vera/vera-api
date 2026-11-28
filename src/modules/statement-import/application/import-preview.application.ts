@@ -8,10 +8,12 @@ import { ImportView, TransactionImportService } from '../../transactions/service
 import { ParsedFile, StatementParserService } from '../services/statement-parser.service';
 import { StatementImportLogService } from '../services/statement-import-log.service';
 import { StatementImportMetricsService } from '../services/statement-import-metrics.service';
+import { StatementModelPreviewService } from '../services/statement-model-preview.service';
 
 export interface PreviewInput {
     readonly format?: ImportFormat;
     readonly mapping?: CsvMapping;
+    readonly modelConsent?: boolean;
 }
 
 @Injectable()
@@ -20,11 +22,23 @@ export class ImportPreviewApplication {
         private readonly parser: StatementParserService,
         private readonly imports: TransactionImportService,
         private readonly accounts: FinancialAccountService,
+        private readonly models: StatementModelPreviewService,
         private readonly logs: StatementImportLogService,
         private readonly metrics: StatementImportMetricsService
     ) {}
 
     public async preview(upload: UploadedStatement, input: PreviewInput): Promise<ImportPreview> {
+        if (this.models.accepts(upload.buffer)) {
+            return this.models.preview(upload, input.modelConsent === true);
+        }
+        return this.previewText(upload, input);
+    }
+
+    public async expire(previewId: string): Promise<void> {
+        await this.models.expire(previewId);
+    }
+
+    private async previewText(upload: UploadedStatement, input: PreviewInput): Promise<ImportPreview> {
         const startedAt: number = Date.now();
         const file: ParsedFile = this.parser.parse(upload.buffer, { format: input.format, mapping: input.mapping, currency: null });
         const previous: ImportView | null = await this.imports.findCompletedByHash(file.sha256);
@@ -32,7 +46,8 @@ export class ImportPreviewApplication {
             detectedFormat: file.detectedFormat,
             fileName: sanitizeFileName(upload.originalname),
             suggestedAccountId: await this.suggestion(file),
-            alreadyImportedAt: previous?.createdAt ?? null
+            alreadyImportedAt: previous?.createdAt ?? null,
+            model: null
         });
         this.logs.record('previewed', {
             format: preview.format,

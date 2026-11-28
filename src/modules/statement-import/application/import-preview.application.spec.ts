@@ -5,6 +5,7 @@ import { TransactionImportService } from '../../transactions/services/transactio
 import { TransactionFingerprintService } from '../../transactions/services/transaction-fingerprint.service';
 import { StatementImportLogService } from '../services/statement-import-log.service';
 import { StatementImportMetricsService } from '../services/statement-import-metrics.service';
+import { StatementModelPreviewService } from '../services/statement-model-preview.service';
 import { StatementParserService } from '../services/statement-parser.service';
 import { ImportPreviewApplication } from './import-preview.application';
 
@@ -15,14 +16,16 @@ function build(previous: { createdAt: string } | null = null) {
     };
     const logs = { record: vi.fn() };
     const metrics = { imported: vi.fn() };
+    const models = { accepts: vi.fn().mockReturnValue(false), preview: vi.fn(), expire: vi.fn() };
     const application = new ImportPreviewApplication(
         new StatementParserService(new TransactionFingerprintService()),
         imports as unknown as TransactionImportService,
         accounts as unknown as FinancialAccountService,
+        models as unknown as StatementModelPreviewService,
         logs as unknown as StatementImportLogService,
         metrics as unknown as StatementImportMetricsService
     );
-    return { application, imports, accounts, logs, metrics };
+    return { application, imports, accounts, logs, metrics, models };
 }
 
 const upload = (name: string, originalname: string = name) => ({ buffer: fixture(name), originalname, size: fixture(name).length });
@@ -83,5 +86,27 @@ describe('ImportPreviewApplication', () => {
         expect(JSON.stringify(logs.record.mock.calls)).not.toContain('nubank-cartao');
         expect(logs.record.mock.calls[0]?.[0]).toBe('previewed');
         expect(metrics.imported).toHaveBeenCalledWith('csv_nubank_card', 'previewed');
+    });
+
+    it('PDF ou imagem vai para a leitura pelo modelo com o consentimento do pedido, e o texto fica de fora', async () => {
+        const { application, models, imports } = build();
+        models.accepts.mockReturnValue(true);
+        models.preview.mockResolvedValue({ format: 'model' });
+        const pdf = { buffer: Buffer.from('%PDF-1.4'), originalname: 'extrato.pdf', size: 8 };
+
+        const preview = await application.preview(pdf, { modelConsent: true });
+        await application.preview(pdf, {});
+
+        expect(preview).toEqual({ format: 'model' });
+        expect(models.preview.mock.calls.map((call: unknown[]) => call[1])).toEqual([true, false]);
+        expect(imports.findCompletedByHash).not.toHaveBeenCalled();
+    });
+
+    it('expire repassa o id da prévia', async () => {
+        const { application, models } = build();
+
+        await application.expire('p-1');
+
+        expect(models.expire).toHaveBeenCalledWith('p-1');
     });
 });

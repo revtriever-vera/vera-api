@@ -17,6 +17,7 @@ export const QUEUES = {
     portfolioWatch: 'vera-portfolio-watch',
     billing: 'vera-billing',
     investmentImport: 'vera-investment-import',
+    statementImport: 'vera-statement-import',
     portfolioEvents: 'vera-portfolio-events',
     marketDocuments: 'vera-market-documents'
 } as const;
@@ -42,6 +43,7 @@ export const MESSAGE_TYPES = {
     usageCleanupRequested: 'usage.cleanup.requested',
     usageGaugeRequested: 'usage.gauge.requested',
     investmentImportPreviewsPurgeRequested: 'investment-import.previews.purge.requested',
+    statementImportPreviewExpired: 'statement-import.preview.expired',
     aiSummariesRetentionRequested: 'ai-assistant.summaries.retention.requested',
     assistantTurnRequested: 'assistant-chat.turn.requested',
     assistantRetentionRequested: 'assistant-chat.retention.requested',
