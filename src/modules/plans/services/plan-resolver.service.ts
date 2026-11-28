@@ -29,7 +29,7 @@ export class PlanResolverService {
     public async capabilities(): Promise<PaidFeature[]> {
         try {
             const plan: EffectivePlan = await this.readPlan();
-            const planCapabilities: PaidFeature[] = plan === 'premium' ? await this.catalog.capabilitiesOf('premium') : [];
+            const planCapabilities: PaidFeature[] = plan === 'self_hosted' ? [] : await this.catalog.capabilitiesOf(plan);
             const manual: CompanyCapability[] = await this.plans.manualCapabilities();
             return PlanDomain.capabilitiesFor(plan, planCapabilities, manual);
         } catch (error: unknown) {

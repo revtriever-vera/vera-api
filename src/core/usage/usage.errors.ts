@@ -1,12 +1,13 @@
 import { AppError } from '../../shared/errors/app.error';
+import { UsagePlan } from './usage.types';
 
 export class CapReachedError extends AppError {
-    public constructor(feature: string, resetsAt: string | null) {
+    public constructor(feature: string, resetsAt: string | null, plan: UsagePlan | null) {
         super({
             code: 'usage.cap_reached',
             status: 429,
             detail: 'The monthly paid usage cap was reached; paid features resume when the month turns.',
-            meta: { feature, resetsAt }
+            meta: { feature, resetsAt, plan }
         });
     }
 }

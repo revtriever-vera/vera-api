@@ -538,7 +538,7 @@ describe('lembretes pelo WhatsApp (drivers mock)', () => {
         const capped: ReminderRow = await schedule(account, 'pagar a fatura');
         const meter = vi
             .spyOn(harness.app.get(PaidUsageMeter, { strict: false }), 'assertRoom')
-            .mockRejectedValueOnce(new CapReachedError('whatsapp', null));
+            .mockRejectedValueOnce(new CapReachedError('whatsapp', null, 'premium'));
         await fire(account, ((await occurrencesOf(capped.id))[0] as OccurrenceRow).id);
         meter.mockRestore();
         expect((await occurrencesOf(capped.id))[0]?.status).toBe('missed');

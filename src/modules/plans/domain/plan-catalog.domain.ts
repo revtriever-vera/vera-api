@@ -40,9 +40,9 @@ export class PlanCatalogDomain {
         return PAID_FEATURES.filter((feature: PaidFeature): boolean => granted.has(feature));
     }
 
-    public async limitsOf(productKey: string, unit: string): Promise<GlobalProductLimit[]> {
-        const product: GlobalProduct = await this.productOf(productKey);
-        return this.productLimits.listFor(product.id, unit);
+    public async limitsOf(planKey: string, productId: string, unit: string): Promise<GlobalProductLimit[]> {
+        const plan: GlobalPlan = await this.planOf(planKey);
+        return this.productLimits.listFor(plan.id, productId, unit);
     }
 
     private async planOf(key: string): Promise<GlobalPlan> {

@@ -110,7 +110,7 @@ describe('MarketDocumentSummarizerService', () => {
 
     it('teto do dia estourado: sem resumo, o documento continua extraído para o dia seguinte e o lote para', async () => {
         const { service, llm, documents, logs } = rig({ documents: [document('a'), document('b')] });
-        llm.generate.mockRejectedValue(new CapReachedError('market_docs', null));
+        llm.generate.mockRejectedValue(new CapReachedError('market_docs', null, null));
 
         await expect(service.summarizePending()).resolves.toBe(0);
 

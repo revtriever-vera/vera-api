@@ -111,12 +111,12 @@ describe('ai consent and payload', () => {
         }
     }
 
-    it('sem linha: não permitido, precisa pedir; Free não está disponível', async () => {
+    it('sem linha: não permitido, precisa pedir; o Free também tem a IA disponível', async () => {
         const free: Account = await harness.signUp('ai-free');
         const paid: Account = await premium(await harness.signUp('ai-paid'));
 
         expect(await consent(free)).toEqual({
-            available: false,
+            available: true,
             granted: false,
             needsConsent: true,
             noticeVersion: 1,
@@ -128,14 +128,14 @@ describe('ai consent and payload', () => {
         expect(await consent(paid)).toMatchObject({ available: true, granted: false, needsConsent: true });
     });
 
-    it('PUT com a versão atual concede, com versão antiga responde 409, no Free 402 e sem credencial 503', async () => {
+    it('PUT com a versão atual concede, com versão antiga responde 409, no Free também concede e sem credencial 503', async () => {
         const free: Account = await harness.signUp('ai-put-free');
         const paid: Account = await premium(await harness.signUp('ai-put-paid'));
         const body = { noticeVersion: 1, source: 'summary_card' };
 
         const outdated = await harness.call<ProblemBody>(paid.token, 'PUT', '/ai/consent', { ...body, noticeVersion: 2 });
         const invalid = await harness.call<ProblemBody>(paid.token, 'PUT', '/ai/consent', { ...body, source: 'whatsapp_link' });
-        const denied = await harness.call<ProblemBody>(free.token, 'PUT', '/ai/consent', body);
+        const freeGranted = await harness.call<ConsentBody>(free.token, 'PUT', '/ai/consent', body);
         const spy = vi.spyOn(harness.app.get(LlmAvailabilityService, { strict: false }), 'enabled').mockResolvedValue(false);
         const noKey = await harness.call<ProblemBody>(paid.token, 'PUT', '/ai/consent', body);
         spy.mockRestore();
@@ -143,7 +143,7 @@ describe('ai consent and payload', () => {
 
         expect(outdated).toMatchObject({ status: 409, body: { type: 'ai.notice_outdated' } });
         expect(invalid.status).toBe(400);
-        expect(denied).toMatchObject({ status: 402, body: { type: 'billing.premium_required' } });
+        expect(freeGranted).toMatchObject({ status: 200, body: { granted: true, needsConsent: false } });
         expect(noKey).toMatchObject({ status: 503, body: { type: 'billing.feature_disabled' } });
         expect(granted.status).toBe(200);
         expect(granted.body).toMatchObject({ granted: true, needsConsent: false, acceptedNoticeVersion: 1, source: 'summary_card' });
@@ -202,7 +202,7 @@ describe('ai consent and payload', () => {
         expect(await consent(second)).toMatchObject({ granted: false, needsConsent: true });
     });
 
-    it('GET /ai/payload exige o plano, não exige a permissão, devolve 204 sem dados e nunca traz nomes nem dados de outra company', async () => {
+    it('GET /ai/payload responde no Free, não exige a permissão, devolve 204 sem dados e nunca traz nomes nem dados de outra company', async () => {
         const free: Account = await harness.signUp('ai-payload-free');
         const owner: Account = await premium(await harness.signUp('ai-payload-a'));
         const other: Account = await premium(await harness.signUp('ai-payload-b'));
@@ -220,11 +220,11 @@ describe('ai consent and payload', () => {
         await harness.call(owner.token, 'PATCH', `/spending/transactions/${gym.rows[0]?.id as string}`, { categoryId: created.body.id });
         const query: string = `/ai/payload?kind=month&month=${dataset.closedMonth}`;
 
-        const denied = await harness.call<ProblemBody>(free.token, 'GET', query);
+        const freeEmpty = await harness.call(free.token, 'GET', query);
         const empty = await harness.call(other.token, 'GET', query);
         const response = await harness.call<PayloadBody>(owner.token, 'GET', query);
 
-        expect(denied).toMatchObject({ status: 402, body: { type: 'billing.premium_required' } });
+        expect(freeEmpty.status).toBe(204);
         expect(empty.status).toBe(204);
         expect(response.status).toBe(200);
         expect(response.body).toMatchObject({ kind: 'month', noticeVersion: 1, payload: { renda: 'R$ 28.000' } });

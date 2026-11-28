@@ -34,7 +34,10 @@ function build(state: UsageState, inserted: boolean = true, claimed: boolean = t
         entries as unknown as PaidUsageEntryDomain,
         notices as unknown as PaidUsageNoticeDomain,
         snapshots as unknown as UsageSnapshotService,
-        { timezone: vi.fn().mockResolvedValue('America/Sao_Paulo') } as unknown as UsageContextHolder,
+        {
+            timezone: vi.fn().mockResolvedValue('America/Sao_Paulo'),
+            plan: vi.fn().mockResolvedValue('free')
+        } as unknown as UsageContextHolder,
         publisher,
         { get: vi.fn().mockReturnValue({ requestId: 'r', companyId: 'company-1' }) } as unknown as AppContext,
         logs as unknown as UsageLogService,
@@ -55,15 +58,16 @@ describe('PaidUsageMeter.assertRoom', () => {
         ).resolves.toBeUndefined();
     });
 
-    it('recusa com restante zero e com estimativa maior que o restante, dando o resetsAt', async () => {
+    it('recusa com restante zero e com estimativa maior que o restante, dando o resetsAt e o plano', async () => {
         const full = build(stateOf({ usedMicros: 4_000_000, state: 'paused' }));
         const tight = build(stateOf({ usedMicros: 3_999_000 }));
 
         await expect(full.meter.assertRoom({ feature: 'ai', task: 't', estimateMicros: 0 })).rejects.toMatchObject({
             code: 'usage.cap_reached',
             status: 429,
-            meta: { feature: 'ai', resetsAt: '2026-11-01T03:00:00.000Z' }
+            meta: { feature: 'ai', resetsAt: '2026-11-01T03:00:00.000Z', plan: 'free' }
         });
+        expect(await full.meter.plan()).toBe('free');
         await expect(tight.meter.assertRoom({ feature: 'whatsapp', task: 't', estimateMicros: 1001 })).rejects.toMatchObject({
             code: 'usage.cap_reached'
         });

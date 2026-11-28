@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { DateUtil } from '../../../shared/utils/date.util';
 import { usageConfig } from '../config/usage.config';
+import { UsagePlan } from '../usage.types';
 import { UsageContextPort } from './usage-context.port';
 
 @Injectable()
@@ -19,6 +20,10 @@ export class UsageContextHolder {
             return this.port.capMicros();
         }
         return this.configuredCapMicros();
+    }
+
+    public async plan(): Promise<UsagePlan | null> {
+        return this.port === null ? null : this.port.plan();
     }
 
     public async helpCapMicros(): Promise<number | null> {

@@ -23,6 +23,7 @@ describe('UsageContextHolder', () => {
         const holder: UsageContextHolder = new UsageContextHolder(config(2_500_000));
 
         expect(await holder.capMicros()).toBe(2_500_000);
+        expect(await holder.plan()).toBeNull();
         expect(await holder.timezone()).toBe('America/Sao_Paulo');
     });
 
@@ -33,6 +34,7 @@ describe('UsageContextHolder', () => {
     it('com porta registrada manda a porta', async () => {
         const holder: UsageContextHolder = new UsageContextHolder(config(2_500_000));
         const port: UsageContextPort = {
+            plan: vi.fn().mockResolvedValue('free'),
             capMicros: vi.fn().mockResolvedValue(900),
             helpCapMicros: vi.fn().mockResolvedValue(null),
             timezone: vi.fn().mockResolvedValue('Asia/Tokyo')
@@ -41,6 +43,7 @@ describe('UsageContextHolder', () => {
         holder.register(port);
 
         expect(await holder.capMicros()).toBe(900);
+        expect(await holder.plan()).toBe('free');
         expect(await holder.timezone()).toBe('Asia/Tokyo');
     });
 
@@ -49,7 +52,7 @@ describe('UsageContextHolder', () => {
         expect(await holder.helpCapMicros()).toBeNull();
         expect(holder.configuredHelpCapMicros()).toBe(500_000);
 
-        holder.register({ capMicros: vi.fn(), helpCapMicros: vi.fn().mockResolvedValue(300_000), timezone: vi.fn() });
+        holder.register({ plan: vi.fn(), capMicros: vi.fn(), helpCapMicros: vi.fn().mockResolvedValue(300_000), timezone: vi.fn() });
 
         expect(await holder.helpCapMicros()).toBe(300_000);
     });

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppContext } from '../../src/core/context/app-context.port';
 import { MockLlmDriver } from '../../src/core/llm/drivers/mock-llm.driver';
+import { UsageSnapshotService } from '../../src/core/usage/services/usage-snapshot.service';
 import { QueueEnvelope } from '../../src/core/queue/queue.types';
 import { AssistantTurnRequestedHandler } from '../../src/modules/assistant-chat/access/queue/assistant-turn.handler';
 import { AssistantConversationApplication } from '../../src/modules/assistant-chat/application/assistant-conversation.application';
@@ -58,7 +59,7 @@ interface ConversationBody {
 
 interface ProblemBody {
     readonly type: string;
-    readonly meta?: { readonly resetsAt?: string };
+    readonly meta?: { readonly resetsAt?: string; readonly feature?: string; readonly plan?: string | null };
 }
 
 class FlakyPublisher extends CapturingPublisher {
@@ -144,6 +145,12 @@ describe('assistant chat', () => {
         }
     }
 
+    async function consented(label: string): Promise<Account> {
+        const account: Account = await harness.signUp(label);
+        await harness.call(account.token, 'PUT', '/ai/consent', { noticeVersion: 1, source: 'summary_card' });
+        return account;
+    }
+
     async function ask(account: Account, text: string, reply: string = 'Abra **Gastos** no menu.'): Promise<StartedBody> {
         llm.enqueue(reply);
         const started = await harness.call<StartedBody>(account.token, 'POST', '/assistant/turns', { text, screen: { path: '/spending' } });
@@ -195,6 +202,18 @@ describe('assistant chat', () => {
         expect(current.body.messages.at(-1)?.toolsUsed).toEqual(['help_search']);
     });
 
+    it('Free com permissão responde em ai pelo modelo, como o Premium', async () => {
+        const free: Account = await consented('chat-free-consent');
+
+        const aiTurn: StartedBody = await ask(free, 'como adiciono um ativo?');
+
+        expect((await turn(free, aiTurn.turnId)).body.answer).toMatchObject({ source: 'ai', access: 'ok' });
+        const calls = await harness.pg.query<{ feature: string }>('SELECT "feature" FROM "LlmCalls" WHERE "companyId" = $1', [
+            free.company.id
+        ]);
+        expect(calls.rows.map((row) => row.feature)).toEqual(['ai']);
+    });
+
     it('Premium sem permissão cai em help; com permissão responde em ai', async () => {
         const without: Account = await premium('chat-noconsent', false);
         const withConsent: Account = await premium('chat-consent', true);
@@ -210,7 +229,7 @@ describe('assistant chat', () => {
         expect(calls.rows.map((row) => row.feature)).toEqual(['ai']);
     });
 
-    it('estado de acesso por resposta: Free vê premium_required, Premium sem permissão permission_required, e pergunta sobre o plano fica ok', async () => {
+    it('estado de acesso por resposta: Free e Premium sem permissão veem permission_required, e pergunta sobre o plano fica ok', async () => {
         const free: Account = await harness.signUp('chat-access-free');
         const without: Account = await premium('chat-access-noconsent', false);
         const withConsent: Account = await premium('chat-access-consent', true);
@@ -222,12 +241,12 @@ describe('assistant chat', () => {
             return started.body;
         };
 
-        const freeTurn: StartedBody = await lockedTurn(free, 'Isso é do Premium: veja o [Plano e uso](/settings/plan).');
+        const freeTurn: StartedBody = await lockedTurn(free, 'Falta permitir em [Dados e privacidade](/settings/privacy).');
         const withoutTurn: StartedBody = await lockedTurn(without, 'Falta permitir em [Dados e privacidade](/settings/privacy).');
         const planTurn: StartedBody = await ask(without, 'o que o Premium inclui?', 'Veja o [Plano e uso](/settings/plan).');
         const okTurn: StartedBody = await ask(withConsent, 'como adiciono um ativo?');
 
-        expect((await turn(free, freeTurn.turnId)).body.answer).toMatchObject({ access: 'premium_required', sentAvailable: false });
+        expect((await turn(free, freeTurn.turnId)).body.answer).toMatchObject({ access: 'permission_required', sentAvailable: false });
         expect((await turn(without, withoutTurn.turnId)).body.answer).toMatchObject({ access: 'permission_required' });
         expect((await turn(without, planTurn.turnId)).body.answer?.access).toBe('ok');
         expect((await turn(withConsent, okTurn.turnId)).body.answer?.access).toBe('ok');
@@ -299,9 +318,37 @@ describe('assistant chat', () => {
         expect(refused.status).toBe(429);
         expect(refused.body.type).toBe('usage.cap_reached');
         expect(refused.body.meta?.resetsAt).toMatch(/^\d{4}-\d{2}-01T/);
+        expect(refused.body.meta?.plan).toBe('free');
         expect(await count('SELECT count(*)::int AS total FROM "AssistantConversations" WHERE "companyId" = $1', [free.company.id])).toBe(
             0
         );
+    });
+
+    it('teto de R$ 5 do Free estourado com permissão: a pergunta cai na ajuda e, sem ajuda, vem o 429 com plan free', async () => {
+        const free: Account = await harness.signUp('chat-free-cap');
+        await harness.pg.query(
+            `INSERT INTO "PaidUsageEntries" ("id","companyId","period","feature","task","referenceId","costMicros","outcome")
+             VALUES ($1,$2,to_char(now() AT TIME ZONE 'America/Sao_Paulo','YYYY-MM'),'ai','ask_vera_app_step','seed',5000000,'answered')`,
+            [crypto.randomUUID(), free.company.id]
+        );
+        await harness.call(free.token, 'PUT', '/ai/consent', { noticeVersion: 1, source: 'summary_card' });
+
+        const helped: StartedBody = await ask(free, 'como adiciono um ativo?');
+        expect((await turn(free, helped.turnId)).body.answer?.source).toBe('help');
+
+        await harness.pg.query(
+            `INSERT INTO "PaidUsageEntries" ("id","companyId","period","feature","task","referenceId","costMicros","outcome")
+             VALUES ($1,$2,to_char(now() AT TIME ZONE 'America/Sao_Paulo','YYYY-MM'),'help','ask_vera_app_step','seed-help',500000,'answered')`,
+            [crypto.randomUUID(), free.company.id]
+        );
+        await harness.inCompany(free.company.id, async () => {
+            harness.app.get(UsageSnapshotService, { strict: false }).invalidate();
+            return Promise.resolve();
+        });
+        const refused = await harness.call<ProblemBody>(free.token, 'POST', '/assistant/turns', { text: 'quanto gastei?' });
+
+        expect(refused.status).toBe(429);
+        expect(refused.body).toMatchObject({ type: 'usage.cap_reached', meta: { feature: 'help', plan: 'free' } });
     });
 
     it('o teto da ajuda do Free não trava quem tem o plano: no Premium a ajuda divide o teto do total', async () => {

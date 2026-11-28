@@ -90,7 +90,7 @@ describe('SummaryGeneratorService', () => {
     });
 
     it('cota e provedor indisponível passam direto, sem nova tentativa', async () => {
-        const { service, generate } = build([new CapReachedError('ai', '2026-12-01T00:00:00.000Z')]);
+        const { service, generate } = build([new CapReachedError('ai', '2026-12-01T00:00:00.000Z', 'premium')]);
 
         await expect(service.generate(REQUEST)).rejects.toBeInstanceOf(CapReachedError);
         expect(generate).toHaveBeenCalledTimes(1);
