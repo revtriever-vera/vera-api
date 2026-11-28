@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     AccountClosedError,
+    AccountModulesEmptyError,
     EmailInUseError,
     EmailNotProvidedError,
     InvalidFacebookTokenError,
@@ -19,6 +20,7 @@ describe('identity errors', () => {
         expect(new UnauthorizedError()).toMatchObject({ code: 'identity.unauthorized', status: 401 });
         expect(new InvalidRefreshTokenError()).toMatchObject({ code: 'identity.invalid_refresh', status: 401 });
         expect(new AccountClosedError('company-1')).toMatchObject({ code: 'identity.account_closed', status: 401 });
+        expect(new AccountModulesEmptyError()).toMatchObject({ code: 'account.modules_empty', status: 422 });
     });
 
     it('o reuso é indistinguível do refresh inválido para quem chama', () => {

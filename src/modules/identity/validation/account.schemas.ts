@@ -8,6 +8,15 @@ export const deleteAccountSchema = z
 
 export class DeleteAccountDto extends createZodDto(deleteAccountSchema) {}
 
+export const updateAccountModulesSchema = z
+    .object({
+        portfolio: z.boolean().optional().describe('Turn the investments module on or off; omitted keeps the current choice'),
+        spending: z.boolean().optional().describe('Turn the spending module on or off; omitted keeps the current choice')
+    })
+    .strict();
+
+export class UpdateAccountModulesDto extends createZodDto(updateAccountModulesSchema) {}
+
 export const accountExportSchema = z.object({
     format: z.literal(ACCOUNT_EXPORT_FORMAT).describe('Version of the export layout'),
     exportedAt: z.string().datetime().describe('When the file was produced (ISO 8601)'),
@@ -17,6 +26,7 @@ export const accountExportSchema = z.object({
                 name: z.string(),
                 locale: z.string(),
                 timezone: z.string(),
+                modules: z.object({ portfolio: z.boolean(), spending: z.boolean() }),
                 createdAt: z.string().datetime()
             }),
             user: z.object({

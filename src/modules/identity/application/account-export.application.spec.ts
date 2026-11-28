@@ -11,7 +11,13 @@ import { IdentityMetricsService } from '../services/identity-metrics.service';
 import { AccountExportApplication, AccountExportFile } from './account-export.application';
 
 const ACCOUNT: IdentityAccountExport = {
-    company: { name: 'Empresa Teste', locale: 'pt-BR', timezone: 'America/Sao_Paulo', createdAt: '2026-01-01T00:00:00.000Z' },
+    company: {
+        name: 'Empresa Teste',
+        locale: 'pt-BR',
+        timezone: 'America/Sao_Paulo',
+        modules: { portfolio: true, spending: true },
+        createdAt: '2026-01-01T00:00:00.000Z'
+    },
     user: {
         name: 'Pessoa Teste',
         email: 'pessoa@example.test',

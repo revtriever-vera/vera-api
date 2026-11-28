@@ -34,7 +34,9 @@ const COMPANY: Company = {
     createdAt: AT,
     updatedAt: AT,
     deletedAt: null,
-    trialStartedAt: null
+    trialStartedAt: null,
+    portfolioModuleEnabled: true,
+    spendingModuleEnabled: true
 };
 
 const IDENTITY: AuthIdentity = {
@@ -80,7 +82,13 @@ function build(company: Company | null = COMPANY): IdentityAccountExporter {
 describe('IdentityAccountExporter', () => {
     it('exporta company, usuário, identidades e sessões ativas', async () => {
         await expect(build().export()).resolves.toEqual({
-            company: { name: 'Empresa Teste', locale: 'pt-BR', timezone: 'America/Sao_Paulo', createdAt: AT.toISOString() },
+            company: {
+                name: 'Empresa Teste',
+                locale: 'pt-BR',
+                timezone: 'America/Sao_Paulo',
+                modules: { portfolio: true, spending: true },
+                createdAt: AT.toISOString()
+            },
             user: {
                 name: 'Pessoa Teste',
                 email: 'pessoa@example.test',

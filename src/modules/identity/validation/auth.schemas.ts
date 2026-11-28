@@ -72,6 +72,11 @@ export class FacebookLoginDto extends createZodDto(facebookLoginSchema) {}
 
 export type SessionResponse = z.infer<typeof sessionResponseSchema>;
 
+export const accountModulesSchema = z.object({
+    portfolio: z.boolean().describe('Investments module (portfolio, allocation, imports of B3 and exchanges) is shown to the account'),
+    spending: z.boolean().describe('Spending module (transactions, categories, budgets, bank statements) is shown to the account')
+});
+
 export const meResponseSchema = z.object({
     userId: z.string().uuid().describe('Authenticated user id'),
     companyId: z.string().uuid().describe('Tenant of the current session'),
@@ -81,7 +86,8 @@ export const meResponseSchema = z.object({
     locale: z.enum(APP_LOCALES).describe('Effective locale: the personal preference when set, otherwise the company locale'),
     preferredLocale: z.enum(APP_LOCALES).nullable().describe('Personal locale preference; null follows the company locale'),
     loginProvider: z.nativeEnum(LOGIN_PROVIDERS).describe('Provider the current session signed in with'),
-    companyName: z.string().describe('Name of the current tenant')
+    companyName: z.string().describe('Name of the current tenant'),
+    modules: accountModulesSchema.describe('Modules the account chose to use; a disabled module is only hidden, its data stays')
 });
 
 export const updatePreferencesSchema = z

@@ -416,6 +416,8 @@ export interface Companies {
     isPlatform: Generated<boolean>;
     locale: Generated<string>;
     name: string;
+    portfolioModuleEnabled: Generated<boolean>;
+    spendingModuleEnabled: Generated<boolean>;
     timezone: Generated<string>;
     trialStartedAt: Timestamp | null;
     updatedAt: Generated<Timestamp>;

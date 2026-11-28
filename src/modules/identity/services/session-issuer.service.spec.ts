@@ -55,6 +55,8 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
         updatedAt: new Date(),
         deletedAt: null,
         trialStartedAt: null,
+        portfolioModuleEnabled: true,
+        spendingModuleEnabled: true,
         ...overrides
     };
 }

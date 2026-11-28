@@ -9,6 +9,7 @@ const NAME_FIELDS: readonly string[] = ['name'];
 const HARD_DELETE_BATCH: number = 10;
 
 type CreateCompanyData = Pick<NewCompany, 'name'> & Partial<Pick<NewCompany, 'locale' | 'timezone' | 'isPlatform'>>;
+type ModulesData = Required<Pick<NewCompany, 'portfolioModuleEnabled' | 'spendingModuleEnabled'>>;
 
 @Injectable()
 export class CompaniesRepository extends GlobalRepository<'Companies'> {
@@ -57,6 +58,10 @@ export class CompaniesRepository extends GlobalRepository<'Companies'> {
     public async markTrialStarted(id: string, at: Date): Promise<boolean> {
         const rows: Company[] = await this.updateManyRows({ id, trialStartedAt: null }, { trialStartedAt: at, updatedAt: at });
         return rows.length > 0;
+    }
+
+    public async updateModules(id: string, modules: ModulesData): Promise<Company | null> {
+        return this.updateRow(id, { ...modules, updatedAt: new Date() });
     }
 
     public async hardDeleteById(id: string): Promise<boolean> {
