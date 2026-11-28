@@ -40,7 +40,9 @@ const COMPANY: Company = {
     createdAt: AT,
     updatedAt: AT,
     deletedAt: null,
-    trialStartedAt: null
+    trialStartedAt: null,
+    portfolioModuleEnabled: true,
+    spendingModuleEnabled: true
 };
 
 interface Options {

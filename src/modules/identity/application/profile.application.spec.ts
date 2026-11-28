@@ -36,7 +36,9 @@ const COMPANY: Company = {
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
-    trialStartedAt: null
+    trialStartedAt: null,
+    portfolioModuleEnabled: true,
+    spendingModuleEnabled: true
 };
 
 const SESSION: Session = {
@@ -99,8 +101,17 @@ describe('ProfileApplication.current', () => {
             locale: 'pt-BR',
             preferredLocale: null,
             loginProvider: 'google',
-            companyName: 'Ana'
+            companyName: 'Ana',
+            modules: { portfolio: true, spending: true }
         });
+    });
+
+    it('traz os módulos que a company escolheu', async () => {
+        const doubles: Doubles = build({ company: { ...COMPANY, spendingModuleEnabled: false } });
+
+        const profile: SessionProfile = await doubles.inRequest(async () => doubles.application.current());
+
+        expect(profile.modules).toEqual({ portfolio: true, spending: false });
     });
 
     it('a preferência pessoal vence a da company', async () => {

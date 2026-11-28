@@ -133,6 +133,16 @@ export class ConfirmationMismatchError extends AppError {
     }
 }
 
+export class AccountModulesEmptyError extends AppError {
+    public constructor() {
+        super({
+            code: 'account.modules_empty',
+            status: 422,
+            detail: 'At least one module (portfolio or spending) must stay enabled.'
+        });
+    }
+}
+
 export class AccountErasureFailedError extends AppError {
     public constructor(area: string, cause: unknown) {
         super({

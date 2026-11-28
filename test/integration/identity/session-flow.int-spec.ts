@@ -37,6 +37,7 @@ interface MeBody {
     readonly preferredLocale: string | null;
     readonly loginProvider: string;
     readonly companyName: string;
+    readonly modules: { readonly portfolio: boolean; readonly spending: boolean };
 }
 
 interface SessionRow {
@@ -274,7 +275,8 @@ describe('identity session flow', () => {
             locale: 'en',
             preferredLocale: null,
             loginProvider: 'facebook',
-            companyName: 'Empresa me'
+            companyName: 'Empresa me',
+            modules: { portfolio: true, spending: true }
         });
     });
 

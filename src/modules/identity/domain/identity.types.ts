@@ -130,6 +130,17 @@ export function effectiveLocale(user: Pick<User, 'locale'>, company: Pick<Compan
     return (user.locale ?? company.locale) as AppLocale;
 }
 
+export interface AccountModules {
+    readonly portfolio: boolean;
+    readonly spending: boolean;
+}
+
+export type AccountModulesChange = Partial<AccountModules>;
+
+export function modulesOf(company: Pick<Company, 'portfolioModuleEnabled' | 'spendingModuleEnabled'>): AccountModules {
+    return { portfolio: company.portfolioModuleEnabled, spending: company.spendingModuleEnabled };
+}
+
 export const REFRESH_OUTCOMES = {
     success: 'success',
     invalid: 'invalid',

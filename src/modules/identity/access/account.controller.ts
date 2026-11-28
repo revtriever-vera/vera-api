@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Res, StreamableFile, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Patch, Res, StreamableFile, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiProduces, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiProblemResponse } from '../../../core/http/api-problem.decorator';
@@ -6,12 +6,21 @@ import { ApiZodBody, ApiZodResponse } from '../../../core/http/api-zod.decorator
 import { AccountDeletionApplication } from '../application/account-deletion.application';
 import { AccountExportApplication, AccountExportFile } from '../application/account-export.application';
 import { AccountSpreadsheetExportApplication, AccountSpreadsheetExportFile } from '../application/account-spreadsheet-export.application';
+import { ProfileApplication } from '../application/profile.application';
+import { AccountModules } from '../domain/identity.types';
 import { RateLimit, RateLimitSubject } from '../../../core/throttle/rate-limit.decorator';
 import { JwtAuthGuard } from '../services/jwt-auth.guard';
 import { RequiresRole } from '../services/requires-role.decorator';
 import { RolesGuard } from '../services/roles.guard';
 import { RefreshCookieAdapter } from '../services/refresh-cookie.adapter';
-import { accountExportSchema, DeleteAccountDto, deleteAccountSchema } from '../validation/account.schemas';
+import {
+    accountExportSchema,
+    DeleteAccountDto,
+    deleteAccountSchema,
+    UpdateAccountModulesDto,
+    updateAccountModulesSchema
+} from '../validation/account.schemas';
+import { accountModulesSchema } from '../validation/auth.schemas';
 
 const DATE_LENGTH: number = 10;
 const SPREADSHEET_EXPORTS_PER_HOUR: number = 3;
@@ -28,6 +37,7 @@ export class AccountController {
         private readonly exportApplication: AccountExportApplication,
         private readonly spreadsheetApplication: AccountSpreadsheetExportApplication,
         private readonly deletionApplication: AccountDeletionApplication,
+        private readonly profileApplication: ProfileApplication,
         private readonly refreshCookie: RefreshCookieAdapter
     ) {}
 
@@ -106,6 +116,41 @@ export class AccountController {
     public async exportSpreadsheets(): Promise<StreamableFile> {
         const file: AccountSpreadsheetExportFile = await this.spreadsheetApplication.export();
         return new StreamableFile(file.stream, { type: ZIP_TYPE, disposition: `attachment; filename="${file.filename}"` });
+    }
+
+    @Patch('modules')
+    @RequiresRole('editor')
+    @ApiOperation({
+        summary: 'Turn the investments and spending modules of the account on or off',
+        description:
+            'Owner or editor. A field left out keeps its current value. Turning a module off only hides it from the menu and ' +
+            'screens: no data is deleted and its endpoints keep answering. At least one module must stay on. ' +
+            'GET /auth/me carries the same `modules` object.'
+    })
+    @ApiZodBody(updateAccountModulesSchema)
+    @ApiZodResponse({ status: 200, description: 'Modules of the account after the change', schema: accountModulesSchema })
+    @ApiProblemResponse({
+        status: 400,
+        description: 'Invalid payload (zod validation details in meta.errors)',
+        example: { type: 'validation_failed', title: 'ZodValidationException', status: 400 }
+    })
+    @ApiProblemResponse({
+        status: 401,
+        description: 'Missing or invalid access token (identity.unauthorized)',
+        example: { type: 'identity.unauthorized', title: 'UnauthorizedError', status: 401 }
+    })
+    @ApiProblemResponse({
+        status: 403,
+        description: 'Viewers cannot change the modules (members.forbidden_role)',
+        example: { type: 'members.forbidden_role', title: 'RoleForbiddenError', status: 403, meta: { required: 'editor' } }
+    })
+    @ApiProblemResponse({
+        status: 422,
+        description: 'The change would leave both modules off (account.modules_empty)',
+        example: { type: 'account.modules_empty', title: 'AccountModulesEmptyError', status: 422 }
+    })
+    public async updateModules(@Body() body: UpdateAccountModulesDto): Promise<AccountModules> {
+        return this.profileApplication.updateModules(body);
     }
 
     @Delete()

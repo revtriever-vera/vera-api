@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { CompaniesRepository } from '../repositories/companies.repository';
 import { Page } from '../../../shared/pagination/pagination.types';
-import { Company } from './identity.types';
+import { AccountClosedError, AccountModulesEmptyError } from './identity.errors';
+import { AccountModules, AccountModulesChange, Company, modulesOf } from './identity.types';
 
 export interface CreateCompanyInput {
     readonly name: string;
@@ -48,6 +49,23 @@ export class CompanyDomain {
 
     public async markTrialStarted(companyId: string, at: Date): Promise<boolean> {
         return this.companies.markTrialStarted(companyId, at);
+    }
+
+    public async updateModules(companyId: string, change: AccountModulesChange): Promise<AccountModules> {
+        const company: Company | null = await this.companies.lockById(companyId);
+        if (!company) {
+            throw new AccountClosedError(companyId);
+        }
+        const current: AccountModules = modulesOf(company);
+        const next: AccountModules = { portfolio: change.portfolio ?? current.portfolio, spending: change.spending ?? current.spending };
+        if (!next.portfolio && !next.spending) {
+            throw new AccountModulesEmptyError();
+        }
+        const updated: Company | null = await this.companies.updateModules(companyId, {
+            portfolioModuleEnabled: next.portfolio,
+            spendingModuleEnabled: next.spending
+        });
+        return updated ? modulesOf(updated) : next;
     }
 
     public async eraseCompany(companyId: string): Promise<boolean> {

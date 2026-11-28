@@ -15,7 +15,8 @@ const EDITOR_WRITES: readonly [string, string][] = [
     ['POST', '/positions'],
     ['PATCH', '/spending/transactions/00000000-0000-4000-8000-000000000001'],
     ['PUT', '/allocation/settings'],
-    ['POST', '/spending/imports']
+    ['POST', '/spending/imports'],
+    ['PATCH', '/account/modules']
 ];
 
 const OWNER_ONLY: readonly [string, string][] = [

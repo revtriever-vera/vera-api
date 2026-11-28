@@ -1,9 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { AppContext } from '../../../core/context/app-context.port';
+import { UsingTransaction } from '../../../core/database/using-transaction.decorator';
 import { AppLocale } from '../../../shared/i18n/locale';
 import { CompanyDomain } from '../domain/company.domain';
 import { AccountClosedError, UnauthorizedError } from '../domain/identity.errors';
-import { Company, effectiveLocale, LoginProvider, Session, User, UserRole } from '../domain/identity.types';
+import {
+    AccountModules,
+    AccountModulesChange,
+    Company,
+    effectiveLocale,
+    LoginProvider,
+    modulesOf,
+    Session,
+    User,
+    UserRole
+} from '../domain/identity.types';
 import { SessionDomain } from '../domain/session.domain';
 import { UserDomain } from '../domain/user.domain';
 import { CurrentUserService } from '../services/current-user.service';
@@ -18,6 +29,7 @@ export interface SessionProfile {
     readonly preferredLocale: AppLocale | null;
     readonly loginProvider: LoginProvider;
     readonly companyName: string;
+    readonly modules: AccountModules;
 }
 
 export interface PreferencesInput {
@@ -47,6 +59,12 @@ export class ProfileApplication {
         return this.profileOf(updated);
     }
 
+    @UsingTransaction()
+    public async updateModules(change: AccountModulesChange): Promise<AccountModules> {
+        const user: User = await this.currentUser.require();
+        return this.companies.updateModules(user.companyId, change);
+    }
+
     private async profileOf(user: User): Promise<SessionProfile> {
         const company: Company = await this.requireCompany(user.companyId);
         const session: Session = await this.requireSession();
@@ -59,7 +77,8 @@ export class ProfileApplication {
             locale: effectiveLocale(user, company),
             preferredLocale: user.locale as AppLocale | null,
             loginProvider: session.provider as LoginProvider,
-            companyName: company.name
+            companyName: company.name,
+            modules: modulesOf(company)
         };
     }
 

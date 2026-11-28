@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AuthIdentityDomain } from '../domain/auth-identity.domain';
 import { CompanyDomain } from '../domain/company.domain';
 import { AccountClosedError } from '../domain/identity.errors';
-import { AuthIdentity, Company, Session, User } from '../domain/identity.types';
+import { AccountModules, AuthIdentity, Company, modulesOf, Session, User } from '../domain/identity.types';
 import { SessionDomain } from '../domain/session.domain';
 import { CurrentUserService } from './current-user.service';
 
@@ -10,6 +10,7 @@ export interface AccountCompanyExport {
     readonly name: string;
     readonly locale: string;
     readonly timezone: string;
+    readonly modules: AccountModules;
     readonly createdAt: string;
 }
 
@@ -71,6 +72,7 @@ export class IdentityAccountExporter {
             name: company.name,
             locale: company.locale,
             timezone: company.timezone,
+            modules: modulesOf(company),
             createdAt: company.createdAt.toISOString()
         };
     }
