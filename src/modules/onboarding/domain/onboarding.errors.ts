@@ -21,6 +21,17 @@ export class OnboardingAlreadyClosedError extends AppError {
     }
 }
 
+export class OnboardingActionOutOfStepError extends AppError {
+    public constructor(action: string, step: string, status: string) {
+        super({
+            code: 'onboarding.action_out_of_step',
+            status: 409,
+            detail: 'The onboarding conversation is not at a point where this action can be taken.',
+            meta: { action, step, status }
+        });
+    }
+}
+
 export class SampleUnavailableError extends AppError {
     public constructor() {
         super({

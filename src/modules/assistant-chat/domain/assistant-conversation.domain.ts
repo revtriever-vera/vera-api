@@ -10,6 +10,14 @@ export class AssistantConversationDomain {
         return this.conversations.open(userId, at);
     }
 
+    public async openOnboarding(userId: string, at: Date): Promise<AssistantConversation> {
+        return this.conversations.openOnboarding(userId, at);
+    }
+
+    public async findOnboarding(): Promise<AssistantConversation | null> {
+        return this.conversations.findOnboarding();
+    }
+
     public async findOfUser(id: string, userId: string): Promise<AssistantConversation | null> {
         return this.conversations.findOfUser(id, userId);
     }

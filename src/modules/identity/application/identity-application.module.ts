@@ -16,6 +16,7 @@ import { MemberDirectoryService } from '../services/member-directory.service';
 import { LoginOfferRegistry } from '../services/login-offer.registry';
 import { MemberExitService } from '../services/member-exit.service';
 import { AccountEmptinessService } from '../services/account-emptiness.service';
+import { AccountModulesService } from '../services/account-modules.service';
 import { AccountInvitesExporter } from '../services/account-invites.exporter';
 import { MemberDepartureRegistry } from '../services/member-departure.registry';
 import { MembersLogService } from '../services/members-log.service';
@@ -102,6 +103,7 @@ import { SocialLoginApplication } from './social-login.application';
         AccountSpreadsheetRegistry,
         AccountExportBuilder,
         AccountEmptinessService,
+        AccountModulesService,
         AccountClosureMailer,
         InviteAcceptanceService,
         LoginOfferRegistry,
@@ -166,6 +168,7 @@ import { SocialLoginApplication } from './social-login.application';
         InvitesApplication,
         MembersCleanupApplication,
         CurrentUserService,
+        AccountModulesService,
         CompanyTimezoneService,
         CompanyTrialService,
         UserLocaleService,

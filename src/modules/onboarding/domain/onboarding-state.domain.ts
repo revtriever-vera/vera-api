@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnboardingStatesRepository } from '../repositories/onboarding-states.repository';
+import { ScriptState } from './script/script.types';
 import { OnboardingAlreadyClosedError, UnknownOnboardingStepError } from './onboarding.errors';
 import {
     completionPatchFor,
@@ -58,6 +59,18 @@ export class OnboardingStateDomain {
             throw new OnboardingAlreadyClosedError();
         }
         const patch: OnboardingStateUpdate = outcome === 'finished' ? { completedAt: new Date() } : { dismissedAt: new Date() };
+        return this.states.stamp(state.id, patch);
+    }
+
+    public async lockForScript(): Promise<OnboardingState> {
+        return this.states.lockCurrent();
+    }
+
+    public async saveScript(state: OnboardingState, script: ScriptState, finished: boolean): Promise<OnboardingState> {
+        const patch: OnboardingStateUpdate = { script: JSON.stringify(script) };
+        if (finished && !isClosed(state)) {
+            return this.states.stamp(state.id, { ...patch, completedAt: new Date() });
+        }
         return this.states.stamp(state.id, patch);
     }
 

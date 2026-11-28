@@ -8,6 +8,7 @@ const LOG_IDENTIFIER: string = 'onboarding-wizard';
 const STEP_METRIC: string = 'vera_onboarding_step_total';
 const CLOSED_METRIC: string = 'vera_onboarding_closed_total';
 const TIME_TO_CLOSE_METRIC: string = 'vera_onboarding_time_to_close_seconds';
+const SCRIPT_ACTION_METRIC: string = 'vera_onboarding_script_action_total';
 
 @Injectable()
 export class OnboardingLogService {
@@ -30,6 +31,16 @@ export class OnboardingLogService {
         this.logService.info({ message, identifier: LOG_IDENTIFIER });
         this.metrics.count(CLOSED_METRIC, { outcome });
         this.metrics.observe(TIME_TO_CLOSE_METRIC, secondsSinceCreation);
+    }
+
+    public scriptStarted(): void {
+        this.logService.info({ message: 'onboarding conversation started', identifier: LOG_IDENTIFIER });
+        this.metrics.count(SCRIPT_ACTION_METRIC, { action: 'START', outcome: 'active' });
+    }
+
+    public scriptAction(action: string, from: string, to: string): void {
+        this.logService.info({ message: 'onboarding conversation action', identifier: LOG_IDENTIFIER, meta: { action, from, to } });
+        this.metrics.count(SCRIPT_ACTION_METRIC, { action, outcome: to });
     }
 
     public summaryAreaFailed(area: OnboardingArea, error: unknown): void {

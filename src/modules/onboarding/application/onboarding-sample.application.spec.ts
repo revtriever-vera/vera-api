@@ -24,6 +24,7 @@ function stateOf(patch: Partial<OnboardingState> = {}): OnboardingState {
         completedAt: null,
         dismissedAt: null,
         sampleLoadedAt: null,
+        script: null,
         createdAt: T0,
         updatedAt: T0,
         deletedAt: null,

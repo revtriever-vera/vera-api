@@ -19,6 +19,12 @@ export class OnboardingStatesRepository extends TenantRepository<'OnboardingStat
         return this.createIfMissing();
     }
 
+    public async lockCurrent(): Promise<OnboardingState> {
+        const ensured: OnboardingState = await this.current();
+        const locked: OnboardingState | undefined = await this.selectScoped().selectAll().forUpdate().executeTakeFirst();
+        return locked ?? ensured;
+    }
+
     public async stamp(id: string, patch: OnboardingStateUpdate): Promise<OnboardingState> {
         const updated: OnboardingState | null = await this.update(id, patch);
         if (updated) {
