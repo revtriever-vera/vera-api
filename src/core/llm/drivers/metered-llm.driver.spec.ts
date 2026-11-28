@@ -154,7 +154,7 @@ describe('MeteredLlmDriver', () => {
 
     it('cap_reached sobe intacto, grava a chamada e o driver nem é chamado', async () => {
         const { metered, ledger, driver } = build();
-        const capReached: CapReachedError = new CapReachedError('ai', '2026-12-01T03:00:00.000Z');
+        const capReached: CapReachedError = new CapReachedError('ai', '2026-12-01T03:00:00.000Z', 'premium');
         ledger.assertRoom.mockRejectedValue(capReached);
 
         await expect(metered.generate(REQUEST)).rejects.toBe(capReached);
@@ -299,7 +299,7 @@ describe('MeteredLlmDriver', () => {
 
         it('a leitura de importação não é barrada pela cota mensal e não lança custo nela', async () => {
             const { metered, ledger } = buildExtract();
-            ledger.assertRoom.mockRejectedValue(new CapReachedError('ai', '2026-12-01T00:00:00.000Z'));
+            ledger.assertRoom.mockRejectedValue(new CapReachedError('ai', '2026-12-01T00:00:00.000Z', 'premium'));
 
             await expect(metered.generate(EXTRACT)).resolves.toMatchObject({ costMicros: 1234 });
 

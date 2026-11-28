@@ -37,7 +37,7 @@ export class AssistantAccessService {
         }
         const state: UsageState = await this.meter.state();
         if (usageViewOf(state, mode).state === USAGE_STATES.paused) {
-            throw new CapReachedError(mode === TURN_MODES.help ? 'help' : 'ai', state.resetsAt);
+            throw new CapReachedError(mode === TURN_MODES.help ? 'help' : 'ai', state.resetsAt, await this.meter.plan());
         }
     }
 

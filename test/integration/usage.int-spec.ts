@@ -103,15 +103,15 @@ describe('paid usage (hosted)', () => {
         }).length;
     }
 
-    it('assertRoom passa com folga e recusa sem restante ou com estimativa maior que o restante, com 429 e resetsAt', async () => {
+    it('assertRoom passa com folga e recusa sem restante ou com estimativa maior que o restante, com 429, resetsAt e o plano', async () => {
         const account = await harness.signUp('room');
 
         await withMeter(account, async (m) => m.assertRoom({ feature: 'ai', task: 'summary', estimateMicros: 1_000_000 }));
-        await withMeter(account, async (m) => m.record(entry({ costMicros: 3_000_000 })));
+        await withMeter(account, async (m) => m.record(entry({ costMicros: 4_000_000 })));
 
         await expect(
             withMeter(account, async (m) => m.assertRoom({ feature: 'ai', task: 'summary', estimateMicros: 1_000_001 }))
-        ).rejects.toMatchObject({ code: 'usage.cap_reached', status: 429, meta: { resetsAt: expect.any(String) } });
+        ).rejects.toMatchObject({ code: 'usage.cap_reached', status: 429, meta: { resetsAt: expect.any(String), plan: 'free' } });
         await withMeter(account, async (m) => m.assertRoom({ feature: 'ai', task: 'summary', estimateMicros: 1_000_000 }));
         await withMeter(account, async (m) => m.record(entry({ costMicros: 1_000_000 })));
         await expect(
@@ -149,7 +149,7 @@ describe('paid usage (hosted)', () => {
         const before = await harness.call<{ features: { ai: string }; usage: { state: string } }>(account.token, 'GET', '/billing/me');
         expect(before.body.usage.state).toBe('ok');
 
-        await withMeter(account, async (m) => m.record(entry({ costMicros: 4_500_000 })));
+        await withMeter(account, async (m) => m.record(entry({ costMicros: 11_250_000 })));
 
         const me = await harness.call<{ features: { ai: string }; usage: { state: string; usedBps: number } }>(
             account.token,
@@ -175,7 +175,7 @@ describe('paid usage (hosted)', () => {
 
         await Promise.all(
             [1, 2, 3].map(async () =>
-                withMeter(account, async (m) => m.record(entry({ costMicros: 1_100_000, feature: 'whatsapp', task: 'reminder' })))
+                withMeter(account, async (m) => m.record(entry({ costMicros: 1_400_000, feature: 'whatsapp', task: 'reminder' })))
             )
         );
 
@@ -186,7 +186,7 @@ describe('paid usage (hosted)', () => {
             .find((message) => message.options?.jobId?.includes(account.company.id) === true);
         expect(warning?.options?.jobId).toMatch(/^usage-notice-.+-\d{4}-\d{2}-warning$/);
 
-        await Promise.all([1, 2].map(async () => withMeter(account, async (m) => m.record(entry({ costMicros: 500_000 })))));
+        await Promise.all([1, 2].map(async () => withMeter(account, async (m) => m.record(entry({ costMicros: 400_000 })))));
 
         expect(noticesOf(account, 'paused')).toBe(1);
         expect(noticesOf(account, 'warning')).toBe(1);
@@ -230,7 +230,7 @@ describe('paid usage (hosted)', () => {
                 .open('premium', { startsAt: new Date(), subscriptionId: crypto.randomUUID() });
         });
         const gate: PlanGateService = harness.app.get(PlanGateService, { strict: false });
-        await withMeter(account, async (m) => m.record(entry({ costMicros: 4_000_000 })));
+        await withMeter(account, async (m) => m.record(entry({ costMicros: 10_000_000 })));
         const paused: UsageState = await withMeter(account, async (m) => m.state());
         expect(await harness.inCompany(account.company.id, async () => gate.stateOf('ai'))).toBe('paused');
 
@@ -287,7 +287,7 @@ describe('paid usage (hosted)', () => {
                 detail: { category: 'utility' }
             }
         ]);
-        expect((await harness.inCompany(account.company.id, async () => meter().state())).byFeature.whatsapp).toBe(4000);
+        expect((await harness.inCompany(account.company.id, async () => meter().state())).byFeature.whatsapp).toBe(3200);
     });
 
     it('nenhuma linha guarda texto livre: o detail só aceita as chaves fixas', async () => {

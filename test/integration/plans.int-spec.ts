@@ -106,7 +106,11 @@ describe('plans (hosted)', () => {
         return harness.app.get(PlanContractService, { strict: false });
     }
 
-    it('sem contrato: free, premium_required e funções sem chave desabilitadas', async () => {
+    function capOf(companyId: string): Promise<number | null> {
+        return harness.inCompany(companyId, async () => harness.app.get(PlanUsageContextAdapter, { strict: false }).capMicros());
+    }
+
+    it('sem contrato: free com IA e Agenda, teto de 5.000.000 micros e funções sem chave desabilitadas', async () => {
         const account = await harness.signUp('free');
 
         const me = await harness.call<Me>(account.token, 'GET', '/billing/me');
@@ -118,9 +122,39 @@ describe('plans (hosted)', () => {
             canManage: true,
             methods: ['card', 'pix'],
             priceCents: 1490,
-            features: { ai: 'premium_required', whatsapp: 'disabled', calendar: 'premium_required' }
+            features: { ai: 'available', whatsapp: 'disabled', calendar: 'available' }
         });
-        expect((await harness.call(account.token, 'GET', '/probe-feature')).status).toBe(402);
+        expect((await harness.call(account.token, 'GET', '/probe-feature')).status).toBe(200);
+        expect(await capOf(account.company.id)).toBe(5_000_000);
+    });
+
+    it('o catálogo dá ai e calendar ao Free e whatsapp só ao Premium', async () => {
+        const granted = await harness.pg.query(
+            'SELECT p."key", c."capability" FROM "GlobalPlanCapabilities" c JOIN "GlobalPlans" p ON p."id" = c."planId" ORDER BY 1, 2'
+        );
+
+        expect(granted.rows).toEqual([
+            { key: 'free', capability: 'ai' },
+            { key: 'free', capability: 'calendar' },
+            { key: 'premium', capability: 'ai' },
+            { key: 'premium', capability: 'calendar' },
+            { key: 'premium', capability: 'whatsapp' }
+        ]);
+    });
+
+    it('o teto próprio da conta em CompanyProductLimits vale mais que o do plano', async () => {
+        const account = await harness.signUp('own-limit');
+        await harness.pg.query(
+            `INSERT INTO "CompanyProductLimits" ("id", "companyId", "productId", "unit", "quantity", "policy")
+             SELECT gen_random_uuid(), $1, "id", 'cost_micros', 9000000, 'pause' FROM "GlobalProducts" WHERE "key" = 'paid_usage'`,
+            [account.company.id]
+        );
+
+        expect(await capOf(account.company.id)).toBe(9_000_000);
+        await harness.inCompany(account.company.id, async () => {
+            await contracts().open('premium', { startsAt: new Date(), subscriptionId: crypto.randomUUID() });
+        });
+        expect(await capOf(account.company.id)).toBe(9_000_000);
     });
 
     it('abrir o contrato dá premium, é idempotente e fechar volta ao free chamando os implementadores', async () => {
@@ -251,12 +285,10 @@ describe('plans (hosted)', () => {
             });
 
             const me = await harness.call<Me>(account.token, 'GET', '/billing/me');
-            const cap: number | null = await harness.inCompany(account.company.id, async () =>
-                harness.app.get(PlanUsageContextAdapter, { strict: false }).capMicros()
-            );
+            const cap: number | null = await capOf(account.company.id);
 
             expect(me.body).toMatchObject({ plan: 'premium', features: { ai: 'available' }, trial: { kind: 'no_card', daysLeft: 14 } });
-            expect(cap).toBe(4000000);
+            expect(cap).toBe(10_000_000);
             const snapshot: PaidUsageSnapshot = {
                 usedBps: 10000,
                 state: 'paused',
@@ -264,10 +296,10 @@ describe('plans (hosted)', () => {
                 byFeature: { ai: { usedBps: 10000 }, whatsapp: { usedBps: 0 } }
             };
             const spy = vi.spyOn(harness.app.get(PaidUsageReader, { strict: false }), 'state').mockResolvedValue(snapshot);
-            const paused = await harness.call<{ type: string }>(account.token, 'GET', '/probe-feature');
+            const paused = await harness.call<{ type: string; meta?: { plan: string } }>(account.token, 'GET', '/probe-feature');
             spy.mockRestore();
             expect(paused.status).toBe(429);
-            expect(paused.body.type).toBe('usage.cap_reached');
+            expect(paused.body).toMatchObject({ type: 'usage.cap_reached', meta: { plan: 'premium' } });
         });
 
         it('avisa uma vez a três dias do fim, fecha no fim chamando o lifecycle e não repete', async () => {

@@ -185,7 +185,7 @@ describe('AskVeraService', () => {
         const spy = vi
             .spyOn(ledger, 'assertRoom')
             .mockResolvedValueOnce(undefined)
-            .mockRejectedValueOnce(new CapReachedError('whatsapp', resetsAt));
+            .mockRejectedValueOnce(new CapReachedError('whatsapp', resetsAt, 'premium'));
 
         await expect(ask(owner, 'quanto gastei?', 'msg-cap')).rejects.toMatchObject({ code: 'usage.cap_reached' });
         spy.mockRestore();

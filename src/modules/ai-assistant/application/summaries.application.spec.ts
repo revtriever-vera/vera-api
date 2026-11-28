@@ -13,7 +13,7 @@ import { SummariesApplication } from './summaries.application';
 const CONTEXT = { periodKey: '2026-10:x', contextHash: 'novo', built: {} };
 
 function build(stored: unknown) {
-    const generate = vi.fn().mockRejectedValue(new CapReachedError('ai', '2026-12-01T03:00:00.000Z'));
+    const generate = vi.fn().mockRejectedValue(new CapReachedError('ai', '2026-12-01T03:00:00.000Z', 'premium'));
     const summary = vi.fn();
     const application: SummariesApplication = new SummariesApplication(
         { of: vi.fn().mockResolvedValue({ mode: 'model', context: CONTEXT }) } as unknown as SummarySubjectService,

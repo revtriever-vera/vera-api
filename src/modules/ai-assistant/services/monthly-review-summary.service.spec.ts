@@ -103,7 +103,7 @@ describe('MonthlyReviewSummaryService', () => {
     });
 
     it('cota esgotada devolve o guardado se houver e nada se não houver, contando o motivo', async () => {
-        const capped = (): Promise<unknown> => Promise.reject(new CapReachedError('ai', null));
+        const capped = (): Promise<unknown> => Promise.reject(new CapReachedError('ai', null, 'premium'));
         const withStored = make({ stored: { ...STORED, contextHash: 'old' }, hash: 'hash-2', generate: capped });
         const without = make({ generate: capped });
 

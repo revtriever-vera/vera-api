@@ -173,8 +173,13 @@ const INVALID: ProblemDoc = {
 const CAP_REACHED: ProblemDoc = {
     status: 429,
     description:
-        'The monthly usage band is used up (usage.cap_reached, with meta.resetsAt) or the hourly limit of 20 turns per person passed (core.too_many_attempts)',
-    example: { type: 'usage.cap_reached', title: 'CapReachedError', status: 429, meta: { feature: 'help', resetsAt: RESETS_AT } }
+        'The monthly usage band is used up (usage.cap_reached, with meta.resetsAt and meta.plan, free or premium, so the screen can offer Premium to a Free account) or the hourly limit of 20 turns per person passed (core.too_many_attempts)',
+    example: {
+        type: 'usage.cap_reached',
+        title: 'CapReachedError',
+        status: 429,
+        meta: { feature: 'ai', resetsAt: RESETS_AT, plan: 'free' }
+    }
 };
 const PROVIDER_DISABLED: ProblemDoc = {
     status: 503,

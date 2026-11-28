@@ -190,7 +190,7 @@ describe('AskVeraService', () => {
     });
 
     it('sobe a cota estourada sem resposta parcial', async () => {
-        const { service, telemetry } = build([new CapReachedError('whatsapp', null)]);
+        const { service, telemetry } = build([new CapReachedError('whatsapp', null, 'premium')]);
         await expect(ask(service, 'quanto gastei?')).rejects.toBeInstanceOf(CapReachedError);
         expect(telemetry.capReached).toHaveBeenCalled();
     });

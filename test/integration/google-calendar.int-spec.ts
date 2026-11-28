@@ -138,13 +138,13 @@ describe('Google Agenda (driver mock, hospedada)', () => {
         await harness.stop();
     });
 
-    it('free recebe 402 ao iniciar', async () => {
+    it('free inicia a conexão da Agenda, que passou a ser do Free', async () => {
         const free: Account = await harness.signUp('cal-free');
 
-        const response = await harness.call<{ type: string }>(free.token, 'GET', '/calendar/google/start');
+        const response = await harness.call<{ url: string }>(free.token, 'GET', '/calendar/google/start');
 
-        expect(response.status).toBe(402);
-        expect(response.body.type).toBe('billing.premium_required');
+        expect(response.status).toBe(200);
+        expect(new URL(response.body.url).origin).toBe('https://accounts.google.com');
     });
 
     it('start devolve a URL com escopo, PKCE e o state guardado com o verifier', async () => {

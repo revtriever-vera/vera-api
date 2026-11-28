@@ -211,6 +211,20 @@ describe('resumos escritos pelo modelo', () => {
         expect(await stored(owner)).toBe(1);
     });
 
+    it('no Free, com a permissão, o resumo do mês é escrito pelo modelo', async () => {
+        const free: Account = await harness.signUp('sum-free-model');
+        await harness.call(free.token, 'PUT', '/ai/consent', { noticeVersion: 1, source: 'summary_card' });
+        await loadSpending(free);
+        const payload: PayloadBody = await monthPayload(free);
+        mock.enqueue(summaryText(payload.payload));
+
+        const generated = await harness.call<SummaryBody>(free.token, 'GET', month());
+
+        expect(generated.status).toBe(200);
+        expect(generated.body).toMatchObject({ kind: 'month', source: 'model', cached: false });
+        expect(await stored(free)).toBe(1);
+    });
+
     it('o corpo que o modelo recebe é o mesmo JSON de GET /ai/payload do mesmo tipo e período', async () => {
         const owner: Account = await premium('sum-equal');
         await loadSpending(owner);
@@ -385,8 +399,9 @@ describe('resumos escritos pelo modelo', () => {
         expect(generated.body.paragraphs[0]).toContain(view.payload.total);
     });
 
-    it('sem gastos 204; sem permissão 403; Free 402; cota pausada 429 com resetsAt', async () => {
+    it('sem gastos 204; sem permissão 403, no Free também; cota pausada 429 com resetsAt', async () => {
         const free: Account = await harness.signUp('sum-free');
+        await loadSpending(free);
         const empty: Account = await premium('sum-empty');
         const noConsent: Account = await premium('sum-noconsent', false);
         await loadSpending(noConsent);
@@ -395,7 +410,7 @@ describe('resumos escritos pelo modelo', () => {
         const resetsAt: string = '2026-12-01T03:00:00.000Z';
         const spy = vi
             .spyOn(harness.app.get(LlmLedgerService, { strict: false }), 'assertRoom')
-            .mockRejectedValue(new CapReachedError('ai', resetsAt));
+            .mockRejectedValue(new CapReachedError('ai', resetsAt, 'premium'));
 
         const noData = await harness.call(empty.token, 'GET', month());
         const refused = await harness.call<ProblemBody>(noConsent.token, 'GET', month());
@@ -405,7 +420,7 @@ describe('resumos escritos pelo modelo', () => {
 
         expect(noData.status).toBe(204);
         expect(refused).toMatchObject({ status: 403, body: { type: 'ai.consent_required' } });
-        expect(plan).toMatchObject({ status: 402, body: { type: 'billing.premium_required' } });
+        expect(plan).toMatchObject({ status: 403, body: { type: 'ai.consent_required' } });
         expect(paused).toMatchObject({ status: 429, body: { type: 'usage.cap_reached', meta: { resetsAt } } });
         expect(await stored(capped)).toBe(0);
     });

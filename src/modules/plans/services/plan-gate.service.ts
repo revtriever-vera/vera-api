@@ -53,6 +53,7 @@ export class PlanGateService {
             return new PremiumRequiredError(feature);
         }
         const usage: PaidUsageSnapshot | null = await this.usage.state();
-        return new CapReachedError(feature, usage?.resetsAt ?? null);
+        const plan: EffectivePlan = await this.resolver.planOf();
+        return new CapReachedError(feature, usage?.resetsAt ?? null, plan === 'self_hosted' ? null : plan);
     }
 }

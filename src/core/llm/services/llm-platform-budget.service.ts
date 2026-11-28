@@ -26,6 +26,6 @@ export class LlmPlatformBudgetService {
         if (used + estimateMicros <= (await this.capMicros())) {
             return;
         }
-        throw new CapReachedError(feature, DateUtil.startOfNextDayIn(DateUtil.BRAZIL_TIMEZONE, now).toISOString());
+        throw new CapReachedError(feature, DateUtil.startOfNextDayIn(DateUtil.BRAZIL_TIMEZONE, now).toISOString(), null);
     }
 }

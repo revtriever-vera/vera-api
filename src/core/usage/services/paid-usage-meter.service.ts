@@ -15,6 +15,7 @@ import {
     RecordUsageInput,
     UsageDetail,
     UsageFeature,
+    UsagePlan,
     UsageState,
     USAGE_STATES,
     UsageThresholdPayload
@@ -52,6 +53,10 @@ export class PaidUsageMeter {
         return this.snapshots.state();
     }
 
+    public async plan(): Promise<UsagePlan | null> {
+        return this.holder.plan();
+    }
+
     public async assertRoom(input: AssertRoomInput): Promise<void> {
         const state: UsageState = await this.snapshots.state();
         const budget: Budget = budgetOf(state, input.feature);
@@ -64,7 +69,7 @@ export class PaidUsageMeter {
         }
         this.logs.capReached(input.feature, input.task, state.period);
         this.metrics.capReached(input.feature);
-        throw new CapReachedError(input.feature, state.resetsAt);
+        throw new CapReachedError(input.feature, state.resetsAt, await this.holder.plan());
     }
 
     public async record(input: RecordUsageInput): Promise<void> {

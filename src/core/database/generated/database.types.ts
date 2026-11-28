@@ -556,6 +556,7 @@ export interface GlobalPlans {
 export interface GlobalProductLimits {
     endsAt: Timestamp | null;
     id: Generated<string>;
+    planId: string;
     policy: string;
     productId: string;
     quantity: Int8;

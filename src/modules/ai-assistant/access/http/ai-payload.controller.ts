@@ -55,8 +55,13 @@ export class AiPayloadController {
     })
     @ApiProblemResponse({
         status: 429,
-        description: 'The monthly cap of paid usage is reached (usage.cap_reached)',
-        example: { type: 'usage.cap_reached', title: 'CapReachedError', status: 429 }
+        description: 'The monthly cap of paid usage of the account plan is reached (usage.cap_reached, with meta.plan free or premium)',
+        example: {
+            type: 'usage.cap_reached',
+            title: 'CapReachedError',
+            status: 429,
+            meta: { feature: 'ai', resetsAt: '2026-12-01T03:00:00.000Z', plan: 'free' }
+        }
     })
     @ApiProblemResponse({
         status: 503,

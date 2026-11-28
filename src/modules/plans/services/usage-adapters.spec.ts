@@ -21,8 +21,22 @@ describe('PlanUsageContextAdapter', () => {
 
         expect(register).toHaveBeenCalledWith(adapter);
         expect(await adapter.capMicros()).toBe(4_000_000);
+        expect(await adapter.plan()).toBe('free');
         expect(await adapter.helpCapMicros()).toBe(500_000);
         expect(await adapter.timezone()).toBe('Asia/Tokyo');
+    });
+});
+
+describe('PlanUsageContextAdapter.plan', () => {
+    it('na auto-hospedada não há plano de cota', async () => {
+        const adapter: PlanUsageContextAdapter = new PlanUsageContextAdapter(
+            {} as unknown as PlanLimitService,
+            { planOf: vi.fn().mockResolvedValue('self_hosted') } as unknown as PlanResolverService,
+            {} as unknown as CompanyTimezoneService,
+            {} as unknown as UsageContextHolder
+        );
+
+        expect(await adapter.plan()).toBeNull();
     });
 });
 

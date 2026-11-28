@@ -7,13 +7,13 @@ import { PlanResolverService } from './plan-resolver.service';
 import { PlansLogService } from './plans-log.service';
 import { PlansMetricsService } from './plans-metrics.service';
 
-function gate(state: FeatureState, resetsAt: string | null = null): PlanGateService {
+function gate(state: FeatureState, resetsAt: string | null = null, plan: string = 'premium'): PlanGateService {
     const states: FeatureStateService = { of: vi.fn().mockResolvedValue(state) } as unknown as FeatureStateService;
     const usage: PaidUsageReader = {
         state: vi.fn().mockResolvedValue(resetsAt === null ? null : { resetsAt })
     } as unknown as PaidUsageReader;
     const resolver: PlanResolverService = {
-        planOf: vi.fn().mockResolvedValue('premium'),
+        planOf: vi.fn().mockResolvedValue(plan),
         mode: vi.fn().mockReturnValue('hosted')
     } as unknown as PlanResolverService;
     const logs: PlansLogService = { gateDenied: vi.fn() } as unknown as PlansLogService;
@@ -36,12 +36,14 @@ describe('PlanGateService', () => {
         await expect(gate('disabled').assert('whatsapp')).rejects.toMatchObject({ code: 'billing.feature_disabled', status: 503 });
     });
 
-    it('lança usage.cap_reached (429) com resetsAt', async () => {
+    it('lança usage.cap_reached (429) com resetsAt e o plano da conta', async () => {
         await expect(gate('paused', '2026-12-01T03:00:00.000Z').assert('ai')).rejects.toMatchObject({
             code: 'usage.cap_reached',
             status: 429,
-            meta: { feature: 'ai', resetsAt: '2026-12-01T03:00:00.000Z' }
+            meta: { feature: 'ai', resetsAt: '2026-12-01T03:00:00.000Z', plan: 'premium' }
         });
+        await expect(gate('paused', null, 'free').assert('ai')).rejects.toMatchObject({ meta: { plan: 'free' } });
+        await expect(gate('paused', null, 'self_hosted').assert('ai')).rejects.toMatchObject({ meta: { plan: null } });
     });
 
     it('expõe o plano e o modo do resolvedor', async () => {

@@ -16,6 +16,9 @@ export type NoticeKind = (typeof NOTICE_KINDS)[keyof typeof NOTICE_KINDS];
 export const USAGE_STATES = { ok: 'ok', warning: 'warning', paused: 'paused' } as const;
 export type UsageStateKey = (typeof USAGE_STATES)[keyof typeof USAGE_STATES];
 
+export const USAGE_PLANS = ['free', 'premium'] as const;
+export type UsagePlan = (typeof USAGE_PLANS)[number];
+
 export const BPS_FULL: number = 10_000;
 export const HELP_CAP_MICROS: number = 500_000;
 export const MICROS_PER_UNIT: number = 1_000_000;

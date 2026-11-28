@@ -9,7 +9,7 @@ export class GlobalProductLimitsRepository extends BareGlobalRepository<'GlobalP
         super(database, 'GlobalProductLimits');
     }
 
-    public async listFor(productId: string, unit: string): Promise<GlobalProductLimit[]> {
-        return this.findMany({ productId, unit });
+    public async listFor(planId: string, productId: string, unit: string): Promise<GlobalProductLimit[]> {
+        return this.findMany({ planId, productId, unit });
     }
 }

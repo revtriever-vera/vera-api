@@ -294,7 +294,7 @@ describe('revisão mensal da carteira', () => {
             .summary;
     }
 
-    it('Free: os números ficam, sem chamada ao modelo, sem e-mail e sem parágrafo', async () => {
+    it('Free: os números ficam, sem chamada ao modelo, sem e-mail e sem parágrafo; o ai-payload responde', async () => {
         const account: Account = await ready('rev-free');
 
         await review(account);
@@ -304,7 +304,7 @@ describe('revisão mensal da carteira', () => {
         expect(await stored(account)).toBe(0);
         expect((await fetched(account)).returnPct).toBeCloseTo(10.46, 2);
         expect(await summaryOf(account)).toBeNull();
-        expect((await harness.call(account.token, 'GET', `/ai/payload?kind=monthly_review&month=${MONTH}`)).status).toBe(402);
+        expect((await harness.call(account.token, 'GET', `/ai/payload?kind=monthly_review&month=${MONTH}`)).status).toBe(200);
     });
 
     it('Premium sem a permissão de envio: e-mail só com os números e nenhuma chamada ao modelo', async () => {

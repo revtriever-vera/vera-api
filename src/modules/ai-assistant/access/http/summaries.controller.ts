@@ -64,12 +64,12 @@ const PROBLEMS: readonly ProblemDoc[] = [
     {
         status: 429,
         description:
-            'The monthly cap of paid usage is reached (usage.cap_reached) or the hourly limit of rewrites passed (rate_limit.exceeded)',
+            'The monthly cap of paid usage of the account plan is reached (usage.cap_reached, with meta.plan free or premium) or the hourly limit of rewrites passed (rate_limit.exceeded)',
         example: {
             type: 'usage.cap_reached',
             title: 'CapReachedError',
             status: 429,
-            meta: { feature: 'ai', resetsAt: '2026-12-01T03:00:00.000Z' }
+            meta: { feature: 'ai', resetsAt: '2026-12-01T03:00:00.000Z', plan: 'free' }
         }
     },
     {
